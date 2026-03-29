@@ -1,6 +1,4 @@
 # BigSmile
-Claro. Te dejo una versión más **profesional, ejecutiva y presentable en GitHub** del `README.md`, pensada para que el repositorio de **Bigsmile** se vea desde el inicio como un producto serio.
-
 ````md
 # Bigsmile
 
