@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BigSmile.Application\BigSmile.Application.csproj" />
+    <ProjectReference Include="..\BigSmile.Infrastructure\BigSmile.Infrastructure.csproj" />
+    <ProjectReference Include="..\BigSmile.SharedKernel\BigSmile.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

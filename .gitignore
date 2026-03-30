@@ -1,0 +1,68 @@
+# .NET
+**/[Bb]in/
+**/[Oo]bj/
+**/packages/
+*.user
+*.suo
+*.cache
+*.swp
+*~
+*.orig
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.sln.iml
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet
+**/packages/*
+!**/packages/build/
+.nuget/
+*.nupkg
+
+# Azure Functions
+func*.exe
+
+# Backend specific
+backend/**/bin/
+backend/**/obj/
+backend/**/TestResults/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.vscode/
+frontend/.vs/
+frontend/coverage/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# OpenClaw runtime (keep .openclaw directory)
+!.openclaw/
+.openclaw/*.log
+.openclaw/cache/
+
+# Outputs
+out/
+dist/
+build/
+
+# Local History
+.history/

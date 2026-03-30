@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BigSmile.Api/BigSmile.Api.csproj" />
+    <Project Path="src/BigSmile.Application/BigSmile.Application.csproj" />
+    <Project Path="src/BigSmile.Domain/BigSmile.Domain.csproj" />
+    <Project Path="src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj" />
+    <Project Path="src/BigSmile.SharedKernel/BigSmile.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj" />
+    <Project Path="tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj" />
+  </Folder>
+</Solution>
