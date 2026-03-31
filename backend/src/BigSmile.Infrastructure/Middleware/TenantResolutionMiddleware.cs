@@ -18,46 +18,58 @@ namespace BigSmile.Infrastructure.Middleware
 
         public async Task InvokeAsync(HttpContext httpContext, TenantContext tenantContext)
         {
-            // For now, read from headers (example: X-Tenant-Id, X-Branch-Id)
-            // In production, this could be derived from subdomain, JWT claim, etc.
-            // This is a placeholder implementation and must be replaced before production deployment.
-            var tenantId = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
-            var branchId = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
+            // Get environment and logger
+            var env = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
+            var logger = httpContext.RequestServices.GetRequiredService<ILogger<TenantResolutionMiddleware>>();
+
+            // Header-based tenant resolution is allowed only in Development environment
+            if (!env.IsDevelopment())
+            {
+                // Check if headers are present (even if we will ignore them)
+                var tenantId = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+                var branchId = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(tenantId) || !string.IsNullOrEmpty(branchId))
+                {
+                    logger.LogError(
+                        "Header-based tenant resolution is not allowed in non-development environments. " +
+                        "Request headers X-Tenant-Id and X-Branch-Id are ignored. " +
+                        "Use a secure tenant resolution strategy (e.g., JWT claims, subdomain).");
+                }
+                // Do NOT set tenant/branch from headers in non-development
+                // The tenant context will remain empty, which will cause downstream authorization to fail.
+                // This is intentional: it forces the adoption of a proper tenant resolution strategy.
+                await _next(httpContext);
+                return;
+            }
+
+            // Development environment: allow header-based resolution (with warnings if malformed)
+            var tenantIdDev = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+            var branchIdDev = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
 
             // Validate tenantId format (must be a valid GUID if provided)
-            if (!string.IsNullOrEmpty(tenantId))
+            if (!string.IsNullOrEmpty(tenantIdDev))
             {
-                if (!Guid.TryParse(tenantId, out var tenantGuid))
+                if (!Guid.TryParse(tenantIdDev, out var tenantGuid))
                 {
-                    var logger = httpContext.RequestServices.GetRequiredService<ILogger<TenantResolutionMiddleware>>();
-                    logger.LogWarning("Invalid tenant ID format in X-Tenant-Id header: {TenantId}", tenantId);
-                    tenantId = null;
+                    logger.LogWarning("Invalid tenant ID format in X-Tenant-Id header: {TenantId}", tenantIdDev);
+                    tenantIdDev = null;
                 }
             }
 
-            if (!string.IsNullOrEmpty(branchId))
+            if (!string.IsNullOrEmpty(branchIdDev))
             {
-                if (!Guid.TryParse(branchId, out var branchGuid))
+                if (!Guid.TryParse(branchIdDev, out var branchGuid))
                 {
-                    var logger = httpContext.RequestServices.GetRequiredService<ILogger<TenantResolutionMiddleware>>();
-                    logger.LogWarning("Invalid branch ID format in X-Branch-Id header: {BranchId}", branchId);
-                    branchId = null;
+                    logger.LogWarning("Invalid branch ID format in X-Branch-Id header: {BranchId}", branchIdDev);
+                    branchIdDev = null;
                 }
             }
 
-            // Log a warning if running in production and using header-based resolution
-            var env = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
-            if (!env.IsDevelopment() && (!string.IsNullOrEmpty(tenantId) || !string.IsNullOrEmpty(branchId)))
-            {
-                var logger = httpContext.RequestServices.GetRequiredService<ILogger<TenantResolutionMiddleware>>();
-                logger.LogWarning("Header-based tenant resolution is being used in a non-development environment. This is insecure and should be replaced with a secure tenant resolution strategy (e.g., JWT claims, subdomain).");
-            }
+            if (!string.IsNullOrEmpty(tenantIdDev))
+                tenantContext.SetTenantId(tenantIdDev);
 
-            if (!string.IsNullOrEmpty(tenantId))
-                tenantContext.SetTenantId(tenantId);
-
-            if (!string.IsNullOrEmpty(branchId))
-                tenantContext.SetBranchId(branchId);
+            if (!string.IsNullOrEmpty(branchIdDev))
+                tenantContext.SetBranchId(branchIdDev);
 
             await _next(httpContext);
         }

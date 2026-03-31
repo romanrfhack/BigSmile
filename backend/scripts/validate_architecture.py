@@ -11,6 +11,7 @@ Validates that project references follow the layered architecture:
 import os
 import sys
 import xml.etree.ElementTree as ET
+import re
 
 # Define projects and their allowed references
 LAYERS = {
@@ -20,6 +21,43 @@ LAYERS = {
     "BigSmile.Api": {"forbidden": []},
     "BigSmile.SharedKernel": {"forbidden": []},  # can be referenced by anyone
 }
+
+def validate_namespace_conventions(src_dir):
+    """
+    Validate that .cs files reside in a directory that matches their namespace.
+    This ensures architectural layering is reflected in the file system.
+    """
+    warnings = []
+    namespace_pattern = re.compile(r'^\s*namespace\s+([\w\.]+)')
+
+    # Expected mapping from directory name to namespace prefix
+    # e.g., files under src/BigSmile.Domain should have namespace starting with BigSmile.Domain
+    for project_dir in os.listdir(src_dir):
+        project_path = os.path.join(src_dir, project_dir)
+        if not os.path.isdir(project_path):
+            continue
+        expected_prefix = project_dir  # e.g., BigSmile.Domain
+        for root, dirs, files in os.walk(project_path):
+            for file in files:
+                if not file.endswith('.cs'):
+                    continue
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read(2000)  # read first 2KB, enough for namespace declaration
+                        match = namespace_pattern.search(content)
+                        if not match:
+                            continue
+                        namespace = match.group(1)
+                        # Check that namespace starts with expected_prefix
+                        if not namespace.startswith(expected_prefix):
+                            warnings.append(
+                                f"Namespace mismatch: {file_path} declares namespace '{namespace}' "
+                                f"but is located under project '{expected_prefix}'"
+                            )
+                except Exception as e:
+                    warnings.append(f"Could not read {file_path}: {e}")
+    return warnings
 
 def self_test():
     """Validate that the validator can detect a forbidden reference."""
@@ -90,6 +128,13 @@ def main():
         for forbidden in rules["forbidden"]:
             if forbidden in refs:
                 errors.append(f"{project_name} references forbidden project {forbidden}")
+
+    # Namespace convention warnings
+    warnings = validate_namespace_conventions(src_dir)
+    if warnings:
+        print("ARCHITECTURE WARNINGS (non‑fatal):")
+        for warn in warnings:
+            print(f"  ⚠ {warn}")
 
     if errors:
         print("ARCHITECTURE VALIDATION FAILED:")
