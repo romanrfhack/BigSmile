@@ -39,10 +39,20 @@ jobs:
     - name: Validate architecture
       run: python3 backend/scripts/validate_architecture.py
 
+    - name: Run backend unit tests
+      run: dotnet test backend/tests/BigSmile.UnitTests --configuration Release --no-build
+
+    - name: Run backend integration tests
+      run: dotnet test backend/tests/BigSmile.IntegrationTests --configuration Release --no-build
+
     - name: Install frontend dependencies
       run: npm ci
       working-directory: frontend
 
     - name: Build frontend
       run: npm run build
+      working-directory: frontend
+
+    - name: Run frontend tests
+      run: npm run test -- --watch=false
       working-directory: frontend

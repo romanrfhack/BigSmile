@@ -21,25 +21,59 @@ LAYERS = {
     "BigSmile.SharedKernel": {"forbidden": []},  # can be referenced by anyone
 }
 
+def self_test():
+    """Validate that the validator can detect a forbidden reference."""
+    import tempfile
+    import os
+    import sys
+    # Create a temporary .csproj with a forbidden reference
+    xml_content = r"""<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../BigSmile.Infrastructure/BigSmile.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>"""
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csproj', delete=False) as f:
+            f.write(xml_content)
+            temp_path = f.name
+        refs = get_project_references(temp_path)
+        os.unlink(temp_path)
+        if "BigSmile.Infrastructure" not in refs:
+            print("SELF-TEST FAILED: Validator failed to detect forbidden reference.", file=sys.stderr)
+            sys.exit(2)
+        else:
+            print("✓ Self-test passed: validator can detect references.")
+    except Exception as e:
+        print(f"SELF-TEST ERROR: {e}", file=sys.stderr)
+        sys.exit(2)
+
+
 def get_project_references(project_path):
     """Return list of referenced project names."""
     try:
         tree = ET.parse(project_path)
         root = tree.getroot()
-        ns = {"msbuild": "http://schemas.microsoft.com/developer/msbuild/2003"}
         refs = []
+        # Try with namespace (old .NET Framework)
+        ns = {"msbuild": "http://schemas.microsoft.com/developer/msbuild/2003"}
         for pr in root.findall(".//msbuild:ProjectReference", ns):
             include = pr.get("Include")
             if include:
-                # Extract project name from path
-                name = os.path.splitext(os.path.basename(include))[0]
+                name = os.path.splitext(os.path.basename(include.replace("\\\\", "/")))[0]
                 refs.append(name)
+        # If no namespaced references found, try without namespace (SDK style)
+        if not refs:
+            for pr in root.findall(".//ProjectReference"):
+                include = pr.get("Include")
+                if include:
+                    name = os.path.splitext(os.path.basename(include.replace("\\\\", "/")))[0]
+                    refs.append(name)
         return refs
     except Exception as e:
         print(f"ERROR parsing {project_path}: {e}", file=sys.stderr)
         return []
-
 def main():
+    self_test()
     src_dir = os.path.join(os.path.dirname(__file__), "..", "src")
     if not os.path.exists(src_dir):
         print(f"ERROR: Source directory not found at {src_dir}", file=sys.stderr)
