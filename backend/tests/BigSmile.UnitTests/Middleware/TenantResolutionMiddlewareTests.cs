@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -51,7 +52,7 @@ namespace BigSmile.UnitTests.Middleware
             _tenantContext = new TenantContext();
         }
 
-        private HttpContext CreateHttpContext(bool isDevelopment, string? tenantHeader = null, string? branchHeader = null)
+        private HttpContext CreateHttpContext(bool isDevelopment, string? tenantHeader = null, string? branchHeader = null, ClaimsPrincipal? user = null)
         {
             var mockHttpContext = new Mock<HttpContext>();
             var mockRequest = new Mock<HttpRequest>();
@@ -73,6 +74,10 @@ namespace BigSmile.UnitTests.Middleware
             serviceProvider.Setup(sp => sp.GetService(typeof(ILogger<TenantResolutionMiddleware>))).Returns(_testLogger);
 
             mockHttpContext.Setup(c => c.RequestServices).Returns(serviceProvider.Object);
+            
+            // Setup user (ClaimsPrincipal)
+            mockHttpContext.Setup(c => c.User).Returns(user ?? new ClaimsPrincipal());
+            
             return mockHttpContext.Object;
         }
 
@@ -91,7 +96,9 @@ namespace BigSmile.UnitTests.Middleware
             // Assert
             Assert.Equal("12345678-1234-1234-1234-123456789abc", _tenantContext.GetTenantId());
             Assert.Equal("87654321-4321-4321-4321-210987654321", _tenantContext.GetBranchId());
-            Assert.Empty(_testLogger.Logs); // No warnings/errors expected
+            // Should log debug messages for header resolution
+            Assert.Contains(_testLogger.Logs, log => log.LogLevel == LogLevel.Debug && log.Message!.Contains("Tenant resolved from header"));
+            Assert.Contains(_testLogger.Logs, log => log.LogLevel == LogLevel.Debug && log.Message!.Contains("Branch resolved from header"));
         }
 
         [Fact]

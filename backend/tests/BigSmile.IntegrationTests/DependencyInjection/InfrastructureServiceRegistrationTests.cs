@@ -1,12 +1,28 @@
 using BigSmile.Infrastructure;
 using BigSmile.SharedKernel.Context;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
 using Xunit;
 
 namespace BigSmile.IntegrationTests.DependencyInjection
 {
     public class InfrastructureServiceRegistrationTests
     {
+        private readonly IConfiguration _configuration;
+
+        public InfrastructureServiceRegistrationTests()
+        {
+            // Provide a minimal configuration with a dummy connection string
+            var configValues = new Dictionary<string, string?>
+            {
+                { "ConnectionStrings:DefaultConnection", "Server=(localdb)\\mssqllocaldb;Database=BigSmile_IntegrationTests;Trusted_Connection=True;MultipleActiveResultSets=true" }
+            };
+            _configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(configValues)
+                .Build();
+        }
+
         [Fact]
         public void AddInfrastructure_RegistersTenantContextAsScoped()
         {
@@ -14,7 +30,7 @@ namespace BigSmile.IntegrationTests.DependencyInjection
             var services = new ServiceCollection();
 
             // Act
-            services.AddInfrastructure();
+            services.AddInfrastructure(_configuration);
             var provider = services.BuildServiceProvider();
 
             // Assert

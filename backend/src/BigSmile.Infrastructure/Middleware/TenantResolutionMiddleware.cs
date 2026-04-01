@@ -18,31 +18,52 @@ namespace BigSmile.Infrastructure.Middleware
 
         public async Task InvokeAsync(HttpContext httpContext, TenantContext tenantContext)
         {
-            // Get environment and logger
-            var env = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
             var logger = httpContext.RequestServices.GetRequiredService<ILogger<TenantResolutionMiddleware>>();
+            var env = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
 
-            // Header-based tenant resolution is allowed only in Development environment
+            // 1. Try to resolve tenant from JWT claim (preferred)
+            var user = httpContext.User;
+            if (user != null)
+            {
+                var tenantClaim = user.Claims.FirstOrDefault(c => c.Type == "tenant_id");
+                var branchClaim = user.Claims.FirstOrDefault(c => c.Type == "branch_id");
+                
+                if (tenantClaim != null)
+                {
+                    // Tenant resolved from JWT claim
+                    tenantContext.SetTenantId(tenantClaim.Value);
+                    logger.LogDebug("Tenant resolved from JWT claim: {TenantId}", tenantClaim.Value);
+                    
+                    if (branchClaim != null)
+                    {
+                        tenantContext.SetBranchId(branchClaim.Value);
+                        logger.LogDebug("Branch resolved from JWT claim: {BranchId}", branchClaim.Value);
+                    }
+                    
+                    await _next(httpContext);
+                    return;
+                }
+            }
+
+            // 2. No tenant claim present; check if we're in development environment
             if (!env.IsDevelopment())
             {
-                // Check if headers are present (even if we will ignore them)
-                var tenantId = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
-                var branchId = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
-                if (!string.IsNullOrEmpty(tenantId) || !string.IsNullOrEmpty(branchId))
+                // Non-development environment: header-based resolution is forbidden
+                var tenantHeader = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+                var branchHeader = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(tenantHeader) || !string.IsNullOrEmpty(branchHeader))
                 {
                     logger.LogError(
-                        "Header-based tenant resolution is not allowed in non-development environments. " +
+                        "Header-based tenant resolution is not allowed in non-development environments when JWT claim is missing. " +
                         "Request headers X-Tenant-Id and X-Branch-Id are ignored. " +
                         "Use a secure tenant resolution strategy (e.g., JWT claims, subdomain).");
                 }
-                // Do NOT set tenant/branch from headers in non-development
-                // The tenant context will remain empty, which will cause downstream authorization to fail.
-                // This is intentional: it forces the adoption of a proper tenant resolution strategy.
+                // Tenant context remains empty; downstream authorization will fail.
                 await _next(httpContext);
                 return;
             }
 
-            // Development environment: allow header-based resolution (with warnings if malformed)
+            // 3. Development environment: allow header-based resolution (with warnings if malformed)
             var tenantIdDev = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
             var branchIdDev = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
 
@@ -66,10 +87,16 @@ namespace BigSmile.Infrastructure.Middleware
             }
 
             if (!string.IsNullOrEmpty(tenantIdDev))
+            {
                 tenantContext.SetTenantId(tenantIdDev);
+                logger.LogDebug("Tenant resolved from header (development only): {TenantId}", tenantIdDev);
+            }
 
             if (!string.IsNullOrEmpty(branchIdDev))
+            {
                 tenantContext.SetBranchId(branchIdDev);
+                logger.LogDebug("Branch resolved from header (development only): {BranchId}", branchIdDev);
+            }
 
             await _next(httpContext);
         }
