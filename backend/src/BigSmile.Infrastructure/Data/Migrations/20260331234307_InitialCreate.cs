@@ -139,7 +139,7 @@ namespace BigSmile.Infrastructure.Data.Migrations
                         column: x => x.BranchId,
                         principalTable: "Branches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_UserBranchAssignments_UserTenantMemberships_MembershipId",
                         column: x => x.MembershipId,

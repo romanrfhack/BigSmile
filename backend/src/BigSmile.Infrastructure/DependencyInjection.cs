@@ -20,11 +20,9 @@ namespace BigSmile.Infrastructure
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-            // Register repositories (still in-memory for now; later replace with EF implementations)
-            services.AddSingleton<ITenantRepository, InMemoryTenantRepository>();
-            services.AddSingleton<IBranchRepository, InMemoryBranchRepository>();
-
             // Register EF-based repositories (scoped, as they depend on DbContext)
+            services.AddScoped<ITenantRepository, EfTenantRepository>();
+            services.AddScoped<IBranchRepository, EfBranchRepository>();
             services.AddScoped<IUserRepository, EfUserRepository>();
             services.AddScoped<IRoleRepository, EfRoleRepository>();
             services.AddScoped<IUserTenantMembershipRepository, EfUserTenantMembershipRepository>();

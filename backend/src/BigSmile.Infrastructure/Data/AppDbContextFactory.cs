@@ -9,9 +9,15 @@ namespace BigSmile.Infrastructure.Data
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            var currentDirectory = Directory.GetCurrentDirectory();
+            var startupProjectDirectory = Path.Combine(currentDirectory, "..", "BigSmile.Api");
+            var basePath = Directory.Exists(startupProjectDirectory) ? startupProjectDirectory : currentDirectory;
+
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(basePath)
+                .AddJsonFile("appsettings.json", optional: true)
                 .AddJsonFile("appsettings.Development.json", optional: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();

@@ -30,7 +30,7 @@ namespace BigSmile.Infrastructure.Data.Configurations
             builder.HasOne(a => a.Branch)
                 .WithMany() // Branch does not have a navigation property to assignments yet
                 .HasForeignKey(a => a.BranchId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
