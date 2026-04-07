@@ -18,16 +18,24 @@ Initial product direction:
 - Long-term goal: scalable, maintainable, secure, multi-tenant product for multiple clinics
 
 # Mandatory reading order
-Before proposing or implementing any change, always read and follow these files if present:
+Before proposing or implementing any change, always read and follow these sources in this order if present:
 
-1. README.md
-2. docs/architecture.md
-3. docs/tenant-model.md
-4. docs/product-roadmap.md
-5. docs/contributing.md
-6. docs/decisions/*.md
+1. `STATE — BigSmile.md`
+2. `AGENTS.md`
+3. `README.md`
+4. `PROJECT_MAP.md`
+5. `REVIEW_RULES.md`
+6. `docs/architecture.md`
+7. `docs/tenant-model.md`
+8. `docs/product-roadmap.md`
+9. `docs/contributing.md`
+10. `docs/decisions/*.md`
 
-If any of these documents conflict with local code assumptions, prefer the documented architecture and report the conflict.
+Then inspect the relevant code, tests, and current repository structure.
+
+Treat `STATE — BigSmile.md` as the canonical starting point for current project status.
+If these sources diverge from the repository, summarize the drift explicitly and use the canonical state plus the actual codebase to choose the next safe step.
+Do not invent implemented modules, completed releases, or functional coverage that are not confirmed by code and aligned documentation.
 
 # Working mode
 Operate with high autonomy, but not with hidden assumptions.
@@ -40,7 +48,7 @@ Default behavior:
 
 # Decision policy
 You may decide without asking when:
-- The change is clearly aligned with README.md and docs/*
+- The change is clearly aligned with `STATE — BigSmile.md`, `README.md`, and the project docs
 - The change is local, safe, and reversible
 - Naming, file placement, folder structure, and implementation style are already implied by the architecture
 - A missing detail can be resolved using the documented principles without changing product direction
@@ -48,6 +56,7 @@ You may decide without asking when:
 You must ask before proceeding when:
 - The decision changes a core product rule
 - The decision affects tenant isolation rules
+- The decision changes tenant resolution strategy
 - The decision changes authentication/session strategy
 - The decision changes authorization scope or role semantics
 - The decision introduces external services, paid dependencies, or vendor lock-in
@@ -79,31 +88,32 @@ You must ask before proceeding when:
 - Product model: multi-tenant SaaS
 
 # Current product direction
-Build in this order unless the documentation changes:
+This repository is beyond the initial bootstrap / early foundation stage.
 
-Release 0:
-- foundation / bootstrap
-- solution structure
-- multi-tenancy base
-- auth / authz
-- tenant and branch context
-- error handling
-- auditing
-- logging
-- architecture tests
-- CI foundation
+Canonical project status:
+- `Foundation / Release 0 base`: completed
+- `Pre-auth hardening`: completed
+- `Identity + Persistence Foundation`: completed
 
-Then continue according to docs/product-roadmap.md.
+Next planned phase:
+- `Tenant-Aware Authorization Foundation`
+
+Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
+Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
+After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help bootstrap the project foundation in alignment with the repository documentation.
+Help build and stabilize `Tenant-Aware Authorization Foundation` in alignment with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
-If the repository is empty or nearly empty:
-1. audit current files
-2. summarize what exists
-3. propose a minimal foundation plan
-4. implement the foundation in small steps
-5. document decisions and results for review
+Immediate priorities:
+- tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
+- authorization decisions based on scope (`platform` / `tenant` / `branch`), membership, role, and permission
+- preservation of tenant isolation across identity, persistence, and access enforcement
+- explicit and auditable privileged/platform paths
+- automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios
+- documentation and ADR updates when tenant resolution, auth/session, or authorization behavior materially changes
+
+If a task touches later functional roadmap modules, keep the change bounded and do not assume unfinished business modules already exist.
 
 # Implementation style
 - Prefer clear and conventional naming
@@ -126,22 +136,30 @@ For any non-trivial task:
 When making important changes, update the relevant documentation.
 
 At minimum, keep these aligned:
-- README.md
-- docs/architecture.md
-- docs/tenant-model.md
-- docs/product-roadmap.md
-- docs/contributing.md
-- docs/decisions/*.md
+- `STATE — BigSmile.md`
+- `AGENTS.md`
+- `README.md`
+- `PROJECT_MAP.md`
+- `REVIEW_RULES.md`
+- `docs/architecture.md`
+- `docs/tenant-model.md`
+- `docs/product-roadmap.md`
+- `docs/contributing.md`
+- `docs/decisions/*.md`
 
 Create or update an ADR when a change affects:
 - architecture style
 - tenant model
+- tenant resolution strategy
 - authentication/session strategy
 - authorization model
 - database tenancy strategy
 - major module boundaries
 - major frontend state strategy
 - important integration patterns
+
+If project status advances to a new completed phase, reflect it in `STATE — BigSmile.md` and reconcile the rest of the base documentation accordingly.
+Do not leave `AGENTS.md` or other base docs describing the repository as bootstrap-stage once the canonical state has moved forward.
 
 # Reviewability requirements
 Every meaningful task should leave enough evidence for later review by humans or CODEX.
@@ -163,7 +181,7 @@ Expected validation types:
 - frontend build
 - unit tests
 - integration tests
-- architecture tests
+- architecture validation / architecture tests
 - linting / formatting
 - e2e tests when relevant
 
@@ -207,6 +225,8 @@ Before finalizing any backend or data-access change, verify:
 - Do not mix platform and tenant concerns casually
 - Do not create large mixed-purpose diffs when smaller ones are possible
 - Do not optimize prematurely for microservices or advanced distributed complexity
+- Do not assume the repository is empty or nearly empty as the default working condition
+- No functional roadmap release should be treated as completed unless the actual codebase and aligned documentation explicitly prove it
 
 # Escalation rule
 If blocked, do not stop at a vague message.
