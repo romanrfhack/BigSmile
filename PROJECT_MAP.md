@@ -1,6 +1,3 @@
-`PROJECT_MAP.md`
-
-````md
 # PROJECT_MAP.md
 
 # Project
@@ -52,28 +49,25 @@ Initial product direction:
 
 ## 2. Current Repository State
 
-This repository is in **early foundation / bootstrap stage** unless code indicates otherwise.
+This repository is beyond the early foundation / bootstrap stage.
 
-Expected initial state:
-- documentation exists
-- architecture direction is defined
-- implementation may still be partial or empty
-- foundation work takes priority over feature sprawl
+Canonical project status:
+
+* **Foundation / Release 0 base:** completed
+* **Pre-auth hardening:** completed
+* **Identity + Persistence Foundation:** completed
 
 ### Current expected priority
-Build and stabilize:
-- solution structure
-- backend foundation
-- frontend foundation
-- multi-tenancy base
-- auth / authz base
-- error handling
-- auditing
-- logging
-- architecture tests
-- CI foundation
 
-Do not treat the repository as feature-complete unless the actual codebase clearly proves it.
+Build and stabilize:
+
+* **Tenant-Aware Authorization Foundation**
+* authorization aligned with tenant scope and branch scope where applicable
+* preservation of tenant isolation across identity, persistence, and access enforcement
+* explicit and auditable privileged/platform paths where required
+* continued validation through CI, tests, logging, auditing, and architectural guardrails
+
+Do not treat the repository as feature-complete unless the actual codebase clearly proves it. No functional roadmap release should be treated as closed without explicit code and documentation evidence.
 
 ---
 
@@ -91,7 +85,7 @@ Expected layout:
   backend/
   frontend/
   .github/
-````
+```
 
 ### Root-level intent
 
@@ -751,17 +745,16 @@ When working in this repo:
 7. Update docs if structure or rules changed
 8. Leave a clear summary for human/CODEX review
 
-### If the repo is still mostly empty
+#### Agent Workflow Guidance note
 
-Prefer:
+If a specific area is still sparse or scaffold-only, prefer:
 
-* foundation
-* scaffolding
+* finishing its local foundation
 * conventions
 * architecture guardrails
 * minimal vertical slice examples
 
-Do not jump too early into many business features at once.
+Do not expand many business features at once from a still-sparse area.
 
 ---
 
@@ -843,4 +836,3 @@ For any new file, feature, or change, ask:
 
 **Does this belong in the right place and preserve Bigsmile as a secure, maintainable, multi-tenant SaaS product?**
 
-```

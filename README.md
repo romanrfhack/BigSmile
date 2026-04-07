@@ -1,5 +1,3 @@
-# BigSmile
-````md
 # Bigsmile
 
 **Bigsmile** is a SaaS platform for managing dental clinics and private practices.  
@@ -154,7 +152,7 @@ backend/
     BigSmile.UnitTests/
     BigSmile.IntegrationTests/
     BigSmile.ArchitectureTests/
-````
+```
 
 ### Frontend structure
 
@@ -247,9 +245,17 @@ Bigsmile treats security as a foundational concern.
 
 ## Current Status
 
-This repository is currently in the **foundation / bootstrap** stage.
+Bigsmile is no longer in the initial bootstrap stage.
 
-The immediate goal is to establish the technical and architectural base of the product before developing full business modules.
+Completed foundation milestones:
+
+* **Foundation / Release 0 base**
+* **Pre-auth hardening**
+* **Identity + Persistence Foundation**
+
+The next planned phase is **Tenant-Aware Authorization Foundation**.
+
+The repository should be treated as having an established technical and architectural foundation, but not as functionally complete. No functional roadmap release should be assumed closed unless the codebase and aligned documentation explicitly prove it.
 
 ---
 
@@ -316,7 +322,7 @@ The immediate goal is to establish the technical and architectural base of the p
 
 ## Local Development
 
-> To be completed once the initial bootstrap is generated.
+> Update this section to match the current runnable setup of the repository; the project is beyond the initial bootstrap stage.
 
 ### Expected prerequisites
 
@@ -348,7 +354,7 @@ npm run start
 
 ## Environment Configuration
 
-> To be documented after the foundation is created.
+> Update this section to match the current environment contract of the repository; the base foundation is already established.
 
 Expected configuration includes:
 
@@ -362,7 +368,7 @@ Expected configuration includes:
 
 ## Testing Strategy
 
-> To be completed after test projects are created.
+> Update this section to reflect the current automated validation baseline already present in the repository.
 
 The project is expected to include:
 
@@ -415,4 +421,3 @@ The goal is not only to make it work, but to build a foundation that can support
 
 Pending definition.
 
-```
