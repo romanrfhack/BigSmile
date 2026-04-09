@@ -15,6 +15,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<UserTenantMembership> UserTenantMemberships => Set<UserTenantMembership>();
         public DbSet<UserBranchAssignment> UserBranchAssignments => Set<UserBranchAssignment>();
+        public DbSet<Patient> Patients => Set<Patient>();
 
         private readonly IConfiguration _configuration;
         private readonly TenantContext _tenantContext;
@@ -41,6 +42,9 @@ namespace BigSmile.Infrastructure.Data
 
             modelBuilder.Entity<UserTenantMembership>().HasQueryFilter(membership =>
                 !ShouldApplyTenantFilter || membership.TenantId == ResolvedTenantId);
+
+            modelBuilder.Entity<Patient>().HasQueryFilter(patient =>
+                !ShouldApplyTenantFilter || patient.TenantId == ResolvedTenantId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

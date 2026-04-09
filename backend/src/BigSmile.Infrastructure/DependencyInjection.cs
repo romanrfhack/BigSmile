@@ -23,6 +23,7 @@ namespace BigSmile.Infrastructure
             // Register EF-based repositories (scoped, as they depend on DbContext)
             services.AddScoped<ITenantRepository, EfTenantRepository>();
             services.AddScoped<IBranchRepository, EfBranchRepository>();
+            services.AddScoped<IPatientRepository, EfPatientRepository>();
             services.AddScoped<IUserRepository, EfUserRepository>();
             services.AddScoped<IRoleRepository, EfRoleRepository>();
             services.AddScoped<IUserTenantMembershipRepository, EfUserTenantMembershipRepository>();

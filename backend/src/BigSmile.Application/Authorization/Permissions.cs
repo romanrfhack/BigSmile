@@ -7,5 +7,7 @@ namespace BigSmile.Application.Authorization
         public const string TenantRead = "tenant.read";
         public const string BranchReadAny = "branch.read.any";
         public const string BranchReadAssigned = "branch.read.assigned";
+        public const string PatientRead = "patient.read";
+        public const string PatientWrite = "patient.write";
     }
 }

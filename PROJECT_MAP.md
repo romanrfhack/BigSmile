@@ -60,12 +60,13 @@ Canonical project status:
 
 ### Current expected priority
 
-Begin carefully:
+Continue carefully:
 
 * **Release 1 — Patients**
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline
 * while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
 * with continued validation through CI, tests, logging, auditing, and architectural guardrails
+* building forward from the first implemented patient slice covering registration, update, search, profile, responsible party, and active/inactive status
 
 Do not treat the repository as feature-complete unless the actual codebase clearly proves it. No functional roadmap release should be treated as closed without explicit code and documentation evidence.
 

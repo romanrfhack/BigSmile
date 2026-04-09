@@ -22,13 +22,17 @@ namespace BigSmile.Application.Authorization
                 {
                     Permissions.AuthSelfRead,
                     Permissions.TenantRead,
-                    Permissions.BranchReadAny
+                    Permissions.BranchReadAny,
+                    Permissions.PatientRead,
+                    Permissions.PatientWrite
                 },
                 [SystemRoles.TenantUser] = new[]
                 {
                     Permissions.AuthSelfRead,
                     Permissions.TenantRead,
-                    Permissions.BranchReadAssigned
+                    Permissions.BranchReadAssigned,
+                    Permissions.PatientRead,
+                    Permissions.PatientWrite
                 }
             };
 

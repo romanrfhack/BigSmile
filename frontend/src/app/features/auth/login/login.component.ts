@@ -129,7 +129,7 @@ export class LoginComponent {
     this.authService.login(this.credentials).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/app']);
+        this.router.navigate(['/patients']);
       },
       error: (err) => {
         this.loading = false;

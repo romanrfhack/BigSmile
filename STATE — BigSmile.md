@@ -42,9 +42,11 @@
 
 [Hecho] La última fase marcada como completada es Tenant-Aware Authorization Foundation.
 
+[Hecho] Release 1 — Patients ya fue abierta con un primer vertical slice funcional y acotado.
+
 [Hecho] README.md, PROJECT_MAP.md y AGENTS.md ya fueron reconciliados con este estado canónico y ubican al repositorio más allá del bootstrap / early foundation stage.
 
-[Inferencia operativa] El proyecto queda listo para abrir Release 1 — Patients sobre una base de autorización tenant-aware ya validada.
+[Hecho + Inferencia operativa] El proyecto ya no está solo “listo para abrir” Patients; ahora tiene una primera base implementada del módulo sobre la autorización tenant-aware ya validada.
 
 [Hecho combinado] Lo ya establecido a nivel fundacional incluye, como mínimo:
 - estructura de solución
@@ -60,13 +62,27 @@
 - CI
 - pruebas backend y frontend de baseline
 
+[Hecho] El primer slice de Patients implementado hasta ahora cubre:
+- registro de paciente
+- actualización de paciente
+- búsqueda tenant-scoped de pacientes
+- consulta de perfil básico
+- responsible party inline
+- estatus activo/inactivo
+- persistencia EF Core + migración inicial del módulo
+- endpoints y permisos explícitos `patient.read` / `patient.write`
+
+[Hecho] Este slice inicial mantiene el modelo de paciente tenant-owned y branch-neutral; no introduce aún clinical alerts, expediente clínico, scheduling ni otros módulos posteriores.
+
 [Hecho] No existe evidencia canónica de cierre para los releases funcionales 1–7 del roadmap; por tanto, Patients, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados/cerrados.
 
 ## 5. Siguiente fase prevista
 
 **Nombre exacto** — [Hecho] Release 1 — Patients.
 
-**Objetivo** — [Hecho + Inferencia alineada a docs] Abrir el primer módulo funcional real del producto sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y override de plataforma explícito.
+**Objetivo** — [Hecho + Inferencia alineada a docs] Continuar Release 1 — Patients sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y override de plataforma explícito.
+
+**Estado operativo actual** — [Hecho] El release ya comenzó con un slice fundacional pequeño y coherente; todavía no debe tratarse como release cerrado.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -100,15 +116,17 @@
 
 Lista priorizada:
 
-1. Abrir Release 1 — Patients sin debilitar la fundación tenant-aware ya cerrada.
+1. Continuar Release 1 — Patients sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Reutilizar el modelo de authorization por scope/membership/permiso al introducir los primeros use cases de pacientes.
+2. Extender el slice inicial de Patients sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada.
 
-3. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
+3. Reutilizar el modelo de authorization por scope/membership/permiso al introducir más use cases de pacientes.
 
-4. Extender el catálogo de permisos solo junto con módulos reales, evitando inflarlo antes de tiempo.
+4. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
 
-5. Mantener sincronizados STATE — BigSmile.md, README.md, PROJECT_MAP.md y AGENTS.md cuando avance el estado del proyecto.
+5. Extender el catálogo de permisos solo junto con módulos reales, evitando inflarlo antes de tiempo.
+
+6. Mantener sincronizados STATE — BigSmile.md, README.md, PROJECT_MAP.md y AGENTS.md cuando avance el estado del proyecto.
 
 ## 8. Criterios para no perder el rumbo
 

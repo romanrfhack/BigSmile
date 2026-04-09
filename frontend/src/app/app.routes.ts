@@ -2,6 +2,9 @@ import { Routes } from '@angular/router';
 import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
 import { LoginComponent } from './features/auth/login/login.component';
 import { SessionHomeComponent } from './features/auth/session-home/session-home.component';
+import { PatientFormPageComponent } from './features/patients/pages/patient-form.page';
+import { PatientListPageComponent } from './features/patients/pages/patient-list.page';
+import { PatientProfilePageComponent } from './features/patients/pages/patient-profile.page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, canActivate: [anonymousOnlyGuard] },
@@ -13,6 +16,38 @@ export const routes: Routes = [
       requiredPermissions: ['auth.self.read']
     }
   },
-  { path: '', redirectTo: '/app', pathMatch: 'full' },
-  { path: '**', redirectTo: '/app' }
+  {
+    path: 'patients',
+    component: PatientListPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['patient.read']
+    }
+  },
+  {
+    path: 'patients/new',
+    component: PatientFormPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['patient.write']
+    }
+  },
+  {
+    path: 'patients/:id/edit',
+    component: PatientFormPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['patient.write']
+    }
+  },
+  {
+    path: 'patients/:id',
+    component: PatientProfilePageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['patient.read']
+    }
+  },
+  { path: '', redirectTo: '/patients', pathMatch: 'full' },
+  { path: '**', redirectTo: '/patients' }
 ];
