@@ -1,3 +1,4 @@
+using BigSmile.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -25,7 +26,7 @@ namespace BigSmile.Infrastructure.Data
                 ?? "Server=(localdb)\\mssqllocaldb;Database=BigSmile;Trusted_Connection=True;MultipleActiveResultSets=true";
             optionsBuilder.UseSqlServer(connectionString);
 
-            return new AppDbContext(optionsBuilder.Options, configuration);
+            return new AppDbContext(optionsBuilder.Options, configuration, new TenantContext());
         }
     }
 }

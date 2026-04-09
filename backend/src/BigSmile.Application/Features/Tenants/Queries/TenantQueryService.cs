@@ -6,6 +6,7 @@ namespace BigSmile.Application.Features.Tenants.Queries
     public interface ITenantQueryService
     {
         Task<TenantDto?> GetTenantByIdAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TenantDto>> GetAllTenantsAsync(CancellationToken cancellationToken = default);
     }
 
     public class TenantQueryService : ITenantQueryService
@@ -30,6 +31,20 @@ namespace BigSmile.Application.Features.Tenants.Queries
                 tenant.IsActive,
                 tenant.CreatedAt,
                 tenant.UpdatedAt);
+        }
+
+        public async Task<IReadOnlyList<TenantDto>> GetAllTenantsAsync(CancellationToken cancellationToken = default)
+        {
+            var tenants = await _tenantRepository.GetAllAsync(cancellationToken);
+            return tenants
+                .Select(tenant => new TenantDto(
+                    tenant.Id,
+                    tenant.Name,
+                    tenant.Subdomain,
+                    tenant.IsActive,
+                    tenant.CreatedAt,
+                    tenant.UpdatedAt))
+                .ToList();
         }
     }
 }

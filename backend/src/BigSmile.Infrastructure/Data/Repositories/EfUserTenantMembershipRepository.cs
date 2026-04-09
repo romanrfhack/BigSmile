@@ -20,6 +20,7 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .Include(m => m.Tenant)
                 .Include(m => m.Role)
                 .Include(m => m.BranchAssignments)
+                .ThenInclude(a => a.Branch)
                 .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
         }
 
@@ -30,6 +31,7 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .Include(m => m.Tenant)
                 .Include(m => m.Role)
                 .Include(m => m.BranchAssignments)
+                .ThenInclude(a => a.Branch)
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.TenantId == tenantId, cancellationToken);
         }
 
@@ -38,6 +40,8 @@ namespace BigSmile.Infrastructure.Data.Repositories
             return await _dbContext.UserTenantMemberships
                 .Include(m => m.Tenant)
                 .Include(m => m.Role)
+                .Include(m => m.BranchAssignments)
+                .ThenInclude(a => a.Branch)
                 .Where(m => m.UserId == userId)
                 .ToListAsync(cancellationToken);
         }

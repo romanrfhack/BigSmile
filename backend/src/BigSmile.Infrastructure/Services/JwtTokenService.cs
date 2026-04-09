@@ -1,5 +1,6 @@
 using BigSmile.Domain.Entities;
 using BigSmile.Infrastructure.Options;
+using BigSmile.SharedKernel.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,8 +10,15 @@ namespace BigSmile.Infrastructure.Services
 {
     public interface IJwtTokenService
     {
-        string GenerateToken(User user, Tenant? tenant, Role role);
+        string GenerateToken(User user, AuthTokenDescriptor descriptor);
     }
+
+    public sealed record AuthTokenDescriptor(
+        string RoleName,
+        AccessScope Scope,
+        IReadOnlyCollection<string> Permissions,
+        Tenant? Tenant = null,
+        Branch? CurrentBranch = null);
 
     public class JwtTokenService : IJwtTokenService
     {
@@ -21,7 +29,7 @@ namespace BigSmile.Infrastructure.Services
             _jwtSettings = jwtSettings;
         }
 
-        public string GenerateToken(User user, Tenant? tenant, Role role)
+        public string GenerateToken(User user, AuthTokenDescriptor descriptor)
         {
             var claims = new List<Claim>
             {
@@ -29,17 +37,27 @@ namespace BigSmile.Infrastructure.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim("role", role.Name)
+                new Claim(ClaimTypes.Role, descriptor.RoleName),
+                new Claim(BigSmileClaimTypes.Role, descriptor.RoleName),
+                new Claim(BigSmileClaimTypes.Scope, descriptor.Scope.ToClaimValue())
             };
 
-            // Add tenant claim if tenant is provided
-            if (tenant != null)
+            foreach (var permission in descriptor.Permissions.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                claims.Add(new Claim("tenant_id", tenant.Id.ToString()));
-                claims.Add(new Claim("tenant_name", tenant.Name));
+                claims.Add(new Claim(BigSmileClaimTypes.Permission, permission));
             }
 
-            // Add branch claims if needed (maybe later)
+            if (descriptor.Tenant != null)
+            {
+                claims.Add(new Claim(BigSmileClaimTypes.TenantId, descriptor.Tenant.Id.ToString()));
+                claims.Add(new Claim(BigSmileClaimTypes.TenantName, descriptor.Tenant.Name));
+            }
+
+            if (descriptor.CurrentBranch != null)
+            {
+                claims.Add(new Claim(BigSmileClaimTypes.BranchId, descriptor.CurrentBranch.Id.ToString()));
+                claims.Add(new Claim(BigSmileClaimTypes.BranchName, descriptor.CurrentBranch.Name));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

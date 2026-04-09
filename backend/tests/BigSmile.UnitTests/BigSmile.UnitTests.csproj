@@ -24,6 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../src/BigSmile.Api/BigSmile.Api.csproj" />
+    <ProjectReference Include="../../src/BigSmile.Application/BigSmile.Application.csproj" />
     <ProjectReference Include="../../src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj" />
     <ProjectReference Include="../../src/BigSmile.SharedKernel/BigSmile.SharedKernel.csproj" />
   </ItemGroup>

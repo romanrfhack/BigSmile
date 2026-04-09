@@ -128,12 +128,14 @@ export class LoginComponent {
 
     this.authService.login(this.credentials).subscribe({
       next: () => {
-        // Redirect to home or dashboard (to be implemented)
-        this.router.navigate(['/']);
+        this.loading = false;
+        this.router.navigate(['/app']);
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.message || 'Login failed. Please check your credentials.';
+        this.error = typeof err.error === 'string'
+          ? err.error
+          : err.error?.message || 'Login failed. Please check your credentials.';
       }
     });
   }

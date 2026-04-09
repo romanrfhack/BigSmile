@@ -1,8 +1,9 @@
 using BigSmile.SharedKernel;
+using BigSmile.SharedKernel.Multitenancy;
 
 namespace BigSmile.Domain.Entities
 {
-    public class Branch : Entity<Guid>
+    public class Branch : Entity<Guid>, ITenantOwnedEntity
     {
         public Tenant Tenant { get; private set; } = null!;
         public Guid TenantId { get; private set; }

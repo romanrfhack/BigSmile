@@ -247,6 +247,11 @@ For platform administrators:
 - tenant override must be audited
 - tenant override must be blocked in contexts where it is not needed
 
+Current foundation note:
+- authenticated requests resolve `user id`, `tenant id`, `branch id`, and `scope` from JWT claims
+- development headers remain a local fallback only for anonymous requests
+- platform override is activated by explicit authorization policy/handler flow, not by general request headers
+
 ### 8.2 TenantContext
 
 Every authenticated request should have a request-scoped `TenantContext`.
@@ -257,6 +262,7 @@ Every authenticated request should have a request-scoped `TenantContext`.
 - current user id
 - current access scope
 - whether the request is platform-scoped or tenant-scoped
+- whether an explicit platform override is active for the current request
 
 ### 8.3 BranchContext
 
@@ -338,6 +344,8 @@ Tenant isolation must be enforced technically in multiple layers.
 - EF Core global query filters must enforce tenant isolation
 - repository access must respect tenant scope
 - bypass mechanisms must be explicit and limited
+- the current foundation filters `Tenant`, `Branch`, and `UserTenantMembership` during authenticated requests
+- authenticated writes must fail when the target tenant does not match the current tenant context unless an explicit platform override is active
 
 ### 10.4 API Layer
 - transport contracts must not allow unsafe direct tenant selection in normal tenant flows
@@ -385,6 +393,7 @@ These may operate outside normal tenant filters, but only:
 - securely
 - with audit trail
 - with narrow authorization
+- through policy-gated override activation rather than silent platform bypass
 
 ### 11.3 Dual-Mode Operations
 Some features may later support both modes.
@@ -407,6 +416,13 @@ It must combine:
 - role
 - permission
 - scope of operation
+
+Current foundational permission set:
+- `auth.self.read`
+- `platform.tenants.read`
+- `tenant.read`
+- `branch.read.any`
+- `branch.read.assigned`
 
 ### Example access logic
 

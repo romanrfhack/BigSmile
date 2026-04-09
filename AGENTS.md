@@ -94,24 +94,25 @@ Canonical project status:
 - `Foundation / Release 0 base`: completed
 - `Pre-auth hardening`: completed
 - `Identity + Persistence Foundation`: completed
+- `Tenant-Aware Authorization Foundation`: completed
 
 Next planned phase:
-- `Tenant-Aware Authorization Foundation`
+- `Release 1 — Patients`
 
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
 Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help build and stabilize `Tenant-Aware Authorization Foundation` in alignment with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation while starting `Release 1 — Patients` in alignment with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
-- tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
-- authorization decisions based on scope (`platform` / `tenant` / `branch`), membership, role, and permission
-- preservation of tenant isolation across identity, persistence, and access enforcement
-- explicit and auditable privileged/platform paths
-- automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios
-- documentation and ADR updates when tenant resolution, auth/session, or authorization behavior materially changes
+- preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
+- keep authorization decisions based on scope (`platform` / `tenant` / `branch`), membership, role, and permission
+- preserve tenant isolation across identity, persistence, and access enforcement while new business modules appear
+- keep privileged/platform paths explicit and auditable
+- maintain automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios
+- update documentation and ADRs whenever tenant resolution, auth/session, authorization, or patient-module behavior materially changes
 
 If a task touches later functional roadmap modules, keep the change bounded and do not assume unfinished business modules already exist.
 

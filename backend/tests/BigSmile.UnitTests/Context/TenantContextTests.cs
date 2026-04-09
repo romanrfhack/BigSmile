@@ -1,3 +1,4 @@
+using BigSmile.SharedKernel.Authorization;
 using BigSmile.Infrastructure.Context;
 using Xunit;
 
@@ -42,12 +43,20 @@ namespace BigSmile.UnitTests.Context
             var context = new TenantContext();
 
             // Act
+            var userId = context.GetUserId();
             var tenantId = context.GetTenantId();
             var branchId = context.GetBranchId();
+            var accessScope = context.GetAccessScope();
+            var isAuthenticated = context.IsAuthenticated();
+            var hasPlatformOverride = context.HasPlatformOverride();
 
             // Assert
+            Assert.Null(userId);
             Assert.Null(tenantId);
             Assert.Null(branchId);
+            Assert.Equal(AccessScope.Anonymous, accessScope);
+            Assert.False(isAuthenticated);
+            Assert.False(hasPlatformOverride);
         }
 
         [Fact]
@@ -65,6 +74,36 @@ namespace BigSmile.UnitTests.Context
             // Assert
             Assert.Null(context.GetTenantId());
             Assert.Null(context.GetBranchId());
+        }
+
+        [Fact]
+        public void SetRequestContext_PopulatesResolvedAccessContext()
+        {
+            var context = new TenantContext();
+
+            context.SetRequestContext(
+                userId: "user-1",
+                accessScope: AccessScope.Branch,
+                isAuthenticated: true,
+                tenantId: "tenant-1",
+                branchId: "branch-1");
+
+            Assert.Equal("user-1", context.GetUserId());
+            Assert.Equal("tenant-1", context.GetTenantId());
+            Assert.Equal("branch-1", context.GetBranchId());
+            Assert.Equal(AccessScope.Branch, context.GetAccessScope());
+            Assert.True(context.IsAuthenticated());
+        }
+
+        [Fact]
+        public void EnablePlatformOverride_SetsOverrideFlag()
+        {
+            var context = new TenantContext();
+            context.SetRequestContext("user-1", AccessScope.Platform, isAuthenticated: true);
+
+            context.EnablePlatformOverride();
+
+            Assert.True(context.HasPlatformOverride());
         }
     }
 }

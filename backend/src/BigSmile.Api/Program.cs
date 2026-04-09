@@ -1,7 +1,9 @@
+using BigSmile.Api.Authorization;
 using BigSmile.Application;
 using BigSmile.Infrastructure;
 using BigSmile.Infrastructure.Middleware;
 using BigSmile.Infrastructure.Options;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
 
 // Register application layer (MediatR handlers)
 builder.Services.AddApplication();
@@ -44,6 +47,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAuthorization(AuthorizationPolicies.AddPolicies);
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
 var app = builder.Build();
 
 // Initialize database (seed data) in development
@@ -70,10 +76,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
-app.UseAuthorization();
-
-// Custom middleware for tenant resolution (must be before controllers)
 app.UseMiddleware<TenantResolutionMiddleware>();
+app.UseAuthorization();
 
 app.MapControllers();
 

@@ -1,5 +1,7 @@
+using BigSmile.Application.Authorization;
 using BigSmile.Infrastructure.Context;
 using BigSmile.Infrastructure.Middleware;
+using BigSmile.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -82,7 +84,31 @@ namespace BigSmile.UnitTests.Middleware
         }
 
         [Fact]
-        public async Task InvokeAsync_Development_WithValidGuidHeaders_SetsTenantAndBranch()
+        public async Task InvokeAsync_AuthenticatedUser_ResolvesRequestContextFromClaims()
+        {
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "user-123"),
+                new Claim(ClaimTypes.Role, SystemRoles.TenantUser),
+                new Claim(BigSmileClaimTypes.Scope, AccessScope.Branch.ToClaimValue()),
+                new Claim(BigSmileClaimTypes.TenantId, "12345678-1234-1234-1234-123456789abc"),
+                new Claim(BigSmileClaimTypes.BranchId, "87654321-4321-4321-4321-210987654321")
+            }, "TestAuth"));
+
+            var httpContext = CreateHttpContext(isDevelopment: false, user: user);
+            var middleware = new TenantResolutionMiddleware(Next);
+
+            await middleware.InvokeAsync(httpContext, _tenantContext);
+
+            Assert.Equal("user-123", _tenantContext.GetUserId());
+            Assert.Equal("12345678-1234-1234-1234-123456789abc", _tenantContext.GetTenantId());
+            Assert.Equal("87654321-4321-4321-4321-210987654321", _tenantContext.GetBranchId());
+            Assert.Equal(AccessScope.Branch, _tenantContext.GetAccessScope());
+            Assert.True(_tenantContext.IsAuthenticated());
+        }
+
+        [Fact]
+        public async Task InvokeAsync_Development_WithValidGuidHeaders_SetsTenantAndBranchForAnonymousRequest()
         {
             // Arrange
             var httpContext = CreateHttpContext(isDevelopment: true,
@@ -96,6 +122,7 @@ namespace BigSmile.UnitTests.Middleware
             // Assert
             Assert.Equal("12345678-1234-1234-1234-123456789abc", _tenantContext.GetTenantId());
             Assert.Equal("87654321-4321-4321-4321-210987654321", _tenantContext.GetBranchId());
+            Assert.Equal(AccessScope.Branch, _tenantContext.GetAccessScope());
             // Should log debug messages for header resolution
             Assert.Contains(_testLogger.Logs, log => log.LogLevel == LogLevel.Debug && log.Message!.Contains("Tenant resolved from header"));
             Assert.Contains(_testLogger.Logs, log => log.LogLevel == LogLevel.Debug && log.Message!.Contains("Branch resolved from header"));
@@ -121,7 +148,32 @@ namespace BigSmile.UnitTests.Middleware
         }
 
         [Fact]
-        public async Task InvokeAsync_Development_NoHeaders_DoesNothing()
+        public async Task InvokeAsync_Development_AuthenticatedUser_IgnoresHeadersAndUsesClaims()
+        {
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "user-123"),
+                new Claim(ClaimTypes.Role, SystemRoles.TenantUser),
+                new Claim(BigSmileClaimTypes.Scope, AccessScope.Tenant.ToClaimValue()),
+                new Claim(BigSmileClaimTypes.TenantId, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+            }, "TestAuth"));
+
+            var httpContext = CreateHttpContext(
+                isDevelopment: true,
+                tenantHeader: "12345678-1234-1234-1234-123456789abc",
+                branchHeader: "87654321-4321-4321-4321-210987654321",
+                user: user);
+            var middleware = new TenantResolutionMiddleware(Next);
+
+            await middleware.InvokeAsync(httpContext, _tenantContext);
+
+            Assert.Equal("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", _tenantContext.GetTenantId());
+            Assert.Null(_tenantContext.GetBranchId());
+            Assert.Equal(AccessScope.Tenant, _tenantContext.GetAccessScope());
+        }
+
+        [Fact]
+        public async Task InvokeAsync_Development_NoHeaders_DoesNothingForAnonymousRequest()
         {
             // Arrange
             var httpContext = CreateHttpContext(isDevelopment: true);

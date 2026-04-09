@@ -1,4 +1,6 @@
+using BigSmile.Infrastructure.Context;
 using BigSmile.Domain.Entities;
+using BigSmile.SharedKernel.Multitenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
@@ -15,11 +17,13 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<UserBranchAssignment> UserBranchAssignments => Set<UserBranchAssignment>();
 
         private readonly IConfiguration _configuration;
+        private readonly TenantContext _tenantContext;
 
-        public AppDbContext(DbContextOptions<AppDbContext> options, IConfiguration configuration)
+        public AppDbContext(DbContextOptions<AppDbContext> options, IConfiguration configuration, TenantContext tenantContext)
             : base(options)
         {
             _configuration = configuration;
+            _tenantContext = tenantContext;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,8 +33,14 @@ namespace BigSmile.Infrastructure.Data
             // Apply configurations from the same assembly
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-            // Global query filters for soft deletion or tenant isolation can be added here
-            // Example: modelBuilder.Entity<Tenant>().HasQueryFilter(t => t.IsActive);
+            modelBuilder.Entity<Tenant>().HasQueryFilter(tenant =>
+                !ShouldApplyTenantFilter || tenant.Id == ResolvedTenantId);
+
+            modelBuilder.Entity<Branch>().HasQueryFilter(branch =>
+                !ShouldApplyTenantFilter || branch.TenantId == ResolvedTenantId);
+
+            modelBuilder.Entity<UserTenantMembership>().HasQueryFilter(membership =>
+                !ShouldApplyTenantFilter || membership.TenantId == ResolvedTenantId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -41,6 +51,68 @@ namespace BigSmile.Infrastructure.Data
                 var connectionString = _configuration.GetConnectionString("DefaultConnection")
                     ?? "Server=(localdb)\\mssqllocaldb;Database=BigSmile;Trusted_Connection=True;MultipleActiveResultSets=true";
                 optionsBuilder.UseSqlServer(connectionString);
+            }
+        }
+
+        public override int SaveChanges()
+        {
+            ValidateTenantBoundWrites();
+            return base.SaveChanges();
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            ValidateTenantBoundWrites();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ValidateTenantBoundWrites();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            ValidateTenantBoundWrites();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private Guid? CurrentTenantId =>
+            Guid.TryParse(_tenantContext.GetTenantId(), out var tenantId)
+                ? tenantId
+                : null;
+
+        private Guid ResolvedTenantId => CurrentTenantId ?? Guid.Empty;
+
+        private bool ShouldApplyTenantFilter =>
+            _tenantContext.IsAuthenticated() && !_tenantContext.HasPlatformOverride();
+
+        private void ValidateTenantBoundWrites()
+        {
+            if (!_tenantContext.IsAuthenticated() || _tenantContext.HasPlatformOverride())
+            {
+                return;
+            }
+
+            if (!CurrentTenantId.HasValue)
+            {
+                throw new InvalidOperationException("Authenticated tenant-scoped writes require a resolved tenant context.");
+            }
+
+            foreach (var entry in ChangeTracker.Entries()
+                         .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted))
+            {
+                switch (entry.Entity)
+                {
+                    case Tenant tenant when tenant.Id != CurrentTenantId.Value:
+                        throw new InvalidOperationException(
+                            $"Tenant write '{entry.State}' was blocked because the target tenant does not match the current tenant context.");
+
+                    case ITenantOwnedEntity tenantOwnedEntity when tenantOwnedEntity.TenantId != CurrentTenantId.Value:
+                        throw new InvalidOperationException(
+                            $"Tenant-owned write '{entry.State}' was blocked because the target tenant does not match the current tenant context.");
+                }
             }
         }
     }

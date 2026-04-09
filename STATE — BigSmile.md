@@ -16,7 +16,7 @@
 
 **Multitenancy** — [Hecho] La estrategia base es shared database + shared schema + TenantId como discriminador transversal, con TenantContext por request, enforcement centralizado, y bypass solo para operaciones de plataforma, explícito y auditable.
 
-**Auth** — [Hecho] La base de identidad y autenticación ya está establecida sobre JWT como dirección principal, con tenant claim como autoridad primaria para requests tenant-scoped y sin confiar la autorización crítica al frontend ni al tenant scope enviado de forma insegura por el cliente. [Pendiente por validar] La capa completa de autorización tenant-aware por scope / membership / permiso todavía no está cerrada.
+**Auth** — [Hecho] La base de identidad y autenticación ya está establecida sobre JWT y ahora la fundación tenant-aware de autorización quedó formalizada: claims de scope/permiso, `TenantContext` enriquecido, policies/handlers por scope, `/api/auth/me`, override de plataforma explícito y auditable, y soporte mínimo de frontend para consumir el contexto actual sin persistencia insegura en navegador.
 
 **Persistencia** — [Hecho] La persistencia base es EF Core sobre SQL Server, con AppDbContext, migraciones, seed durable y validación de login real contra base SQL Server. Tenant, Branch e identidad ya comparten la misma ruta de persistencia durable. BranchId solo se usa cuando el dominio lo requiere, subordinado a TenantId.
 
@@ -32,17 +32,19 @@
 
 [Hecho] Identity + Persistence Foundation — completada.
 
+[Hecho] Tenant-Aware Authorization Foundation — completada.
+
 [Hecho] La corrección de consistencia de persistencia quedó absorbida dentro de Identity + Persistence Foundation: tenant y branch ya no viven en un path in-memory separado, el seed es durable y el login real contra SQL Server ya fue validado.
 
 [Hecho] No hay otra fase cerrada explícitamente en el roadmap funcional. Patients, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
 
 ## 4. Fase actual
 
-[Hecho] La última fase marcada como completada es Identity + Persistence Foundation.
+[Hecho] La última fase marcada como completada es Tenant-Aware Authorization Foundation.
 
 [Hecho] README.md, PROJECT_MAP.md y AGENTS.md ya fueron reconciliados con este estado canónico y ubican al repositorio más allá del bootstrap / early foundation stage.
 
-[Inferencia operativa] El proyecto está listo para arrancar formalmente Tenant-Aware Authorization Foundation.
+[Inferencia operativa] El proyecto queda listo para abrir Release 1 — Patients sobre una base de autorización tenant-aware ya validada.
 
 [Hecho combinado] Lo ya establecido a nivel fundacional incluye, como mínimo:
 - estructura de solución
@@ -62,24 +64,23 @@
 
 ## 5. Siguiente fase prevista
 
-**Nombre exacto** — [Hecho] Tenant-Aware Authorization Foundation.
+**Nombre exacto** — [Hecho] Release 1 — Patients.
 
-**Objetivo** — [Hecho + Inferencia alineada a docs] Llevar la autorización desde una base auth existente hacia un modelo realmente scope-aware y tenant-aware, donde la decisión de acceso combine tenant membership, branch assignment cuando aplique, rol, permiso y contexto de plataforma / tenant / branch.
+**Objetivo** — [Hecho + Inferencia alineada a docs] Abrir el primer módulo funcional real del producto sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y override de plataforma explícito.
 
-**Entregables esperados** — [Inferencia operativa]
-- políticas y/o requirement handlers backend para tenant user / tenant admin / platform admin o equivalentes
+**Precondición ya resuelta** — [Hecho]
+- policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
 - autorización evaluada por scope, membership, rol y permiso; no solo por nombre de rol
-- enforcement centralizado de aislamiento tenant-aware en acceso a datos (por ejemplo, query filters globales o mecanismo equivalente)
-- soporte de platform/support override solo donde esté explícitamente permitido y con auditoría
+- enforcement centralizado tenant-aware para reads/writes en datos tenant-owned actuales
+- soporte explícito y auditable para platform override permitido
 - pruebas automáticas para reads/writes cross-tenant prohibidos, restricciones branch-aware y escenarios permitidos de bypass de plataforma
-- documentación/ADR específica para tenant resolution, auth/session y authorization model
-- base frontend para authz: guards, contexto de usuario/tenant y, si aplica, endpoint `/auth/me`
+- endpoint `/api/auth/me` y base frontend de guards/contexto actual
 
 ## 6. Riesgos y temas a vigilar
 
 **Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal: cualquier fuga cross-tenant por modelado incompleto, resolución insegura de tenant, filtros incompletos o bypass silencioso compromete la frontera primaria de seguridad.
 
-**Authorization model** — [Hecho + Pendiente] Los roles por sí solos no bastan; la autorización debe cerrarse y probarse por membership, scope y permisos. El catálogo final de permisos y la implementación exacta de auth/session siguen siendo áreas evolutivas.
+**Authorization model** — [Hecho] La fundación ya quedó cerrada y probada por membership, scope y permisos; el catálogo inicial es pequeño a propósito y seguirá evolucionando por módulo sin reabrir la forma base del modelo.
 
 **Query filters y acceso a datos** — [Hecho] Los filtros globales de tenant y el enforcement centralizado siguen siendo críticos; el riesgo es degradarlos con filtros manuales dispersos, accesos ad hoc o bypasses no controlados.
 
@@ -87,7 +88,7 @@
 
 **Consistencia TenantId / BranchId** — [Hecho] BranchId sigue siendo scope operativo subordinado; el riesgo es usarlo como sustituto implícito de TenantId o permitir combinaciones tenant/branch inconsistentes.
 
-**Claims y contrato de identidad** — [Hecho + Pendiente] La base JWT ya existe, pero el contrato de claims para tenant users, platform users, branch scope y override auditable todavía debe formalizarse mejor en la siguiente fase.
+**Claims y contrato de identidad** — [Hecho] El contrato base ya quedó formalizado con user id, role, scope, permission, tenant claim y branch claim cuando aplica; futuras fases solo deberían extenderlo de forma compatible.
 
 **UX operativa** — [Hecho] La seguridad y la estructura técnica no deben degradar la velocidad ni la claridad de los flujos núcleo; la UX operativa sigue siendo restricción de producto.
 
@@ -99,23 +100,15 @@
 
 Lista priorizada:
 
-1. Cerrar Tenant-Aware Authorization Foundation con enforcement backend tenant-aware y, cuando aplique, branch-aware, integrado con TenantContext y BranchContext.
+1. Abrir Release 1 — Patients sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Formalizar la decisión de acceso por scope (platform / tenant / branch), membership, rol y permiso, evitando depender solo del nombre del rol o de scope enviado de forma insegura por el cliente.
+2. Reutilizar el modelo de authorization por scope/membership/permiso al introducir los primeros use cases de pacientes.
 
-3. Introducir y/o endurecer el enforcement centralizado de acceso a datos tenant-owned (por ejemplo, query filters globales o equivalente) y revisar los caminos de bypass explícito.
+3. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
 
-4. Hacer explícitos, segregados y auditables los privileged/platform paths y cualquier platform override permitido.
+4. Extender el catálogo de permisos solo junto con módulos reales, evitando inflarlo antes de tiempo.
 
-5. Ampliar la cobertura automática para reads/writes cross-tenant prohibidos, restricciones branch-aware y escenarios permitidos de override de plataforma.
-
-6. Incorporar el soporte mínimo de frontend para la fase de authz: guards, contexto de usuario/tenant y endpoint `/auth/me` o equivalente si todavía no existe.
-
-7. Formalizar los ADRs siguientes ya anticipados por ADR 001: Tenant Resolution Strategy, Authentication and Session Strategy y Authorization Model.
-
-8. Mantener sincronizados STATE — BigSmile.md, README.md, PROJECT_MAP.md y AGENTS.md cuando avance el estado del proyecto; no reintroducir lenguaje de bootstrap en documentación base ya reconciliada.
-
-9. No abrir Release 1 — Patients hasta dejar verde, trazable y validada Tenant-Aware Authorization Foundation.
+5. Mantener sincronizados STATE — BigSmile.md, README.md, PROJECT_MAP.md y AGENTS.md cuando avance el estado del proyecto.
 
 ## 8. Criterios para no perder el rumbo
 
@@ -137,6 +130,6 @@ Lista priorizada:
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening e Identity + Persistence Foundation; tratar README.md, PROJECT_MAP.md y AGENTS.md como ya reconciliados con STATE; no asumir implementados o cerrados los releases funcionales del MVP mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation y Tenant-Aware Authorization Foundation; tratar README.md, PROJECT_MAP.md y AGENTS.md como reconciliados con STATE; no asumir implementados o cerrados los releases funcionales del MVP mientras no exista evidencia explícita en código y documentación alineada.
 
-**Consecuencias:** La prioridad inmediata es construir y estabilizar Tenant-Aware Authorization Foundation — autorización por scope, membership, rol y permiso; platform override explícito y auditable; enforcement centralizado y pruebas de aislamiento — y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto. Solo después corresponde abrir de forma ordenada Release 1 — Patients.
+**Consecuencias:** La prioridad inmediata pasa a ser abrir Release 1 — Patients sobre una base ya validada de autorización tenant-aware, override explícito y enforcement centralizado, manteniendo sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.

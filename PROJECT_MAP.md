@@ -56,16 +56,16 @@ Canonical project status:
 * **Foundation / Release 0 base:** completed
 * **Pre-auth hardening:** completed
 * **Identity + Persistence Foundation:** completed
+* **Tenant-Aware Authorization Foundation:** completed
 
 ### Current expected priority
 
-Build and stabilize:
+Begin carefully:
 
-* **Tenant-Aware Authorization Foundation**
-* authorization aligned with tenant scope and branch scope where applicable
-* preservation of tenant isolation across identity, persistence, and access enforcement
-* explicit and auditable privileged/platform paths where required
-* continued validation through CI, tests, logging, auditing, and architectural guardrails
+* **Release 1 — Patients**
+* only on top of the completed tenant-aware authorization and tenant enforcement baseline
+* while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
+* with continued validation through CI, tests, logging, auditing, and architectural guardrails
 
 Do not treat the repository as feature-complete unless the actual codebase clearly proves it. No functional roadmap release should be treated as closed without explicit code and documentation evidence.
 
@@ -835,4 +835,3 @@ When in doubt, follow this order:
 For any new file, feature, or change, ask:
 
 **Does this belong in the right place and preserve Bigsmile as a secure, maintainable, multi-tenant SaaS product?**
-

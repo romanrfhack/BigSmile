@@ -1,9 +1,10 @@
 using BigSmile.SharedKernel;
+using BigSmile.SharedKernel.Multitenancy;
 using System;
 
 namespace BigSmile.Domain.Entities
 {
-    public class UserTenantMembership : Entity<Guid>
+    public class UserTenantMembership : Entity<Guid>, ITenantOwnedEntity
     {
         public User User { get; private set; } = null!;
         public Guid UserId { get; private set; }

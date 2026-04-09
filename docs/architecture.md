@@ -302,6 +302,11 @@ Possible sources may include:
 
 Tenant resolution must never rely on ad hoc logic spread across handlers or controllers.
 
+Current foundation note:
+
+* authenticated requests resolve user id, tenant id, branch id, and scope from JWT claims
+* development headers are only a local fallback for anonymous requests and never override an authenticated identity
+
 ### 7.4 Enforcement
 
 Tenant isolation must be enforced through:
@@ -313,6 +318,11 @@ Tenant isolation must be enforced through:
 * authorization policies
 * integration tests for tenant isolation
 
+Current foundation note:
+
+* authenticated reads are filtered centrally in EF Core for the current tenant unless an explicit platform override is active
+* authenticated writes are blocked in `SaveChanges` when the target tenant does not match the current tenant context
+
 ### 7.5 Platform Operations
 
 Some platform-level operations require bypassing tenant filters.
@@ -323,6 +333,11 @@ These cases must be:
 * audited
 * tightly controlled
 * limited to platform contexts only
+
+Current foundation note:
+
+* platform scope alone does not bypass tenant filters
+* a request-scoped platform override is activated only by explicit authorization policies/handlers
 
 ---
 

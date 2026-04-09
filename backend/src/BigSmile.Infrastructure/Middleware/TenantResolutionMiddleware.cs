@@ -1,9 +1,11 @@
+using BigSmile.Application.Authorization;
 using BigSmile.Infrastructure.Context;
+using BigSmile.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using System;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace BigSmile.Infrastructure.Middleware
 {
@@ -21,56 +23,66 @@ namespace BigSmile.Infrastructure.Middleware
             var logger = httpContext.RequestServices.GetRequiredService<ILogger<TenantResolutionMiddleware>>();
             var env = httpContext.RequestServices.GetRequiredService<IHostEnvironment>();
 
-            // 1. Try to resolve tenant from JWT claim (preferred)
             var user = httpContext.User;
-            if (user != null)
+            if (user.Identity?.IsAuthenticated == true)
             {
-                var tenantClaim = user.Claims.FirstOrDefault(c => c.Type == "tenant_id");
-                var branchClaim = user.Claims.FirstOrDefault(c => c.Type == "branch_id");
-                
-                if (tenantClaim != null)
+                var userId = FindFirstValue(user, ClaimTypes.NameIdentifier) ?? FindFirstValue(user, ClaimTypes.Name);
+                var tenantId = FindFirstValue(user, BigSmileClaimTypes.TenantId);
+                var branchId = FindFirstValue(user, BigSmileClaimTypes.BranchId);
+                var scope = FindFirstValue(user, BigSmileClaimTypes.Scope).ToAccessScope();
+
+                if (scope == AccessScope.Anonymous)
                 {
-                    // Tenant resolved from JWT claim
-                    tenantContext.SetTenantId(tenantClaim.Value);
-                    logger.LogDebug("Tenant resolved from JWT claim: {TenantId}", tenantClaim.Value);
-                    
-                    if (branchClaim != null)
-                    {
-                        tenantContext.SetBranchId(branchClaim.Value);
-                        logger.LogDebug("Branch resolved from JWT claim: {BranchId}", branchClaim.Value);
-                    }
-                    
-                    await _next(httpContext);
-                    return;
+                    scope = ResolveFallbackScope(user, tenantId, branchId);
                 }
+
+                tenantContext.SetRequestContext(
+                    userId,
+                    scope,
+                    isAuthenticated: true,
+                    tenantId,
+                    branchId);
+
+                if (!string.IsNullOrWhiteSpace(tenantId))
+                {
+                    logger.LogDebug("Tenant resolved from claims: {TenantId}", tenantId);
+                }
+
+                if (!string.IsNullOrWhiteSpace(branchId))
+                {
+                    logger.LogDebug("Branch resolved from claims: {BranchId}", branchId);
+                }
+
+                await _next(httpContext);
+                return;
             }
 
-            // 2. No tenant claim present; check if we're in development environment
+            tenantContext.SetRequestContext(
+                userId: null,
+                accessScope: AccessScope.Anonymous,
+                isAuthenticated: false);
+
             if (!env.IsDevelopment())
             {
-                // Non-development environment: header-based resolution is forbidden
                 var tenantHeader = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
                 var branchHeader = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
                 if (!string.IsNullOrEmpty(tenantHeader) || !string.IsNullOrEmpty(branchHeader))
                 {
                     logger.LogError(
-                        "Header-based tenant resolution is not allowed in non-development environments when JWT claim is missing. " +
-                        "Request headers X-Tenant-Id and X-Branch-Id are ignored. " +
-                        "Use a secure tenant resolution strategy (e.g., JWT claims, subdomain).");
+                        "Header-based tenant resolution is not allowed in non-development environments. " +
+                        "Request headers X-Tenant-Id and X-Branch-Id are ignored.");
                 }
-                // Tenant context remains empty; downstream authorization will fail.
+
                 await _next(httpContext);
                 return;
             }
 
-            // 3. Development environment: allow header-based resolution (with warnings if malformed)
             var tenantIdDev = httpContext.Request.Headers["X-Tenant-Id"].FirstOrDefault();
             var branchIdDev = httpContext.Request.Headers["X-Branch-Id"].FirstOrDefault();
 
-            // Validate tenantId format (must be a valid GUID if provided)
             if (!string.IsNullOrEmpty(tenantIdDev))
             {
-                if (!Guid.TryParse(tenantIdDev, out var tenantGuid))
+                if (!Guid.TryParse(tenantIdDev, out _))
                 {
                     logger.LogWarning("Invalid tenant ID format in X-Tenant-Id header: {TenantId}", tenantIdDev);
                     tenantIdDev = null;
@@ -79,7 +91,7 @@ namespace BigSmile.Infrastructure.Middleware
 
             if (!string.IsNullOrEmpty(branchIdDev))
             {
-                if (!Guid.TryParse(branchIdDev, out var branchGuid))
+                if (!Guid.TryParse(branchIdDev, out _))
                 {
                     logger.LogWarning("Invalid branch ID format in X-Branch-Id header: {BranchId}", branchIdDev);
                     branchIdDev = null;
@@ -89,16 +101,46 @@ namespace BigSmile.Infrastructure.Middleware
             if (!string.IsNullOrEmpty(tenantIdDev))
             {
                 tenantContext.SetTenantId(tenantIdDev);
+                tenantContext.SetAccessScope(string.IsNullOrEmpty(branchIdDev) ? AccessScope.Tenant : AccessScope.Branch);
                 logger.LogDebug("Tenant resolved from header (development only): {TenantId}", tenantIdDev);
             }
 
             if (!string.IsNullOrEmpty(branchIdDev))
             {
                 tenantContext.SetBranchId(branchIdDev);
+                tenantContext.SetAccessScope(AccessScope.Branch);
                 logger.LogDebug("Branch resolved from header (development only): {BranchId}", branchIdDev);
             }
 
             await _next(httpContext);
+        }
+
+        private static AccessScope ResolveFallbackScope(ClaimsPrincipal user, string? tenantId, string? branchId)
+        {
+            if (user.IsInRole(SystemRoles.PlatformAdmin) || string.Equals(
+                    FindFirstValue(user, BigSmileClaimTypes.Role),
+                    SystemRoles.PlatformAdmin,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return AccessScope.Platform;
+            }
+
+            if (!string.IsNullOrWhiteSpace(branchId))
+            {
+                return AccessScope.Branch;
+            }
+
+            if (!string.IsNullOrWhiteSpace(tenantId))
+            {
+                return AccessScope.Tenant;
+            }
+
+            return AccessScope.Anonymous;
+        }
+
+        private static string? FindFirstValue(ClaimsPrincipal user, string claimType)
+        {
+            return user.FindFirst(claimType)?.Value;
         }
     }
 }
