@@ -14,7 +14,8 @@ namespace BigSmile.Application.Features.Patients.Dtos
                 patient.DateOfBirth,
                 patient.PrimaryPhone,
                 patient.Email,
-                patient.IsActive);
+                patient.IsActive,
+                patient.HasClinicalAlerts);
         }
 
         public static PatientDetailDto ToDetailDto(this Patient patient)
@@ -35,6 +36,8 @@ namespace BigSmile.Application.Features.Patients.Dtos
                 patient.PrimaryPhone,
                 patient.Email,
                 patient.IsActive,
+                patient.HasClinicalAlerts,
+                patient.ClinicalAlertsSummary,
                 responsibleParty,
                 patient.CreatedAt,
                 patient.UpdatedAt);

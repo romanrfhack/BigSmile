@@ -31,18 +31,24 @@ namespace BigSmile.IntegrationTests.Patients
                     "5551234567",
                     "ana@example.com",
                     true,
+                    true,
+                    "Allergic to latex.",
                     "Maria Lopez",
                     "Mother",
                     "5559990000"));
 
             Assert.Equal("Ana Lopez", patient.FullName);
             Assert.True(patient.IsActive);
+            Assert.True(patient.HasClinicalAlerts);
+            Assert.Equal("Allergic to latex.", patient.ClinicalAlertsSummary);
 
             await using var verificationContext = CreateContext(databaseName, new TenantContext());
             var storedPatient = await verificationContext.Patients.SingleAsync();
 
             Assert.Equal(tenantA.Id, storedPatient.TenantId);
             Assert.Equal("Ana", storedPatient.FirstName);
+            Assert.True(storedPatient.HasClinicalAlerts);
+            Assert.Equal("Allergic to latex.", storedPatient.ClinicalAlertsSummary);
             Assert.Equal("Maria Lopez", storedPatient.ResponsiblePartyName);
         }
 
@@ -86,6 +92,8 @@ namespace BigSmile.IntegrationTests.Patients
                     "5551112222",
                     "ana.sofia@example.com",
                     false,
+                    false,
+                    "Should be cleared",
                     "Mario Lopez",
                     "Father",
                     "5554448888"));
@@ -93,12 +101,16 @@ namespace BigSmile.IntegrationTests.Patients
             Assert.NotNull(updated);
             Assert.Equal("Ana Sofia Lopez", updated!.FullName);
             Assert.False(updated.IsActive);
+            Assert.False(updated.HasClinicalAlerts);
+            Assert.Null(updated.ClinicalAlertsSummary);
 
             await using var verificationContext = CreateContext(databaseName, tenantContext);
             var storedPatient = await verificationContext.Patients.SingleAsync();
 
             Assert.Equal("Ana Sofia", storedPatient.FirstName);
             Assert.False(storedPatient.IsActive);
+            Assert.False(storedPatient.HasClinicalAlerts);
+            Assert.Null(storedPatient.ClinicalAlertsSummary);
             Assert.Equal("Mario Lopez", storedPatient.ResponsiblePartyName);
         }
 
@@ -107,7 +119,14 @@ namespace BigSmile.IntegrationTests.Patients
         {
             var databaseName = Guid.NewGuid().ToString();
             var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
-            await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez", "5551234567");
+            await SeedPatientAsync(
+                databaseName,
+                tenantA.Id,
+                "Ana",
+                "Lopez",
+                "5551234567",
+                hasClinicalAlerts: true,
+                clinicalAlertsSummary: "Requires antibiotic prophylaxis.");
             await SeedPatientAsync(databaseName, tenantA.Id, "Andres", "Soto", "5555555555");
             await SeedPatientAsync(databaseName, tenantB.Id, "Ana", "Torres", "5550000000");
 
@@ -121,6 +140,38 @@ namespace BigSmile.IntegrationTests.Patients
 
             Assert.Single(results);
             Assert.Equal("Ana Lopez", results[0].FullName);
+            Assert.True(results[0].HasClinicalAlerts);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_ReturnsClinicalAlertsSummaryOnlyInDetailView()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(
+                databaseName,
+                tenantA.Id,
+                "Ana",
+                "Lopez",
+                "5551234567",
+                hasClinicalAlerts: true,
+                clinicalAlertsSummary: "Requires antibiotic prophylaxis.");
+
+            var tenantContext = new TenantContext();
+            tenantContext.SetRequestContext(Guid.NewGuid().ToString(), AccessScope.Tenant, isAuthenticated: true, tenantA.Id.ToString());
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = new PatientQueryService(new EfPatientRepository(context), tenantContext);
+
+            var detail = await queryService.GetByIdAsync(patient.Id);
+            var results = await queryService.SearchAsync("Ana", includeInactive: false, take: 25);
+
+            Assert.NotNull(detail);
+            Assert.True(detail!.HasClinicalAlerts);
+            Assert.Equal("Requires antibiotic prophylaxis.", detail.ClinicalAlertsSummary);
+            Assert.True(results[0].HasClinicalAlerts);
+            Assert.Null(typeof(BigSmile.Application.Features.Patients.Dtos.PatientSummaryDto)
+                .GetProperty(nameof(BigSmile.Application.Features.Patients.Dtos.PatientDetailDto.ClinicalAlertsSummary)));
         }
 
         private static async Task<(Tenant TenantA, Tenant TenantB)> SeedTenantsAsync(string databaseName)
@@ -142,7 +193,9 @@ namespace BigSmile.IntegrationTests.Patients
             Guid tenantId,
             string firstName,
             string lastName,
-            string phone)
+            string phone,
+            bool hasClinicalAlerts = false,
+            string? clinicalAlertsSummary = null)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
             var patient = new Patient(
@@ -151,7 +204,9 @@ namespace BigSmile.IntegrationTests.Patients
                 lastName,
                 new DateOnly(1991, 2, 14),
                 phone,
-                $"{firstName.ToLowerInvariant()}@example.com");
+                $"{firstName.ToLowerInvariant()}@example.com",
+                hasClinicalAlerts: hasClinicalAlerts,
+                clinicalAlertsSummary: clinicalAlertsSummary);
 
             context.Patients.Add(patient);
             await context.SaveChangesAsync();

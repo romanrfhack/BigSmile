@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { PatientDetail, SavePatientRequest } from '../models/patient.models';
 
@@ -71,6 +72,28 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
             <span>Email</span>
             <input type="email" formControlName="email" />
             <small *ngIf="showError('email', 'email')">Enter a valid email address.</small>
+          </label>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Clinical alerts</h3>
+        <div class="field-grid">
+          <label class="checkbox-field">
+            <input type="checkbox" formControlName="hasClinicalAlerts" />
+            <span>Patient has basic clinical alerts</span>
+          </label>
+
+          <label class="field-wide">
+            <span>Alert summary</span>
+            <textarea
+              rows="3"
+              formControlName="clinicalAlertsSummary"
+              placeholder="Short alert for immediate patient handling"
+            ></textarea>
+            <small *ngIf="showError('clinicalAlertsSummary', 'maxlength')">
+              Alert summary must be 500 characters or fewer.
+            </small>
           </label>
         </div>
       </section>
@@ -164,7 +187,8 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
       font-weight: 600;
     }
 
-    input {
+    input,
+    textarea {
       border: 1px solid #c8d4df;
       border-radius: 12px;
       padding: 0.8rem 0.9rem;
@@ -173,9 +197,20 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
       background: #ffffff;
     }
 
-    input:focus {
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+    }
+
+    input:focus,
+    textarea:focus {
       outline: 2px solid #b8d5f4;
       border-color: #7aa8da;
+    }
+
+    textarea:disabled {
+      background: #f2f5f8;
+      color: #7c8da0;
     }
 
     .checkbox-field {
@@ -183,6 +218,11 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
       align-items: center;
       gap: 0.75rem;
       font-weight: 600;
+      min-height: 100%;
+    }
+
+    .field-wide {
+      grid-column: 1 / -1;
     }
 
     .checkbox-field input {
@@ -248,6 +288,7 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
 })
 export class PatientFormComponent implements OnChanges {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   @Input() initialPatient: PatientDetail | null = null;
   @Input() mode: 'create' | 'edit' = 'create';
@@ -264,10 +305,27 @@ export class PatientFormComponent implements OnChanges {
     primaryPhone: ['', [Validators.maxLength(40)]],
     email: ['', [Validators.email, Validators.maxLength(256)]],
     isActive: [true, [Validators.required]],
+    hasClinicalAlerts: [false, [Validators.required]],
+    clinicalAlertsSummary: [{ value: '', disabled: true }, [Validators.maxLength(500)]],
     responsiblePartyName: ['', [Validators.maxLength(100)]],
     responsiblePartyRelationship: ['', [Validators.maxLength(100)]],
     responsiblePartyPhone: ['', [Validators.maxLength(40)]]
   }, { validators: responsiblePartyValidator });
+
+  constructor() {
+    this.form.controls.hasClinicalAlerts.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((hasClinicalAlerts) => {
+        const summaryControl = this.form.controls.clinicalAlertsSummary;
+        if (hasClinicalAlerts) {
+          summaryControl.enable({ emitEvent: false });
+          return;
+        }
+
+        summaryControl.reset('', { emitEvent: false });
+        summaryControl.disable({ emitEvent: false });
+      });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes['initialPatient']) {
@@ -282,10 +340,13 @@ export class PatientFormComponent implements OnChanges {
         primaryPhone: '',
         email: '',
         isActive: true,
+        hasClinicalAlerts: false,
+        clinicalAlertsSummary: '',
         responsiblePartyName: '',
         responsiblePartyRelationship: '',
         responsiblePartyPhone: ''
       });
+      this.form.controls.clinicalAlertsSummary.disable({ emitEvent: false });
       return;
     }
 
@@ -296,10 +357,19 @@ export class PatientFormComponent implements OnChanges {
       primaryPhone: this.initialPatient.primaryPhone ?? '',
       email: this.initialPatient.email ?? '',
       isActive: this.initialPatient.isActive,
+      hasClinicalAlerts: this.initialPatient.hasClinicalAlerts,
+      clinicalAlertsSummary: this.initialPatient.clinicalAlertsSummary ?? '',
       responsiblePartyName: this.initialPatient.responsibleParty?.name ?? '',
       responsiblePartyRelationship: this.initialPatient.responsibleParty?.relationship ?? '',
       responsiblePartyPhone: this.initialPatient.responsibleParty?.phone ?? ''
     });
+
+    if (this.initialPatient.hasClinicalAlerts) {
+      this.form.controls.clinicalAlertsSummary.enable({ emitEvent: false });
+      return;
+    }
+
+    this.form.controls.clinicalAlertsSummary.disable({ emitEvent: false });
   }
 
   submit(): void {
@@ -316,6 +386,10 @@ export class PatientFormComponent implements OnChanges {
       primaryPhone: this.normalizeOptional(raw.primaryPhone),
       email: this.normalizeOptional(raw.email),
       isActive: raw.isActive ?? true,
+      hasClinicalAlerts: raw.hasClinicalAlerts ?? false,
+      clinicalAlertsSummary: raw.hasClinicalAlerts
+        ? this.normalizeOptional(raw.clinicalAlertsSummary)
+        : null,
       responsiblePartyName: this.normalizeOptional(raw.responsiblePartyName),
       responsiblePartyRelationship: this.normalizeOptional(raw.responsiblePartyRelationship),
       responsiblePartyPhone: this.normalizeOptional(raw.responsiblePartyPhone)

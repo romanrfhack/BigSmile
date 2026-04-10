@@ -123,6 +123,11 @@ namespace BigSmile.Api.Controllers
 
             public bool IsActive { get; set; } = true;
 
+            public bool HasClinicalAlerts { get; set; }
+
+            [MaxLength(500)]
+            public string? ClinicalAlertsSummary { get; set; }
+
             [MaxLength(100)]
             public string? ResponsiblePartyName { get; set; }
 
@@ -162,6 +167,8 @@ namespace BigSmile.Api.Controllers
                     PrimaryPhone,
                     Email,
                     IsActive,
+                    HasClinicalAlerts,
+                    ClinicalAlertsSummary,
                     ResponsiblePartyName,
                     ResponsiblePartyRelationship,
                     ResponsiblePartyPhone);

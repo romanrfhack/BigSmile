@@ -13,9 +13,11 @@ export interface PatientSummary {
   primaryPhone: string | null;
   email: string | null;
   isActive: boolean;
+  hasClinicalAlerts: boolean;
 }
 
 export interface PatientDetail extends PatientSummary {
+  clinicalAlertsSummary: string | null;
   responsibleParty: ResponsibleParty | null;
   createdAt: string;
   updatedAt: string | null;
@@ -28,6 +30,8 @@ export interface SavePatientRequest {
   primaryPhone: string | null;
   email: string | null;
   isActive: boolean;
+  hasClinicalAlerts: boolean;
+  clinicalAlertsSummary: string | null;
   responsiblePartyName: string | null;
   responsiblePartyRelationship: string | null;
   responsiblePartyPhone: string | null;

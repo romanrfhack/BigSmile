@@ -72,7 +72,15 @@
 - persistencia EF Core + migración inicial del módulo
 - endpoints y permisos explícitos `patient.read` / `patient.write`
 
-[Hecho] Este slice inicial mantiene el modelo de paciente tenant-owned y branch-neutral; no introduce aún clinical alerts, expediente clínico, scheduling ni otros módulos posteriores.
+[Hecho] Sobre ese slice inicial ya quedó completado el siguiente sub-slice mínimo de Patients:
+- basic clinical alerts
+- `HasClinicalAlerts` en paciente
+- `ClinicalAlertsSummary` como texto corto y acotado
+- visibilidad de estado de alertas en búsqueda/listado
+- soporte en alta/edición/perfil
+- limpieza automática del summary cuando `HasClinicalAlerts = false`
+
+[Hecho] Patients sigue manteniendo el modelo branch-neutral y tenant-owned; este avance no abre aún expediente clínico, diagnósticos, historia clínica, timeline, adjuntos, scheduling ni otros módulos posteriores.
 
 [Hecho] No existe evidencia canónica de cierre para los releases funcionales 1–7 del roadmap; por tanto, Patients, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados/cerrados.
 

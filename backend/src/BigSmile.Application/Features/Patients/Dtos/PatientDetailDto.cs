@@ -13,7 +13,8 @@ namespace BigSmile.Application.Features.Patients.Dtos
         DateOnly DateOfBirth,
         string? PrimaryPhone,
         string? Email,
-        bool IsActive);
+        bool IsActive,
+        bool HasClinicalAlerts);
 
     public sealed record PatientDetailDto(
         Guid Id,
@@ -24,6 +25,8 @@ namespace BigSmile.Application.Features.Patients.Dtos
         string? PrimaryPhone,
         string? Email,
         bool IsActive,
+        bool HasClinicalAlerts,
+        string? ClinicalAlertsSummary,
         ResponsiblePartyDto? ResponsibleParty,
         DateTime CreatedAt,
         DateTime? UpdatedAt);

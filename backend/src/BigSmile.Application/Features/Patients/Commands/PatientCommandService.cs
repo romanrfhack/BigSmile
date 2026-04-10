@@ -12,6 +12,8 @@ namespace BigSmile.Application.Features.Patients.Commands
         string? PrimaryPhone,
         string? Email,
         bool IsActive,
+        bool HasClinicalAlerts,
+        string? ClinicalAlertsSummary,
         string? ResponsiblePartyName,
         string? ResponsiblePartyRelationship,
         string? ResponsiblePartyPhone);
@@ -46,6 +48,8 @@ namespace BigSmile.Application.Features.Patients.Commands
                 command.PrimaryPhone,
                 command.Email,
                 command.IsActive,
+                command.HasClinicalAlerts,
+                command.ClinicalAlertsSummary,
                 command.ResponsiblePartyName,
                 command.ResponsiblePartyRelationship,
                 command.ResponsiblePartyPhone);
@@ -70,6 +74,8 @@ namespace BigSmile.Application.Features.Patients.Commands
                 command.PrimaryPhone,
                 command.Email,
                 command.IsActive,
+                command.HasClinicalAlerts,
+                command.ClinicalAlertsSummary,
                 command.ResponsiblePartyName,
                 command.ResponsiblePartyRelationship,
                 command.ResponsiblePartyPhone);

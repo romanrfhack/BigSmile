@@ -13,7 +13,7 @@ import { PatientsFacade } from '../facades/patients.facade';
         <div>
           <p class="eyebrow">Release 1 / Patients</p>
           <h2>Patient profile</h2>
-          <p class="subtitle">Tenant-scoped patient identity, status, and responsible-party context.</p>
+          <p class="subtitle">Tenant-scoped patient identity, status, basic clinical alerts, and responsible-party context.</p>
         </div>
         <div class="head-actions">
           <a routerLink="/patients" class="action-link action-secondary">Back to search</a>
@@ -32,9 +32,12 @@ import { PatientsFacade } from '../facades/patients.facade';
             <h3>{{ patient.fullName }}</h3>
             <p>{{ patient.dateOfBirth | date: 'longDate' }}</p>
           </div>
-          <span class="status-pill" [class.status-inactive]="!patient.isActive">
-            {{ patient.isActive ? 'Active' : 'Inactive' }}
-          </span>
+          <div class="pill-stack">
+            <span class="status-pill" [class.status-inactive]="!patient.isActive">
+              {{ patient.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <span *ngIf="patient.hasClinicalAlerts" class="alert-pill">Clinical alerts</span>
+          </div>
         </div>
 
         <section class="detail-grid">
@@ -53,6 +56,24 @@ import { PatientsFacade } from '../facades/patients.facade';
           <div>
             <dt>Updated</dt>
             <dd>{{ patient.updatedAt ? (patient.updatedAt | date: 'medium') : 'No updates yet' }}</dd>
+          </div>
+        </section>
+
+        <section class="clinical-alerts">
+          <h4>Clinical alerts</h4>
+          <div class="detail-grid">
+            <div>
+              <dt>Alerts on file</dt>
+              <dd>{{ patient.hasClinicalAlerts ? 'Yes' : 'No' }}</dd>
+            </div>
+            <div>
+              <dt>Summary</dt>
+              <dd>
+                {{ patient.hasClinicalAlerts
+                  ? (patient.clinicalAlertsSummary || 'No summary provided')
+                  : 'No clinical alerts registered for this patient.' }}
+              </dd>
+            </div>
           </div>
         </section>
 
@@ -131,6 +152,12 @@ import { PatientsFacade } from '../facades/patients.facade';
       flex-wrap: wrap;
     }
 
+    .pill-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
     .action-link {
       text-decoration: none;
       color: #0a5bb5;
@@ -168,6 +195,15 @@ import { PatientsFacade } from '../facades/patients.facade';
       color: #9b2d30;
     }
 
+    .alert-pill {
+      border-radius: 999px;
+      padding: 0.5rem 0.75rem;
+      background: #fff1dd;
+      color: #8f5a00;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
     .detail-grid {
       margin-top: 1.2rem;
       display: grid;
@@ -190,6 +226,7 @@ import { PatientsFacade } from '../facades/patients.facade';
       word-break: break-word;
     }
 
+    .clinical-alerts,
     .responsible-party {
       margin-top: 1.4rem;
     }

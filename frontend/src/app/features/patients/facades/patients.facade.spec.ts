@@ -24,7 +24,8 @@ describe('PatientsFacade', () => {
             dateOfBirth: '1991-02-14',
             primaryPhone: '5551234567',
             email: 'ana@example.com',
-            isActive: true
+            isActive: true,
+            hasClinicalAlerts: true
           }
         ]);
       },
@@ -39,6 +40,8 @@ describe('PatientsFacade', () => {
           primaryPhone: '5551234567',
           email: 'ana@example.com',
           isActive: true,
+          hasClinicalAlerts: true,
+          clinicalAlertsSummary: 'Allergy to latex.',
           responsibleParty: {
             name: 'Maria Lopez',
             relationship: 'Mother',
@@ -68,6 +71,7 @@ describe('PatientsFacade', () => {
     expect(searchArgs).toEqual(['Ana', false, 25]);
     expect(facade.patients()[0]?.id).toBe('patient-1');
     expect(facade.patients()[0]?.fullName).toBe('Ana Lopez');
+    expect(facade.patients()[0]?.hasClinicalAlerts).toBe(true);
     expect(facade.loadingPatients()).toBe(false);
   });
 
@@ -76,6 +80,7 @@ describe('PatientsFacade', () => {
 
     expect(requestedPatientId).toBe('patient-1');
     expect(facade.currentPatient()?.id).toBe('patient-1');
+    expect(facade.currentPatient()?.clinicalAlertsSummary).toBe('Allergy to latex.');
     expect(facade.currentPatient()?.responsibleParty?.name).toBe('Maria Lopez');
     expect(facade.loadingPatient()).toBe(false);
   });

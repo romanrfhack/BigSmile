@@ -22,9 +22,12 @@ import { PatientSummary } from '../models/patient.models';
             <h3>{{ patient.fullName }}</h3>
             <p>{{ patient.dateOfBirth | date: 'longDate' }}</p>
           </div>
-          <span class="status-pill" [class.status-inactive]="!patient.isActive">
-            {{ patient.isActive ? 'Active' : 'Inactive' }}
-          </span>
+          <div class="pill-stack">
+            <span class="status-pill" [class.status-inactive]="!patient.isActive">
+              {{ patient.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <span *ngIf="patient.hasClinicalAlerts" class="alert-pill">Alerts</span>
+          </div>
         </div>
 
         <dl class="meta-grid">
@@ -74,6 +77,13 @@ import { PatientSummary } from '../models/patient.models';
       align-items: flex-start;
     }
 
+    .pill-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
     h3 {
       margin: 0 0 0.25rem;
       color: #16324f;
@@ -97,6 +107,16 @@ import { PatientSummary } from '../models/patient.models';
     .status-inactive {
       background: #fce8e8;
       color: #9b2d30;
+    }
+
+    .alert-pill {
+      border-radius: 999px;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: #fff1dd;
+      color: #8f5a00;
+      white-space: nowrap;
     }
 
     .meta-grid {

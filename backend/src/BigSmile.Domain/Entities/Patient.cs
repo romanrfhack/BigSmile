@@ -6,6 +6,7 @@ namespace BigSmile.Domain.Entities
     public class Patient : Entity<Guid>, ITenantOwnedEntity
     {
         private const int DefaultMaxNameLength = 100;
+        private const int ClinicalAlertsSummaryMaxLength = 500;
 
         public Guid TenantId { get; private set; }
         public Tenant Tenant { get; private set; } = null!;
@@ -16,6 +17,8 @@ namespace BigSmile.Domain.Entities
         public string? PrimaryPhone { get; private set; }
         public string? Email { get; private set; }
         public bool IsActive { get; private set; } = true;
+        public bool HasClinicalAlerts { get; private set; }
+        public string? ClinicalAlertsSummary { get; private set; }
 
         public string? ResponsiblePartyName { get; private set; }
         public string? ResponsiblePartyRelationship { get; private set; }
@@ -38,6 +41,8 @@ namespace BigSmile.Domain.Entities
             string? primaryPhone = null,
             string? email = null,
             bool isActive = true,
+            bool hasClinicalAlerts = false,
+            string? clinicalAlertsSummary = null,
             string? responsiblePartyName = null,
             string? responsiblePartyRelationship = null,
             string? responsiblePartyPhone = null)
@@ -56,6 +61,7 @@ namespace BigSmile.Domain.Entities
             Email = NormalizeOptional(email, nameof(email), 256);
             IsActive = isActive;
 
+            SetClinicalAlerts(hasClinicalAlerts, clinicalAlertsSummary);
             SetResponsibleParty(responsiblePartyName, responsiblePartyRelationship, responsiblePartyPhone);
         }
 
@@ -66,6 +72,8 @@ namespace BigSmile.Domain.Entities
             string? primaryPhone,
             string? email,
             bool isActive,
+            bool hasClinicalAlerts,
+            string? clinicalAlertsSummary,
             string? responsiblePartyName,
             string? responsiblePartyRelationship,
             string? responsiblePartyPhone)
@@ -77,6 +85,7 @@ namespace BigSmile.Domain.Entities
             Email = NormalizeOptional(email, nameof(email), 256);
             IsActive = isActive;
 
+            SetClinicalAlerts(hasClinicalAlerts, clinicalAlertsSummary);
             SetResponsibleParty(responsiblePartyName, responsiblePartyRelationship, responsiblePartyPhone);
             UpdatedAt = DateTime.UtcNow;
         }
@@ -120,6 +129,14 @@ namespace BigSmile.Domain.Entities
             ResponsiblePartyName = normalizedName;
             ResponsiblePartyRelationship = normalizedRelationship;
             ResponsiblePartyPhone = normalizedPhone;
+        }
+
+        private void SetClinicalAlerts(bool hasClinicalAlerts, string? clinicalAlertsSummary)
+        {
+            HasClinicalAlerts = hasClinicalAlerts;
+            ClinicalAlertsSummary = hasClinicalAlerts
+                ? NormalizeOptional(clinicalAlertsSummary, nameof(clinicalAlertsSummary), ClinicalAlertsSummaryMaxLength)
+                : null;
         }
 
         private static DateOnly EnsureValidDateOfBirth(DateOnly dateOfBirth)

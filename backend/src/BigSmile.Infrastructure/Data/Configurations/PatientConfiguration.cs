@@ -28,6 +28,12 @@ namespace BigSmile.Infrastructure.Data.Configurations
             builder.Property(patient => patient.Email)
                 .HasMaxLength(256);
 
+            builder.Property(patient => patient.HasClinicalAlerts)
+                .IsRequired();
+
+            builder.Property(patient => patient.ClinicalAlertsSummary)
+                .HasMaxLength(500);
+
             builder.Property(patient => patient.ResponsiblePartyName)
                 .HasMaxLength(100);
 
