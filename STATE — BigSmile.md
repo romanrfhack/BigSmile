@@ -97,7 +97,19 @@
 
 **Objetivo** — [Hecho + Inferencia alineada a docs] Abrir Scheduling solo sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y un módulo Patients ya cerrado.
 
-**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 aún no debe tratarse como iniciada hasta que exista trabajo funcional explícito de Scheduling.
+**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 ya quedó iniciada con un primer slice explícito y acotado de Scheduling.
+
+**Primer slice implementado de Release 2** — [Hecho]
+- agregado `Appointment` tenant-owned y branch-aware
+- enlace obligatorio a `Patient` existente dentro del tenant
+- estatus mínimo explícito `Scheduled` / `Cancelled`
+- creación, edición, reprogramación y cancelación de citas
+- vista mínima de calendario diario/semanal por sucursal
+- filtrado branch-aware usando membership, rol y permisos existentes
+- permisos explícitos `scheduling.read` / `scheduling.write`
+- soporte frontend mínimo con página de scheduling, selector de sucursal, vista day/week y formulario de cita
+
+**Estado de Release 2** — [Hecho] iniciado, no completado.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -133,9 +145,9 @@ Lista priorizada:
 
 1. Continuar Release 1 — Patients sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Preservar el módulo Patients ya cerrado sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada.
+2. Preservar el módulo Patients ya cerrado sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada mientras crece Scheduling.
 
-3. Abrir Release 2 — Scheduling solo cuando el trabajo funcional siguiente lo requiera explícitamente.
+3. Continuar Release 2 — Scheduling desde el slice inicial ya abierto, sin ampliar scope hacia provider management, blocked slots, no-show, attended ni workflows avanzados antes de tiempo.
 
 4. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
 

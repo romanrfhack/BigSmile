@@ -17,6 +17,14 @@ namespace BigSmile.Api.Controllers
             _branchQueryService = branchQueryService ?? throw new ArgumentNullException(nameof(branchQueryService));
         }
 
+        [HttpGet]
+        [Authorize(Policy = AuthorizationPolicies.TenantRead)]
+        public async Task<ActionResult<IReadOnlyList<BranchDto>>> GetAccessible(CancellationToken cancellationToken)
+        {
+            var branches = await _branchQueryService.GetAccessibleBranchesAsync(cancellationToken);
+            return Ok(branches);
+        }
+
         [HttpGet("{id:guid}")]
         [Authorize(Policy = AuthorizationPolicies.BranchRead)]
         public async Task<ActionResult<BranchDto>> GetById(Guid id, CancellationToken cancellationToken)

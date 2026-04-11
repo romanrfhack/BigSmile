@@ -1,0 +1,148 @@
+using BigSmile.SharedKernel;
+using BigSmile.SharedKernel.Multitenancy;
+
+namespace BigSmile.Domain.Entities
+{
+    public class Appointment : Entity<Guid>, ITenantOwnedEntity
+    {
+        private const int NotesMaxLength = 1000;
+        private const int CancellationReasonMaxLength = 500;
+
+        public Guid TenantId { get; private set; }
+        public Tenant Tenant { get; private set; } = null!;
+
+        public Guid BranchId { get; private set; }
+        public Branch Branch { get; private set; } = null!;
+
+        public Guid PatientId { get; private set; }
+        public Patient Patient { get; private set; } = null!;
+
+        public DateTime StartsAt { get; private set; }
+        public DateTime EndsAt { get; private set; }
+        public string? Notes { get; private set; }
+        public AppointmentStatus Status { get; private set; } = AppointmentStatus.Scheduled;
+        public DateTime? CancelledAt { get; private set; }
+        public string? CancellationReason { get; private set; }
+        public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; private set; }
+
+        protected Appointment()
+        {
+        }
+
+        public Appointment(
+            Guid tenantId,
+            Guid branchId,
+            Guid patientId,
+            DateTime startsAt,
+            DateTime endsAt,
+            string? notes = null)
+        {
+            if (tenantId == Guid.Empty)
+            {
+                throw new ArgumentException("Appointment tenant ownership is required.", nameof(tenantId));
+            }
+
+            if (branchId == Guid.Empty)
+            {
+                throw new ArgumentException("Appointment branch is required.", nameof(branchId));
+            }
+
+            if (patientId == Guid.Empty)
+            {
+                throw new ArgumentException("Appointment patient is required.", nameof(patientId));
+            }
+
+            Id = Guid.NewGuid();
+            TenantId = tenantId;
+            BranchId = branchId;
+            PatientId = patientId;
+
+            SetSchedule(startsAt, endsAt);
+            Notes = NormalizeOptional(notes, nameof(notes), NotesMaxLength);
+        }
+
+        public void Update(Guid patientId, DateTime startsAt, DateTime endsAt, string? notes)
+        {
+            EnsureNotCancelled();
+
+            if (patientId == Guid.Empty)
+            {
+                throw new ArgumentException("Appointment patient is required.", nameof(patientId));
+            }
+
+            PatientId = patientId;
+            SetSchedule(startsAt, endsAt);
+            Notes = NormalizeOptional(notes, nameof(notes), NotesMaxLength);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void Reschedule(DateTime startsAt, DateTime endsAt)
+        {
+            EnsureNotCancelled();
+            SetSchedule(startsAt, endsAt);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void Cancel(string? cancellationReason = null)
+        {
+            if (Status == AppointmentStatus.Cancelled)
+            {
+                return;
+            }
+
+            Status = AppointmentStatus.Cancelled;
+            CancellationReason = NormalizeOptional(
+                cancellationReason,
+                nameof(cancellationReason),
+                CancellationReasonMaxLength);
+            CancelledAt = DateTime.UtcNow;
+            UpdatedAt = CancelledAt;
+        }
+
+        private void EnsureNotCancelled()
+        {
+            if (Status == AppointmentStatus.Cancelled)
+            {
+                throw new InvalidOperationException("Cancelled appointments cannot be modified.");
+            }
+        }
+
+        private void SetSchedule(DateTime startsAt, DateTime endsAt)
+        {
+            if (startsAt == default)
+            {
+                throw new ArgumentException("Appointment start time is required.", nameof(startsAt));
+            }
+
+            if (endsAt == default)
+            {
+                throw new ArgumentException("Appointment end time is required.", nameof(endsAt));
+            }
+
+            if (endsAt <= startsAt)
+            {
+                throw new ArgumentException("Appointment end time must be after the start time.", nameof(endsAt));
+            }
+
+            StartsAt = startsAt;
+            EndsAt = endsAt;
+        }
+
+        private static string? NormalizeOptional(string? value, string paramName, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var normalized = value.Trim();
+            if (normalized.Length > maxLength)
+            {
+                throw new ArgumentException($"{paramName} exceeds the allowed length of {maxLength}.", paramName);
+            }
+
+            return normalized;
+        }
+    }
+}

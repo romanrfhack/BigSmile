@@ -9,5 +9,7 @@ namespace BigSmile.Application.Authorization
         public const string BranchReadAssigned = "branch.read.assigned";
         public const string PatientRead = "patient.read";
         public const string PatientWrite = "patient.write";
+        public const string SchedulingRead = "scheduling.read";
+        public const string SchedulingWrite = "scheduling.write";
     }
 }

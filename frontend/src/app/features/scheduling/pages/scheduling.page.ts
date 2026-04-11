@@ -1,0 +1,433 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../core/auth/auth.service';
+import { AppointmentCalendarComponent } from '../components/appointment-calendar.component';
+import { AppointmentFormComponent } from '../components/appointment-form.component';
+import { SchedulingFacade } from '../facades/scheduling.facade';
+import {
+  AppointmentEditorMode,
+  AppointmentFormValue,
+  AppointmentSummary,
+  CalendarViewMode
+} from '../models/scheduling.models';
+
+@Component({
+  selector: 'app-scheduling-page',
+  standalone: true,
+  imports: [CommonModule, FormsModule, AppointmentCalendarComponent, AppointmentFormComponent],
+  template: `
+    <section class="scheduling-page">
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Release 2 / Scheduling</p>
+          <h2>Scheduling foundation</h2>
+          <p class="subtitle">
+            Daily and weekly branch-aware scheduling for {{ tenantName }} on top of the completed Patients module.
+          </p>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" (click)="startCreate()" [disabled]="!canWrite">
+            New appointment
+          </button>
+        </div>
+      </header>
+
+      <section class="toolbar">
+        <label class="control">
+          <span>Branch</span>
+          <select
+            [ngModel]="schedulingFacade.selectedBranchId()"
+            (ngModelChange)="changeBranch($event)"
+            [disabled]="schedulingFacade.loadingBranches()">
+            <option [ngValue]="null">Select a branch</option>
+            <option *ngFor="let branch of schedulingFacade.branches()" [ngValue]="branch.id">
+              {{ branch.name }}
+            </option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span>Calendar date</span>
+          <input
+            type="date"
+            [ngModel]="schedulingFacade.selectedDate()"
+            (ngModelChange)="changeDate($event)" />
+        </label>
+
+        <label class="control">
+          <span>View</span>
+          <select
+            [ngModel]="schedulingFacade.viewMode()"
+            (ngModelChange)="changeViewMode($event)">
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+          </select>
+        </label>
+      </section>
+
+      <div *ngIf="schedulingFacade.branchesError()" class="state-card state-error">
+        {{ schedulingFacade.branchesError() }}
+      </div>
+
+      <div *ngIf="!schedulingFacade.loadingBranches() && !schedulingFacade.branches().length" class="state-card">
+        No accessible branches are available for the current scheduling session.
+      </div>
+
+      <div *ngIf="selectedAppointment" class="selection-card">
+        <div>
+          <p class="selection-label">Selected appointment</p>
+          <strong>{{ selectedAppointment.patientFullName }}</strong>
+          <p>
+            {{ selectedAppointment.startsAt | date: 'medium' }} to {{ selectedAppointment.endsAt | date: 'shortTime' }}
+          </p>
+          <p *ngIf="selectedAppointment.status === 'Cancelled'" class="cancelled-note">
+            This appointment is cancelled and remains visible only for calendar traceability.
+          </p>
+        </div>
+
+        <div class="selection-actions" *ngIf="canWrite && selectedAppointment.status !== 'Cancelled'">
+          <button type="button" class="btn btn-secondary" (click)="startEdit(selectedAppointment)">Edit</button>
+          <button type="button" class="btn btn-secondary" (click)="startReschedule(selectedAppointment)">Reschedule</button>
+          <button type="button" class="btn btn-danger" (click)="cancelSelected()">Cancel appointment</button>
+        </div>
+      </div>
+
+      <div class="content-grid" *ngIf="schedulingFacade.branches().length">
+        <section class="editor-panel" *ngIf="canWrite">
+          <app-appointment-form
+            [mode]="editorMode"
+            [selectedBranchName]="selectedBranchName"
+            [draftDate]="schedulingFacade.selectedDate()"
+            [initialAppointment]="editableAppointment"
+            [patientOptions]="schedulingFacade.patientOptions()"
+            [searchingPatients]="schedulingFacade.loadingPatients()"
+            [saving]="saving"
+            [error]="submitError"
+            (patientSearchChanged)="schedulingFacade.searchPatients($event)"
+            (saved)="save($event)"
+            (cancelled)="resetEditor()">
+          </app-appointment-form>
+        </section>
+
+        <section class="calendar-panel" [class.calendar-panel-wide]="!canWrite">
+          <app-appointment-calendar
+            [calendar]="schedulingFacade.calendar()"
+            [loading]="schedulingFacade.loadingCalendar()"
+            [error]="schedulingFacade.calendarError()"
+            [activeAppointmentId]="selectedAppointment?.id ?? null"
+            (appointmentSelected)="selectAppointment($event)">
+          </app-appointment-calendar>
+        </section>
+      </div>
+    </section>
+  `,
+  styles: [`
+    .scheduling-page {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .page-head,
+    .toolbar,
+    .selection-card,
+    .state-card,
+    .editor-panel,
+    .calendar-panel {
+      border-radius: 20px;
+      border: 1px solid #d7dfe8;
+      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      padding: 1.4rem 1.5rem;
+      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+    }
+
+    .page-head,
+    .selection-card {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .eyebrow,
+    .selection-label {
+      margin: 0 0 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #56708d;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    h2 {
+      margin: 0;
+      color: #16324f;
+      font-size: clamp(1.8rem, 2vw, 2.4rem);
+    }
+
+    .subtitle,
+    .selection-card p {
+      margin: 0.5rem 0 0;
+      color: #5b6e84;
+      max-width: 60ch;
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .control {
+      display: grid;
+      gap: 0.45rem;
+      color: #16324f;
+      font-weight: 600;
+    }
+
+    .control select,
+    .control input {
+      border: 1px solid #c8d4df;
+      border-radius: 14px;
+      padding: 0.85rem 0.95rem;
+      font: inherit;
+      background: #ffffff;
+    }
+
+    .content-grid {
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    }
+
+    .calendar-panel-wide {
+      grid-column: 1 / -1;
+    }
+
+    .selection-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .cancelled-note {
+      color: #9b2d30;
+      font-weight: 600;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 0.85rem 1.1rem;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #0a5bb5;
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: #e5edf5;
+      color: #17304d;
+    }
+
+    .btn-danger {
+      background: #fde3e3;
+      color: #9b2d30;
+    }
+
+    .state-error {
+      border-color: #f2c4c4;
+      background: #fff3f3;
+      color: #8c2525;
+    }
+
+    @media (max-width: 1080px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page-head,
+      .selection-card {
+        flex-direction: column;
+      }
+
+      .header-actions,
+      .selection-actions {
+        width: 100%;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  `]
+})
+export class SchedulingPageComponent implements OnInit {
+  readonly schedulingFacade = inject(SchedulingFacade);
+  private readonly authService = inject(AuthService);
+
+  tenantName = 'the current tenant';
+  editorMode: AppointmentEditorMode = 'create';
+  selectedAppointment: AppointmentSummary | null = null;
+  saving = false;
+  submitError: string | null = null;
+
+  get canWrite(): boolean {
+    return this.authService.hasPermissions(['scheduling.write']);
+  }
+
+  get selectedBranchName(): string {
+    const branchId = this.schedulingFacade.selectedBranchId();
+    return this.schedulingFacade.branches().find(branch => branch.id === branchId)?.name ?? '';
+  }
+
+  get editableAppointment(): AppointmentSummary | null {
+    return this.editorMode === 'create'
+      ? null
+      : this.selectedAppointment;
+  }
+
+  ngOnInit(): void {
+    this.tenantName = this.authService.getCurrentTenant()?.name ?? 'the current tenant';
+    const preferredBranchId = this.authService.getCurrent()?.currentBranch?.id ?? null;
+    this.schedulingFacade.loadInitialContext(preferredBranchId);
+  }
+
+  changeBranch(branchId: string | null): void {
+    this.selectedAppointment = null;
+    this.editorMode = 'create';
+    this.submitError = null;
+    this.schedulingFacade.clearPatientOptions();
+    this.schedulingFacade.selectBranch(branchId);
+  }
+
+  changeDate(date: string): void {
+    this.selectedAppointment = null;
+    this.editorMode = 'create';
+    this.schedulingFacade.setDate(date);
+  }
+
+  changeViewMode(mode: CalendarViewMode): void {
+    this.selectedAppointment = null;
+    this.editorMode = 'create';
+    this.schedulingFacade.setViewMode(mode);
+  }
+
+  startCreate(): void {
+    this.selectedAppointment = null;
+    this.editorMode = 'create';
+    this.submitError = null;
+    this.schedulingFacade.clearPatientOptions();
+  }
+
+  startEdit(appointment: AppointmentSummary): void {
+    this.selectedAppointment = appointment;
+    this.editorMode = 'edit';
+    this.submitError = null;
+  }
+
+  startReschedule(appointment: AppointmentSummary): void {
+    this.selectedAppointment = appointment;
+    this.editorMode = 'reschedule';
+    this.submitError = null;
+  }
+
+  selectAppointment(appointment: AppointmentSummary): void {
+    this.selectedAppointment = appointment;
+    this.editorMode = appointment.status === 'Cancelled' ? 'create' : 'edit';
+    this.submitError = null;
+  }
+
+  resetEditor(): void {
+    this.startCreate();
+  }
+
+  save(payload: AppointmentFormValue): void {
+    const branchId = this.schedulingFacade.selectedBranchId();
+    if (!branchId) {
+      this.submitError = 'Select a branch before saving appointments.';
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    const request$ = this.editorMode === 'create'
+      ? this.schedulingFacade.createAppointment({
+          branchId,
+          patientId: payload.patientId ?? '',
+          startsAt: payload.startsAt,
+          endsAt: payload.endsAt,
+          notes: payload.notes
+        })
+      : this.editorMode === 'reschedule' && this.selectedAppointment
+        ? this.schedulingFacade.rescheduleAppointment(this.selectedAppointment.id, {
+            startsAt: payload.startsAt,
+            endsAt: payload.endsAt
+          })
+        : this.selectedAppointment
+          ? this.schedulingFacade.updateAppointment(this.selectedAppointment.id, {
+              patientId: payload.patientId ?? '',
+              startsAt: payload.startsAt,
+              endsAt: payload.endsAt,
+              notes: payload.notes
+            })
+          : null;
+
+    if (!request$) {
+      this.saving = false;
+      this.submitError = 'No appointment target is selected for this action.';
+      return;
+    }
+
+    request$.subscribe({
+      next: (appointment) => {
+        this.saving = false;
+        this.selectedAppointment = appointment.status === 'Cancelled' ? null : appointment;
+        this.editorMode = appointment.status === 'Cancelled' ? 'create' : 'edit';
+        this.schedulingFacade.clearPatientOptions();
+      },
+      error: (error) => {
+        this.saving = false;
+        this.submitError = error.error?.errors?.AppointmentsController?.[0]
+          ?? error.error?.title
+          ?? 'The appointment could not be saved.';
+      }
+    });
+  }
+
+  cancelSelected(): void {
+    if (!this.selectedAppointment || this.selectedAppointment.status === 'Cancelled' || !this.canWrite) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Cancel the appointment for ${this.selectedAppointment.patientFullName}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    this.schedulingFacade.cancelAppointment(this.selectedAppointment.id, { reason: null })
+      .subscribe({
+        next: () => {
+          this.saving = false;
+          this.startCreate();
+        },
+        error: (error) => {
+          this.saving = false;
+          this.submitError = error.error?.errors?.AppointmentsController?.[0]
+            ?? error.error?.title
+            ?? 'The appointment could not be cancelled.';
+        }
+      });
+  }
+}

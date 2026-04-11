@@ -61,9 +61,10 @@ Canonical project status:
 
 ### Current expected priority
 
-Prepare carefully for the next planned phase:
+Continue the active phase:
 
 * **Release 2 — Scheduling**
+* starting from the initial scheduling slice already implemented
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline
 * while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
 * with continued validation through CI, tests, logging, auditing, and architectural guardrails

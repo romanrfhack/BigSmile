@@ -97,7 +97,7 @@ Canonical project status:
 - `Tenant-Aware Authorization Foundation`: completed
 - `Release 1 — Patients`: completed
 
-Next planned phase:
+Current active phase:
 - `Release 2 — Scheduling`
 
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
@@ -105,7 +105,7 @@ Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Od
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation and the completed `Release 1 — Patients` module while preparing the repository for `Release 2 — Scheduling` in alignment with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation and the completed `Release 1 — Patients` module while implementing `Release 2 — Scheduling` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`

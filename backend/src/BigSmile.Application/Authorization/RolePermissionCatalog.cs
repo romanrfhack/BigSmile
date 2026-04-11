@@ -16,7 +16,11 @@ namespace BigSmile.Application.Authorization
                     Permissions.PlatformTenantsRead,
                     Permissions.TenantRead,
                     Permissions.BranchReadAny,
-                    Permissions.BranchReadAssigned
+                    Permissions.BranchReadAssigned,
+                    Permissions.PatientRead,
+                    Permissions.PatientWrite,
+                    Permissions.SchedulingRead,
+                    Permissions.SchedulingWrite
                 },
                 [SystemRoles.TenantAdmin] = new[]
                 {
@@ -24,7 +28,9 @@ namespace BigSmile.Application.Authorization
                     Permissions.TenantRead,
                     Permissions.BranchReadAny,
                     Permissions.PatientRead,
-                    Permissions.PatientWrite
+                    Permissions.PatientWrite,
+                    Permissions.SchedulingRead,
+                    Permissions.SchedulingWrite
                 },
                 [SystemRoles.TenantUser] = new[]
                 {
@@ -32,7 +38,9 @@ namespace BigSmile.Application.Authorization
                     Permissions.TenantRead,
                     Permissions.BranchReadAssigned,
                     Permissions.PatientRead,
-                    Permissions.PatientWrite
+                    Permissions.PatientWrite,
+                    Permissions.SchedulingRead,
+                    Permissions.SchedulingWrite
                 }
             };
 

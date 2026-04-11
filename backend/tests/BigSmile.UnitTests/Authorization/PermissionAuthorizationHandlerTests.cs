@@ -232,6 +232,48 @@ namespace BigSmile.UnitTests.Authorization
             Assert.False(context.HasSucceeded);
         }
 
+        [Fact]
+        public async Task PermissionRequirement_Succeeds_ForGrantedSchedulingPermission()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Tenant,
+                isAuthenticated: true,
+                Guid.NewGuid().ToString());
+
+            var user = CreatePrincipal(userId, SystemRoles.TenantUser, Permissions.SchedulingWrite);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[] { new PermissionRequirement(Permissions.SchedulingWrite) },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.True(context.HasSucceeded);
+        }
+
+        [Fact]
+        public async Task PermissionRequirement_Fails_WhenSchedulingPermissionIsMissing()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Tenant,
+                isAuthenticated: true,
+                Guid.NewGuid().ToString());
+
+            var user = CreatePrincipal(userId, SystemRoles.TenantUser, Permissions.PatientRead);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[] { new PermissionRequirement(Permissions.SchedulingRead) },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.False(context.HasSucceeded);
+        }
+
         private static ClaimsPrincipal CreatePrincipal(Guid userId, string role, params string[] permissions)
         {
             var claims = new List<Claim>

@@ -5,6 +5,7 @@ import { SessionHomeComponent } from './features/auth/session-home/session-home.
 import { PatientFormPageComponent } from './features/patients/pages/patient-form.page';
 import { PatientListPageComponent } from './features/patients/pages/patient-list.page';
 import { PatientProfilePageComponent } from './features/patients/pages/patient-profile.page';
+import { SchedulingPageComponent } from './features/scheduling/pages/scheduling.page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, canActivate: [anonymousOnlyGuard] },
@@ -46,6 +47,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       requiredPermissions: ['patient.read']
+    }
+  },
+  {
+    path: 'scheduling',
+    component: SchedulingPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['scheduling.read']
     }
   },
   { path: '', redirectTo: '/patients', pathMatch: 'full' },

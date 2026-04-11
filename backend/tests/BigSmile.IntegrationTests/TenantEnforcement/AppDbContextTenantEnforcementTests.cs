@@ -16,6 +16,8 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
             await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
             await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            await SeedAppointmentAsync(databaseName, tenantA.Id, tenantA.Branches.Single().Id, (await GetSinglePatientIdAsync(databaseName, tenantA.Id)), new DateTime(2026, 4, 14, 9, 0, 0), new DateTime(2026, 4, 14, 9, 30, 0));
+            await SeedAppointmentAsync(databaseName, tenantB.Id, tenantB.Branches.Single().Id, (await GetSinglePatientIdAsync(databaseName, tenantB.Id)), new DateTime(2026, 4, 14, 10, 0, 0), new DateTime(2026, 4, 14, 10, 30, 0));
             var tenantContext = new TenantContext();
             tenantContext.SetRequestContext(Guid.NewGuid().ToString(), AccessScope.Tenant, isAuthenticated: true, tenantA.Id.ToString());
 
@@ -24,13 +26,16 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             var tenants = await context.Tenants.OrderBy(tenant => tenant.Name).ToListAsync();
             var branches = await context.Branches.OrderBy(branch => branch.Name).ToListAsync();
             var patients = await context.Patients.OrderBy(patient => patient.LastName).ToListAsync();
+            var appointments = await context.Appointments.OrderBy(appointment => appointment.StartsAt).ToListAsync();
 
             Assert.Single(tenants);
             Assert.Single(branches);
             Assert.Single(patients);
+            Assert.Single(appointments);
             Assert.Equal(tenantA.Id, tenants[0].Id);
             Assert.Equal(tenantA.Id, branches[0].TenantId);
             Assert.Equal(tenantA.Id, patients[0].TenantId);
+            Assert.Equal(tenantA.Id, appointments[0].TenantId);
             Assert.DoesNotContain(tenants, tenant => tenant.Id == tenantB.Id);
         }
 
@@ -121,6 +126,28 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Contains("does not match the current tenant context", exception.Message);
         }
 
+        [Fact]
+        public async Task TenantScopedWrite_BlocksCrossTenantAppointmentWrite()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var tenantContext = new TenantContext();
+            tenantContext.SetRequestContext(Guid.NewGuid().ToString(), AccessScope.Tenant, isAuthenticated: true, tenantA.Id.ToString());
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            context.Appointments.Add(new Appointment(
+                tenantB.Id,
+                tenantB.Branches.Single().Id,
+                patientA.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0),
+                null));
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => context.SaveChangesAsync());
+            Assert.Contains("does not match the current tenant context", exception.Message);
+        }
+
         private static async Task<(Tenant TenantA, Tenant TenantB)> SeedTenantsAsync(string databaseName)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
@@ -135,17 +162,42 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             return (tenantA, tenantB);
         }
 
-        private static async Task SeedPatientAsync(string databaseName, Guid tenantId, string firstName, string lastName)
+        private static async Task<Patient> SeedPatientAsync(string databaseName, Guid tenantId, string firstName, string lastName)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
-            context.Patients.Add(new Patient(
+            var patient = new Patient(
                 tenantId,
                 firstName,
                 lastName,
                 new DateOnly(1991, 2, 14),
                 "5551234567",
-                $"{firstName.ToLowerInvariant()}@example.com"));
+                $"{firstName.ToLowerInvariant()}@example.com");
+            context.Patients.Add(patient);
             await context.SaveChangesAsync();
+
+            return patient;
+        }
+
+        private static async Task SeedAppointmentAsync(
+            string databaseName,
+            Guid tenantId,
+            Guid branchId,
+            Guid patientId,
+            DateTime startsAt,
+            DateTime endsAt)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            context.Appointments.Add(new Appointment(tenantId, branchId, patientId, startsAt, endsAt, null));
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task<Guid> GetSinglePatientIdAsync(string databaseName, Guid tenantId)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            return await context.Patients
+                .Where(patient => patient.TenantId == tenantId)
+                .Select(patient => patient.Id)
+                .SingleAsync();
         }
 
         private static AppDbContext CreateContext(string databaseName, TenantContext tenantContext)

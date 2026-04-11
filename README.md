@@ -257,7 +257,9 @@ Completed foundation milestones:
 
 The latest completed delivery phase is **Release 1 — Patients**.
 
-The next planned phase is **Release 2 — Scheduling**.
+The current active phase is **Release 2 — Scheduling**, started with an initial foundation slice.
+
+The latest completed delivery phase remains **Release 1 — Patients**.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
