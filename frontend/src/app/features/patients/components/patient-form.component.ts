@@ -4,6 +4,26 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { PatientDetail, SavePatientRequest } from '../models/patient.models';
 
+function getTodayIsoDate(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = `${today.getMonth() + 1}`.padStart(2, '0');
+  const day = `${today.getDate()}`.padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function dateOfBirthValidator(control: AbstractControl): ValidationErrors | null {
+  const dateOfBirth = `${control.value ?? ''}`.trim();
+  if (!dateOfBirth) {
+    return null;
+  }
+
+  return dateOfBirth > getTodayIsoDate()
+    ? { futureDateOfBirth: true }
+    : null;
+}
+
 function responsiblePartyValidator(control: AbstractControl): ValidationErrors | null {
   const relationship = `${control.get('responsiblePartyRelationship')?.value ?? ''}`.trim();
   const phone = `${control.get('responsiblePartyPhone')?.value ?? ''}`.trim();
@@ -51,6 +71,7 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
             <span>Date of birth</span>
             <input type="date" formControlName="dateOfBirth" />
             <small *ngIf="showError('dateOfBirth', 'required')">Date of birth is required.</small>
+            <small *ngIf="showError('dateOfBirth', 'futureDateOfBirth')">Date of birth cannot be in the future.</small>
           </label>
 
           <label class="checkbox-field">
@@ -301,7 +322,7 @@ export class PatientFormComponent implements OnChanges {
   readonly form = this.formBuilder.group({
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
-    dateOfBirth: ['', [Validators.required]],
+    dateOfBirth: ['', [Validators.required, dateOfBirthValidator]],
     primaryPhone: ['', [Validators.maxLength(40)]],
     email: ['', [Validators.email, Validators.maxLength(256)]],
     isActive: [true, [Validators.required]],

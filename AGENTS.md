@@ -95,16 +95,17 @@ Canonical project status:
 - `Pre-auth hardening`: completed
 - `Identity + Persistence Foundation`: completed
 - `Tenant-Aware Authorization Foundation`: completed
+- `Release 1 — Patients`: completed
 
 Next planned phase:
-- `Release 1 — Patients`
+- `Release 2 — Scheduling`
 
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
 Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation while starting `Release 1 — Patients` in alignment with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation and the completed `Release 1 — Patients` module while preparing the repository for `Release 2 — Scheduling` in alignment with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`

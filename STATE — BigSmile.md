@@ -34,19 +34,21 @@
 
 [Hecho] Tenant-Aware Authorization Foundation — completada.
 
+[Hecho] Release 1 — Patients — completada.
+
 [Hecho] La corrección de consistencia de persistencia quedó absorbida dentro de Identity + Persistence Foundation: tenant y branch ya no viven en un path in-memory separado, el seed es durable y el login real contra SQL Server ya fue validado.
 
-[Hecho] No hay otra fase cerrada explícitamente en el roadmap funcional. Patients, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
+[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a Patients; por tanto, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
 
 ## 4. Fase actual
 
-[Hecho] La última fase marcada como completada es Tenant-Aware Authorization Foundation.
+[Hecho] La última fase marcada como completada es Release 1 — Patients.
 
-[Hecho] Release 1 — Patients ya fue abierta con un primer vertical slice funcional y acotado.
+[Hecho] Release 1 — Patients ya quedó cerrada con el alcance roadmap mínimo confirmado en código, pruebas y documentación alineada.
 
 [Hecho] README.md, PROJECT_MAP.md y AGENTS.md ya fueron reconciliados con este estado canónico y ubican al repositorio más allá del bootstrap / early foundation stage.
 
-[Hecho + Inferencia operativa] El proyecto ya no está solo “listo para abrir” Patients; ahora tiene una primera base implementada del módulo sobre la autorización tenant-aware ya validada.
+[Hecho + Inferencia operativa] El proyecto ya no está solo “listo para abrir” Patients; ahora tiene un release funcional completo del módulo sobre la autorización tenant-aware ya validada.
 
 [Hecho combinado] Lo ya establecido a nivel fundacional incluye, como mínimo:
 - estructura de solución
@@ -80,17 +82,22 @@
 - soporte en alta/edición/perfil
 - limpieza automática del summary cuando `HasClinicalAlerts = false`
 
+[Hecho] La corrección mínima final de cierre para Release 1 quedó absorbida sin ampliar scope:
+- validación frontend para impedir fecha de nacimiento futura en el formulario de pacientes
+- prueba frontend enfocada para ese guardrail operativo
+- validación backend existente preservada sin cambios
+
 [Hecho] Patients sigue manteniendo el modelo branch-neutral y tenant-owned; este avance no abre aún expediente clínico, diagnósticos, historia clínica, timeline, adjuntos, scheduling ni otros módulos posteriores.
 
-[Hecho] No existe evidencia canónica de cierre para los releases funcionales 1–7 del roadmap; por tanto, Patients, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados/cerrados.
+[Hecho] Con esa corrección mínima final, Release 1 — Patients ya tiene evidencia suficiente de cierre sin abrir sub-slices adicionales ni debilitar tenant isolation.
 
 ## 5. Siguiente fase prevista
 
-**Nombre exacto** — [Hecho] Release 1 — Patients.
+**Nombre exacto** — [Hecho] Release 2 — Scheduling.
 
-**Objetivo** — [Hecho + Inferencia alineada a docs] Continuar Release 1 — Patients sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y override de plataforma explícito.
+**Objetivo** — [Hecho + Inferencia alineada a docs] Abrir Scheduling solo sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y un módulo Patients ya cerrado.
 
-**Estado operativo actual** — [Hecho] El release ya comenzó con un slice fundacional pequeño y coherente; todavía no debe tratarse como release cerrado.
+**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 aún no debe tratarse como iniciada hasta que exista trabajo funcional explícito de Scheduling.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -126,9 +133,9 @@ Lista priorizada:
 
 1. Continuar Release 1 — Patients sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Extender el slice inicial de Patients sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada.
+2. Preservar el módulo Patients ya cerrado sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada.
 
-3. Reutilizar el modelo de authorization por scope/membership/permiso al introducir más use cases de pacientes.
+3. Abrir Release 2 — Scheduling solo cuando el trabajo funcional siguiente lo requiera explícitamente.
 
 4. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
 
@@ -156,6 +163,6 @@ Lista priorizada:
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation y Tenant-Aware Authorization Foundation; tratar README.md, PROJECT_MAP.md y AGENTS.md como reconciliados con STATE; no asumir implementados o cerrados los releases funcionales del MVP mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation y Release 1 — Patients; tratar README.md, PROJECT_MAP.md y AGENTS.md como reconciliados con STATE; no asumir implementados o cerrados los releases funcionales posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
 
-**Consecuencias:** La prioridad inmediata pasa a ser abrir Release 1 — Patients sobre una base ya validada de autorización tenant-aware, override explícito y enforcement centralizado, manteniendo sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
+**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Release 1 — Patients y dejar explícito que Release 2 — Scheduling es la siguiente fase prevista, manteniendo sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.

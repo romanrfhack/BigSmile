@@ -253,12 +253,15 @@ Completed foundation milestones:
 * **Pre-auth hardening**
 * **Identity + Persistence Foundation**
 * **Tenant-Aware Authorization Foundation**
+* **Release 1 — Patients**
 
-The current delivery phase is **Release 1 — Patients**.
+The latest completed delivery phase is **Release 1 — Patients**.
+
+The next planned phase is **Release 2 — Scheduling**.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
-Release 1 has now started with an initial Patients slice that adds tenant-scoped patient registration, update, search, and profile retrieval, plus responsible-party data and explicit `patient.read` / `patient.write` permissions. The release is still in progress; clinical alerts and the rest of the Patients roadmap scope are not yet complete.
+Release 1 is now formally complete. The Patients module covers tenant-scoped patient registration, update, search, and profile retrieval; responsible-party data; active/inactive status; basic clinical alerts; and the small validation guardrails required for the release, including backend enforcement and client-side prevention of future dates of birth.
 
 The repository should be treated as having an established technical and architectural foundation, but not as functionally complete. No functional roadmap release should be assumed closed unless the codebase and aligned documentation explicitly prove it.
 

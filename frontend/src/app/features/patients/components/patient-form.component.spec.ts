@@ -1,6 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { PatientFormComponent } from './patient-form.component';
 
+function getFutureDateIsoString(): string {
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 1);
+
+  const year = futureDate.getFullYear();
+  const month = `${futureDate.getMonth() + 1}`.padStart(2, '0');
+  const day = `${futureDate.getDate()}`.padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
 describe('PatientFormComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -61,6 +72,28 @@ describe('PatientFormComponent', () => {
     component.submit();
 
     expect(component.form.errors?.['responsiblePartyNameRequired']).toBe(true);
+  });
+
+  it('blocks submission when the date of birth is in the future', () => {
+    const fixture = TestBed.createComponent(PatientFormComponent);
+    const component = fixture.componentInstance;
+    const futureDateOfBirth = getFutureDateIsoString();
+    let emittedPayload: unknown = null;
+
+    component.saved.subscribe((payload) => {
+      emittedPayload = payload;
+    });
+
+    component.form.patchValue({
+      firstName: 'Ana',
+      lastName: 'Lopez',
+      dateOfBirth: futureDateOfBirth
+    });
+
+    component.submit();
+
+    expect(component.form.controls.dateOfBirth.hasError('futureDateOfBirth')).toBe(true);
+    expect(emittedPayload).toBeNull();
   });
 
   it('clears and disables the alert summary when clinical alerts are turned off', () => {

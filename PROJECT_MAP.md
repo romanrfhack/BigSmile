@@ -57,16 +57,17 @@ Canonical project status:
 * **Pre-auth hardening:** completed
 * **Identity + Persistence Foundation:** completed
 * **Tenant-Aware Authorization Foundation:** completed
+* **Release 1 — Patients:** completed
 
 ### Current expected priority
 
-Continue carefully:
+Prepare carefully for the next planned phase:
 
-* **Release 1 — Patients**
+* **Release 2 — Scheduling**
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline
 * while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
 * with continued validation through CI, tests, logging, auditing, and architectural guardrails
-* building forward from the first implemented patient slice covering registration, update, search, profile, responsible party, and active/inactive status
+* building forward from the completed Patients release covering registration, update, search, profile, responsible party, active/inactive status, clinical alerts, and basic validation guardrails
 
 Do not treat the repository as feature-complete unless the actual codebase clearly proves it. No functional roadmap release should be treated as closed without explicit code and documentation evidence.
 
