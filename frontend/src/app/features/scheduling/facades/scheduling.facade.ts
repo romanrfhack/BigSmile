@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { finalize, tap } from 'rxjs';
 import { SchedulingApiService } from '../data-access/scheduling-api.service';
 import {
+  CreateAppointmentBlockRequest,
   CalendarView,
   CalendarViewMode,
   CancelAppointmentRequest,
@@ -137,6 +138,18 @@ export class SchedulingFacade {
 
   cancelAppointment(id: string, payload: CancelAppointmentRequest) {
     return this.schedulingApi.cancelAppointment(id, payload).pipe(
+      tap(() => this.loadCalendar())
+    );
+  }
+
+  createAppointmentBlock(payload: CreateAppointmentBlockRequest) {
+    return this.schedulingApi.createAppointmentBlock(payload).pipe(
+      tap(() => this.loadCalendar())
+    );
+  }
+
+  deleteAppointmentBlock(id: string) {
+    return this.schedulingApi.deleteAppointmentBlock(id).pipe(
       tap(() => this.loadCalendar())
     );
   }

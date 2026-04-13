@@ -17,15 +17,18 @@ namespace BigSmile.Application.Features.Scheduling.Queries
     public sealed class AppointmentQueryService : IAppointmentQueryService
     {
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IAppointmentBlockRepository _appointmentBlockRepository;
         private readonly IBranchAccessService _branchAccessService;
         private readonly ITenantContext _tenantContext;
 
         public AppointmentQueryService(
             IAppointmentRepository appointmentRepository,
+            IAppointmentBlockRepository appointmentBlockRepository,
             IBranchAccessService branchAccessService,
             ITenantContext tenantContext)
         {
             _appointmentRepository = appointmentRepository ?? throw new ArgumentNullException(nameof(appointmentRepository));
+            _appointmentBlockRepository = appointmentBlockRepository ?? throw new ArgumentNullException(nameof(appointmentBlockRepository));
             _branchAccessService = branchAccessService ?? throw new ArgumentNullException(nameof(branchAccessService));
             _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
         }
@@ -53,6 +56,11 @@ namespace BigSmile.Application.Features.Scheduling.Queries
                 rangeStart,
                 rangeEnd,
                 cancellationToken);
+            var appointmentBlocks = await _appointmentBlockRepository.GetCalendarAsync(
+                branch.Id,
+                rangeStart,
+                rangeEnd,
+                cancellationToken);
 
             var calendarDays = Enumerable.Range(0, normalizedDays)
                 .Select(offset =>
@@ -64,8 +72,14 @@ namespace BigSmile.Application.Features.Scheduling.Queries
                         .ThenBy(appointment => appointment.Patient.FullName)
                         .Select(appointment => appointment.ToSummaryDto())
                         .ToArray();
+                    var blockedSlots = appointmentBlocks
+                        .Where(appointmentBlock => DateOnly.FromDateTime(appointmentBlock.StartsAt) == date)
+                        .OrderBy(appointmentBlock => appointmentBlock.StartsAt)
+                        .ThenBy(appointmentBlock => appointmentBlock.EndsAt)
+                        .Select(appointmentBlock => appointmentBlock.ToSummaryDto())
+                        .ToArray();
 
-                    return new CalendarDayDto(date, items);
+                    return new CalendarDayDto(date, items, blockedSlots);
                 })
                 .ToArray();
 

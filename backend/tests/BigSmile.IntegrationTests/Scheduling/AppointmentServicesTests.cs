@@ -163,10 +163,74 @@ namespace BigSmile.IntegrationTests.Scheduling
             Assert.Equal(new DateTime(2026, 4, 14, 10, 45, 0), storedAppointment.EndsAt);
         }
 
+        [Fact]
+        public async Task CreateAsync_BlocksSchedulingWhenBlockedSlotExists()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            await SeedAppointmentBlockAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 10, 0, 0),
+                "Morning huddle");
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.CreateAsync(
+                new CreateAppointmentCommand(
+                    seedData.PrimaryBranch.Id,
+                    patient.Id,
+                    new DateTime(2026, 4, 14, 9, 15, 0),
+                    new DateTime(2026, 4, 14, 9, 45, 0),
+                    null)));
+
+            Assert.Contains("blocked time slots", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task RescheduleAsync_BlocksSchedulingWhenBlockedSlotExists()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 8, 0, 0),
+                new DateTime(2026, 4, 14, 8, 30, 0));
+            await SeedAppointmentBlockAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 10, 0, 0),
+                "Morning huddle");
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.RescheduleAsync(
+                appointment.Id,
+                new RescheduleAppointmentCommand(
+                    new DateTime(2026, 4, 14, 9, 15, 0),
+                    new DateTime(2026, 4, 14, 9, 45, 0))));
+
+            Assert.Contains("blocked time slots", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
         private static AppointmentCommandService CreateCommandService(AppDbContext context, TenantContext tenantContext)
         {
             return new AppointmentCommandService(
                 new EfAppointmentRepository(context),
+                new EfAppointmentBlockRepository(context),
                 new EfPatientRepository(context),
                 new BranchAccessService(
                     new EfBranchRepository(context),
@@ -180,6 +244,7 @@ namespace BigSmile.IntegrationTests.Scheduling
         {
             return new AppointmentQueryService(
                 new EfAppointmentRepository(context),
+                new EfAppointmentBlockRepository(context),
                 new BranchAccessService(
                     new EfBranchRepository(context),
                     new EfUserTenantMembershipRepository(context),
@@ -250,6 +315,23 @@ namespace BigSmile.IntegrationTests.Scheduling
             await context.SaveChangesAsync();
 
             return appointment;
+        }
+
+        private static async Task<AppointmentBlock> SeedAppointmentBlockAsync(
+            string databaseName,
+            Guid tenantId,
+            Guid branchId,
+            DateTime startsAt,
+            DateTime endsAt,
+            string? label)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var appointmentBlock = new AppointmentBlock(tenantId, branchId, startsAt, endsAt, label);
+
+            context.AppointmentBlocks.Add(appointmentBlock);
+            await context.SaveChangesAsync();
+
+            return appointmentBlock;
         }
 
         private static AppDbContext CreateContext(string databaseName, TenantContext tenantContext)

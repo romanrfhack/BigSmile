@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { AppointmentSummary, CalendarView } from '../models/scheduling.models';
+import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../models/scheduling.models';
 
 @Component({
   selector: 'app-appointment-calendar',
@@ -15,12 +15,28 @@ import { AppointmentSummary, CalendarView } from '../models/scheduling.models';
         <article *ngFor="let day of currentCalendar.calendarDays" class="day-column">
           <header class="day-head">
             <h3>{{ day.date | date: 'fullDate' }}</h3>
-            <p>{{ day.appointments.length }} appointment{{ day.appointments.length === 1 ? '' : 's' }}</p>
+            <p>
+              {{ day.appointments.length }} appointment{{ day.appointments.length === 1 ? '' : 's' }}
+              ·
+              {{ day.blockedSlots.length }} blocked slot{{ day.blockedSlots.length === 1 ? '' : 's' }}
+            </p>
           </header>
 
-          <div *ngIf="!day.appointments.length" class="empty-state">
-            No appointments scheduled for this branch and date.
+          <div *ngIf="!day.appointments.length && !day.blockedSlots.length" class="empty-state">
+            No scheduling activity for this branch and date.
           </div>
+
+          <button
+            type="button"
+            *ngFor="let blockedSlot of day.blockedSlots"
+            class="appointment-card block-card"
+            [class.block-active]="blockedSlot.id === activeBlockId"
+            (click)="blockedSlotSelected.emit(blockedSlot)">
+            <span class="time-range">{{ blockedSlot.startsAt | date: 'shortTime' }} - {{ blockedSlot.endsAt | date: 'shortTime' }}</span>
+            <strong>{{ blockedSlot.label || 'Blocked slot' }}</strong>
+            <p>Appointments are not allowed in this branch range.</p>
+            <span class="status-pill block-pill">Blocked</span>
+          </button>
 
           <button
             type="button"
@@ -104,6 +120,16 @@ import { AppointmentSummary, CalendarView } from '../models/scheduling.models';
       box-shadow: inset 0 0 0 1px #0a5bb5;
     }
 
+    .block-card {
+      background: #fff7eb;
+      border-color: #f0d5ad;
+    }
+
+    .block-active {
+      border-color: #8b4f0f;
+      box-shadow: inset 0 0 0 1px #8b4f0f;
+    }
+
     .appointment-cancelled {
       background: #fff3f3;
       border-color: #f2c4c4;
@@ -139,6 +165,11 @@ import { AppointmentSummary, CalendarView } from '../models/scheduling.models';
       color: #9b2d30;
     }
 
+    .block-pill {
+      background: #f8e3c5;
+      color: #8b4f0f;
+    }
+
     .state-error {
       border-color: #f2c4c4;
       background: #fff3f3;
@@ -151,6 +182,8 @@ export class AppointmentCalendarComponent {
   @Input() loading = false;
   @Input() error: string | null = null;
   @Input() activeAppointmentId: string | null = null;
+  @Input() activeBlockId: string | null = null;
 
   @Output() appointmentSelected = new EventEmitter<AppointmentSummary>();
+  @Output() blockedSlotSelected = new EventEmitter<AppointmentBlockSummary>();
 }

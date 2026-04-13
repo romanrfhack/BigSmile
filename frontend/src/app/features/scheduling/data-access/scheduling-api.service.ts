@@ -3,9 +3,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
+  AppointmentBlockSummary,
   AppointmentSummary,
   CalendarView,
   CancelAppointmentRequest,
+  CreateAppointmentBlockRequest,
   CreateAppointmentRequest,
   RescheduleAppointmentRequest,
   SchedulingBranch,
@@ -19,6 +21,7 @@ import {
 export class SchedulingApiService {
   private readonly http = inject(HttpClient);
   private readonly appointmentsBaseUrl = `${environment.apiUrl}/api/appointments`;
+  private readonly appointmentBlocksBaseUrl = `${environment.apiUrl}/api/appointmentblocks`;
   private readonly branchesBaseUrl = `${environment.apiUrl}/api/branches`;
   private readonly patientsBaseUrl = `${environment.apiUrl}/api/patients`;
 
@@ -59,5 +62,13 @@ export class SchedulingApiService {
 
   cancelAppointment(id: string, payload: CancelAppointmentRequest): Observable<AppointmentSummary> {
     return this.http.post<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/cancel`, payload);
+  }
+
+  createAppointmentBlock(payload: CreateAppointmentBlockRequest): Observable<AppointmentBlockSummary> {
+    return this.http.post<AppointmentBlockSummary>(this.appointmentBlocksBaseUrl, payload);
+  }
+
+  deleteAppointmentBlock(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.appointmentBlocksBaseUrl}/${id}`);
   }
 }

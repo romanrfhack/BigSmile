@@ -7,11 +7,13 @@ describe('SchedulingFacade', () => {
   let facade: SchedulingFacade;
   let requestedCalendarArgs: [string, string, number] | null;
   let requestedPatientSearch: string | null;
+  let calendarLoadCount: number;
   let api: SchedulingApiService;
 
   beforeEach(() => {
     requestedCalendarArgs = null;
     requestedPatientSearch = null;
+    calendarLoadCount = 0;
 
     api = {
       listAccessibleBranches: () => of([
@@ -26,6 +28,7 @@ describe('SchedulingFacade', () => {
         }
       ]),
       getCalendar: (branchId: string, startDate: string, days: number) => {
+        calendarLoadCount += 1;
         requestedCalendarArgs = [branchId, startDate, days];
         return of({
           branchId,
@@ -34,7 +37,8 @@ describe('SchedulingFacade', () => {
           calendarDays: [
             {
               date: startDate,
-              appointments: []
+              appointments: [],
+              blockedSlots: []
             }
           ]
         });
@@ -54,7 +58,15 @@ describe('SchedulingFacade', () => {
       createAppointment: () => of(),
       updateAppointment: () => of(),
       rescheduleAppointment: () => of(),
-      cancelAppointment: () => of()
+      cancelAppointment: () => of(),
+      createAppointmentBlock: () => of({
+        id: 'block-1',
+        branchId: 'branch-1',
+        startsAt: '2026-04-16T13:00:00',
+        endsAt: '2026-04-16T14:00:00',
+        label: 'Lunch break'
+      }),
+      deleteAppointmentBlock: () => of(void 0)
     } as unknown as SchedulingApiService;
 
     TestBed.configureTestingModule({
@@ -82,5 +94,19 @@ describe('SchedulingFacade', () => {
     expect(requestedPatientSearch).toBe('Ana');
     expect(facade.patientOptions()[0]?.fullName).toBe('Ana Lopez');
     expect(facade.patientOptions()[0]?.hasClinicalAlerts).toBe(true);
+  });
+
+  it('reloads the calendar after a blocked slot is created', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+
+    facade.createAppointmentBlock({
+      branchId: 'branch-1',
+      startsAt: '2026-04-16T13:00',
+      endsAt: '2026-04-16T14:00',
+      label: 'Lunch break'
+    }).subscribe();
+
+    expect(calendarLoadCount).toBe(2);
   });
 });

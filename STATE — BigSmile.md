@@ -97,7 +97,7 @@
 
 **Objetivo** — [Hecho + Inferencia alineada a docs] Abrir Scheduling solo sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y un módulo Patients ya cerrado.
 
-**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 ya quedó iniciada con un primer slice explícito y acotado de Scheduling.
+**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 ya quedó iniciada y ya absorbió un segundo sub-slice mínimo de Scheduling sin ampliar scope fuera del calendario operativo branch-aware.
 
 **Primer slice implementado de Release 2** — [Hecho]
 - agregado `Appointment` tenant-owned y branch-aware
@@ -108,6 +108,17 @@
 - filtrado branch-aware usando membership, rol y permisos existentes
 - permisos explícitos `scheduling.read` / `scheduling.write`
 - soporte frontend mínimo con página de scheduling, selector de sucursal, vista day/week y formulario de cita
+
+**Segundo sub-slice implementado de Release 2** — [Hecho]
+- agregado `AppointmentBlock` tenant-owned y branch-aware como entidad dedicada, sin sobrecargar `AppointmentStatus`
+- rango horario mínimo `StartsAt` / `EndsAt` con validación explícita de rango válido
+- `Label` opcional corto para motivo operativo del bloqueo
+- persistencia EF Core + migración dedicada `AddAppointmentBlocks`
+- visibilidad de blocked slots dentro del mismo read model del calendario existente, sin crear una segunda vista de acceso
+- endpoints mínimos para crear y eliminar blocked slots dentro del bounded context Scheduling
+- bloqueo de creación/reprogramación de citas cuando se solapan con blocked slots de la misma sucursal
+- cobertura automática para creación/lectura tenant-scoped, acceso cross-tenant prohibido, restricciones branch-aware y colisiones cita-vs-block
+- soporte frontend mínimo para crear, visualizar y eliminar blocked slots desde la página actual de Scheduling
 
 **Estado de Release 2** — [Hecho] iniciado, no completado.
 
@@ -147,7 +158,7 @@ Lista priorizada:
 
 2. Preservar el módulo Patients ya cerrado sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada mientras crece Scheduling.
 
-3. Continuar Release 2 — Scheduling desde el slice inicial ya abierto, sin ampliar scope hacia provider management, blocked slots, no-show, attended ni workflows avanzados antes de tiempo.
+3. Continuar Release 2 — Scheduling desde los slices ya abiertos, sin ampliar scope hacia provider management, no-show, attended ni workflows avanzados antes de tiempo.
 
 4. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
 

@@ -17,5 +17,15 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
                 appointment.Notes,
                 appointment.CancellationReason);
         }
+
+        public static AppointmentBlockSummaryDto ToSummaryDto(this AppointmentBlock appointmentBlock)
+        {
+            return new AppointmentBlockSummaryDto(
+                appointmentBlock.Id,
+                appointmentBlock.BranchId,
+                appointmentBlock.StartsAt,
+                appointmentBlock.EndsAt,
+                appointmentBlock.Label);
+        }
     }
 }

@@ -37,17 +37,20 @@ namespace BigSmile.Application.Features.Scheduling.Commands
     public sealed class AppointmentCommandService : IAppointmentCommandService
     {
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IAppointmentBlockRepository _appointmentBlockRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IBranchAccessService _branchAccessService;
         private readonly ITenantContext _tenantContext;
 
         public AppointmentCommandService(
             IAppointmentRepository appointmentRepository,
+            IAppointmentBlockRepository appointmentBlockRepository,
             IPatientRepository patientRepository,
             IBranchAccessService branchAccessService,
             ITenantContext tenantContext)
         {
             _appointmentRepository = appointmentRepository ?? throw new ArgumentNullException(nameof(appointmentRepository));
+            _appointmentBlockRepository = appointmentBlockRepository ?? throw new ArgumentNullException(nameof(appointmentBlockRepository));
             _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
             _branchAccessService = branchAccessService ?? throw new ArgumentNullException(nameof(branchAccessService));
             _tenantContext = tenantContext ?? throw new ArgumentNullException(nameof(tenantContext));
@@ -60,6 +63,11 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             var patient = await GetRequiredPatientAsync(command.PatientId, cancellationToken);
 
             EnsurePatientBelongsToTenant(patient, tenantId);
+            await EnsureNoAppointmentBlockConflictAsync(
+                branch.Id,
+                command.StartsAt,
+                command.EndsAt,
+                cancellationToken);
 
             var appointment = new Appointment(
                 tenantId,
@@ -86,6 +94,14 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             var patient = await GetRequiredPatientAsync(command.PatientId, cancellationToken);
 
             EnsurePatientBelongsToTenant(patient, branch.TenantId);
+            if (HasScheduleChanged(appointment, command.StartsAt, command.EndsAt))
+            {
+                await EnsureNoAppointmentBlockConflictAsync(
+                    appointment.BranchId,
+                    command.StartsAt,
+                    command.EndsAt,
+                    cancellationToken);
+            }
 
             appointment.Update(
                 patient.Id,
@@ -107,6 +123,14 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             }
 
             await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
+            if (HasScheduleChanged(appointment, command.StartsAt, command.EndsAt))
+            {
+                await EnsureNoAppointmentBlockConflictAsync(
+                    appointment.BranchId,
+                    command.StartsAt,
+                    command.EndsAt,
+                    cancellationToken);
+            }
 
             appointment.Reschedule(command.StartsAt, command.EndsAt);
             await _appointmentRepository.UpdateAsync(appointment, cancellationToken);
@@ -173,6 +197,30 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             {
                 throw new InvalidOperationException("Appointments can only reference patients from the current tenant.");
             }
+        }
+
+        private async Task EnsureNoAppointmentBlockConflictAsync(
+            Guid branchId,
+            DateTime startsAt,
+            DateTime endsAt,
+            CancellationToken cancellationToken)
+        {
+            var overlapsBlockedSlot = await _appointmentBlockRepository.ExistsOverlappingAsync(
+                branchId,
+                startsAt,
+                endsAt,
+                cancellationToken);
+
+            if (overlapsBlockedSlot)
+            {
+                throw new InvalidOperationException(
+                    "Appointments cannot be scheduled inside blocked time slots for the selected branch.");
+            }
+        }
+
+        private static bool HasScheduleChanged(Appointment appointment, DateTime startsAt, DateTime endsAt)
+        {
+            return appointment.StartsAt != startsAt || appointment.EndsAt != endsAt;
         }
 
         private Guid GetRequiredTenantId()

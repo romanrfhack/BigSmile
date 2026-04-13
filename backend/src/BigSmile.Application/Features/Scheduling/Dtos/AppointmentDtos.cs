@@ -11,9 +11,17 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
         string? Notes,
         string? CancellationReason);
 
+    public sealed record AppointmentBlockSummaryDto(
+        Guid Id,
+        Guid BranchId,
+        DateTime StartsAt,
+        DateTime EndsAt,
+        string? Label);
+
     public sealed record CalendarDayDto(
         DateOnly Date,
-        IReadOnlyList<AppointmentSummaryDto> Appointments);
+        IReadOnlyList<AppointmentSummaryDto> Appointments,
+        IReadOnlyList<AppointmentBlockSummaryDto> BlockedSlots);
 
     public sealed record CalendarViewDto(
         Guid BranchId,

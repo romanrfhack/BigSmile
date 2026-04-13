@@ -2,20 +2,31 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
+import { AppointmentBlockFormComponent } from '../components/appointment-block-form.component';
 import { AppointmentCalendarComponent } from '../components/appointment-calendar.component';
 import { AppointmentFormComponent } from '../components/appointment-form.component';
 import { SchedulingFacade } from '../facades/scheduling.facade';
 import {
+  AppointmentBlockFormValue,
+  AppointmentBlockSummary,
   AppointmentEditorMode,
   AppointmentFormValue,
   AppointmentSummary,
   CalendarViewMode
 } from '../models/scheduling.models';
 
+type SchedulingEditorSurface = 'appointment' | 'block';
+
 @Component({
   selector: 'app-scheduling-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppointmentCalendarComponent, AppointmentFormComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AppointmentCalendarComponent,
+    AppointmentFormComponent,
+    AppointmentBlockFormComponent
+  ],
   template: `
     <section class="scheduling-page">
       <header class="page-head">
@@ -27,9 +38,12 @@ import {
           </p>
         </div>
 
-        <div class="header-actions">
-          <button type="button" class="btn btn-primary" (click)="startCreate()" [disabled]="!canWrite">
+        <div class="header-actions" *ngIf="canWrite">
+          <button type="button" class="btn btn-primary" (click)="startCreate()">
             New appointment
+          </button>
+          <button type="button" class="btn btn-block" (click)="startCreateBlock()">
+            Block time
           </button>
         </div>
       </header>
@@ -94,9 +108,27 @@ import {
         </div>
       </div>
 
+      <div *ngIf="selectedBlockedSlot" class="selection-card selection-card-block">
+        <div>
+          <p class="selection-label">Selected blocked slot</p>
+          <strong>{{ selectedBlockedSlot.label || 'Blocked slot' }}</strong>
+          <p>
+            {{ selectedBlockedSlot.startsAt | date: 'medium' }} to {{ selectedBlockedSlot.endsAt | date: 'shortTime' }}
+          </p>
+          <p class="blocked-note">
+            Appointments are blocked for this branch during the selected range.
+          </p>
+        </div>
+
+        <div class="selection-actions" *ngIf="canWrite">
+          <button type="button" class="btn btn-danger" (click)="removeSelectedBlock()">Remove blocked slot</button>
+        </div>
+      </div>
+
       <div class="content-grid" *ngIf="schedulingFacade.branches().length">
         <section class="editor-panel" *ngIf="canWrite">
           <app-appointment-form
+            *ngIf="editorSurface === 'appointment'"
             [mode]="editorMode"
             [selectedBranchName]="selectedBranchName"
             [draftDate]="schedulingFacade.selectedDate()"
@@ -106,9 +138,20 @@ import {
             [saving]="saving"
             [error]="submitError"
             (patientSearchChanged)="schedulingFacade.searchPatients($event)"
-            (saved)="save($event)"
+            (saved)="saveAppointment($event)"
             (cancelled)="resetEditor()">
           </app-appointment-form>
+
+          <app-appointment-block-form
+            *ngIf="editorSurface === 'block'"
+            [selectedBranchName]="selectedBranchName"
+            [draftDate]="schedulingFacade.selectedDate()"
+            [revision]="blockEditorRevision"
+            [saving]="saving"
+            [error]="submitError"
+            (saved)="saveBlockedSlot($event)"
+            (cancelled)="resetEditor()">
+          </app-appointment-block-form>
         </section>
 
         <section class="calendar-panel" [class.calendar-panel-wide]="!canWrite">
@@ -117,7 +160,9 @@ import {
             [loading]="schedulingFacade.loadingCalendar()"
             [error]="schedulingFacade.calendarError()"
             [activeAppointmentId]="selectedAppointment?.id ?? null"
-            (appointmentSelected)="selectAppointment($event)">
+            [activeBlockId]="selectedBlockedSlot?.id ?? null"
+            (appointmentSelected)="selectAppointment($event)"
+            (blockedSlotSelected)="selectBlockedSlot($event)">
           </app-appointment-calendar>
         </section>
       </div>
@@ -150,6 +195,11 @@ import {
       align-items: flex-start;
     }
 
+    .selection-card-block {
+      border-color: #f0d5ad;
+      background: linear-gradient(180deg, #fffaf2 0%, #fff5e7 100%);
+    }
+
     .eyebrow,
     .selection-label {
       margin: 0 0 0.4rem;
@@ -171,6 +221,12 @@ import {
       margin: 0.5rem 0 0;
       color: #5b6e84;
       max-width: 60ch;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .toolbar {
@@ -216,6 +272,11 @@ import {
       font-weight: 600;
     }
 
+    .blocked-note {
+      color: #8b4f0f;
+      font-weight: 600;
+    }
+
     .btn {
       border: none;
       border-radius: 999px;
@@ -238,6 +299,11 @@ import {
     .btn-danger {
       background: #fde3e3;
       color: #9b2d30;
+    }
+
+    .btn-block {
+      background: #8b4f0f;
+      color: #ffffff;
     }
 
     .state-error {
@@ -274,8 +340,11 @@ export class SchedulingPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   tenantName = 'the current tenant';
+  editorSurface: SchedulingEditorSurface = 'appointment';
   editorMode: AppointmentEditorMode = 'create';
   selectedAppointment: AppointmentSummary | null = null;
+  selectedBlockedSlot: AppointmentBlockSummary | null = null;
+  blockEditorRevision = 0;
   saving = false;
   submitError: string | null = null;
 
@@ -301,55 +370,82 @@ export class SchedulingPageComponent implements OnInit {
   }
 
   changeBranch(branchId: string | null): void {
-    this.selectedAppointment = null;
+    this.clearSelection();
     this.editorMode = 'create';
-    this.submitError = null;
     this.schedulingFacade.clearPatientOptions();
     this.schedulingFacade.selectBranch(branchId);
   }
 
   changeDate(date: string): void {
-    this.selectedAppointment = null;
+    this.clearSelection();
     this.editorMode = 'create';
     this.schedulingFacade.setDate(date);
   }
 
   changeViewMode(mode: CalendarViewMode): void {
-    this.selectedAppointment = null;
+    this.clearSelection();
     this.editorMode = 'create';
     this.schedulingFacade.setViewMode(mode);
   }
 
   startCreate(): void {
-    this.selectedAppointment = null;
+    this.editorSurface = 'appointment';
+    this.clearSelection();
     this.editorMode = 'create';
-    this.submitError = null;
+    this.schedulingFacade.clearPatientOptions();
+  }
+
+  startCreateBlock(): void {
+    this.editorSurface = 'block';
+    this.blockEditorRevision += 1;
+    this.clearSelection();
+    this.editorMode = 'create';
     this.schedulingFacade.clearPatientOptions();
   }
 
   startEdit(appointment: AppointmentSummary): void {
+    this.editorSurface = 'appointment';
+    this.selectedBlockedSlot = null;
     this.selectedAppointment = appointment;
     this.editorMode = 'edit';
     this.submitError = null;
   }
 
   startReschedule(appointment: AppointmentSummary): void {
+    this.editorSurface = 'appointment';
+    this.selectedBlockedSlot = null;
     this.selectedAppointment = appointment;
     this.editorMode = 'reschedule';
     this.submitError = null;
   }
 
   selectAppointment(appointment: AppointmentSummary): void {
+    this.editorSurface = 'appointment';
+    this.selectedBlockedSlot = null;
     this.selectedAppointment = appointment;
     this.editorMode = appointment.status === 'Cancelled' ? 'create' : 'edit';
     this.submitError = null;
   }
 
+  selectBlockedSlot(blockedSlot: AppointmentBlockSummary): void {
+    this.editorSurface = 'block';
+    this.selectedAppointment = null;
+    this.selectedBlockedSlot = blockedSlot;
+    this.editorMode = 'create';
+    this.submitError = null;
+    this.schedulingFacade.clearPatientOptions();
+  }
+
   resetEditor(): void {
+    if (this.editorSurface === 'block') {
+      this.startCreateBlock();
+      return;
+    }
+
     this.startCreate();
   }
 
-  save(payload: AppointmentFormValue): void {
+  saveAppointment(payload: AppointmentFormValue): void {
     const branchId = this.schedulingFacade.selectedBranchId();
     if (!branchId) {
       this.submitError = 'Select a branch before saving appointments.';
@@ -391,14 +487,41 @@ export class SchedulingPageComponent implements OnInit {
       next: (appointment) => {
         this.saving = false;
         this.selectedAppointment = appointment.status === 'Cancelled' ? null : appointment;
+        this.selectedBlockedSlot = null;
         this.editorMode = appointment.status === 'Cancelled' ? 'create' : 'edit';
         this.schedulingFacade.clearPatientOptions();
       },
       error: (error) => {
         this.saving = false;
-        this.submitError = error.error?.errors?.AppointmentsController?.[0]
-          ?? error.error?.title
-          ?? 'The appointment could not be saved.';
+        this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be saved.');
+      }
+    });
+  }
+
+  saveBlockedSlot(payload: AppointmentBlockFormValue): void {
+    const branchId = this.schedulingFacade.selectedBranchId();
+    if (!branchId) {
+      this.submitError = 'Select a branch before blocking time.';
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    this.schedulingFacade.createAppointmentBlock({
+      branchId,
+      startsAt: payload.startsAt,
+      endsAt: payload.endsAt,
+      label: payload.label
+    }).subscribe({
+      next: (blockedSlot) => {
+        this.saving = false;
+        this.selectedAppointment = null;
+        this.selectedBlockedSlot = blockedSlot;
+      },
+      error: (error) => {
+        this.saving = false;
+        this.submitError = this.getErrorMessage(error, 'AppointmentBlocksController', 'The blocked slot could not be saved.');
       }
     });
   }
@@ -424,10 +547,54 @@ export class SchedulingPageComponent implements OnInit {
         },
         error: (error) => {
           this.saving = false;
-          this.submitError = error.error?.errors?.AppointmentsController?.[0]
-            ?? error.error?.title
-            ?? 'The appointment could not be cancelled.';
+          this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be cancelled.');
         }
       });
+  }
+
+  removeSelectedBlock(): void {
+    if (!this.selectedBlockedSlot || !this.canWrite) {
+      return;
+    }
+
+    const label = this.selectedBlockedSlot.label || 'this blocked slot';
+    const confirmed = window.confirm(`Remove ${label}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    this.schedulingFacade.deleteAppointmentBlock(this.selectedBlockedSlot.id)
+      .subscribe({
+        next: () => {
+          this.saving = false;
+          this.startCreateBlock();
+        },
+        error: (error) => {
+          this.saving = false;
+          this.submitError = this.getErrorMessage(error, 'AppointmentBlocksController', 'The blocked slot could not be removed.');
+        }
+      });
+  }
+
+  private clearSelection(): void {
+    this.selectedAppointment = null;
+    this.selectedBlockedSlot = null;
+    this.submitError = null;
+  }
+
+  private getErrorMessage(error: unknown, controllerName: string, fallback: string): string {
+    const apiError = error as {
+      error?: {
+        errors?: Record<string, string[]>;
+        title?: string;
+      };
+    };
+
+    return apiError.error?.errors?.[controllerName]?.[0]
+      ?? apiError.error?.title
+      ?? fallback;
   }
 }

@@ -32,9 +32,18 @@ export interface AppointmentSummary {
   cancellationReason: string | null;
 }
 
+export interface AppointmentBlockSummary {
+  id: string;
+  branchId: string;
+  startsAt: string;
+  endsAt: string;
+  label: string | null;
+}
+
 export interface CalendarDay {
   date: string;
   appointments: AppointmentSummary[];
+  blockedSlots: AppointmentBlockSummary[];
 }
 
 export interface CalendarView {
@@ -68,9 +77,22 @@ export interface CancelAppointmentRequest {
   reason: string | null;
 }
 
+export interface CreateAppointmentBlockRequest {
+  branchId: string;
+  startsAt: string;
+  endsAt: string;
+  label: string | null;
+}
+
 export interface AppointmentFormValue {
   patientId: string | null;
   startsAt: string;
   endsAt: string;
   notes: string | null;
+}
+
+export interface AppointmentBlockFormValue {
+  startsAt: string;
+  endsAt: string;
+  label: string | null;
 }
