@@ -96,21 +96,24 @@ Canonical project status:
 - `Identity + Persistence Foundation`: completed
 - `Tenant-Aware Authorization Foundation`: completed
 - `Release 1 — Patients`: completed
+- `Release 2 — Scheduling`: completed
 
-Current active phase:
-- `Release 2 — Scheduling`
+Next planned phase:
+- `Release 3 — Clinical Records`
 
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
 Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation and the completed `Release 1 — Patients` module while implementing `Release 2 — Scheduling` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, and the completed `Release 2 — Scheduling` module while preparing to open `Release 3 — Clinical Records` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
 - keep authorization decisions based on scope (`platform` / `tenant` / `branch`), membership, role, and permission
 - preserve tenant isolation across identity, persistence, and access enforcement while new business modules appear
+- preserve the closed Scheduling release without reopening scope casually
+- keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened
 - keep privileged/platform paths explicit and auditable
 - maintain automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios
 - update documentation and ADRs whenever tenant resolution, auth/session, authorization, or patient-module behavior materially changes

@@ -58,17 +58,19 @@ Canonical project status:
 * **Identity + Persistence Foundation:** completed
 * **Tenant-Aware Authorization Foundation:** completed
 * **Release 1 — Patients:** completed
+* **Release 2 — Scheduling:** completed
 
 ### Current expected priority
 
-Continue the active phase:
+Prepare the next planned phase:
 
-* **Release 2 — Scheduling**
-* building on the scheduling slices already implemented for appointment foundation, blocked slots, and explicit attended/no-show completion states
+* **Release 3 — Clinical Records**
+* preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
+* keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline
 * while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
 * with continued validation through CI, tests, logging, auditing, and architectural guardrails
-* building forward from the completed Patients release covering registration, update, search, profile, responsible party, active/inactive status, clinical alerts, and basic validation guardrails
+* building forward from the completed Patients and Scheduling releases without reopening closed release scope casually
 
 Do not treat the repository as feature-complete unless the actual codebase clearly proves it. No functional roadmap release should be treated as closed without explicit code and documentation evidence.
 

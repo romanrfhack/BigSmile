@@ -180,7 +180,6 @@ Provide the clinic with a practical operational calendar for managing appointmen
 - no-show status
 - attended status
 - blocked time slots
-- doctor-based views
 - branch-aware scheduling
 - appointment notes
 
@@ -199,6 +198,7 @@ Front desk users can manage the daily operation of the clinic through the system
 - avoid calendar friction
 
 ## Out of scope
+- doctor-based views, deferred to a future bounded Scheduling slice that introduces provider/doctor assignment
 - online booking
 - reminder automation
 - advanced waiting room workflows

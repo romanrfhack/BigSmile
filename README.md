@@ -254,12 +254,15 @@ Completed foundation milestones:
 * **Identity + Persistence Foundation**
 * **Tenant-Aware Authorization Foundation**
 * **Release 1 — Patients**
+* **Release 2 — Scheduling**
 
-The latest completed delivery phase is **Release 1 — Patients**.
+The latest completed delivery phase is **Release 2 — Scheduling**.
 
-The current active phase is **Release 2 — Scheduling**, with appointment foundation, blocked slots, and explicit attended/no-show completion states already implemented in bounded slices.
+Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
-The latest completed delivery phase remains **Release 1 — Patients**.
+Doctor-based views are explicitly deferred to a future bounded slice because they require provider/doctor assignment rather than a small UI-only filter.
+
+The next planned phase is **Release 3 — Clinical Records**.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -292,12 +295,14 @@ The repository should be treated as having an established technical and architec
 
 ### Release 2 — Scheduling
 
-* Daily and weekly calendar
-* Appointment creation and rescheduling
+* Daily and weekly branch-aware calendar
+* Appointment creation, editing, rescheduling, and cancellation
 * Appointment statuses
+* Appointment notes
 * Schedule blocking
+* Doctor-based views deferred to a future bounded slice
 
-### Release 3 — Clinical
+### Release 3 — Clinical Records
 
 * Clinical record
 * Clinical notes

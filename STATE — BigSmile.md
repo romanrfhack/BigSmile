@@ -36,19 +36,25 @@
 
 [Hecho] Release 1 — Patients — completada.
 
+[Hecho] Release 2 — Scheduling — completada.
+
 [Hecho] La corrección de consistencia de persistencia quedó absorbida dentro de Identity + Persistence Foundation: tenant y branch ya no viven en un path in-memory separado, el seed es durable y el login real contra SQL Server ya fue validado.
 
-[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a Patients; por tanto, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
+[Hecho] El cierre formal de Release 2 se apoya en evidencia de código, pruebas, revisión de release y documentación alineada para calendario diario/semanal branch-aware, creación/edición/reprogramación/cancelación de citas, appointment notes, blocked slots y estados `Attended` / `NoShow`.
+
+[Hecho] `doctor-based views` quedó explícitamente diferido por decisión documentada a un slice futuro acotado; no forma parte del cierre efectivo de Release 2.
+
+[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a Scheduling; por tanto, Clinical Records, Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
 
 ## 4. Fase actual
 
-[Hecho] La última fase marcada como completada es Release 1 — Patients.
+[Hecho] La última fase marcada como completada es Release 2 — Scheduling.
 
-[Hecho] Release 1 — Patients ya quedó cerrada con el alcance roadmap mínimo confirmado en código, pruebas y documentación alineada.
+[Hecho] Release 2 — Scheduling ya quedó cerrada con el alcance roadmap reconciliado, confirmado en código, pruebas, revisión de release y documentación alineada.
 
-[Hecho] README.md, PROJECT_MAP.md y AGENTS.md ya fueron reconciliados con este estado canónico y ubican al repositorio más allá del bootstrap / early foundation stage.
+[Hecho] README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md ya fueron reconciliados con este estado canónico y ubican al repositorio más allá del bootstrap / early foundation stage.
 
-[Hecho + Inferencia operativa] El proyecto ya no está solo “listo para abrir” Patients; ahora tiene un release funcional completo del módulo sobre la autorización tenant-aware ya validada.
+[Hecho + Inferencia operativa] El proyecto ya no está solo “listo para continuar” Scheduling; ahora queda preparado para abrir Release 3 — Clinical Records sobre una base que ya incluye Patients y Scheduling cerrados.
 
 [Hecho combinado] Lo ya establecido a nivel fundacional incluye, como mínimo:
 - estructura de solución
@@ -91,13 +97,13 @@
 
 [Hecho] Con esa corrección mínima final, Release 1 — Patients ya tiene evidencia suficiente de cierre sin abrir sub-slices adicionales ni debilitar tenant isolation.
 
-## 5. Siguiente fase prevista
+## 5. Release 2 — Scheduling
 
 **Nombre exacto** — [Hecho] Release 2 — Scheduling.
 
 **Objetivo** — [Hecho + Inferencia alineada a docs] Abrir Scheduling solo sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y un módulo Patients ya cerrado.
 
-**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 ya quedó iniciada y ya absorbió un tercer sub-slice mínimo de Scheduling sin ampliar scope fuera del calendario operativo branch-aware.
+**Estado operativo actual** — [Hecho] Release 2 quedó formalmente cerrada tras absorber los slices mínimos aceptados y reconciliar explícitamente el alcance para dejar `doctor-based views` diferido a un slice futuro acotado.
 
 **Primer slice implementado de Release 2** — [Hecho]
 - agregado `Appointment` tenant-owned y branch-aware
@@ -129,7 +135,11 @@
 - soporte frontend mínimo para marcar attended/no-show desde la selección de cita y mostrar badges/estilos diferenciados en el calendario
 - cobertura automática para transiciones permitidas, transiciones inválidas, acceso cross-tenant prohibido, restricciones branch-aware y representación de estados en calendario
 
-**Estado de Release 2** — [Hecho] iniciado, no completado.
+**Estado de Release 2** — [Hecho] completado.
+
+**Decisión de alcance** — [Hecho] `doctor-based views` se difiere explícitamente a un slice futuro porque no es un parche pequeño de UI: requiere un slice dedicado de provider/doctor assignment, cambios de modelo y read models específicos de calendario.
+
+**Siguiente fase prevista** — [Hecho] Release 3 — Clinical Records.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -163,11 +173,11 @@
 
 Lista priorizada:
 
-1. Continuar Release 1 — Patients sin debilitar la fundación tenant-aware ya cerrada.
+1. Preservar Releases 1 y 2 ya cerrados sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Preservar el módulo Patients ya cerrado sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada mientras crece Scheduling.
+2. Abrir Release 3 — Clinical Records en slices acotados, auditables y compatibles con la fundación tenant-aware ya cerrada.
 
-3. Continuar Release 2 — Scheduling desde los slices ya abiertos, sin ampliar scope hacia provider management, waiting room workflows, reminders, doctor management ni analytics avanzados antes de tiempo.
+3. Mantener diferidas las `doctor-based views` hasta abrir un slice dedicado de provider/doctor assignment; no reintroducirlas como parche incidental de UI.
 
 4. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
 
@@ -195,6 +205,6 @@ Lista priorizada:
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation y Release 1 — Patients; tratar README.md, PROJECT_MAP.md y AGENTS.md como reconciliados con STATE; no asumir implementados o cerrados los releases funcionales posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir implementados o cerrados los releases funcionales posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
 
-**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Release 1 — Patients y dejar explícito que Release 2 — Scheduling es la siguiente fase prevista, manteniendo sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
+**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, dejar explícito que Release 3 — Clinical Records es la siguiente fase prevista, y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
