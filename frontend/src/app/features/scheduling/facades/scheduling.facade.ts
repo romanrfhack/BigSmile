@@ -142,6 +142,18 @@ export class SchedulingFacade {
     );
   }
 
+  markAppointmentAttended(id: string) {
+    return this.schedulingApi.markAppointmentAttended(id).pipe(
+      tap(() => this.loadCalendar())
+    );
+  }
+
+  markAppointmentNoShow(id: string) {
+    return this.schedulingApi.markAppointmentNoShow(id).pipe(
+      tap(() => this.loadCalendar())
+    );
+  }
+
   createAppointmentBlock(payload: CreateAppointmentBlockRequest) {
     return this.schedulingApi.createAppointmentBlock(payload).pipe(
       tap(() => this.loadCalendar())

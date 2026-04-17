@@ -1,6 +1,6 @@
 export type CalendarViewMode = 'day' | 'week';
 export type AppointmentEditorMode = 'create' | 'edit' | 'reschedule';
-export type AppointmentStatus = 'Scheduled' | 'Cancelled';
+export type AppointmentStatus = 'Scheduled' | 'Cancelled' | 'Attended' | 'NoShow';
 
 export interface SchedulingBranch {
   id: string;

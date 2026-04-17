@@ -64,7 +64,7 @@ Canonical project status:
 Continue the active phase:
 
 * **Release 2 — Scheduling**
-* starting from the initial scheduling slice already implemented
+* building on the scheduling slices already implemented for appointment foundation, blocked slots, and explicit attended/no-show completion states
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline
 * while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
 * with continued validation through CI, tests, logging, auditing, and architectural guardrails

@@ -32,6 +32,8 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         Task<AppointmentSummaryDto?> UpdateAsync(Guid id, UpdateAppointmentCommand command, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> RescheduleAsync(Guid id, RescheduleAppointmentCommand command, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> CancelAsync(Guid id, CancelAppointmentCommand command, CancellationToken cancellationToken = default);
+        Task<AppointmentSummaryDto?> MarkAttendedAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<AppointmentSummaryDto?> MarkNoShowAsync(Guid id, CancellationToken cancellationToken = default);
     }
 
     public sealed class AppointmentCommandService : IAppointmentCommandService
@@ -149,6 +151,38 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
 
             appointment.Cancel(command.Reason);
+            await _appointmentRepository.UpdateAsync(appointment, cancellationToken);
+            return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
+        }
+
+        public async Task<AppointmentSummaryDto?> MarkAttendedAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            GetRequiredTenantId();
+            var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
+            if (appointment == null)
+            {
+                return null;
+            }
+
+            await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
+
+            appointment.MarkAttended();
+            await _appointmentRepository.UpdateAsync(appointment, cancellationToken);
+            return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
+        }
+
+        public async Task<AppointmentSummaryDto?> MarkNoShowAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            GetRequiredTenantId();
+            var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
+            if (appointment == null)
+            {
+                return null;
+            }
+
+            await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
+
+            appointment.MarkNoShow();
             await _appointmentRepository.UpdateAsync(appointment, cancellationToken);
             return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
         }

@@ -64,7 +64,7 @@ namespace BigSmile.Domain.Entities
 
         public void Update(Guid patientId, DateTime startsAt, DateTime endsAt, string? notes)
         {
-            EnsureNotCancelled();
+            EnsureStatusAllows("modified");
 
             if (patientId == Guid.Empty)
             {
@@ -79,7 +79,7 @@ namespace BigSmile.Domain.Entities
 
         public void Reschedule(DateTime startsAt, DateTime endsAt)
         {
-            EnsureNotCancelled();
+            EnsureStatusAllows("rescheduled");
             SetSchedule(startsAt, endsAt);
             UpdatedAt = DateTime.UtcNow;
         }
@@ -91,6 +91,7 @@ namespace BigSmile.Domain.Entities
                 return;
             }
 
+            EnsureStatusAllows("cancelled");
             Status = AppointmentStatus.Cancelled;
             CancellationReason = NormalizeOptional(
                 cancellationReason,
@@ -100,12 +101,34 @@ namespace BigSmile.Domain.Entities
             UpdatedAt = CancelledAt;
         }
 
-        private void EnsureNotCancelled()
+        public void MarkAttended()
         {
-            if (Status == AppointmentStatus.Cancelled)
+            EnsureStatusAllows("marked as attended");
+            Status = AppointmentStatus.Attended;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void MarkNoShow()
+        {
+            EnsureStatusAllows("marked as no-show");
+            Status = AppointmentStatus.NoShow;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        private void EnsureStatusAllows(string action)
+        {
+            if (Status == AppointmentStatus.Scheduled)
             {
-                throw new InvalidOperationException("Cancelled appointments cannot be modified.");
+                return;
             }
+
+            var statusName = Status switch
+            {
+                AppointmentStatus.NoShow => "No-show",
+                _ => Status.ToString()
+            };
+
+            throw new InvalidOperationException($"{statusName} appointments cannot be {action}.");
         }
 
         private void SetSchedule(DateTime startsAt, DateTime endsAt)

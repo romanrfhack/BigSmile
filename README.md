@@ -257,7 +257,7 @@ Completed foundation milestones:
 
 The latest completed delivery phase is **Release 1 — Patients**.
 
-The current active phase is **Release 2 — Scheduling**, started with an initial foundation slice.
+The current active phase is **Release 2 — Scheduling**, with appointment foundation, blocked slots, and explicit attended/no-show completion states already implemented in bounded slices.
 
 The latest completed delivery phase remains **Release 1 — Patients**.
 

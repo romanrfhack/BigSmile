@@ -97,7 +97,7 @@
 
 **Objetivo** — [Hecho + Inferencia alineada a docs] Abrir Scheduling solo sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y un módulo Patients ya cerrado.
 
-**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 ya quedó iniciada y ya absorbió un segundo sub-slice mínimo de Scheduling sin ampliar scope fuera del calendario operativo branch-aware.
+**Estado operativo actual** — [Hecho] Release 1 quedó formalmente cerrada; Release 2 ya quedó iniciada y ya absorbió un tercer sub-slice mínimo de Scheduling sin ampliar scope fuera del calendario operativo branch-aware.
 
 **Primer slice implementado de Release 2** — [Hecho]
 - agregado `Appointment` tenant-owned y branch-aware
@@ -119,6 +119,15 @@
 - bloqueo de creación/reprogramación de citas cuando se solapan con blocked slots de la misma sucursal
 - cobertura automática para creación/lectura tenant-scoped, acceso cross-tenant prohibido, restricciones branch-aware y colisiones cita-vs-block
 - soporte frontend mínimo para crear, visualizar y eliminar blocked slots desde la página actual de Scheduling
+
+**Tercer sub-slice implementado de Release 2** — [Hecho]
+- extensión mínima del lifecycle de `Appointment` con estados explícitos `Attended` y `NoShow`
+- transiciones de dominio acotadas `MarkAttended()` y `MarkNoShow()` solo desde `Scheduled`
+- bloqueo explícito de transiciones incompatibles desde `Cancelled`, `Attended` y `NoShow`
+- endpoints mínimos para marcar citas como attended o no-show sin abrir un segundo modelo de acceso
+- read model de calendario existente preservado y enriquecido con los nuevos estados para distinción visual mínima
+- soporte frontend mínimo para marcar attended/no-show desde la selección de cita y mostrar badges/estilos diferenciados en el calendario
+- cobertura automática para transiciones permitidas, transiciones inválidas, acceso cross-tenant prohibido, restricciones branch-aware y representación de estados en calendario
 
 **Estado de Release 2** — [Hecho] iniciado, no completado.
 
@@ -158,7 +167,7 @@ Lista priorizada:
 
 2. Preservar el módulo Patients ya cerrado sin romper el modelo branch-neutral del paciente ni la autorización tenant-aware ya cerrada mientras crece Scheduling.
 
-3. Continuar Release 2 — Scheduling desde los slices ya abiertos, sin ampliar scope hacia provider management, no-show, attended ni workflows avanzados antes de tiempo.
+3. Continuar Release 2 — Scheduling desde los slices ya abiertos, sin ampliar scope hacia provider management, waiting room workflows, reminders, doctor management ni analytics avanzados antes de tiempo.
 
 4. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
 

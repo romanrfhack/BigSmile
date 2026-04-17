@@ -99,11 +99,19 @@ type SchedulingEditorSurface = 'appointment' | 'block';
           <p *ngIf="selectedAppointment.status === 'Cancelled'" class="cancelled-note">
             This appointment is cancelled and remains visible only for calendar traceability.
           </p>
+          <p *ngIf="selectedAppointment.status === 'Attended'" class="attended-note">
+            This appointment was marked as attended and is now read-only in the calendar.
+          </p>
+          <p *ngIf="selectedAppointment.status === 'NoShow'" class="no-show-note">
+            This appointment was marked as no-show and remains visible for operational follow-up.
+          </p>
         </div>
 
-        <div class="selection-actions" *ngIf="canWrite && selectedAppointment.status !== 'Cancelled'">
+        <div class="selection-actions" *ngIf="canWrite && isScheduledAppointment(selectedAppointment)">
           <button type="button" class="btn btn-secondary" (click)="startEdit(selectedAppointment)">Edit</button>
           <button type="button" class="btn btn-secondary" (click)="startReschedule(selectedAppointment)">Reschedule</button>
+          <button type="button" class="btn btn-success" (click)="markSelectedAttended()">Mark attended</button>
+          <button type="button" class="btn btn-warning" (click)="markSelectedNoShow()">Mark no-show</button>
           <button type="button" class="btn btn-danger" (click)="cancelSelected()">Cancel appointment</button>
         </div>
       </div>
@@ -277,6 +285,16 @@ type SchedulingEditorSurface = 'appointment' | 'block';
       font-weight: 600;
     }
 
+    .attended-note {
+      color: #1d6a3a;
+      font-weight: 600;
+    }
+
+    .no-show-note {
+      color: #8b4f0f;
+      font-weight: 600;
+    }
+
     .btn {
       border: none;
       border-radius: 999px;
@@ -299,6 +317,16 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     .btn-danger {
       background: #fde3e3;
       color: #9b2d30;
+    }
+
+    .btn-success {
+      background: #dff2e5;
+      color: #1d6a3a;
+    }
+
+    .btn-warning {
+      background: #fbe6bf;
+      color: #8b4f0f;
     }
 
     .btn-block {
@@ -423,7 +451,7 @@ export class SchedulingPageComponent implements OnInit {
     this.editorSurface = 'appointment';
     this.selectedBlockedSlot = null;
     this.selectedAppointment = appointment;
-    this.editorMode = appointment.status === 'Cancelled' ? 'create' : 'edit';
+    this.editorMode = this.isScheduledAppointment(appointment) ? 'edit' : 'create';
     this.submitError = null;
   }
 
@@ -486,9 +514,9 @@ export class SchedulingPageComponent implements OnInit {
     request$.subscribe({
       next: (appointment) => {
         this.saving = false;
-        this.selectedAppointment = appointment.status === 'Cancelled' ? null : appointment;
+        this.selectedAppointment = appointment.status === 'Scheduled' ? appointment : null;
         this.selectedBlockedSlot = null;
-        this.editorMode = appointment.status === 'Cancelled' ? 'create' : 'edit';
+        this.editorMode = appointment.status === 'Scheduled' ? 'edit' : 'create';
         this.schedulingFacade.clearPatientOptions();
       },
       error: (error) => {
@@ -527,7 +555,7 @@ export class SchedulingPageComponent implements OnInit {
   }
 
   cancelSelected(): void {
-    if (!this.selectedAppointment || this.selectedAppointment.status === 'Cancelled' || !this.canWrite) {
+    if (!this.selectedAppointment || !this.isScheduledAppointment(this.selectedAppointment) || !this.canWrite) {
       return;
     }
 
@@ -548,6 +576,64 @@ export class SchedulingPageComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be cancelled.');
+        }
+      });
+  }
+
+  markSelectedAttended(): void {
+    if (!this.selectedAppointment || !this.isScheduledAppointment(this.selectedAppointment) || !this.canWrite) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Mark the appointment for ${this.selectedAppointment.patientFullName} as attended?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    this.schedulingFacade.markAppointmentAttended(this.selectedAppointment.id)
+      .subscribe({
+        next: (appointment) => {
+          this.saving = false;
+          this.selectedAppointment = appointment;
+          this.selectedBlockedSlot = null;
+          this.editorMode = 'create';
+          this.schedulingFacade.clearPatientOptions();
+        },
+        error: (error) => {
+          this.saving = false;
+          this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be marked as attended.');
+        }
+      });
+  }
+
+  markSelectedNoShow(): void {
+    if (!this.selectedAppointment || !this.isScheduledAppointment(this.selectedAppointment) || !this.canWrite) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Mark the appointment for ${this.selectedAppointment.patientFullName} as no-show?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    this.schedulingFacade.markAppointmentNoShow(this.selectedAppointment.id)
+      .subscribe({
+        next: (appointment) => {
+          this.saving = false;
+          this.selectedAppointment = appointment;
+          this.selectedBlockedSlot = null;
+          this.editorMode = 'create';
+          this.schedulingFacade.clearPatientOptions();
+        },
+        error: (error) => {
+          this.saving = false;
+          this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be marked as no-show.');
         }
       });
   }
@@ -583,6 +669,10 @@ export class SchedulingPageComponent implements OnInit {
     this.selectedAppointment = null;
     this.selectedBlockedSlot = null;
     this.submitError = null;
+  }
+
+  isScheduledAppointment(appointment: AppointmentSummary | null): appointment is AppointmentSummary & { status: 'Scheduled' } {
+    return appointment?.status === 'Scheduled';
   }
 
   private getErrorMessage(error: unknown, controllerName: string, fallback: string): string {

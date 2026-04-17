@@ -164,6 +164,222 @@ namespace BigSmile.IntegrationTests.Scheduling
         }
 
         [Fact]
+        public async Task MarkAttendedAsync_UpdatesStoredStatus_WithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.MarkAttendedAsync(appointment.Id);
+
+            Assert.NotNull(updated);
+            Assert.Equal("Attended", updated!.Status);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+
+            Assert.Equal(AppointmentStatus.Attended, storedAppointment.Status);
+        }
+
+        [Fact]
+        public async Task MarkNoShowAsync_UpdatesStoredStatus_WithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 10, 0, 0),
+                new DateTime(2026, 4, 14, 10, 30, 0));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.MarkNoShowAsync(appointment.Id);
+
+            Assert.NotNull(updated);
+            Assert.Equal("NoShow", updated!.Status);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+
+            Assert.Equal(AppointmentStatus.NoShow, storedAppointment.Status);
+        }
+
+        [Fact]
+        public async Task MarkAttendedAsync_BlocksCancelledAppointments()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0),
+                status: AppointmentStatus.Cancelled);
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.MarkAttendedAsync(appointment.Id));
+
+            Assert.Contains("Cancelled appointments cannot be marked as attended", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task MarkNoShowAsync_BlocksAttendedAppointments()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0),
+                status: AppointmentStatus.Attended);
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.MarkNoShowAsync(appointment.Id));
+
+            Assert.Contains("Attended appointments cannot be marked as no-show", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task CancelAsync_BlocksAttendedAppointments()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0),
+                status: AppointmentStatus.Attended);
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.CancelAsync(
+                appointment.Id,
+                new CancelAppointmentCommand(null)));
+
+            Assert.Contains("Attended appointments cannot be cancelled", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task MarkNoShowAsync_BlocksBranchOutsideAssignedScope_ForTenantUser()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.SecondaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 11, 0, 0),
+                new DateTime(2026, 4, 14, 11, 30, 0));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.MarkNoShowAsync(appointment.Id));
+
+            Assert.Contains("branch is not accessible", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task MarkAttendedAsync_ReturnsNullForAppointmentOutsideCurrentTenant()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var tenantASeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant A", tenantSubdomain: "tenant-a");
+            var tenantBSeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant B", tenantSubdomain: "tenant-b");
+            var patientB = await SeedPatientAsync(databaseName, tenantBSeed.Tenant.Id, "Bruno", "Garcia");
+            var foreignAppointment = await SeedAppointmentAsync(
+                databaseName,
+                tenantBSeed.Tenant.Id,
+                tenantBSeed.PrimaryBranch.Id,
+                patientB.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0));
+            var tenantContext = CreateTenantContext(tenantASeed.User.Id, tenantASeed.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.MarkAttendedAsync(foreignAppointment.Id);
+
+            Assert.Null(updated);
+        }
+
+        [Fact]
+        public async Task GetCalendarAsync_ExposesAttendedAndNoShowStatuses()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var patientB = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Bruno", "Garcia");
+
+            await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patientA.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0),
+                status: AppointmentStatus.Attended);
+            await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patientB.Id,
+                new DateTime(2026, 4, 14, 10, 0, 0),
+                new DateTime(2026, 4, 14, 10, 30, 0),
+                status: AppointmentStatus.NoShow);
+
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext);
+
+            var calendar = await queryService.GetCalendarAsync(
+                seedData.PrimaryBranch.Id,
+                new DateOnly(2026, 4, 14),
+                1);
+
+            Assert.Equal(new[] { "Attended", "NoShow" }, calendar.CalendarDays[0].Appointments.Select(appointment => appointment.Status));
+        }
+
+        [Fact]
         public async Task CreateAsync_BlocksSchedulingWhenBlockedSlotExists()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -306,10 +522,24 @@ namespace BigSmile.IntegrationTests.Scheduling
             Guid branchId,
             Guid patientId,
             DateTime startsAt,
-            DateTime endsAt)
+            DateTime endsAt,
+            AppointmentStatus status = AppointmentStatus.Scheduled)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
             var appointment = new Appointment(tenantId, branchId, patientId, startsAt, endsAt, "Follow-up");
+
+            switch (status)
+            {
+                case AppointmentStatus.Cancelled:
+                    appointment.Cancel("Cancelled during test setup.");
+                    break;
+                case AppointmentStatus.Attended:
+                    appointment.MarkAttended();
+                    break;
+                case AppointmentStatus.NoShow:
+                    appointment.MarkNoShow();
+                    break;
+            }
 
             context.Appointments.Add(appointment);
             await context.SaveChangesAsync();

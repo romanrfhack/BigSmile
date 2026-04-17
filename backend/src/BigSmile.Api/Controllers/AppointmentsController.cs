@@ -144,6 +144,50 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpPost("{id:guid}/attended")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingWrite)]
+        public async Task<ActionResult<AppointmentSummaryDto>> MarkAttended(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var appointment = await _appointmentCommandService.MarkAttendedAsync(id, cancellationToken);
+                if (appointment == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(appointment);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
+        [HttpPost("{id:guid}/no-show")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingWrite)]
+        public async Task<ActionResult<AppointmentSummaryDto>> MarkNoShow(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var appointment = await _appointmentCommandService.MarkNoShowAsync(id, cancellationToken);
+                if (appointment == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(appointment);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         private ActionResult BuildValidationProblem(string message)
         {
             ModelState.AddModelError(nameof(AppointmentsController), message);

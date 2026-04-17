@@ -64,6 +64,14 @@ export class SchedulingApiService {
     return this.http.post<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/cancel`, payload);
   }
 
+  markAppointmentAttended(id: string): Observable<AppointmentSummary> {
+    return this.http.post<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/attended`, {});
+  }
+
+  markAppointmentNoShow(id: string): Observable<AppointmentSummary> {
+    return this.http.post<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/no-show`, {});
+  }
+
   createAppointmentBlock(payload: CreateAppointmentBlockRequest): Observable<AppointmentBlockSummary> {
     return this.http.post<AppointmentBlockSummary>(this.appointmentBlocksBaseUrl, payload);
   }

@@ -59,6 +59,28 @@ describe('SchedulingFacade', () => {
       updateAppointment: () => of(),
       rescheduleAppointment: () => of(),
       cancelAppointment: () => of(),
+      markAppointmentAttended: () => of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-16T09:00:00',
+        endsAt: '2026-04-16T09:30:00',
+        status: 'Attended',
+        notes: 'Check-up',
+        cancellationReason: null
+      }),
+      markAppointmentNoShow: () => of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-16T09:00:00',
+        endsAt: '2026-04-16T09:30:00',
+        status: 'NoShow',
+        notes: 'Check-up',
+        cancellationReason: null
+      }),
       createAppointmentBlock: () => of({
         id: 'block-1',
         branchId: 'branch-1',
@@ -106,6 +128,24 @@ describe('SchedulingFacade', () => {
       endsAt: '2026-04-16T14:00',
       label: 'Lunch break'
     }).subscribe();
+
+    expect(calendarLoadCount).toBe(2);
+  });
+
+  it('reloads the calendar after an appointment is marked as attended', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+
+    facade.markAppointmentAttended('appointment-1').subscribe();
+
+    expect(calendarLoadCount).toBe(2);
+  });
+
+  it('reloads the calendar after an appointment is marked as no-show', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+
+    facade.markAppointmentNoShow('appointment-1').subscribe();
 
     expect(calendarLoadCount).toBe(2);
   });

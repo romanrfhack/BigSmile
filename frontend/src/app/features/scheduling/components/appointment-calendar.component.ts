@@ -44,11 +44,13 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
             class="appointment-card"
             [class.appointment-active]="appointment.id === activeAppointmentId"
             [class.appointment-cancelled]="appointment.status === 'Cancelled'"
+            [class.appointment-attended]="appointment.status === 'Attended'"
+            [class.appointment-no-show]="appointment.status === 'NoShow'"
             (click)="appointmentSelected.emit(appointment)">
             <span class="time-range">{{ appointment.startsAt | date: 'shortTime' }} - {{ appointment.endsAt | date: 'shortTime' }}</span>
             <strong>{{ appointment.patientFullName }}</strong>
             <p>{{ appointment.notes || 'No operational note.' }}</p>
-            <span class="status-pill">{{ appointment.status }}</span>
+            <span class="status-pill">{{ getStatusLabel(appointment.status) }}</span>
           </button>
         </article>
       </div>
@@ -135,6 +137,16 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       border-color: #f2c4c4;
     }
 
+    .appointment-attended {
+      background: #eef9f2;
+      border-color: #b9e1c7;
+    }
+
+    .appointment-no-show {
+      background: #fff6e5;
+      border-color: #f3d39f;
+    }
+
     .time-range {
       font-size: 0.82rem;
       text-transform: uppercase;
@@ -165,6 +177,16 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       color: #9b2d30;
     }
 
+    .appointment-attended .status-pill {
+      background: #dff2e5;
+      color: #1d6a3a;
+    }
+
+    .appointment-no-show .status-pill {
+      background: #fbe6bf;
+      color: #8b4f0f;
+    }
+
     .block-pill {
       background: #f8e3c5;
       color: #8b4f0f;
@@ -186,4 +208,8 @@ export class AppointmentCalendarComponent {
 
   @Output() appointmentSelected = new EventEmitter<AppointmentSummary>();
   @Output() blockedSlotSelected = new EventEmitter<AppointmentBlockSummary>();
+
+  getStatusLabel(status: AppointmentSummary['status']): string {
+    return status === 'NoShow' ? 'No-show' : status;
+  }
 }
