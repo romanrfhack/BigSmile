@@ -9,9 +9,11 @@ describe('SchedulingPageComponent', () => {
   let facade: any;
   let authService: any;
   let attendedCalls: string[];
+  let noShowCalls: string[];
 
   beforeEach(async () => {
     attendedCalls = [];
+    noShowCalls = [];
 
     facade = {
       branches: signal([
@@ -59,17 +61,20 @@ describe('SchedulingPageComponent', () => {
           cancellationReason: null
         });
       },
-      markAppointmentNoShow: () => of({
-        id: 'appointment-1',
-        branchId: 'branch-1',
-        patientId: 'patient-1',
-        patientFullName: 'Ana Lopez',
-        startsAt: '2026-04-14T09:00:00',
-        endsAt: '2026-04-14T09:30:00',
-        status: 'NoShow',
-        notes: 'Follow-up',
-        cancellationReason: null
-      }),
+      markAppointmentNoShow: (id: string) => {
+        noShowCalls.push(id);
+        return of({
+          id: 'appointment-1',
+          branchId: 'branch-1',
+          patientId: 'patient-1',
+          patientFullName: 'Ana Lopez',
+          startsAt: '2026-04-14T09:00:00',
+          endsAt: '2026-04-14T09:30:00',
+          status: 'NoShow',
+          notes: 'Follow-up',
+          cancellationReason: null
+        });
+      },
       createAppointmentBlock: () => of(null),
       deleteAppointmentBlock: () => of(null)
     };
@@ -147,6 +152,35 @@ describe('SchedulingPageComponent', () => {
 
       expect(attendedCalls).toEqual(['appointment-1']);
       expect(component.selectedAppointment?.status).toBe('Attended');
+      expect(component.editorMode).toBe('create');
+    } finally {
+      window.confirm = originalConfirm;
+    }
+  });
+
+  it('marks the selected appointment as no-show through the scheduling facade', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+    const originalConfirm = window.confirm;
+    window.confirm = () => true;
+
+    component.selectedAppointment = {
+      id: 'appointment-1',
+      branchId: 'branch-1',
+      patientId: 'patient-1',
+      patientFullName: 'Ana Lopez',
+      startsAt: '2026-04-14T09:00:00',
+      endsAt: '2026-04-14T09:30:00',
+      status: 'Scheduled',
+      notes: 'Follow-up',
+      cancellationReason: null
+    };
+
+    try {
+      component.markSelectedNoShow();
+
+      expect(noShowCalls).toEqual(['appointment-1']);
+      expect(component.selectedAppointment?.status).toBe('NoShow');
       expect(component.editorMode).toBe('create');
     } finally {
       window.confirm = originalConfirm;
