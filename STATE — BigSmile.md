@@ -44,7 +44,7 @@
 
 [Hecho] `doctor-based views` quedó explícitamente diferido por decisión documentada a un slice futuro acotado; no forma parte del cierre efectivo de Release 2.
 
-[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a Release 3.1 — Clinical Record Foundation; por tanto, Release 3 — Clinical Records no debe asumirse como cerrada y Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
+[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a Release 3.2 — Basic Diagnoses Foundation; por tanto, Release 3 — Clinical Records no debe asumirse como cerrada y Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
 
 ## 4. Fase actual
 
@@ -56,7 +56,7 @@
 
 [Hecho] Release 3 — Clinical Records ya fue abierta y está en progreso.
 
-[Hecho] El primer slice aceptado de Release 3 es Release 3.1 — Clinical Record Foundation.
+[Hecho] Los slices aceptados de Release 3 son Release 3.1 — Clinical Record Foundation y Release 3.2 — Basic Diagnoses Foundation.
 
 [Hecho] Release 3.1 cubre, de forma acotada:
 - `ClinicalRecord` tenant-owned y patient-owned
@@ -69,9 +69,19 @@
 - clinical notes append-only con orden newest-first en lectura/UI
 - clinician attribution mínima y metadata básica de auditoría
 
+[Hecho] Release 3.2 cubre, de forma acotada:
+- diagnósticos básicos dentro de un `ClinicalRecord` existente
+- alta explícita vía `POST /api/patients/{patientId}/clinical-record/diagnoses`
+- resolución explícita vía `POST /api/patients/{patientId}/clinical-record/diagnoses/{diagnosisId}/resolve`
+- enriquecimiento de `GET /api/patients/{patientId}/clinical-record` para incluir diagnósticos
+- sin autocreación del expediente clínico
+- diagnósticos básicos y no codificados
+- estados mínimos `Active` / `Resolved`
+- orden `active-first` y `newest-first` dentro de cada grupo en lectura/UI
+
 [Hecho] En esta fase, `clinical.read` y `clinical.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos clínicos.
 
-[Hecho] Release 3 completa no está cerrada. Diagnósticos, timeline clínica completa, odontogram, treatments y documents siguen fuera de Release 3.1.
+[Hecho] Release 3 completa no está cerrada. La timeline clínica completa, odontogram, treatments y documents siguen fuera de los slices aceptados actuales; los diagnósticos ya entraron solo en forma básica y no codificada dentro de Release 3.2.
 
 [Hecho + Inferencia operativa] El proyecto ya no está solo “listo para abrir” Clinical Records; ahora está dentro de Release 3 con un primer slice aceptado sobre una base que ya incluye Patients y Scheduling cerrados.
 
@@ -158,7 +168,7 @@
 
 **Decisión de alcance** — [Hecho] `doctor-based views` se difiere explícitamente a un slice futuro porque no es un parche pequeño de UI: requiere un slice dedicado de provider/doctor assignment, cambios de modelo y read models específicos de calendario.
 
-**Fase abierta actual** — [Hecho] Release 3 — Clinical Records, con Release 3.1 — Clinical Record Foundation aceptada.
+**Fase abierta actual** — [Hecho] Release 3 — Clinical Records, con Release 3.1 — Clinical Record Foundation y Release 3.2 — Basic Diagnoses Foundation aceptadas.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -224,6 +234,6 @@ Lista priorizada:
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como fase abierta en progreso con Release 3.1 — Clinical Record Foundation aceptada; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerrada Release 3 ni implementados o cerrados los sub-slices posteriores del módulo Clinical o los releases funcionales posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como fase abierta en progreso con Release 3.1 — Clinical Record Foundation y Release 3.2 — Basic Diagnoses Foundation aceptadas; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerrada Release 3 ni implementados o cerrados los sub-slices posteriores del módulo Clinical o los releases funcionales posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
 
-**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar el slice aceptado Release 3.1 — Clinical Record Foundation, continuar Release 3 — Clinical Records en slices acotados y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
+**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation y Release 3.2 — Basic Diagnoses Foundation, continuar Release 3 — Clinical Records en slices acotados y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.

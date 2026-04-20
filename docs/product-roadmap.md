@@ -214,9 +214,10 @@ Allow clinicians to maintain a structured patient clinical record.
 ## Current status
 - Release 3 is open and in progress
 - Release 3.1 — Clinical Record Foundation is accepted
+- Release 3.2 — Basic Diagnoses Foundation is accepted
 
 ## Scope
-Release 3 is being delivered in bounded slices. The currently accepted slice is Release 3.1 and it covers:
+Release 3 is being delivered in bounded slices. The currently accepted slices are Release 3.1 and Release 3.2, and they cover:
 
 - explicit clinical record creation
 - medical background summary
@@ -226,9 +227,14 @@ Release 3 is being delivered in bounded slices. The currently accepted slice is 
 - note history returned newest-first in reads and UI
 - clinician attribution
 - audit-sensitive updates
+- basic non-coded diagnoses on existing clinical records
+- explicit diagnosis creation
+- explicit diagnosis resolution
+- diagnoses included in the clinical record read model
+- diagnosis ordering with active diagnoses first and newest-first within each status group
 
 ## Expected outcome
-A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way.
+A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking without opening later clinical modules.
 
 ## Core users
 - Dentist
@@ -237,17 +243,19 @@ A user operating under the current clinical permissions can consult and update t
 
 ## Current access note
 - `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive clinical permissions in Release 3.1
+- `TenantUser` does not receive clinical permissions in the currently accepted Release 3 slices
 
 ## Key UX goals
 - clear navigation from patient profile to clinical record
 - readable history
 - fast note entry
+- clear active/resolved diagnosis visibility
 - secure access to sensitive information
 
 ## Out of scope
-- diagnoses
-- patient clinical timeline
+- full patient clinical timeline
+- coded diagnosis catalogs such as ICD/CIE/SNOMED
+- advanced diagnosis workflows beyond basic add/resolve
 - odontogram
 - treatments
 - documents

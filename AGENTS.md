@@ -98,25 +98,26 @@ Canonical project status:
 - `Release 1 — Patients`: completed
 - `Release 2 — Scheduling`: completed
 - `Release 3 — Clinical Records`: in progress
-- accepted slice: `Release 3.1 — Clinical Record Foundation`
+- accepted slices: `Release 3.1 — Clinical Record Foundation` and `Release 3.2 — Basic Diagnoses Foundation`
 
 Current active phase:
 - `Release 3 — Clinical Records`
 
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
 Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
-Within `Release 3 — Clinical Records`, do not assume slices beyond the accepted `Release 3.1 — Clinical Record Foundation` are implemented unless the actual codebase and aligned documentation explicitly prove it.
+Within `Release 3 — Clinical Records`, do not assume slices beyond the accepted `Release 3.1 — Clinical Record Foundation` and `Release 3.2 — Basic Diagnoses Foundation` are implemented unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, and the accepted `Release 3.1 — Clinical Record Foundation` slice while continuing `Release 3 — Clinical Records` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, and the accepted `Release 3.1 — Clinical Record Foundation` and `Release 3.2 — Basic Diagnoses Foundation` slices while continuing `Release 3 — Clinical Records` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
 - keep authorization decisions based on scope (`platform` / `tenant` / `branch`), membership, role, and permission
 - preserve tenant isolation across identity, persistence, and access enforcement while new business modules appear
 - preserve the closed Scheduling release without reopening scope casually
-- preserve the accepted Release 3.1 scope: explicit clinical record creation, base snapshot, current allergies, append-only notes, and no diagnoses / full timeline / odontogram / treatments / documents yet
+- preserve the accepted Release 3.1 scope: explicit clinical record creation, base snapshot, current allergies, and append-only notes
+- preserve the accepted Release 3.2 scope: basic diagnoses on existing clinical records, explicit diagnosis add/resolve operations, diagnosis read-model inclusion, basic non-coded diagnosis data, and no full timeline / odontogram / treatments / documents yet
 - preserve the current clinical access restriction: `clinical.read` / `clinical.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive clinical permissions in this phase
 - keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened
 - keep privileged/platform paths explicit and auditable

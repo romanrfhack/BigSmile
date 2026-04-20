@@ -259,7 +259,7 @@ Completed foundation milestones:
 Current active phase:
 
 * **Release 3 — Clinical Records:** in progress
-* **Accepted slice:** **Release 3.1 — Clinical Record Foundation**
+* **Accepted slices:** **Release 3.1 — Clinical Record Foundation** and **Release 3.2 — Basic Diagnoses Foundation**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -269,7 +269,9 @@ Doctor-based views are explicitly deferred to a future bounded slice because the
 
 Release 3 is now open. Release 3.1 is accepted with tenant-owned, patient-owned clinical records; explicit record creation; `GET` returning `404` when the record does not exist; no autocreation; medical background and current medications summaries; current allergies; append-only clinical notes returned newest-first; and minimal clinician attribution.
 
-Diagnoses remain explicitly outside Release 3.1, together with the full clinical timeline, odontogram, treatments, documents, and other later clinical slices.
+Release 3.2 is also accepted and adds only the bounded diagnoses foundation on top of an existing clinical record: explicit diagnosis creation, explicit diagnosis resolution, diagnoses included in the clinical record read model, basic non-coded diagnosis text/notes, and `Active` / `Resolved` status with active-first ordering and newest-first ordering within each status group in reads and UI.
+
+The full clinical timeline, odontogram, treatments, documents, and other later clinical slices remain outside the currently accepted Release 3 scope.
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
@@ -314,11 +316,13 @@ The repository should be treated as having an established technical and architec
 ### Release 3 — Clinical Records
 
 * Release 3 is in progress
-* Accepted slice: Release 3.1 — Clinical Record Foundation
+* Accepted slices: Release 3.1 — Clinical Record Foundation and Release 3.2 — Basic Diagnoses Foundation
 * Explicit clinical record creation with `GET` returning `404` when missing and no autocreation
 * Medical background summary, current medications summary, current allergies, and append-only clinical notes
 * Notes returned newest-first in API/UI
-* Diagnoses, full clinical timeline, odontogram, treatments, and documents deferred beyond 3.1
+* Basic non-coded diagnoses on existing clinical records, with explicit add/resolve flows and `Active` / `Resolved` states
+* Diagnosis reads ordered active-first and newest-first within each status group
+* Full clinical timeline, odontogram, treatments, and documents deferred beyond the accepted slices
 * `clinical.read` / `clinical.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
 
 ### Release 4 — Odontogram
