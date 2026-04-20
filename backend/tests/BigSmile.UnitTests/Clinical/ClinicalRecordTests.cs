@@ -31,6 +31,50 @@ namespace BigSmile.UnitTests.Clinical
         }
 
         [Fact]
+        public void AddDiagnosis_RejectsEmptyText()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<ArgumentException>(() => clinicalRecord.AddDiagnosis("   ", null, Guid.NewGuid()));
+
+            Assert.Contains("diagnosisText is required", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void AddDiagnosis_StartsAsActive()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var diagnosis = clinicalRecord.AddDiagnosis("Occlusal caries", "Upper molar.", Guid.NewGuid());
+
+            Assert.Equal(ClinicalDiagnosisStatus.Active, diagnosis.Status);
+            Assert.Null(diagnosis.ResolvedAtUtc);
+            Assert.Null(diagnosis.ResolvedByUserId);
+        }
+
+        [Fact]
+        public void ResolveDiagnosis_RejectsResolvingTwice()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+            var diagnosis = clinicalRecord.AddDiagnosis("Occlusal caries", null, Guid.NewGuid());
+            clinicalRecord.ResolveDiagnosis(diagnosis.Id, Guid.NewGuid());
+
+            var exception = Assert.Throws<InvalidOperationException>(() => clinicalRecord.ResolveDiagnosis(diagnosis.Id, Guid.NewGuid()));
+
+            Assert.Contains("already resolved", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void ResolveDiagnosis_RejectsMissingDiagnosis()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => clinicalRecord.ResolveDiagnosis(Guid.NewGuid(), Guid.NewGuid()));
+
+            Assert.Contains("does not exist", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void SnapshotMutations_DoNotChangeTenantOrPatientOwnership()
         {
             var clinicalRecord = CreateClinicalRecord();
@@ -43,6 +87,7 @@ namespace BigSmile.UnitTests.Clinical
                 new[] { new ClinicalAllergyDraft("Latex", "Rash", "Use nitrile gloves.") },
                 actorUserId);
             clinicalRecord.AddClinicalNote("Initial clinical intake completed.", actorUserId);
+            clinicalRecord.AddDiagnosis("Occlusal caries", null, actorUserId);
 
             Assert.Equal(originalTenantId, clinicalRecord.TenantId);
             Assert.Equal(originalPatientId, clinicalRecord.PatientId);
@@ -50,6 +95,7 @@ namespace BigSmile.UnitTests.Clinical
             Assert.Equal("Ibuprofen as needed.", clinicalRecord.CurrentMedicationsSummary);
             Assert.Single(clinicalRecord.Allergies);
             Assert.Equal("Latex", clinicalRecord.Allergies.First().Substance);
+            Assert.Single(clinicalRecord.Diagnoses);
         }
 
         private static ClinicalRecord CreateClinicalRecord()

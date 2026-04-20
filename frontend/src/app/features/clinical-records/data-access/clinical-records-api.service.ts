@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
+  AddClinicalDiagnosisRequest,
   AddClinicalNoteRequest,
   ClinicalRecord,
   SaveClinicalRecordSnapshotRequest
@@ -29,5 +30,13 @@ export class ClinicalRecordsApiService {
 
   addClinicalNote(patientId: string, payload: AddClinicalNoteRequest): Observable<ClinicalRecord> {
     return this.http.post<ClinicalRecord>(`${this.baseUrl}/${patientId}/clinical-record/notes`, payload);
+  }
+
+  addDiagnosis(patientId: string, payload: AddClinicalDiagnosisRequest): Observable<ClinicalRecord> {
+    return this.http.post<ClinicalRecord>(`${this.baseUrl}/${patientId}/clinical-record/diagnoses`, payload);
+  }
+
+  resolveDiagnosis(patientId: string, diagnosisId: string): Observable<ClinicalRecord> {
+    return this.http.post<ClinicalRecord>(`${this.baseUrl}/${patientId}/clinical-record/diagnoses/${diagnosisId}/resolve`, {});
   }
 }

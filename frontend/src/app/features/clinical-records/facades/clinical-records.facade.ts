@@ -3,6 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { ClinicalRecordsApiService } from '../data-access/clinical-records-api.service';
 import {
+  AddClinicalDiagnosisRequest,
   AddClinicalNoteRequest,
   ClinicalRecord,
   SaveClinicalRecordSnapshotRequest
@@ -69,6 +70,18 @@ export class ClinicalRecordsFacade {
 
   addNote(patientId: string, payload: AddClinicalNoteRequest) {
     return this.clinicalRecordsApi.addClinicalNote(patientId, payload).pipe(
+      tap((record) => this.setLoadedRecord(record))
+    );
+  }
+
+  addDiagnosis(patientId: string, payload: AddClinicalDiagnosisRequest) {
+    return this.clinicalRecordsApi.addDiagnosis(patientId, payload).pipe(
+      tap((record) => this.setLoadedRecord(record))
+    );
+  }
+
+  resolveDiagnosis(patientId: string, diagnosisId: string) {
+    return this.clinicalRecordsApi.resolveDiagnosis(patientId, diagnosisId).pipe(
       tap((record) => this.setLoadedRecord(record))
     );
   }

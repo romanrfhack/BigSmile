@@ -146,6 +146,87 @@ namespace BigSmile.IntegrationTests.Clinical
         }
 
         [Fact]
+        public async Task AddDiagnosisAsync_SucceedsWithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.AddDiagnosisAsync(
+                patient.Id,
+                new AddClinicalDiagnosisCommand("Occlusal caries", "Upper molar."));
+
+            Assert.Single(updated.Diagnoses);
+            Assert.Equal("Occlusal caries", updated.Diagnoses[0].DiagnosisText);
+            Assert.Equal("Active", updated.Diagnoses[0].Status);
+        }
+
+        [Fact]
+        public async Task ResolveDiagnosisAsync_SucceedsWithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var writeContext = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(writeContext, tenantContext);
+            var withDiagnosis = await commandService.AddDiagnosisAsync(
+                patient.Id,
+                new AddClinicalDiagnosisCommand("Occlusal caries", null));
+
+            var diagnosisId = withDiagnosis.Diagnoses.Single().DiagnosisId;
+
+            await using var resolveContext = CreateContext(databaseName, tenantContext);
+            var resolveService = CreateCommandService(resolveContext, tenantContext);
+            var resolved = await resolveService.ResolveDiagnosisAsync(patient.Id, diagnosisId);
+
+            var diagnosis = Assert.Single(resolved.Diagnoses);
+            Assert.Equal("Resolved", diagnosis.Status);
+            Assert.NotNull(diagnosis.ResolvedAtUtc);
+            Assert.NotNull(diagnosis.ResolvedByUserId);
+        }
+
+        [Fact]
+        public async Task GetByPatientIdAsync_IncludesDiagnosesOrderedActiveFirstAndNewestFirst()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var writeContext = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(writeContext, tenantContext);
+            await commandService.AddDiagnosisAsync(patient.Id, new AddClinicalDiagnosisCommand("Older active", null));
+            var middleDiagnosis = await commandService.AddDiagnosisAsync(patient.Id, new AddClinicalDiagnosisCommand("Resolved middle", null));
+            var middleDiagnosisId = middleDiagnosis.Diagnoses
+                .Single(diagnosis => diagnosis.DiagnosisText == "Resolved middle")
+                .DiagnosisId;
+            await commandService.ResolveDiagnosisAsync(patient.Id, middleDiagnosisId);
+            await commandService.AddDiagnosisAsync(patient.Id, new AddClinicalDiagnosisCommand("Newest active", null));
+
+            await using var queryContext = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(queryContext, tenantContext);
+            var loaded = await queryService.GetByPatientIdAsync(patient.Id);
+
+            Assert.NotNull(loaded);
+            Assert.Equal(
+                new[] { "Newest active", "Older active", "Resolved middle" },
+                loaded!.Diagnoses.Select(diagnosis => diagnosis.DiagnosisText).ToArray());
+            Assert.Equal(new[] { "Active", "Active", "Resolved" }, loaded.Diagnoses.Select(diagnosis => diagnosis.Status).ToArray());
+        }
+
+        [Fact]
         public async Task AddNoteAsync_Fails_WhenClinicalRecordDoesNotExist()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -161,6 +242,64 @@ namespace BigSmile.IntegrationTests.Clinical
                 new AddClinicalNoteCommand("Attempting to add note without a record.")));
 
             Assert.Contains("must be created explicitly", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task AddDiagnosisAsync_Fails_WhenClinicalRecordDoesNotExist()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.AddDiagnosisAsync(
+                patient.Id,
+                new AddClinicalDiagnosisCommand("Occlusal caries", null)));
+
+            Assert.Contains("created explicitly", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task AddDiagnosisAsync_BlocksCrossTenantWrite()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var foreignPatient = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            await SeedClinicalRecordAsync(databaseName, tenantB.Id, foreignPatient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.AddDiagnosisAsync(
+                foreignPatient.Id,
+                new AddClinicalDiagnosisCommand("Occlusal caries", null)));
+
+            Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task ResolveDiagnosisAsync_Fails_WhenDiagnosisDoesNotExistInClinicalRecord()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.ResolveDiagnosisAsync(
+                patient.Id,
+                Guid.NewGuid()));
+
+            Assert.Contains("does not exist", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]

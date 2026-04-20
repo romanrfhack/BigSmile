@@ -18,6 +18,10 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
     public sealed record AddClinicalNoteCommand(
         string NoteText);
 
+    public sealed record AddClinicalDiagnosisCommand(
+        string DiagnosisText,
+        string? Notes);
+
     public interface IClinicalRecordCommandService
     {
         Task<ClinicalRecordDetailDto> CreateAsync(
@@ -33,6 +37,16 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
         Task<ClinicalRecordDetailDto> AddNoteAsync(
             Guid patientId,
             AddClinicalNoteCommand command,
+            CancellationToken cancellationToken = default);
+
+        Task<ClinicalRecordDetailDto> AddDiagnosisAsync(
+            Guid patientId,
+            AddClinicalDiagnosisCommand command,
+            CancellationToken cancellationToken = default);
+
+        Task<ClinicalRecordDetailDto> ResolveDiagnosisAsync(
+            Guid patientId,
+            Guid diagnosisId,
             CancellationToken cancellationToken = default);
     }
 
@@ -126,6 +140,52 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
             }
 
             clinicalRecord.AddClinicalNote(command.NoteText, actorUserId);
+            await _clinicalRecordRepository.UpdateAsync(clinicalRecord, cancellationToken);
+
+            return clinicalRecord.ToDetailDto();
+        }
+
+        public async Task<ClinicalRecordDetailDto> AddDiagnosisAsync(
+            Guid patientId,
+            AddClinicalDiagnosisCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            var tenantId = GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
+
+            EnsurePatientBelongsToTenant(patient, tenantId);
+
+            var clinicalRecord = await _clinicalRecordRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            if (clinicalRecord is null)
+            {
+                throw new InvalidOperationException("The clinical record must be created explicitly before adding diagnoses.");
+            }
+
+            clinicalRecord.AddDiagnosis(command.DiagnosisText, command.Notes, actorUserId);
+            await _clinicalRecordRepository.UpdateAsync(clinicalRecord, cancellationToken);
+
+            return clinicalRecord.ToDetailDto();
+        }
+
+        public async Task<ClinicalRecordDetailDto> ResolveDiagnosisAsync(
+            Guid patientId,
+            Guid diagnosisId,
+            CancellationToken cancellationToken = default)
+        {
+            var tenantId = GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
+
+            EnsurePatientBelongsToTenant(patient, tenantId);
+
+            var clinicalRecord = await _clinicalRecordRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            if (clinicalRecord is null)
+            {
+                throw new InvalidOperationException("The clinical record must exist before resolving diagnoses.");
+            }
+
+            clinicalRecord.ResolveDiagnosis(diagnosisId, actorUserId);
             await _clinicalRecordRepository.UpdateAsync(clinicalRecord, cancellationToken);
 
             return clinicalRecord.ToDetailDto();

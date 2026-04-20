@@ -116,6 +116,50 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpPost("diagnoses")]
+        [Authorize(Policy = AuthorizationPolicies.ClinicalWrite)]
+        public async Task<ActionResult<ClinicalRecordDetailDto>> AddDiagnosis(
+            Guid patientId,
+            [FromBody] AddClinicalDiagnosisRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var clinicalRecord = await _clinicalRecordCommandService.AddDiagnosisAsync(patientId, request.ToCommand(), cancellationToken);
+                return Ok(clinicalRecord);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
+        [HttpPost("diagnoses/{diagnosisId:guid}/resolve")]
+        [Authorize(Policy = AuthorizationPolicies.ClinicalWrite)]
+        public async Task<ActionResult<ClinicalRecordDetailDto>> ResolveDiagnosis(
+            Guid patientId,
+            Guid diagnosisId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var clinicalRecord = await _clinicalRecordCommandService.ResolveDiagnosisAsync(patientId, diagnosisId, cancellationToken);
+                return Ok(clinicalRecord);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         private ActionResult BuildValidationProblem(string message)
         {
             ModelState.AddModelError(nameof(PatientClinicalRecordsController), message);
@@ -176,6 +220,29 @@ namespace BigSmile.Api.Controllers
             public AddClinicalNoteCommand ToCommand()
             {
                 return new AddClinicalNoteCommand(NoteText);
+            }
+        }
+
+        public sealed class AddClinicalDiagnosisRequest : IValidatableObject
+        {
+            [Required]
+            [MaxLength(250)]
+            public string DiagnosisText { get; set; } = string.Empty;
+
+            [MaxLength(500)]
+            public string? Notes { get; set; }
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (string.IsNullOrWhiteSpace(DiagnosisText))
+                {
+                    yield return new ValidationResult("Diagnosis text is required.", new[] { nameof(DiagnosisText) });
+                }
+            }
+
+            public AddClinicalDiagnosisCommand ToCommand()
+            {
+                return new AddClinicalDiagnosisCommand(DiagnosisText, Notes);
             }
         }
     }

@@ -28,6 +28,7 @@ namespace BigSmile.Domain.Entities
 
         public ICollection<ClinicalAllergyEntry> Allergies { get; private set; } = new List<ClinicalAllergyEntry>();
         public ICollection<ClinicalNote> Notes { get; private set; } = new List<ClinicalNote>();
+        public ICollection<ClinicalDiagnosis> Diagnoses { get; private set; } = new List<ClinicalDiagnosis>();
 
         private ClinicalRecord()
         {
@@ -89,6 +90,34 @@ namespace BigSmile.Domain.Entities
             Touch(createdByUserId);
 
             return note;
+        }
+
+        public ClinicalDiagnosis AddDiagnosis(string diagnosisText, string? notes, Guid createdByUserId)
+        {
+            var diagnosis = new ClinicalDiagnosis(Id, diagnosisText, notes, createdByUserId);
+            Diagnoses.Add(diagnosis);
+            Touch(createdByUserId);
+
+            return diagnosis;
+        }
+
+        public ClinicalDiagnosis ResolveDiagnosis(Guid diagnosisId, Guid resolvedByUserId)
+        {
+            if (diagnosisId == Guid.Empty)
+            {
+                throw new ArgumentException("Clinical diagnosis reference is required.", nameof(diagnosisId));
+            }
+
+            var diagnosis = Diagnoses.SingleOrDefault(entry => entry.Id == diagnosisId);
+            if (diagnosis is null)
+            {
+                throw new InvalidOperationException("The requested diagnosis does not exist in the current clinical record.");
+            }
+
+            diagnosis.Resolve(resolvedByUserId);
+            Touch(resolvedByUserId);
+
+            return diagnosis;
         }
 
         private void ReplaceAllergiesInternal(IEnumerable<ClinicalAllergyDraft>? allergies)

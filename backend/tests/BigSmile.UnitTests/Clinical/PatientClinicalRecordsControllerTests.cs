@@ -40,6 +40,7 @@ namespace BigSmile.UnitTests.Clinical
                 {
                     new ClinicalNoteDto(Guid.NewGuid(), "Newest note", DateTime.UtcNow, Guid.NewGuid())
                 },
+                Array.Empty<ClinicalDiagnosisDto>(),
                 DateTime.UtcNow,
                 Guid.NewGuid(),
                 DateTime.UtcNow,
@@ -61,6 +62,57 @@ namespace BigSmile.UnitTests.Clinical
                 new PatientClinicalRecordsController.AddClinicalNoteRequest
                 {
                     NoteText = "Newest note"
+                });
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Same(response, ok.Value);
+        }
+
+        [Fact]
+        public async Task AddDiagnosis_ReturnsOk_WhenCommandServiceSucceeds()
+        {
+            var patientId = Guid.NewGuid();
+            var response = new ClinicalRecordDetailDto(
+                Guid.NewGuid(),
+                patientId,
+                "Background",
+                null,
+                Array.Empty<ClinicalAllergyEntryDto>(),
+                Array.Empty<ClinicalNoteDto>(),
+                new[]
+                {
+                    new ClinicalDiagnosisDto(
+                        Guid.NewGuid(),
+                        "Occlusal caries",
+                        "Upper molar.",
+                        "Active",
+                        DateTime.UtcNow,
+                        Guid.NewGuid(),
+                        null,
+                        null)
+                },
+                DateTime.UtcNow,
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                Guid.NewGuid());
+
+            var commandService = new Mock<IClinicalRecordCommandService>();
+            commandService
+                .Setup(service => service.AddDiagnosisAsync(
+                    patientId,
+                    It.IsAny<AddClinicalDiagnosisCommand>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var queryService = new Mock<IClinicalRecordQueryService>();
+            var controller = new PatientClinicalRecordsController(commandService.Object, queryService.Object);
+
+            var result = await controller.AddDiagnosis(
+                patientId,
+                new PatientClinicalRecordsController.AddClinicalDiagnosisRequest
+                {
+                    DiagnosisText = "Occlusal caries",
+                    Notes = "Upper molar."
                 });
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);

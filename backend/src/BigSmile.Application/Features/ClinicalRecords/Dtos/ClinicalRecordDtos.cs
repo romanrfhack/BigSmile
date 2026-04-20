@@ -12,6 +12,16 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         DateTime CreatedAtUtc,
         Guid CreatedByUserId);
 
+    public sealed record ClinicalDiagnosisDto(
+        Guid DiagnosisId,
+        string DiagnosisText,
+        string? Notes,
+        string Status,
+        DateTime CreatedAtUtc,
+        Guid CreatedByUserId,
+        DateTime? ResolvedAtUtc,
+        Guid? ResolvedByUserId);
+
     public sealed record ClinicalRecordDetailDto(
         Guid ClinicalRecordId,
         Guid PatientId,
@@ -19,6 +29,7 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         string? CurrentMedicationsSummary,
         IReadOnlyList<ClinicalAllergyEntryDto> Allergies,
         IReadOnlyList<ClinicalNoteDto> Notes,
+        IReadOnlyList<ClinicalDiagnosisDto> Diagnoses,
         DateTime CreatedAtUtc,
         Guid CreatedByUserId,
         DateTime LastUpdatedAtUtc,

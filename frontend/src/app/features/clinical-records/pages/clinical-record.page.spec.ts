@@ -13,11 +13,15 @@ describe('ClinicalRecordPageComponent', () => {
   let createCalls: any[];
   let updateCalls: any[];
   let addNoteCalls: any[];
+  let addDiagnosisCalls: any[];
+  let resolveDiagnosisCalls: any[];
 
   beforeEach(async () => {
     createCalls = [];
     updateCalls = [];
     addNoteCalls = [];
+    addDiagnosisCalls = [];
+    resolveDiagnosisCalls = [];
 
     clinicalRecordsFacade = {
       currentRecord: signal<any | null>(null),
@@ -35,6 +39,7 @@ describe('ClinicalRecordPageComponent', () => {
           currentMedicationsSummary: payload.currentMedicationsSummary,
           allergies: payload.allergies,
           notes: [],
+          diagnoses: [],
           createdAtUtc: '2026-04-20T10:00:00Z',
           createdByUserId: 'user-1',
           lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
@@ -50,6 +55,7 @@ describe('ClinicalRecordPageComponent', () => {
           medicalBackgroundSummary: payload.medicalBackgroundSummary,
           currentMedicationsSummary: payload.currentMedicationsSummary,
           allergies: payload.allergies,
+          diagnoses: clinicalRecordsFacade.currentRecord()?.diagnoses ?? [],
           lastUpdatedAtUtc: '2026-04-20T11:00:00Z',
           lastUpdatedByUserId: 'user-2'
         });
@@ -68,6 +74,41 @@ describe('ClinicalRecordPageComponent', () => {
             },
             ...(clinicalRecordsFacade.currentRecord()?.notes ?? [])
           ]
+        });
+        return of(clinicalRecordsFacade.currentRecord());
+      },
+      addDiagnosis: (_patientId: string, payload: any) => {
+        addDiagnosisCalls.push(payload);
+        clinicalRecordsFacade.currentRecord.set({
+          ...clinicalRecordsFacade.currentRecord(),
+          diagnoses: [
+            {
+              diagnosisId: `diagnosis-${addDiagnosisCalls.length}`,
+              diagnosisText: payload.diagnosisText,
+              notes: payload.notes,
+              status: 'Active',
+              createdAtUtc: '2026-04-20T12:30:00Z',
+              createdByUserId: 'user-2',
+              resolvedAtUtc: null,
+              resolvedByUserId: null
+            },
+            ...(clinicalRecordsFacade.currentRecord()?.diagnoses ?? [])
+          ]
+        });
+        return of(clinicalRecordsFacade.currentRecord());
+      },
+      resolveDiagnosis: (_patientId: string, diagnosisId: string) => {
+        resolveDiagnosisCalls.push(diagnosisId);
+        clinicalRecordsFacade.currentRecord.set({
+          ...clinicalRecordsFacade.currentRecord(),
+          diagnoses: (clinicalRecordsFacade.currentRecord()?.diagnoses ?? []).map((diagnosis: any) => diagnosis.diagnosisId === diagnosisId
+            ? {
+                ...diagnosis,
+                status: 'Resolved',
+                resolvedAtUtc: '2026-04-20T13:00:00Z',
+                resolvedByUserId: 'user-3'
+              }
+            : diagnosis)
         });
         return of(clinicalRecordsFacade.currentRecord());
       }
@@ -147,6 +188,7 @@ describe('ClinicalRecordPageComponent', () => {
       currentMedicationsSummary: null,
       allergies: [],
       notes: [],
+      diagnoses: [],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
       lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
@@ -175,6 +217,7 @@ describe('ClinicalRecordPageComponent', () => {
       medicalBackgroundSummary: 'Background',
       currentMedicationsSummary: null,
       allergies: [],
+      diagnoses: [],
       notes: [
         {
           id: 'note-1',
@@ -197,5 +240,114 @@ describe('ClinicalRecordPageComponent', () => {
 
     expect(addNoteCalls).toEqual([{ noteText: 'Newest note' }]);
     expect(clinicalRecordsFacade.currentRecord()?.notes[0]?.noteText).toBe('Newest note');
+  });
+
+  it('renders diagnoses with active and resolved states', () => {
+    clinicalRecordsFacade.recordMissing.set(false);
+    clinicalRecordsFacade.currentRecord.set({
+      clinicalRecordId: 'record-1',
+      patientId: 'patient-1',
+      medicalBackgroundSummary: 'Background',
+      currentMedicationsSummary: null,
+      allergies: [],
+      notes: [],
+      diagnoses: [
+        {
+          diagnosisId: 'diagnosis-1',
+          diagnosisText: 'Occlusal caries',
+          notes: 'Watch upper molar.',
+          status: 'Active',
+          createdAtUtc: '2026-04-20T10:00:00Z',
+          createdByUserId: 'user-1',
+          resolvedAtUtc: null,
+          resolvedByUserId: null
+        },
+        {
+          diagnosisId: 'diagnosis-2',
+          diagnosisText: 'Resolved gingivitis',
+          notes: null,
+          status: 'Resolved',
+          createdAtUtc: '2026-04-20T09:00:00Z',
+          createdByUserId: 'user-1',
+          resolvedAtUtc: '2026-04-20T11:00:00Z',
+          resolvedByUserId: 'user-2'
+        }
+      ],
+      createdAtUtc: '2026-04-20T10:00:00Z',
+      createdByUserId: 'user-1',
+      lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
+      lastUpdatedByUserId: 'user-1'
+    });
+
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Diagnoses');
+    expect(fixture.nativeElement.textContent).toContain('Occlusal caries');
+    expect(fixture.nativeElement.textContent).toContain('Active');
+    expect(fixture.nativeElement.textContent).toContain('Resolved');
+  });
+
+  it('adds a diagnosis through the facade', () => {
+    clinicalRecordsFacade.recordMissing.set(false);
+    clinicalRecordsFacade.currentRecord.set({
+      clinicalRecordId: 'record-1',
+      patientId: 'patient-1',
+      medicalBackgroundSummary: 'Background',
+      currentMedicationsSummary: null,
+      allergies: [],
+      notes: [],
+      diagnoses: [],
+      createdAtUtc: '2026-04-20T10:00:00Z',
+      createdByUserId: 'user-1',
+      lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
+      lastUpdatedByUserId: 'user-1'
+    });
+
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.addDiagnosis({ diagnosisText: 'Occlusal caries', notes: 'Upper molar.' });
+
+    expect(addDiagnosisCalls).toEqual([{ diagnosisText: 'Occlusal caries', notes: 'Upper molar.' }]);
+    expect(clinicalRecordsFacade.currentRecord()?.diagnoses[0]?.diagnosisText).toBe('Occlusal caries');
+  });
+
+  it('marks a diagnosis as resolved through the facade', () => {
+    clinicalRecordsFacade.recordMissing.set(false);
+    clinicalRecordsFacade.currentRecord.set({
+      clinicalRecordId: 'record-1',
+      patientId: 'patient-1',
+      medicalBackgroundSummary: 'Background',
+      currentMedicationsSummary: null,
+      allergies: [],
+      notes: [],
+      diagnoses: [
+        {
+          diagnosisId: 'diagnosis-1',
+          diagnosisText: 'Occlusal caries',
+          notes: null,
+          status: 'Active',
+          createdAtUtc: '2026-04-20T10:00:00Z',
+          createdByUserId: 'user-1',
+          resolvedAtUtc: null,
+          resolvedByUserId: null
+        }
+      ],
+      createdAtUtc: '2026-04-20T10:00:00Z',
+      createdByUserId: 'user-1',
+      lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
+      lastUpdatedByUserId: 'user-1'
+    });
+
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.resolveDiagnosis('diagnosis-1');
+
+    expect(resolveDiagnosisCalls).toEqual(['diagnosis-1']);
+    expect(clinicalRecordsFacade.currentRecord()?.diagnoses[0]?.status).toBe('Resolved');
   });
 });

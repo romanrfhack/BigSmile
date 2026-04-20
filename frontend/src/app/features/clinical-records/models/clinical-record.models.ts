@@ -12,6 +12,19 @@ export interface ClinicalNote {
   createdByUserId: string;
 }
 
+export type ClinicalDiagnosisStatus = 'Active' | 'Resolved';
+
+export interface ClinicalDiagnosis {
+  diagnosisId: string;
+  diagnosisText: string;
+  notes: string | null;
+  status: ClinicalDiagnosisStatus;
+  createdAtUtc: string;
+  createdByUserId: string;
+  resolvedAtUtc: string | null;
+  resolvedByUserId: string | null;
+}
+
 export interface ClinicalRecord {
   clinicalRecordId: string;
   patientId: string;
@@ -19,6 +32,7 @@ export interface ClinicalRecord {
   currentMedicationsSummary: string | null;
   allergies: ClinicalAllergy[];
   notes: ClinicalNote[];
+  diagnoses: ClinicalDiagnosis[];
   createdAtUtc: string;
   createdByUserId: string;
   lastUpdatedAtUtc: string;
@@ -39,4 +53,9 @@ export interface SaveClinicalRecordSnapshotRequest {
 
 export interface AddClinicalNoteRequest {
   noteText: string;
+}
+
+export interface AddClinicalDiagnosisRequest {
+  diagnosisText: string;
+  notes: string | null;
 }

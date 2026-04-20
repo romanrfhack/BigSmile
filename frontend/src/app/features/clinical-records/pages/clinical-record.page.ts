@@ -4,11 +4,14 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { ClinicalBackgroundFormComponent } from '../components/clinical-background-form.component';
+import { ClinicalDiagnosisCreateFormComponent } from '../components/clinical-diagnosis-create-form.component';
+import { ClinicalDiagnosesListComponent } from '../components/clinical-diagnoses-list.component';
 import { ClinicalNoteCreateFormComponent } from '../components/clinical-note-create-form.component';
 import { ClinicalNotesListComponent } from '../components/clinical-notes-list.component';
 import { ClinicalRecordEmptyStateComponent } from '../components/clinical-record-empty-state.component';
 import { ClinicalRecordsFacade } from '../facades/clinical-records.facade';
 import {
+  AddClinicalDiagnosisRequest,
   AddClinicalNoteRequest,
   SaveClinicalRecordSnapshotRequest
 } from '../models/clinical-record.models';
@@ -21,6 +24,8 @@ import {
     RouterLink,
     ClinicalRecordEmptyStateComponent,
     ClinicalBackgroundFormComponent,
+    ClinicalDiagnosisCreateFormComponent,
+    ClinicalDiagnosesListComponent,
     ClinicalNoteCreateFormComponent,
     ClinicalNotesListComponent
   ],
@@ -28,10 +33,10 @@ import {
     <section class="clinical-record-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 3.1 / Clinical Record Foundation</p>
+          <p class="eyebrow">Release 3.2 / Basic Diagnoses Foundation</p>
           <h2>Clinical record</h2>
           <p class="subtitle">
-            Minimal clinical foundation for {{ patientDisplayName }} with explicit creation, current allergies, and append-only notes.
+            Minimal clinical foundation for {{ patientDisplayName }} with explicit creation, current allergies, basic diagnoses, and append-only notes.
           </p>
         </div>
 
@@ -95,6 +100,31 @@ import {
           (saved)="saveSnapshot($event)">
         </app-clinical-background-form>
 
+        <section class="diagnoses-shell">
+          <div class="notes-head">
+            <div>
+              <p class="eyebrow">Diagnoses</p>
+              <h3>Basic diagnoses only</h3>
+              <p class="section-copy">No coded catalogs, timeline, or treatment linkage in this slice.</p>
+            </div>
+          </div>
+
+          <app-clinical-diagnosis-create-form
+            *ngIf="canWrite"
+            [saving]="savingDiagnosis"
+            [error]="diagnosisError"
+            [revision]="diagnosisFormRevision"
+            (saved)="addDiagnosis($event)">
+          </app-clinical-diagnosis-create-form>
+
+          <app-clinical-diagnoses-list
+            [diagnoses]="record.diagnoses"
+            [canWrite]="canWrite"
+            [resolvingDiagnosisId]="resolvingDiagnosisId"
+            (resolveRequested)="resolveDiagnosis($event)">
+          </app-clinical-diagnoses-list>
+        </section>
+
         <section class="notes-shell">
           <div class="notes-head">
             <div>
@@ -125,6 +155,7 @@ import {
     .page-head,
     .state-card,
     .record-meta,
+    .diagnoses-shell,
     .notes-shell {
       border-radius: 20px;
       border: 1px solid #d7dfe8;
@@ -192,6 +223,17 @@ import {
       gap: 1rem;
     }
 
+    .diagnoses-shell {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .section-copy {
+      margin: 0.35rem 0 0;
+      color: #5b6e84;
+      max-width: 60ch;
+    }
+
     .head-actions {
       display: flex;
       gap: 0.75rem;
@@ -233,9 +275,13 @@ export class ClinicalRecordPageComponent implements OnInit {
   creatingRecord = false;
   savingSnapshot = false;
   savingNote = false;
+  savingDiagnosis = false;
   snapshotError: string | null = null;
   noteError: string | null = null;
+  diagnosisError: string | null = null;
   noteFormRevision = 0;
+  diagnosisFormRevision = 0;
+  resolvingDiagnosisId: string | null = null;
 
   get patientDisplayName(): string {
     return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
@@ -308,6 +354,47 @@ export class ClinicalRecordPageComponent implements OnInit {
         error: () => {
           this.savingNote = false;
           this.noteError = 'The clinical note could not be added.';
+        }
+      });
+  }
+
+  addDiagnosis(payload: AddClinicalDiagnosisRequest): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.savingDiagnosis = true;
+    this.diagnosisError = null;
+
+    this.clinicalRecordsFacade.addDiagnosis(this.patientId, payload)
+      .subscribe({
+        next: () => {
+          this.savingDiagnosis = false;
+          this.diagnosisFormRevision += 1;
+        },
+        error: () => {
+          this.savingDiagnosis = false;
+          this.diagnosisError = 'The diagnosis could not be added.';
+        }
+      });
+  }
+
+  resolveDiagnosis(diagnosisId: string): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.resolvingDiagnosisId = diagnosisId;
+    this.diagnosisError = null;
+
+    this.clinicalRecordsFacade.resolveDiagnosis(this.patientId, diagnosisId)
+      .subscribe({
+        next: () => {
+          this.resolvingDiagnosisId = null;
+        },
+        error: () => {
+          this.resolvingDiagnosisId = null;
+          this.diagnosisError = 'The diagnosis could not be resolved.';
         }
       });
   }
