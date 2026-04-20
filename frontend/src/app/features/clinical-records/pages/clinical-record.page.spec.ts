@@ -40,6 +40,7 @@ describe('ClinicalRecordPageComponent', () => {
           allergies: payload.allergies,
           notes: [],
           diagnoses: [],
+          timeline: [],
           createdAtUtc: '2026-04-20T10:00:00Z',
           createdByUserId: 'user-1',
           lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
@@ -56,6 +57,7 @@ describe('ClinicalRecordPageComponent', () => {
           currentMedicationsSummary: payload.currentMedicationsSummary,
           allergies: payload.allergies,
           diagnoses: clinicalRecordsFacade.currentRecord()?.diagnoses ?? [],
+          timeline: clinicalRecordsFacade.currentRecord()?.timeline ?? [],
           lastUpdatedAtUtc: '2026-04-20T11:00:00Z',
           lastUpdatedByUserId: 'user-2'
         });
@@ -73,6 +75,17 @@ describe('ClinicalRecordPageComponent', () => {
               createdByUserId: 'user-2'
             },
             ...(clinicalRecordsFacade.currentRecord()?.notes ?? [])
+          ],
+          timeline: [
+            {
+              eventType: 'ClinicalNoteCreated',
+              occurredAtUtc: '2026-04-20T12:00:00Z',
+              actorUserId: 'user-2',
+              title: 'Clinical note added',
+              summary: payload.noteText,
+              referenceId: 'note-2'
+            },
+            ...(clinicalRecordsFacade.currentRecord()?.timeline ?? [])
           ]
         });
         return of(clinicalRecordsFacade.currentRecord());
@@ -93,6 +106,17 @@ describe('ClinicalRecordPageComponent', () => {
               resolvedByUserId: null
             },
             ...(clinicalRecordsFacade.currentRecord()?.diagnoses ?? [])
+          ],
+          timeline: [
+            {
+              eventType: 'ClinicalDiagnosisCreated',
+              occurredAtUtc: '2026-04-20T12:30:00Z',
+              actorUserId: 'user-2',
+              title: 'Diagnosis added',
+              summary: payload.notes ? `${payload.diagnosisText}: ${payload.notes}` : payload.diagnosisText,
+              referenceId: `diagnosis-${addDiagnosisCalls.length}`
+            },
+            ...(clinicalRecordsFacade.currentRecord()?.timeline ?? [])
           ]
         });
         return of(clinicalRecordsFacade.currentRecord());
@@ -108,7 +132,19 @@ describe('ClinicalRecordPageComponent', () => {
                 resolvedAtUtc: '2026-04-20T13:00:00Z',
                 resolvedByUserId: 'user-3'
               }
-            : diagnosis)
+            : diagnosis),
+          timeline: [
+            {
+              eventType: 'ClinicalDiagnosisResolved',
+              occurredAtUtc: '2026-04-20T13:00:00Z',
+              actorUserId: 'user-3',
+              title: 'Diagnosis resolved',
+              summary: (clinicalRecordsFacade.currentRecord()?.diagnoses ?? [])
+                .find((diagnosis: any) => diagnosis.diagnosisId === diagnosisId)?.diagnosisText ?? 'Resolved diagnosis',
+              referenceId: diagnosisId
+            },
+            ...(clinicalRecordsFacade.currentRecord()?.timeline ?? [])
+          ]
         });
         return of(clinicalRecordsFacade.currentRecord());
       }
@@ -189,6 +225,7 @@ describe('ClinicalRecordPageComponent', () => {
       allergies: [],
       notes: [],
       diagnoses: [],
+      timeline: [],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
       lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
@@ -218,6 +255,7 @@ describe('ClinicalRecordPageComponent', () => {
       currentMedicationsSummary: null,
       allergies: [],
       diagnoses: [],
+      timeline: [],
       notes: [
         {
           id: 'note-1',
@@ -273,6 +311,24 @@ describe('ClinicalRecordPageComponent', () => {
           resolvedByUserId: 'user-2'
         }
       ],
+      timeline: [
+        {
+          eventType: 'ClinicalDiagnosisResolved',
+          occurredAtUtc: '2026-04-20T11:00:00Z',
+          actorUserId: 'user-2',
+          title: 'Diagnosis resolved',
+          summary: 'Resolved gingivitis',
+          referenceId: 'diagnosis-2'
+        },
+        {
+          eventType: 'ClinicalDiagnosisCreated',
+          occurredAtUtc: '2026-04-20T10:00:00Z',
+          actorUserId: 'user-1',
+          title: 'Diagnosis added',
+          summary: 'Occlusal caries: Watch upper molar.',
+          referenceId: 'diagnosis-1'
+        }
+      ],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
       lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
@@ -286,6 +342,9 @@ describe('ClinicalRecordPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Occlusal caries');
     expect(fixture.nativeElement.textContent).toContain('Active');
     expect(fixture.nativeElement.textContent).toContain('Resolved');
+    expect(fixture.nativeElement.textContent).toContain('Clinical timeline');
+    expect(fixture.nativeElement.textContent).toContain('Diagnosis added');
+    expect(fixture.nativeElement.textContent).toContain('Diagnosis resolved');
   });
 
   it('adds a diagnosis through the facade', () => {
@@ -298,6 +357,7 @@ describe('ClinicalRecordPageComponent', () => {
       allergies: [],
       notes: [],
       diagnoses: [],
+      timeline: [],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
       lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
@@ -335,6 +395,7 @@ describe('ClinicalRecordPageComponent', () => {
           resolvedByUserId: null
         }
       ],
+      timeline: [],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
       lastUpdatedAtUtc: '2026-04-20T10:00:00Z',

@@ -22,6 +22,14 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         DateTime? ResolvedAtUtc,
         Guid? ResolvedByUserId);
 
+    public sealed record ClinicalTimelineEntryDto(
+        string EventType,
+        DateTime OccurredAtUtc,
+        Guid ActorUserId,
+        string Title,
+        string Summary,
+        Guid ReferenceId);
+
     public sealed record ClinicalRecordDetailDto(
         Guid ClinicalRecordId,
         Guid PatientId,
@@ -30,6 +38,7 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         IReadOnlyList<ClinicalAllergyEntryDto> Allergies,
         IReadOnlyList<ClinicalNoteDto> Notes,
         IReadOnlyList<ClinicalDiagnosisDto> Diagnoses,
+        IReadOnlyList<ClinicalTimelineEntryDto> Timeline,
         DateTime CreatedAtUtc,
         Guid CreatedByUserId,
         DateTime LastUpdatedAtUtc,

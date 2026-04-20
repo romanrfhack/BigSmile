@@ -4,6 +4,10 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
 {
     internal static class ClinicalRecordMappings
     {
+        private const string ClinicalNoteCreated = "ClinicalNoteCreated";
+        private const string ClinicalDiagnosisCreated = "ClinicalDiagnosisCreated";
+        private const string ClinicalDiagnosisResolved = "ClinicalDiagnosisResolved";
+
         public static ClinicalRecordDetailDto ToDetailDto(this ClinicalRecord clinicalRecord)
         {
             return new ClinicalRecordDetailDto(
@@ -42,10 +46,50 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
                         diagnosis.ResolvedAtUtc,
                         diagnosis.ResolvedByUserId))
                     .ToList(),
+                BuildTimeline(clinicalRecord),
                 clinicalRecord.CreatedAtUtc,
                 clinicalRecord.CreatedByUserId,
                 clinicalRecord.LastUpdatedAtUtc,
                 clinicalRecord.LastUpdatedByUserId);
+        }
+
+        private static IReadOnlyList<ClinicalTimelineEntryDto> BuildTimeline(ClinicalRecord clinicalRecord)
+        {
+            return clinicalRecord.Notes
+                .Select(note => new ClinicalTimelineEntryDto(
+                    ClinicalNoteCreated,
+                    note.CreatedAtUtc,
+                    note.CreatedByUserId,
+                    "Clinical note added",
+                    note.NoteText,
+                    note.Id))
+                .Concat(clinicalRecord.Diagnoses.Select(diagnosis => new ClinicalTimelineEntryDto(
+                    ClinicalDiagnosisCreated,
+                    diagnosis.CreatedAtUtc,
+                    diagnosis.CreatedByUserId,
+                    "Diagnosis added",
+                    BuildDiagnosisSummary(diagnosis),
+                    diagnosis.Id)))
+                .Concat(clinicalRecord.Diagnoses
+                    .Where(diagnosis => diagnosis.ResolvedAtUtc.HasValue)
+                    .Select(diagnosis => new ClinicalTimelineEntryDto(
+                        ClinicalDiagnosisResolved,
+                        diagnosis.ResolvedAtUtc!.Value,
+                        diagnosis.ResolvedByUserId ?? diagnosis.CreatedByUserId,
+                        "Diagnosis resolved",
+                        BuildDiagnosisSummary(diagnosis),
+                        diagnosis.Id)))
+                .OrderByDescending(entry => entry.OccurredAtUtc)
+                .ThenByDescending(entry => entry.ReferenceId)
+                .ThenByDescending(entry => entry.EventType, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        private static string BuildDiagnosisSummary(ClinicalDiagnosis diagnosis)
+        {
+            return string.IsNullOrWhiteSpace(diagnosis.Notes)
+                ? diagnosis.DiagnosisText
+                : $"{diagnosis.DiagnosisText}: {diagnosis.Notes}";
         }
     }
 }

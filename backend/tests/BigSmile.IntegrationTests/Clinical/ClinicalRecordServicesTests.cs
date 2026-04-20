@@ -35,12 +35,14 @@ namespace BigSmile.IntegrationTests.Clinical
             Assert.Equal(patient.Id, created.PatientId);
             Assert.Empty(created.Allergies);
             Assert.Empty(created.Notes);
+            Assert.Empty(created.Timeline);
 
             var loaded = await queryService.GetByPatientIdAsync(patient.Id);
 
             Assert.NotNull(loaded);
             Assert.Equal("History of bruxism.", loaded!.MedicalBackgroundSummary);
             Assert.Empty(loaded.Allergies);
+            Assert.Empty(loaded.Timeline);
         }
 
         [Fact]
@@ -227,6 +229,60 @@ namespace BigSmile.IntegrationTests.Clinical
         }
 
         [Fact]
+        public async Task GetByPatientIdAsync_IncludesClinicalTimelineNewestFirst()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordWithTimelineAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext);
+
+            var loaded = await queryService.GetByPatientIdAsync(patient.Id);
+
+            Assert.NotNull(loaded);
+            Assert.Equal(
+                new[]
+                {
+                    "ClinicalDiagnosisResolved",
+                    "ClinicalDiagnosisCreated",
+                    "ClinicalDiagnosisCreated",
+                    "ClinicalNoteCreated"
+                },
+                loaded!.Timeline.Select(entry => entry.EventType).ToArray());
+            Assert.Equal(
+                new[]
+                {
+                    "Diagnosis resolved",
+                    "Diagnosis added",
+                    "Diagnosis added",
+                    "Clinical note added"
+                },
+                loaded.Timeline.Select(entry => entry.Title).ToArray());
+        }
+
+        [Fact]
+        public async Task GetByPatientIdAsync_TimelineRemainsBlockedForCrossTenantAccess()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordWithTimelineAsync(databaseName, tenantA.Id, patientA.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantB.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext);
+
+            var clinicalRecord = await queryService.GetByPatientIdAsync(patientA.Id);
+
+            Assert.Null(clinicalRecord);
+        }
+
+        [Fact]
         public async Task AddNoteAsync_Fails_WhenClinicalRecordDoesNotExist()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -387,6 +443,58 @@ namespace BigSmile.IntegrationTests.Clinical
             await context.SaveChangesAsync();
 
             return clinicalRecord;
+        }
+
+        private static async Task SeedClinicalRecordWithTimelineAsync(string databaseName, Guid tenantId, Guid patientId, Guid actorUserId)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var clinicalRecord = new ClinicalRecord(
+                tenantId,
+                patientId,
+                actorUserId,
+                "Seeded background.",
+                "Seeded medications.");
+
+            var note = clinicalRecord.AddClinicalNote("Clinical note summary.", actorUserId);
+            SetCreatedAt(note, new DateTime(2026, 4, 20, 9, 0, 0, DateTimeKind.Utc));
+
+            var createdDiagnosis = clinicalRecord.AddDiagnosis("Occlusal caries", "Upper molar.", actorUserId);
+            SetCreatedAt(createdDiagnosis, new DateTime(2026, 4, 20, 10, 0, 0, DateTimeKind.Utc));
+
+            var resolvedDiagnosis = clinicalRecord.AddDiagnosis("Gingivitis", null, actorUserId);
+            SetCreatedAt(resolvedDiagnosis, new DateTime(2026, 4, 20, 11, 0, 0, DateTimeKind.Utc));
+            clinicalRecord.ResolveDiagnosis(resolvedDiagnosis.Id, actorUserId);
+            SetResolvedAt(resolvedDiagnosis, new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc), actorUserId);
+
+            context.ClinicalRecords.Add(clinicalRecord);
+            await context.SaveChangesAsync();
+        }
+
+        private static void SetCreatedAt(ClinicalNote note, DateTime value)
+        {
+            var field = typeof(ClinicalNote)
+                .GetField($"<{nameof(ClinicalNote.CreatedAtUtc)}>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+            field.SetValue(note, value);
+        }
+
+        private static void SetCreatedAt(ClinicalDiagnosis diagnosis, DateTime value)
+        {
+            var field = typeof(ClinicalDiagnosis)
+                .GetField($"<{nameof(ClinicalDiagnosis.CreatedAtUtc)}>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+            field.SetValue(diagnosis, value);
+        }
+
+        private static void SetResolvedAt(ClinicalDiagnosis diagnosis, DateTime value, Guid resolvedByUserId)
+        {
+            var resolvedAtField = typeof(ClinicalDiagnosis)
+                .GetField($"<{nameof(ClinicalDiagnosis.ResolvedAtUtc)}>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+            var resolvedByField = typeof(ClinicalDiagnosis)
+                .GetField($"<{nameof(ClinicalDiagnosis.ResolvedByUserId)}>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+            resolvedAtField.SetValue(diagnosis, value);
+            resolvedByField.SetValue(diagnosis, resolvedByUserId);
         }
 
         private static AppDbContext CreateContext(string databaseName, TenantContext tenantContext)

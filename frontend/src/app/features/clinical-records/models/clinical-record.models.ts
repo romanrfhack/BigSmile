@@ -25,6 +25,20 @@ export interface ClinicalDiagnosis {
   resolvedByUserId: string | null;
 }
 
+export type ClinicalTimelineEventType =
+  | 'ClinicalNoteCreated'
+  | 'ClinicalDiagnosisCreated'
+  | 'ClinicalDiagnosisResolved';
+
+export interface ClinicalTimelineEntry {
+  eventType: ClinicalTimelineEventType;
+  occurredAtUtc: string;
+  actorUserId: string;
+  title: string;
+  summary: string;
+  referenceId: string;
+}
+
 export interface ClinicalRecord {
   clinicalRecordId: string;
   patientId: string;
@@ -33,6 +47,7 @@ export interface ClinicalRecord {
   allergies: ClinicalAllergy[];
   notes: ClinicalNote[];
   diagnoses: ClinicalDiagnosis[];
+  timeline: ClinicalTimelineEntry[];
   createdAtUtc: string;
   createdByUserId: string;
   lastUpdatedAtUtc: string;

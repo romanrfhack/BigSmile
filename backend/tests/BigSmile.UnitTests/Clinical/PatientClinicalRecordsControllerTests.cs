@@ -41,6 +41,7 @@ namespace BigSmile.UnitTests.Clinical
                     new ClinicalNoteDto(Guid.NewGuid(), "Newest note", DateTime.UtcNow, Guid.NewGuid())
                 },
                 Array.Empty<ClinicalDiagnosisDto>(),
+                Array.Empty<ClinicalTimelineEntryDto>(),
                 DateTime.UtcNow,
                 Guid.NewGuid(),
                 DateTime.UtcNow,
@@ -91,6 +92,7 @@ namespace BigSmile.UnitTests.Clinical
                         null,
                         null)
                 },
+                Array.Empty<ClinicalTimelineEntryDto>(),
                 DateTime.UtcNow,
                 Guid.NewGuid(),
                 DateTime.UtcNow,

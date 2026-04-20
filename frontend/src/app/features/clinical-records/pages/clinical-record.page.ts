@@ -9,6 +9,7 @@ import { ClinicalDiagnosesListComponent } from '../components/clinical-diagnoses
 import { ClinicalNoteCreateFormComponent } from '../components/clinical-note-create-form.component';
 import { ClinicalNotesListComponent } from '../components/clinical-notes-list.component';
 import { ClinicalRecordEmptyStateComponent } from '../components/clinical-record-empty-state.component';
+import { ClinicalTimelineListComponent } from '../components/clinical-timeline-list.component';
 import { ClinicalRecordsFacade } from '../facades/clinical-records.facade';
 import {
   AddClinicalDiagnosisRequest,
@@ -27,16 +28,17 @@ import {
     ClinicalDiagnosisCreateFormComponent,
     ClinicalDiagnosesListComponent,
     ClinicalNoteCreateFormComponent,
-    ClinicalNotesListComponent
+    ClinicalNotesListComponent,
+    ClinicalTimelineListComponent
   ],
   template: `
     <section class="clinical-record-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 3.2 / Basic Diagnoses Foundation</p>
+          <p class="eyebrow">Release 3.3 / Clinical Timeline Read Model</p>
           <h2>Clinical record</h2>
           <p class="subtitle">
-            Minimal clinical foundation for {{ patientDisplayName }} with explicit creation, current allergies, basic diagnoses, and append-only notes.
+            Minimal clinical foundation for {{ patientDisplayName }} with explicit creation, current allergies, basic diagnoses, append-only notes, and a unified clinical timeline.
           </p>
         </div>
 
@@ -100,12 +102,24 @@ import {
           (saved)="saveSnapshot($event)">
         </app-clinical-background-form>
 
+        <section class="timeline-shell">
+          <div class="notes-head">
+            <div>
+              <p class="eyebrow">Clinical timeline</p>
+              <h3>Newest clinical events first</h3>
+              <p class="section-copy">Only note created, diagnosis created, and diagnosis resolved events are included in this slice.</p>
+            </div>
+          </div>
+
+          <app-clinical-timeline-list [timeline]="record.timeline"></app-clinical-timeline-list>
+        </section>
+
         <section class="diagnoses-shell">
           <div class="notes-head">
             <div>
               <p class="eyebrow">Diagnoses</p>
               <h3>Basic diagnoses only</h3>
-              <p class="section-copy">No coded catalogs, timeline, or treatment linkage in this slice.</p>
+              <p class="section-copy">No coded catalogs or treatment linkage in this slice.</p>
             </div>
           </div>
 
@@ -155,6 +169,7 @@ import {
     .page-head,
     .state-card,
     .record-meta,
+    .timeline-shell,
     .diagnoses-shell,
     .notes-shell {
       border-radius: 20px;
@@ -219,6 +234,11 @@ import {
     }
 
     .notes-shell {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .timeline-shell {
       display: grid;
       gap: 1rem;
     }
