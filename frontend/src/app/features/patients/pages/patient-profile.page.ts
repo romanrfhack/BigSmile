@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
 import { PatientsFacade } from '../facades/patients.facade';
 
 @Component({
@@ -17,6 +18,12 @@ import { PatientsFacade } from '../facades/patients.facade';
         </div>
         <div class="head-actions">
           <a routerLink="/patients" class="action-link action-secondary">Back to search</a>
+          <a
+            *ngIf="canReadClinicalRecords && patientsFacade.currentPatient() as patient"
+            [routerLink]="['/patients', patient.id, 'clinical-record']"
+            class="action-link action-secondary">
+            Clinical record
+          </a>
           <a *ngIf="patientsFacade.currentPatient() as patient" [routerLink]="['/patients', patient.id, 'edit']" class="action-link">
             Edit patient
           </a>
@@ -241,6 +248,7 @@ import { PatientsFacade } from '../facades/patients.facade';
 })
 export class PatientProfilePageComponent implements OnInit {
   readonly patientsFacade = inject(PatientsFacade);
+  readonly canReadClinicalRecords = inject(AuthService).hasPermissions(['clinical.read']);
   private readonly route = inject(ActivatedRoute);
 
   ngOnInit(): void {

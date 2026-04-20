@@ -1,6 +1,8 @@
 using BigSmile.Application.Authorization;
 using BigSmile.Application.Features.Branches.Services;
 using BigSmile.Application.Features.Branches.Queries;
+using BigSmile.Application.Features.ClinicalRecords.Commands;
+using BigSmile.Application.Features.ClinicalRecords.Queries;
 using BigSmile.Application.Features.Patients.Commands;
 using BigSmile.Application.Features.Patients.Queries;
 using BigSmile.Application.Features.Scheduling.Commands;
@@ -18,6 +20,8 @@ namespace BigSmile.Application
             services.AddSingleton<IRolePermissionCatalog, RolePermissionCatalog>();
             services.AddScoped<IBranchAccessService, BranchAccessService>();
             services.AddScoped<IBranchQueryService, BranchQueryService>();
+            services.AddScoped<IClinicalRecordCommandService, ClinicalRecordCommandService>();
+            services.AddScoped<IClinicalRecordQueryService, ClinicalRecordQueryService>();
             services.AddScoped<IPatientCommandService, PatientCommandService>();
             services.AddScoped<IPatientQueryService, PatientQueryService>();
             services.AddScoped<IAppointmentCommandService, AppointmentCommandService>();

@@ -11,5 +11,7 @@ namespace BigSmile.Application.Authorization
         public const string PatientWrite = "patient.write";
         public const string SchedulingRead = "scheduling.read";
         public const string SchedulingWrite = "scheduling.write";
+        public const string ClinicalRead = "clinical.read";
+        public const string ClinicalWrite = "clinical.write";
     }
 }

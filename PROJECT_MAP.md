@@ -59,12 +59,18 @@ Canonical project status:
 * **Tenant-Aware Authorization Foundation:** completed
 * **Release 1 — Patients:** completed
 * **Release 2 — Scheduling:** completed
+* **Release 3 — Clinical Records:** in progress
+* **Accepted slice:** **Release 3.1 — Clinical Record Foundation**
 
 ### Current expected priority
 
-Prepare the next planned phase:
+Continue the current active phase:
 
 * **Release 3 — Clinical Records**
+* keeping Release 3 explicitly open, not closed, while treating Release 3.1 as the accepted first slice
+* preserving the accepted Release 3.1 scope: tenant-owned and patient-owned clinical records, explicit creation, `GET` returning `404` when missing, no autocreation, base snapshot, current allergies, and append-only notes returned newest-first
+* keeping diagnoses, the full clinical timeline, odontogram, treatments, and documents outside Release 3.1
+* preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
 * preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
 * keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline

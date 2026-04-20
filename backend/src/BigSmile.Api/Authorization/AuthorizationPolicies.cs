@@ -13,6 +13,8 @@ namespace BigSmile.Api.Authorization
         public const string PatientWrite = "patient.write";
         public const string SchedulingRead = "scheduling.read";
         public const string SchedulingWrite = "scheduling.write";
+        public const string ClinicalRead = "clinical.read";
+        public const string ClinicalWrite = "clinical.write";
 
         public static void AddPolicies(AuthorizationOptions options)
         {
@@ -70,6 +72,18 @@ namespace BigSmile.Api.Authorization
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(new PermissionRequirement(Permissions.SchedulingWrite));
+            });
+
+            options.AddPolicy(ClinicalRead, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(Permissions.ClinicalRead));
+            });
+
+            options.AddPolicy(ClinicalWrite, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(Permissions.ClinicalWrite));
             });
         }
     }

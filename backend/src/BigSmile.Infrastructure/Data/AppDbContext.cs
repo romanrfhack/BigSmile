@@ -16,6 +16,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<UserTenantMembership> UserTenantMemberships => Set<UserTenantMembership>();
         public DbSet<UserBranchAssignment> UserBranchAssignments => Set<UserBranchAssignment>();
         public DbSet<Patient> Patients => Set<Patient>();
+        public DbSet<ClinicalRecord> ClinicalRecords => Set<ClinicalRecord>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<AppointmentBlock> AppointmentBlocks => Set<AppointmentBlock>();
 
@@ -47,6 +48,9 @@ namespace BigSmile.Infrastructure.Data
 
             modelBuilder.Entity<Patient>().HasQueryFilter(patient =>
                 !ShouldApplyTenantFilter || patient.TenantId == ResolvedTenantId);
+
+            modelBuilder.Entity<ClinicalRecord>().HasQueryFilter(clinicalRecord =>
+                !ShouldApplyTenantFilter || clinicalRecord.TenantId == ResolvedTenantId);
 
             modelBuilder.Entity<Appointment>().HasQueryFilter(appointment =>
                 !ShouldApplyTenantFilter || appointment.TenantId == ResolvedTenantId);

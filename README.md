@@ -256,13 +256,22 @@ Completed foundation milestones:
 * **Release 1 — Patients**
 * **Release 2 — Scheduling**
 
-The latest completed delivery phase is **Release 2 — Scheduling**.
+Current active phase:
+
+* **Release 3 — Clinical Records:** in progress
+* **Accepted slice:** **Release 3.1 — Clinical Record Foundation**
+
+The latest completed delivery phase remains **Release 2 — Scheduling**.
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
 Doctor-based views are explicitly deferred to a future bounded slice because they require provider/doctor assignment rather than a small UI-only filter.
 
-The next planned phase is **Release 3 — Clinical Records**.
+Release 3 is now open. Release 3.1 is accepted with tenant-owned, patient-owned clinical records; explicit record creation; `GET` returning `404` when the record does not exist; no autocreation; medical background and current medications summaries; current allergies; append-only clinical notes returned newest-first; and minimal clinician attribution.
+
+Diagnoses remain explicitly outside Release 3.1, together with the full clinical timeline, odontogram, treatments, documents, and other later clinical slices.
+
+Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -304,9 +313,13 @@ The repository should be treated as having an established technical and architec
 
 ### Release 3 — Clinical Records
 
-* Clinical record
-* Clinical notes
-* Patient history
+* Release 3 is in progress
+* Accepted slice: Release 3.1 — Clinical Record Foundation
+* Explicit clinical record creation with `GET` returning `404` when missing and no autocreation
+* Medical background summary, current medications summary, current allergies, and append-only clinical notes
+* Notes returned newest-first in API/UI
+* Diagnoses, full clinical timeline, odontogram, treatments, and documents deferred beyond 3.1
+* `clinical.read` / `clinical.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
 
 ### Release 4 — Odontogram
 

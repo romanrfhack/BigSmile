@@ -18,6 +18,7 @@ namespace BigSmile.UnitTests.Authorization
         private readonly Mock<IUserTenantMembershipRepository> _membershipRepository = new();
         private readonly DefaultHttpContext _httpContext = new();
         private readonly PermissionAuthorizationHandler _handler;
+        private readonly RolePermissionCatalog _rolePermissionCatalog = new();
 
         public PermissionAuthorizationHandlerTests()
         {
@@ -272,6 +273,58 @@ namespace BigSmile.UnitTests.Authorization
             await _handler.HandleAsync(context);
 
             Assert.False(context.HasSucceeded);
+        }
+
+        [Fact]
+        public async Task PermissionRequirement_Succeeds_ForGrantedClinicalPermission()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Tenant,
+                isAuthenticated: true,
+                Guid.NewGuid().ToString());
+
+            var user = CreatePrincipal(userId, SystemRoles.TenantAdmin, Permissions.ClinicalWrite);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[] { new PermissionRequirement(Permissions.ClinicalWrite) },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.True(context.HasSucceeded);
+            Assert.False(_tenantContext.HasPlatformOverride());
+        }
+
+        [Fact]
+        public async Task PermissionRequirement_Fails_WhenClinicalPermissionIsMissing()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Tenant,
+                isAuthenticated: true,
+                Guid.NewGuid().ToString());
+
+            var user = CreatePrincipal(userId, SystemRoles.TenantUser, Permissions.PatientRead);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[] { new PermissionRequirement(Permissions.ClinicalRead) },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.False(context.HasSucceeded);
+        }
+
+        [Fact]
+        public void RolePermissionCatalog_DoesNotGrantClinicalPermissions_ToTenantUser()
+        {
+            var permissions = _rolePermissionCatalog.GetPermissions(SystemRoles.TenantUser);
+
+            Assert.DoesNotContain(Permissions.ClinicalRead, permissions);
+            Assert.DoesNotContain(Permissions.ClinicalWrite, permissions);
         }
 
         private static ClaimsPrincipal CreatePrincipal(Guid userId, string role, params string[] permissions)

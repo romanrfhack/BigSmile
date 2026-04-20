@@ -211,24 +211,33 @@ Front desk users can manage the daily operation of the clinic through the system
 ## Goal
 Allow clinicians to maintain a structured patient clinical record.
 
+## Current status
+- Release 3 is open and in progress
+- Release 3.1 — Clinical Record Foundation is accepted
+
 ## Scope
-- clinical record creation
-- medical background
-- allergies
-- clinical notes
-- note history
-- basic diagnoses structure
-- patient clinical timeline
+Release 3 is being delivered in bounded slices. The currently accepted slice is Release 3.1 and it covers:
+
+- explicit clinical record creation
+- medical background summary
+- current medications summary
+- current allergies
+- append-only clinical notes
+- note history returned newest-first in reads and UI
 - clinician attribution
 - audit-sensitive updates
 
 ## Expected outcome
-A dentist can consult and update the patient’s clinical record in a structured way.
+A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way.
 
 ## Core users
 - Dentist
 - Assistant
 - Tenant Admin
+
+## Current access note
+- `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`
+- `TenantUser` does not receive clinical permissions in Release 3.1
 
 ## Key UX goals
 - clear navigation from patient profile to clinical record
@@ -237,6 +246,11 @@ A dentist can consult and update the patient’s clinical record in a structured
 - secure access to sensitive information
 
 ## Out of scope
+- diagnoses
+- patient clinical timeline
+- odontogram
+- treatments
+- documents
 - advanced specialty templates
 - AI note generation
 - electronic consent flows
