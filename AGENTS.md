@@ -98,20 +98,22 @@ Canonical project status:
 - `Release 1 — Patients`: completed
 - `Release 2 — Scheduling`: completed
 - `Release 3 — Clinical Records`: preserved through accepted slices `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, and `Release 3.4 — Clinical Snapshot Change History`
-- `Release 4 — Odontogram`: in progress
-- accepted slices: `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, and `Release 4.4 — Dental Findings Change History`
+- `Release 4 — Odontogram`: preserved through accepted slices `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, and `Release 4.4 — Dental Findings Change History`
+- `Release 5 — Treatments and Quotes`: in progress
+- accepted slice: `Release 5.1 — Treatment Plan Foundation`
 
 Current active phase:
-- `Release 4 — Odontogram`
+- `Release 5 — Treatments and Quotes`
 
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
 Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 3 — Clinical Records`, do not assume slices beyond the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, and `Release 3.4 — Clinical Snapshot Change History` are implemented unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 4 — Odontogram`, do not assume slices beyond the accepted `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, and `Release 4.4 — Dental Findings Change History` are implemented unless the actual codebase and aligned documentation explicitly prove it.
+Within `Release 5 — Treatments and Quotes`, do not assume slices beyond the accepted `Release 5.1 — Treatment Plan Foundation` are implemented unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, and `Release 4.4 — Dental Findings Change History` slices while continuing `Release 4 — Odontogram` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, `Release 4.4 — Dental Findings Change History`, and `Release 5.1 — Treatment Plan Foundation` slices while continuing `Release 5 — Treatments and Quotes` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -126,8 +128,10 @@ Immediate priorities:
 - preserve the accepted Release 4.2 scope: minimal O/M/D/B/L surfaces on top of the accepted odontogram foundation, surface-level current status only, explicit surface updates, no tooth-status auto-aggregation, and no complex findings/treatment linkage/surface history
 - preserve the accepted Release 4.3 scope: basic surface findings on top of the accepted odontogram foundation and surface foundation, explicit add/remove operations, a minimal finding catalog `Caries` / `Restoration` / `MissingStructure` / `Sealant`, enriched odontogram reads, and no findings history, treatment linkage, diagnosis linkage, or auto-aggregation from findings
 - preserve the accepted Release 4.4 scope: bounded findings change history for the accepted basic findings only, `FindingAdded` / `FindingRemoved` entries on effective add/remove operations, root-level odontogram read-model enrichment, UI history inside the existing odontogram page filtered by selected surface, separation from any future dental timeline, and no restore / full odontogram versioning / treatment linkage / diagnosis linkage / surface history
+- preserve the accepted Release 5.1 scope: explicit treatment plan creation, `GET` returning `404` when missing, no autocreation, exactly 1 active treatment plan por Patient por Tenant, basic add/remove of treatment items, bounded `Draft` / `Proposed` / `Accepted` plan status, optional adult FDI tooth/surface reference per item, and no pricing / formal quotes / billing linkage / scheduling linkage / treatment execution tracking / versioning in this slice
 - preserve the current clinical access restriction: `clinical.read` / `clinical.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive clinical permissions in this phase
 - preserve the current odontogram access restriction: `odontogram.read` / `odontogram.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive odontogram permissions in this phase
+- preserve the current treatment-plan access restriction: `treatmentplan.read` / `treatmentplan.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive treatment-plan permissions in this phase
 - keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened
 - keep privileged/platform paths explicit and auditable
 - maintain automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios

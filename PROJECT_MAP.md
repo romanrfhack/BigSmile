@@ -60,22 +60,22 @@ Canonical project status:
 * **Release 1 — Patients:** completed
 * **Release 2 — Scheduling:** completed
 * **Release 3 — Clinical Records:** preserved through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, and **Release 3.4 — Clinical Snapshot Change History**
-* **Release 4 — Odontogram:** in progress
-* **Accepted slices:** **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, **Release 4.4 — Dental Findings Change History**
+* **Release 4 — Odontogram:** preserved through accepted slices **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, **Release 4.4 — Dental Findings Change History**
+* **Release 5 — Treatments and Quotes:** in progress
+* **Accepted slice:** **Release 5.1 — Treatment Plan Foundation**
 
 ### Current expected priority
 
 Continue the current active phase:
 
-* **Release 4 — Odontogram**
-* preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices as the clinical base that Release 4.1, Release 4.2, Release 4.3, and Release 4.4 build on
-* preserving the accepted Release 4.1 scope: tenant-owned and patient-owned odontograms, explicit creation, `GET` returning `404` when missing, no autocreation, permanent adult FDI tooth numbering, tooth-level current status only, and minimal audit metadata
-* preserving the accepted Release 4.2 scope: minimal O/M/D/B/L surfaces, enriched odontogram reads, explicit per-surface updates, and no tooth-status auto-aggregation
-* preserving the accepted Release 4.3 scope: explicit per-surface add/remove of basic findings, enriched surface reads, minimal finding catalog `Caries` / `Restoration` / `MissingStructure` / `Sealant`, and no status auto-aggregation from findings
-* preserving the accepted Release 4.4 scope: bounded findings change history for the accepted basic findings only, enriched odontogram reads with root-level `findingsHistory`, and UI history inside the existing odontogram page filtered by selected surface
-* keeping rich findings, treatment linkage, broader dental history/versioning, surface history, bulk editing, and advanced charting outside the accepted Release 4.4 slice
+* **Release 5 — Treatments and Quotes**
+* preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices plus the accepted Release 4.1, Release 4.2, Release 4.3, and Release 4.4 odontogram slices as the foundation that Release 5.1 builds on
+* preserving the accepted Release 5.1 scope: tenant-owned and patient-owned treatment plans, explicit creation, `GET` returning `404` when missing, no autocreation, exactly one active treatment plan per patient per tenant, basic add/remove items, and bounded `Draft` / `Proposed` / `Accepted` status updates
+* preserving the accepted Release 5.1 item scope: required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference with `surfaceCode` requiring `toothCode`
+* keeping pricing, formal quotes, discounts, taxes, billing linkage, scheduling linkage, treatment execution tracking, plan archive/versioning, and complex reorder outside the accepted Release 5.1 slice
 * preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
 * preserving the current odontogram access restriction where `odontogram.read` / `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive odontogram permissions in this phase
+* preserving the current treatment-plan access restriction where `treatmentplan.read` / `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive treatment-plan permissions in this phase
 * preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
 * keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline

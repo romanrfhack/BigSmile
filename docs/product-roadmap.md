@@ -361,32 +361,56 @@ A user operating under the current odontogram permissions can initialize, consul
 ## Goal
 Connect diagnosis with operational and commercial treatment planning.
 
+## Current status
+- Release 5.1 — Treatment Plan Foundation is accepted
+- Release 5 remains in progress; formal quotes and pricing are still deferred beyond the accepted 5.1 slice
+
 ## Scope
-- treatment catalog
-- treatment plan creation
-- treatment plan items
-- quote generation
-- estimated totals
-- plan status
-- item status
-- treatment acceptance tracking
-- basic treatment progress states
+Release 5 is being delivered in bounded slices. The currently accepted slice is Release 5.1, and it covers:
+- explicit treatment plan creation for an existing patient
+- exactly one active treatment plan per patient per tenant
+- `GET` returning `404` when the treatment plan does not exist
+- no autocreation by read or by item operations
+- treatment plan items with required title, optional category, simple quantity, short note, and optional adult FDI `toothCode` plus optional `surfaceCode`
+- `surfaceCode` limited to `O` / `M` / `D` / `B` / `L` and requiring `toothCode`
+- explicit add/remove item flows
+- bounded plan status with `Draft` / `Proposed` / `Accepted`
+- minimal patient-context UI for empty state, explicit creation, item add/remove, and status changes
+- no pricing
+- no formal quote generation
+- no discounts or taxes
+- no billing linkage
+- no scheduling linkage
+- no treatment execution tracking
+- no plan versioning or archive
 
 ## Expected outcome
-Clinicians and front desk staff can move from findings to a structured treatment proposal and quote.
+Clinicians and tenant administrators can move from clinical or odontogram context to a structured, minimal treatment plan without yet opening the full commercial quote workflow.
 
 ## Core users
 - Dentist
 - Front Desk
 - Tenant Admin
 
+## Current access note
+- `treatmentplan.read` and `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`
+- `TenantUser` does not receive treatment plan permissions in the accepted Release 5.1 slice
+
 ## Key UX goals
 - easy transition from diagnosis to treatment
-- clear quote presentation
+- clear plan status
+- low-friction item capture
 - understandable plan status
 - simple treatment lifecycle
 
 ## Out of scope
+- formal quotes in the accepted 5.1 slice
+- price breakdowns and totals
+- discounts and taxes
+- billing handoff
+- scheduling handoff
+- treatment execution/progress tracking
+- plan archive/versioning
 - complex insurance processing
 - installment financing logic
 - advanced approval workflows
