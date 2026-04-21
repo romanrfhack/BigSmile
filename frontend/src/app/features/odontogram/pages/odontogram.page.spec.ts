@@ -12,10 +12,37 @@ describe('OdontogramPageComponent', () => {
   let patientsFacade: any;
   let createCalls: string[];
   let updateCalls: Array<{ patientId: string; toothCode: string; status: string }>;
+  let updateSurfaceCalls: Array<{ patientId: string; toothCode: string; surfaceCode: string; status: string }>;
+
+  function buildSurface(surfaceCode: string, status = 'Unknown') {
+    return {
+      surfaceCode,
+      status,
+      updatedAtUtc: '2026-04-20T10:00:00Z',
+      updatedByUserId: 'user-1'
+    };
+  }
+
+  function buildTooth(toothCode: string, status = 'Unknown') {
+    return {
+      toothCode,
+      status,
+      updatedAtUtc: '2026-04-20T10:00:00Z',
+      updatedByUserId: 'user-1',
+      surfaces: [
+        buildSurface('O'),
+        buildSurface('M'),
+        buildSurface('D'),
+        buildSurface('B'),
+        buildSurface('L')
+      ]
+    };
+  }
 
   beforeEach(async () => {
     createCalls = [];
     updateCalls = [];
+    updateSurfaceCalls = [];
 
     odontogramsFacade = {
       currentOdontogram: signal<any | null>(null),
@@ -30,8 +57,8 @@ describe('OdontogramPageComponent', () => {
           odontogramId: 'odontogram-1',
           patientId,
           teeth: [
-            { toothCode: '11', status: 'Unknown', updatedAtUtc: '2026-04-20T10:00:00Z', updatedByUserId: 'user-1' },
-            { toothCode: '12', status: 'Unknown', updatedAtUtc: '2026-04-20T10:00:00Z', updatedByUserId: 'user-1' }
+            buildTooth('11'),
+            buildTooth('12')
           ],
           createdAtUtc: '2026-04-20T10:00:00Z',
           createdByUserId: 'user-1',
@@ -54,6 +81,28 @@ describe('OdontogramPageComponent', () => {
               }
             : tooth),
           lastUpdatedAtUtc: '2026-04-20T11:00:00Z',
+          lastUpdatedByUserId: 'user-2'
+        });
+        return of(odontogramsFacade.currentOdontogram());
+      },
+      updateSurfaceStatus: (patientId: string, toothCode: string, surfaceCode: string, payload: any) => {
+        updateSurfaceCalls.push({ patientId, toothCode, surfaceCode, status: payload.status });
+        odontogramsFacade.currentOdontogram.set({
+          ...odontogramsFacade.currentOdontogram(),
+          teeth: (odontogramsFacade.currentOdontogram()?.teeth ?? []).map((tooth: any) => tooth.toothCode === toothCode
+            ? {
+                ...tooth,
+                surfaces: (tooth.surfaces ?? []).map((surface: any) => surface.surfaceCode === surfaceCode
+                  ? {
+                      ...surface,
+                      status: payload.status,
+                      updatedAtUtc: '2026-04-20T11:30:00Z',
+                      updatedByUserId: 'user-2'
+                    }
+                  : surface)
+              }
+            : tooth),
+          lastUpdatedAtUtc: '2026-04-20T11:30:00Z',
           lastUpdatedByUserId: 'user-2'
         });
         return of(odontogramsFacade.currentOdontogram());
@@ -121,8 +170,8 @@ describe('OdontogramPageComponent', () => {
       odontogramId: 'odontogram-1',
       patientId: 'patient-1',
       teeth: [
-        { toothCode: '11', status: 'Healthy', updatedAtUtc: '2026-04-20T10:00:00Z', updatedByUserId: 'user-1' },
-        { toothCode: '12', status: 'Restored', updatedAtUtc: '2026-04-20T10:05:00Z', updatedByUserId: 'user-1' }
+        buildTooth('11', 'Healthy'),
+        buildTooth('12', 'Restored')
       ],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
@@ -137,6 +186,7 @@ describe('OdontogramPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('11');
     expect(fixture.nativeElement.textContent).toContain('Healthy');
     expect(fixture.nativeElement.textContent).toContain('Restored');
+    expect(fixture.nativeElement.textContent).toContain('Surface detail is limited');
   });
 
   it('updates the selected tooth state through the facade', () => {
@@ -145,7 +195,7 @@ describe('OdontogramPageComponent', () => {
       odontogramId: 'odontogram-1',
       patientId: 'patient-1',
       teeth: [
-        { toothCode: '11', status: 'Unknown', updatedAtUtc: '2026-04-20T10:00:00Z', updatedByUserId: 'user-1' }
+        buildTooth('11')
       ],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
@@ -161,5 +211,52 @@ describe('OdontogramPageComponent', () => {
 
     expect(updateCalls).toEqual([{ patientId: 'patient-1', toothCode: '11', status: 'Caries' }]);
     expect(odontogramsFacade.currentOdontogram()?.teeth[0]?.status).toBe('Caries');
+  });
+
+  it('renders tooth surface detail for the selected tooth', () => {
+    odontogramsFacade.odontogramMissing.set(false);
+    odontogramsFacade.currentOdontogram.set({
+      odontogramId: 'odontogram-1',
+      patientId: 'patient-1',
+      teeth: [
+        buildTooth('11', 'Healthy')
+      ],
+      createdAtUtc: '2026-04-20T10:00:00Z',
+      createdByUserId: 'user-1',
+      lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
+      lastUpdatedByUserId: 'user-1'
+    });
+
+    const fixture = TestBed.createComponent(OdontogramPageComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Surfaces');
+    expect(fixture.nativeElement.textContent).toContain('Current detail for tooth 11');
+    expect(fixture.nativeElement.textContent).toContain('O');
+    expect(fixture.nativeElement.textContent).toContain('M');
+  });
+
+  it('updates the selected surface state through the facade', () => {
+    odontogramsFacade.odontogramMissing.set(false);
+    odontogramsFacade.currentOdontogram.set({
+      odontogramId: 'odontogram-1',
+      patientId: 'patient-1',
+      teeth: [
+        buildTooth('11')
+      ],
+      createdAtUtc: '2026-04-20T10:00:00Z',
+      createdByUserId: 'user-1',
+      lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
+      lastUpdatedByUserId: 'user-1'
+    });
+
+    const fixture = TestBed.createComponent(OdontogramPageComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.updateSurfaceStatus({ surfaceCode: 'O', status: 'Caries' });
+
+    expect(updateSurfaceCalls).toEqual([{ patientId: 'patient-1', toothCode: '11', surfaceCode: 'O', status: 'Caries' }]);
+    expect(odontogramsFacade.currentOdontogram()?.teeth[0]?.surfaces[0]?.status).toBe('Caries');
   });
 });

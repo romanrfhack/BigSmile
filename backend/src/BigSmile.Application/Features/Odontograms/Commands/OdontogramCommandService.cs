@@ -9,6 +9,11 @@ namespace BigSmile.Application.Features.Odontograms.Commands
         string ToothCode,
         string Status);
 
+    public sealed record UpdateOdontogramSurfaceStatusCommand(
+        string ToothCode,
+        string SurfaceCode,
+        string Status);
+
     public interface IOdontogramCommandService
     {
         Task<OdontogramDetailDto> CreateAsync(
@@ -18,6 +23,11 @@ namespace BigSmile.Application.Features.Odontograms.Commands
         Task<OdontogramDetailDto?> UpdateToothStatusAsync(
             Guid patientId,
             UpdateOdontogramToothStatusCommand command,
+            CancellationToken cancellationToken = default);
+
+        Task<OdontogramDetailDto?> UpdateSurfaceStatusAsync(
+            Guid patientId,
+            UpdateOdontogramSurfaceStatusCommand command,
             CancellationToken cancellationToken = default);
     }
 
@@ -86,6 +96,33 @@ namespace BigSmile.Application.Features.Odontograms.Commands
             return odontogram.ToDetailDto();
         }
 
+        public async Task<OdontogramDetailDto?> UpdateSurfaceStatusAsync(
+            Guid patientId,
+            UpdateOdontogramSurfaceStatusCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            var tenantId = GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
+
+            EnsurePatientBelongsToTenant(patient, tenantId);
+
+            var odontogram = await _odontogramRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            if (odontogram is null)
+            {
+                return null;
+            }
+
+            var status = ParseSurfaceStatus(command.Status);
+            var changed = odontogram.UpdateSurfaceStatus(command.ToothCode, command.SurfaceCode, status, actorUserId);
+            if (changed)
+            {
+                await _odontogramRepository.UpdateAsync(odontogram, cancellationToken);
+            }
+
+            return odontogram.ToDetailDto();
+        }
+
         private async Task<Patient> GetRequiredPatientAsync(Guid patientId, CancellationToken cancellationToken)
         {
             var patient = await _patientRepository.GetByIdAsync(patientId, cancellationToken);
@@ -139,6 +176,24 @@ namespace BigSmile.Application.Features.Odontograms.Commands
             {
                 throw new ArgumentException(
                     "Tooth status must be one of: Unknown, Healthy, Missing, Restored, or Caries.",
+                    nameof(status));
+            }
+
+            return parsedStatus;
+        }
+
+        private static OdontogramSurfaceStatus ParseSurfaceStatus(string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                throw new ArgumentException("Surface status is required.", nameof(status));
+            }
+
+            if (!Enum.TryParse<OdontogramSurfaceStatus>(status.Trim(), ignoreCase: true, out var parsedStatus) ||
+                !Enum.IsDefined(parsedStatus))
+            {
+                throw new ArgumentException(
+                    "Surface status must be one of: Unknown, Healthy, Restored, or Caries.",
                     nameof(status));
             }
 

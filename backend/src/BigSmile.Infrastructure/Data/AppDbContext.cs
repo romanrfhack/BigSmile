@@ -21,6 +21,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<ClinicalSnapshotHistoryEntry> ClinicalSnapshotHistoryEntries => Set<ClinicalSnapshotHistoryEntry>();
         public DbSet<Odontogram> Odontograms => Set<Odontogram>();
         public DbSet<OdontogramToothState> OdontogramToothStates => Set<OdontogramToothState>();
+        public DbSet<OdontogramSurfaceState> OdontogramSurfaceStates => Set<OdontogramSurfaceState>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<AppointmentBlock> AppointmentBlocks => Set<AppointmentBlock>();
 

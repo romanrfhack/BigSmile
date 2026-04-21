@@ -35,7 +35,15 @@ namespace BigSmile.UnitTests.Odontogram
                 patientId,
                 new[]
                 {
-                    new OdontogramToothStateDto("11", "Unknown", DateTime.UtcNow, Guid.NewGuid())
+                    new OdontogramToothStateDto(
+                        "11",
+                        "Unknown",
+                        DateTime.UtcNow,
+                        Guid.NewGuid(),
+                        new[]
+                        {
+                            new OdontogramSurfaceStateDto("O", "Unknown", DateTime.UtcNow, Guid.NewGuid())
+                        })
                 },
                 DateTime.UtcNow,
                 Guid.NewGuid(),
@@ -66,7 +74,15 @@ namespace BigSmile.UnitTests.Odontogram
                 patientId,
                 new[]
                 {
-                    new OdontogramToothStateDto("11", "Caries", DateTime.UtcNow, Guid.NewGuid())
+                    new OdontogramToothStateDto(
+                        "11",
+                        "Caries",
+                        DateTime.UtcNow,
+                        Guid.NewGuid(),
+                        new[]
+                        {
+                            new OdontogramSurfaceStateDto("O", "Healthy", DateTime.UtcNow, Guid.NewGuid())
+                        })
                 },
                 DateTime.UtcNow,
                 Guid.NewGuid(),
@@ -88,6 +104,54 @@ namespace BigSmile.UnitTests.Odontogram
                 patientId,
                 "11",
                 new PatientOdontogramsController.UpdateToothStatusRequest
+                {
+                    Status = "Caries"
+                });
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Same(response, ok.Value);
+        }
+
+        [Fact]
+        public async Task UpdateSurfaceStatus_ReturnsOk_WhenCommandServiceSucceeds()
+        {
+            var patientId = Guid.NewGuid();
+            var response = new OdontogramDetailDto(
+                Guid.NewGuid(),
+                patientId,
+                new[]
+                {
+                    new OdontogramToothStateDto(
+                        "11",
+                        "Unknown",
+                        DateTime.UtcNow,
+                        Guid.NewGuid(),
+                        new[]
+                        {
+                            new OdontogramSurfaceStateDto("O", "Caries", DateTime.UtcNow, Guid.NewGuid())
+                        })
+                },
+                DateTime.UtcNow,
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                Guid.NewGuid());
+
+            var commandService = new Mock<IOdontogramCommandService>();
+            commandService
+                .Setup(service => service.UpdateSurfaceStatusAsync(
+                    patientId,
+                    It.IsAny<UpdateOdontogramSurfaceStatusCommand>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var queryService = new Mock<IOdontogramQueryService>();
+            var controller = new PatientOdontogramsController(commandService.Object, queryService.Object);
+
+            var result = await controller.UpdateSurfaceStatus(
+                patientId,
+                "11",
+                "O",
+                new PatientOdontogramsController.UpdateSurfaceStatusRequest
                 {
                     Status = "Caries"
                 });

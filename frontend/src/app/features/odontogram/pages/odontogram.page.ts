@@ -7,7 +7,7 @@ import { OdontogramEmptyStateComponent } from '../components/odontogram-empty-st
 import { OdontogramGridComponent } from '../components/odontogram-grid.component';
 import { ToothStateEditorComponent } from '../components/tooth-state-editor.component';
 import { OdontogramsFacade } from '../facades/odontograms.facade';
-import { OdontogramToothState, OdontogramToothStatus } from '../models/odontogram.models';
+import { OdontogramSurfaceStatus, OdontogramToothState, OdontogramToothStatus } from '../models/odontogram.models';
 
 @Component({
   selector: 'app-odontogram-page',
@@ -23,10 +23,10 @@ import { OdontogramToothState, OdontogramToothStatus } from '../models/odontogra
     <section class="odontogram-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 4.1 / Odontogram Foundation</p>
+          <p class="eyebrow">Release 4.2 / Odontogram Surface Foundation</p>
           <h2>Odontogram</h2>
           <p class="subtitle">
-            Minimal patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering only.
+            Patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering and a minimal O/M/D/B/L surface set.
           </p>
         </div>
 
@@ -81,9 +81,9 @@ import { OdontogramToothState, OdontogramToothStatus } from '../models/odontogra
         <section class="grid-card">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Tooth states</p>
+              <p class="eyebrow">Tooth and surface states</p>
               <h3>32 permanent adult teeth</h3>
-              <p class="section-copy">The slice is tooth-level only: no surfaces, complex findings, treatment linkage, documents, or dental history.</p>
+              <p class="section-copy">Surface detail is limited to a minimal O/M/D/B/L set with current state only. No complex findings, treatment linkage, documents, or surface history in Release 4.2.</p>
             </div>
           </div>
 
@@ -97,9 +97,11 @@ import { OdontogramToothState, OdontogramToothStatus } from '../models/odontogra
         <app-tooth-state-editor
           [tooth]="selectedTooth"
           [canWrite]="canWrite"
-          [saving]="savingTooth"
+          [savingTooth]="savingTooth"
+          [savingSurface]="savingSurface"
           [error]="actionError"
-          (updateRequested)="updateToothStatus($event)">
+          (updateRequested)="updateToothStatus($event)"
+          (surfaceUpdateRequested)="updateSurfaceStatus($event)">
         </app-tooth-state-editor>
       </article>
     </section>
@@ -220,6 +222,7 @@ export class OdontogramPageComponent implements OnInit {
   patientId: string | null = null;
   savingCreate = false;
   savingTooth = false;
+  savingSurface = false;
   actionError: string | null = null;
   selectedToothCode: string | null = null;
 
@@ -306,6 +309,26 @@ export class OdontogramPageComponent implements OnInit {
         error: () => {
           this.savingTooth = false;
           this.actionError = 'The tooth state could not be updated.';
+        }
+      });
+  }
+
+  updateSurfaceStatus(event: { surfaceCode: string; status: OdontogramSurfaceStatus }): void {
+    if (!this.patientId || !this.selectedToothCode) {
+      return;
+    }
+
+    this.savingSurface = true;
+    this.actionError = null;
+
+    this.odontogramsFacade.updateSurfaceStatus(this.patientId, this.selectedToothCode, event.surfaceCode, { status: event.status })
+      .subscribe({
+        next: () => {
+          this.savingSurface = false;
+        },
+        error: () => {
+          this.savingSurface = false;
+          this.actionError = 'The surface state could not be updated.';
         }
       });
   }

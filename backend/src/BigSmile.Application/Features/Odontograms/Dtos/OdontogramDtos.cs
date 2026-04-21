@@ -1,10 +1,17 @@
 namespace BigSmile.Application.Features.Odontograms.Dtos
 {
+    public sealed record OdontogramSurfaceStateDto(
+        string SurfaceCode,
+        string Status,
+        DateTime UpdatedAtUtc,
+        Guid UpdatedByUserId);
+
     public sealed record OdontogramToothStateDto(
         string ToothCode,
         string Status,
         DateTime UpdatedAtUtc,
-        Guid UpdatedByUserId);
+        Guid UpdatedByUserId,
+        IReadOnlyList<OdontogramSurfaceStateDto> Surfaces);
 
     public sealed record OdontogramDetailDto(
         Guid OdontogramId,

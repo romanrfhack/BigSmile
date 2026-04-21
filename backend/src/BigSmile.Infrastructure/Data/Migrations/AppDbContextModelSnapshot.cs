@@ -353,6 +353,44 @@ namespace BigSmile.Infrastructure.Data.Migrations
                     b.ToTable("Odontograms", (string)null);
                 });
 
+            modelBuilder.Entity("BigSmile.Domain.Entities.OdontogramSurfaceState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OdontogramId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("SurfaceCode")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)");
+
+                    b.Property<string>("ToothCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OdontogramId", "ToothCode", "SurfaceCode")
+                        .IsUnique();
+
+                    b.ToTable("OdontogramSurfaceStates", (string)null);
+                });
+
             modelBuilder.Entity("BigSmile.Domain.Entities.OdontogramToothState", b =>
                 {
                     b.Property<Guid>("Id")
@@ -791,6 +829,17 @@ namespace BigSmile.Infrastructure.Data.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("BigSmile.Domain.Entities.OdontogramSurfaceState", b =>
+                {
+                    b.HasOne("BigSmile.Domain.Entities.Odontogram", "Odontogram")
+                        .WithMany("Surfaces")
+                        .HasForeignKey("OdontogramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Odontogram");
+                });
+
             modelBuilder.Entity("BigSmile.Domain.Entities.OdontogramToothState", b =>
                 {
                     b.HasOne("BigSmile.Domain.Entities.Odontogram", "Odontogram")
@@ -872,6 +921,8 @@ namespace BigSmile.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("BigSmile.Domain.Entities.Odontogram", b =>
                 {
+                    b.Navigation("Surfaces");
+
                     b.Navigation("Teeth");
                 });
 

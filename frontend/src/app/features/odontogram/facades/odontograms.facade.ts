@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { OdontogramsApiService } from '../data-access/odontograms-api.service';
-import { Odontogram, UpdateToothStatusRequest } from '../models/odontogram.models';
+import { Odontogram, UpdateSurfaceStatusRequest, UpdateToothStatusRequest } from '../models/odontogram.models';
 
 @Injectable({
   providedIn: 'root'
@@ -59,6 +59,12 @@ export class OdontogramsFacade {
 
   updateToothStatus(patientId: string, toothCode: string, payload: UpdateToothStatusRequest) {
     return this.odontogramsApi.updateToothStatus(patientId, toothCode, payload).pipe(
+      tap((odontogram) => this.setLoadedOdontogram(odontogram))
+    );
+  }
+
+  updateSurfaceStatus(patientId: string, toothCode: string, surfaceCode: string, payload: UpdateSurfaceStatusRequest) {
+    return this.odontogramsApi.updateSurfaceStatus(patientId, toothCode, surfaceCode, payload).pipe(
       tap((odontogram) => this.setLoadedOdontogram(odontogram))
     );
   }

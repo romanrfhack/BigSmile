@@ -17,6 +17,7 @@ namespace BigSmile.Domain.Entities
         public Guid LastUpdatedByUserId { get; private set; }
 
         public ICollection<OdontogramToothState> Teeth { get; private set; } = new List<OdontogramToothState>();
+        public ICollection<OdontogramSurfaceState> Surfaces { get; private set; } = new List<OdontogramSurfaceState>();
 
         private Odontogram()
         {
@@ -52,6 +53,17 @@ namespace BigSmile.Domain.Entities
                     OdontogramToothStatus.Unknown,
                     createdByUserId,
                     CreatedAtUtc));
+
+                foreach (var surfaceCode in OdontogramSurfaceState.GetAllowedSurfaceCodes())
+                {
+                    Surfaces.Add(new OdontogramSurfaceState(
+                        Id,
+                        toothCode,
+                        surfaceCode,
+                        OdontogramSurfaceStatus.Unknown,
+                        createdByUserId,
+                        CreatedAtUtc));
+                }
             }
         }
 
@@ -67,6 +79,31 @@ namespace BigSmile.Domain.Entities
             }
 
             var changed = toothState.UpdateStatus(status, updatedByUserId);
+            if (!changed)
+            {
+                return false;
+            }
+
+            LastUpdatedAtUtc = DateTime.UtcNow;
+            LastUpdatedByUserId = updatedByUserId;
+            return true;
+        }
+
+        public bool UpdateSurfaceStatus(string toothCode, string surfaceCode, OdontogramSurfaceStatus status, Guid updatedByUserId)
+        {
+            EnsureActor(updatedByUserId);
+
+            var normalizedToothCode = OdontogramToothState.NormalizeToothCode(toothCode);
+            var normalizedSurfaceCode = OdontogramSurfaceState.NormalizeSurfaceCode(surfaceCode);
+            var surfaceState = Surfaces.SingleOrDefault(surface =>
+                surface.ToothCode == normalizedToothCode &&
+                surface.SurfaceCode == normalizedSurfaceCode);
+            if (surfaceState is null)
+            {
+                throw new InvalidOperationException("The requested tooth surface does not exist in the current odontogram.");
+            }
+
+            var changed = surfaceState.UpdateStatus(status, updatedByUserId);
             if (!changed)
             {
                 return false;

@@ -7,7 +7,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   imports: [CommonModule],
   template: `
     <section class="empty-card">
-      <p class="eyebrow">Release 4.1 / Odontogram Foundation</p>
+      <p class="eyebrow">Release 4.2 / Odontogram Surface Foundation</p>
       <h3>No odontogram yet</h3>
       <p class="copy">
         The odontogram is not auto-created. Start it explicitly to initialize the permanent adult FDI chart for this patient.

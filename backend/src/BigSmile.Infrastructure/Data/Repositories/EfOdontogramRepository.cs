@@ -17,6 +17,7 @@ namespace BigSmile.Infrastructure.Data.Repositories
         {
             return await _dbContext.Odontograms
                 .Include(odontogram => odontogram.Teeth)
+                .Include(odontogram => odontogram.Surfaces)
                 .SingleOrDefaultAsync(odontogram => odontogram.PatientId == patientId, cancellationToken);
         }
 
@@ -38,7 +39,7 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .AsNoTracking()
                 .Where(tooth => tooth.OdontogramId == odontogram.Id)
                 .Select(tooth => tooth.Id)
-                .ToListAsync(cancellationToken);
+                .ToHashSetAsync(cancellationToken);
 
             foreach (var tooth in odontogram.Teeth)
             {
@@ -53,6 +54,28 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 {
                     _dbContext.OdontogramToothStates.Attach(tooth);
                     _dbContext.Entry(tooth).State = EntityState.Modified;
+                }
+            }
+
+            var persistedSurfaceIds = await _dbContext.OdontogramSurfaceStates
+                .AsNoTracking()
+                .Where(surface => surface.OdontogramId == odontogram.Id)
+                .Select(surface => surface.Id)
+                .ToHashSetAsync(cancellationToken);
+
+            foreach (var surface in odontogram.Surfaces)
+            {
+                var entry = _dbContext.Entry(surface);
+                if (!persistedSurfaceIds.Contains(surface.Id))
+                {
+                    entry.State = EntityState.Added;
+                    continue;
+                }
+
+                if (entry.State == EntityState.Detached)
+                {
+                    _dbContext.OdontogramSurfaceStates.Attach(surface);
+                    _dbContext.Entry(surface).State = EntityState.Modified;
                 }
             }
 

@@ -29,11 +29,17 @@ namespace BigSmile.IntegrationTests.Odontogram
             Assert.Equal(patient.Id, created.PatientId);
             Assert.Equal(32, created.Teeth.Count);
             Assert.All(created.Teeth, tooth => Assert.Equal("Unknown", tooth.Status));
+            Assert.All(created.Teeth, tooth =>
+            {
+                Assert.Equal(5, tooth.Surfaces.Count);
+                Assert.All(tooth.Surfaces, surface => Assert.Equal("Unknown", surface.Status));
+            });
 
             var loaded = await queryService.GetByPatientIdAsync(patient.Id);
 
             Assert.NotNull(loaded);
             Assert.Equal(32, loaded!.Teeth.Count);
+            Assert.All(loaded.Teeth, tooth => Assert.Equal(5, tooth.Surfaces.Count));
         }
 
         [Fact]
@@ -95,6 +101,31 @@ namespace BigSmile.IntegrationTests.Odontogram
         }
 
         [Fact]
+        public async Task UpdateSurfaceStatusAsync_SucceedsWithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedOdontogramAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.UpdateSurfaceStatusAsync(
+                patient.Id,
+                new UpdateOdontogramSurfaceStatusCommand("11", "O", "Caries"));
+
+            Assert.NotNull(updated);
+            var tooth = Assert.Single(updated!.Teeth, entry => entry.ToothCode == "11");
+            var surface = Assert.Single(tooth.Surfaces, entry => entry.SurfaceCode == "O");
+            Assert.Equal("Caries", surface.Status);
+            Assert.Equal(actorUserId, surface.UpdatedByUserId);
+            Assert.Equal(actorUserId, updated.LastUpdatedByUserId);
+        }
+
+        [Fact]
         public async Task UpdateToothStatusAsync_ReturnsNull_WhenOdontogramDoesNotExist()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -108,6 +139,24 @@ namespace BigSmile.IntegrationTests.Odontogram
             var updated = await commandService.UpdateToothStatusAsync(
                 patient.Id,
                 new UpdateOdontogramToothStatusCommand("11", "Healthy"));
+
+            Assert.Null(updated);
+        }
+
+        [Fact]
+        public async Task UpdateSurfaceStatusAsync_ReturnsNull_WhenOdontogramDoesNotExist()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.UpdateSurfaceStatusAsync(
+                patient.Id,
+                new UpdateOdontogramSurfaceStatusCommand("11", "O", "Healthy"));
 
             Assert.Null(updated);
         }
@@ -130,6 +179,46 @@ namespace BigSmile.IntegrationTests.Odontogram
                 new UpdateOdontogramToothStatusCommand("55", "Healthy")));
 
             Assert.Contains("FDI permanent adult numbering", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateSurfaceStatusAsync_Fails_ForInvalidToothCode()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedOdontogramAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandService.UpdateSurfaceStatusAsync(
+                patient.Id,
+                new UpdateOdontogramSurfaceStatusCommand("55", "O", "Healthy")));
+
+            Assert.Contains("FDI permanent adult numbering", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateSurfaceStatusAsync_Fails_ForInvalidSurfaceCode()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedOdontogramAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandService.UpdateSurfaceStatusAsync(
+                patient.Id,
+                new UpdateOdontogramSurfaceStatusCommand("11", "X", "Healthy")));
+
+            Assert.Contains("Surface code must be one of", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -166,6 +255,26 @@ namespace BigSmile.IntegrationTests.Odontogram
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateToothStatusAsync(
                 foreignPatient.Id,
                 new UpdateOdontogramToothStatusCommand("11", "Healthy")));
+
+            Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateSurfaceStatusAsync_BlocksCrossTenantWrite()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var foreignPatient = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            await SeedOdontogramAsync(databaseName, tenantB.Id, foreignPatient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateSurfaceStatusAsync(
+                foreignPatient.Id,
+                new UpdateOdontogramSurfaceStatusCommand("11", "O", "Healthy")));
 
             Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
         }

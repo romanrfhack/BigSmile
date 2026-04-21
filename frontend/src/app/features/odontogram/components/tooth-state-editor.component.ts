@@ -2,6 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  ODONTOGRAM_SURFACE_CODES,
+  ODONTOGRAM_SURFACE_STATUSES,
+  OdontogramSurfaceCode,
+  OdontogramSurfaceState,
+  OdontogramSurfaceStatus,
   ODONTOGRAM_TOOTH_STATUSES,
   OdontogramToothState,
   OdontogramToothStatus
@@ -16,7 +21,7 @@ import {
       <ng-container *ngIf="tooth; else noSelection">
         <p class="eyebrow">Selected tooth</p>
         <h3>Tooth {{ tooth.toothCode }}</h3>
-        <p class="copy">Minimal tooth-level state only. No surfaces, findings bundles, treatment linkage, or dental timeline in Release 4.1.</p>
+        <p class="copy">Minimal tooth and surface state only. No complex findings, treatment linkage, or surface history in Release 4.2.</p>
 
         <div class="meta-grid">
           <div>
@@ -44,11 +49,80 @@ import {
           <button
             type="button"
             class="primary-action"
-            [disabled]="saving || selectedStatus === tooth.status"
+            [disabled]="savingTooth || selectedStatus === tooth.status"
             (click)="updateRequested.emit(selectedStatus)">
-            {{ saving ? 'Saving...' : 'Update tooth state' }}
+            {{ savingTooth ? 'Saving...' : 'Update tooth state' }}
           </button>
         </div>
+
+        <section class="surface-section" *ngIf="tooth.surfaces.length > 0">
+          <div class="surface-head">
+            <div>
+              <p class="eyebrow">Surfaces</p>
+              <h4>Current detail for tooth {{ tooth.toothCode }}</h4>
+            </div>
+          </div>
+
+          <div class="surface-grid">
+            <button
+              *ngFor="let surface of tooth.surfaces"
+              type="button"
+              class="surface-card"
+              [class.is-selected]="surface.surfaceCode === selectedSurfaceCode"
+              [class.status-healthy]="surface.status === 'Healthy'"
+              [class.status-restored]="surface.status === 'Restored'"
+              [class.status-caries]="surface.status === 'Caries'"
+              (click)="selectSurface(surface.surfaceCode)">
+              <span class="surface-code">{{ surface.surfaceCode }}</span>
+              <span class="surface-status">{{ surface.status }}</span>
+            </button>
+          </div>
+
+          <ng-container *ngIf="selectedSurface as surface">
+            <div class="meta-grid">
+              <div>
+                <dt>Selected surface</dt>
+                <dd>{{ surface.surfaceCode }}</dd>
+              </div>
+              <div>
+                <dt>Current surface status</dt>
+                <dd>{{ surface.status }}</dd>
+              </div>
+              <div>
+                <dt>Last updated</dt>
+                <dd>{{ surface.updatedAtUtc | date: 'medium' }}</dd>
+              </div>
+              <div>
+                <dt>Updated by</dt>
+                <dd>{{ surface.updatedByUserId }}</dd>
+              </div>
+            </div>
+
+            <div *ngIf="canWrite" class="editor-actions">
+              <label class="field">
+                <span>Surface</span>
+                <select [(ngModel)]="selectedSurfaceCode" (ngModelChange)="onSurfaceSelectionChange($event)">
+                  <option *ngFor="let surfaceCode of surfaceCodes" [ngValue]="surfaceCode">{{ surfaceCode }}</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>New surface status</span>
+                <select [(ngModel)]="selectedSurfaceStatus">
+                  <option *ngFor="let status of surfaceStatuses" [ngValue]="status">{{ status }}</option>
+                </select>
+              </label>
+
+              <button
+                type="button"
+                class="primary-action"
+                [disabled]="savingSurface || !selectedSurfaceCode || selectedSurfaceStatus === surface.status"
+                (click)="emitSurfaceUpdate()">
+                {{ savingSurface ? 'Saving...' : 'Update surface state' }}
+              </button>
+            </div>
+          </ng-container>
+        </section>
 
         <p *ngIf="error" class="error-copy">{{ error }}</p>
       </ng-container>
@@ -147,6 +221,71 @@ import {
       cursor: not-allowed;
     }
 
+    .surface-section {
+      display: grid;
+      gap: 1rem;
+      border-top: 1px solid #d7dfe8;
+      padding-top: 1rem;
+    }
+
+    .surface-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    h4 {
+      margin: 0.25rem 0 0;
+      color: #16324f;
+    }
+
+    .surface-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .surface-card {
+      border-radius: 16px;
+      border: 1px solid #d6dfeb;
+      background: #ffffff;
+      padding: 0.8rem;
+      display: grid;
+      gap: 0.35rem;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .surface-card.is-selected {
+      border-color: #0a5bb5;
+      box-shadow: 0 0 0 2px rgba(10, 91, 181, 0.12);
+    }
+
+    .surface-code {
+      color: #16324f;
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .surface-status {
+      color: #5b6e84;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .surface-card.status-healthy {
+      background: #eef8f0;
+    }
+
+    .surface-card.status-restored {
+      background: #eef4ff;
+    }
+
+    .surface-card.status-caries {
+      background: #fff4e8;
+    }
+
     .error-copy {
       margin: 0;
       color: #8c2525;
@@ -157,17 +296,53 @@ import {
 export class ToothStateEditorComponent implements OnChanges {
   @Input() tooth: OdontogramToothState | null = null;
   @Input() canWrite = false;
-  @Input() saving = false;
+  @Input() savingTooth = false;
+  @Input() savingSurface = false;
   @Input() error: string | null = null;
 
   @Output() readonly updateRequested = new EventEmitter<OdontogramToothStatus>();
+  @Output() readonly surfaceUpdateRequested = new EventEmitter<{ surfaceCode: string; status: OdontogramSurfaceStatus }>();
 
   readonly statuses = ODONTOGRAM_TOOTH_STATUSES;
+  readonly surfaceCodes = ODONTOGRAM_SURFACE_CODES;
+  readonly surfaceStatuses = ODONTOGRAM_SURFACE_STATUSES;
   selectedStatus: OdontogramToothStatus = 'Unknown';
+  selectedSurfaceCode: OdontogramSurfaceCode | null = null;
+  selectedSurfaceStatus: OdontogramSurfaceStatus = 'Unknown';
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['tooth'] && this.tooth) {
       this.selectedStatus = this.tooth.status;
+      this.selectedSurfaceCode = this.tooth.surfaces[0]?.surfaceCode ?? null;
+      this.selectedSurfaceStatus = this.selectedSurface?.status ?? 'Unknown';
     }
+  }
+
+  get selectedSurface(): OdontogramSurfaceState | null {
+    if (!this.tooth || !this.selectedSurfaceCode) {
+      return null;
+    }
+
+    return this.tooth.surfaces.find((surface) => surface.surfaceCode === this.selectedSurfaceCode) ?? null;
+  }
+
+  selectSurface(surfaceCode: OdontogramSurfaceCode): void {
+    this.selectedSurfaceCode = surfaceCode;
+    this.selectedSurfaceStatus = this.selectedSurface?.status ?? 'Unknown';
+  }
+
+  onSurfaceSelectionChange(surfaceCode: OdontogramSurfaceCode): void {
+    this.selectSurface(surfaceCode);
+  }
+
+  emitSurfaceUpdate(): void {
+    if (!this.selectedSurfaceCode) {
+      return;
+    }
+
+    this.surfaceUpdateRequested.emit({
+      surfaceCode: this.selectedSurfaceCode,
+      status: this.selectedSurfaceStatus
+    });
   }
 }

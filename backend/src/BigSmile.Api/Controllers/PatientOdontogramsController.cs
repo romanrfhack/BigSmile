@@ -98,6 +98,39 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpPut("teeth/{toothCode}/surfaces/{surfaceCode}")]
+        [Authorize(Policy = AuthorizationPolicies.OdontogramWrite)]
+        public async Task<ActionResult<OdontogramDetailDto>> UpdateSurfaceStatus(
+            Guid patientId,
+            string toothCode,
+            string surfaceCode,
+            [FromBody] UpdateSurfaceStatusRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var odontogram = await _odontogramCommandService.UpdateSurfaceStatusAsync(
+                    patientId,
+                    request.ToCommand(toothCode, surfaceCode),
+                    cancellationToken);
+
+                if (odontogram is null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(odontogram);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         private ActionResult BuildValidationProblem(string message)
         {
             ModelState.AddModelError(nameof(PatientOdontogramsController), message);
@@ -120,6 +153,25 @@ namespace BigSmile.Api.Controllers
             public UpdateOdontogramToothStatusCommand ToCommand(string toothCode)
             {
                 return new UpdateOdontogramToothStatusCommand(toothCode, Status);
+            }
+        }
+
+        public sealed class UpdateSurfaceStatusRequest : IValidatableObject
+        {
+            [Required]
+            public string Status { get; set; } = string.Empty;
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (string.IsNullOrWhiteSpace(Status))
+                {
+                    yield return new ValidationResult("Surface status is required.", new[] { nameof(Status) });
+                }
+            }
+
+            public UpdateOdontogramSurfaceStatusCommand ToCommand(string toothCode, string surfaceCode)
+            {
+                return new UpdateOdontogramSurfaceStatusCommand(toothCode, surfaceCode, Status);
             }
         }
     }
