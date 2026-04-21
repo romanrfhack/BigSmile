@@ -259,7 +259,7 @@ Completed foundation milestones:
 Current active phase:
 
 * **Release 4 — Odontogram:** in progress
-* **Accepted slices:** **Release 4.1 — Odontogram Foundation**
+* **Accepted slices:** **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -279,9 +279,9 @@ Release 3 remains preserved through the accepted slices above. The full or advan
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
-Release 4 is now open with Release 4.1 accepted as the minimal odontogram foundation: explicit `POST /api/patients/{patientId}/odontogram`, `GET` returning `404` when missing, no autocreation, 32 permanent adult teeth using FDI/ISO two-digit numbering (`11-18`, `21-28`, `31-38`, `41-48`), tooth-level statuses only (`Unknown`, `Healthy`, `Missing`, `Restored`, `Caries`), and explicit `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}` updates returning the updated odontogram.
+Release 4 is now open with Release 4.1 accepted as the minimal odontogram foundation and Release 4.2 accepted as the minimal surface foundation on top of it: explicit `POST /api/patients/{patientId}/odontogram`, `GET` returning `404` when missing, no autocreation, 32 permanent adult teeth using FDI/ISO two-digit numbering (`11-18`, `21-28`, `31-38`, `41-48`), tooth-level statuses (`Unknown`, `Healthy`, `Missing`, `Restored`, `Caries`), minimal O/M/D/B/L surface detail with `Unknown`, `Healthy`, `Restored`, and `Caries`, explicit `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}` tooth updates, and explicit `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}/surfaces/{surfaceCode}` surface updates returning the updated odontogram.
 
-Odontogram access in the accepted Release 4.1 slice is intentionally restricted: `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive odontogram permissions. Surfaces, complex findings, treatment linkage, documents, dental timeline/history, bulk editing, and advanced charting remain outside Release 4.1.
+Odontogram access in the accepted Release 4.2 slice remains intentionally restricted: `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive odontogram permissions. Complex findings, treatment linkage, documents, dental timeline/history, surface history, bulk editing, and advanced charting remain outside Release 4.2.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -338,13 +338,14 @@ The repository should be treated as having an established technical and architec
 ### Release 4 — Odontogram
 
 * Release 4 is in progress
-* Accepted slice: Release 4.1 — Odontogram Foundation
+* Accepted slices: Release 4.1 — Odontogram Foundation and Release 4.2 — Odontogram Surface Foundation
 * Explicit odontogram creation with `GET` returning `404` when missing and no autocreation
 * Permanent adult FDI tooth numbering only (`11-18`, `21-28`, `31-38`, `41-48`)
-* Tooth-level current state only with `Unknown`, `Healthy`, `Missing`, `Restored`, and `Caries`
-* Minimal patient-context UI for empty state, explicit creation, grid/list visualization, and single-tooth state updates
+* Tooth-level current state with `Unknown`, `Healthy`, `Missing`, `Restored`, and `Caries`
+* Minimal O/M/D/B/L surface detail with `Unknown`, `Healthy`, `Restored`, and `Caries`
+* Minimal patient-context UI for empty state, explicit creation, grid/list visualization, single-tooth state updates, and per-surface editing inside the existing odontogram page
 * `odontogram.read` / `odontogram.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
-* Surfaces, complex findings, treatment linkage, documents, dental history/versioning, and advanced charting deferred beyond Release 4.1
+* Complex findings, treatment linkage, documents, dental history/versioning, surface history, and advanced charting deferred beyond Release 4.2
 
 ### Release 5 — Treatments
 

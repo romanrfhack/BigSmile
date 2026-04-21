@@ -289,23 +289,28 @@ Introduce the dental visual layer of the product.
 ## Current status
 - Release 4 is open and in progress
 - Release 4.1 — Odontogram Foundation is accepted
+- Release 4.2 — Odontogram Surface Foundation is accepted
 
 ## Scope
-Release 4 is being delivered in bounded slices. The currently accepted slice is Release 4.1, and it covers:
+Release 4 is being delivered in bounded slices. The currently accepted slices are Release 4.1 and Release 4.2, and they cover:
 
 - explicit odontogram creation
 - exactly one odontogram per patient per tenant
 - explicit `GET` returning `404` when missing
 - no autocreation
 - permanent adult FDI/ISO two-digit tooth numbering only (`11-18`, `21-28`, `31-38`, `41-48`)
-- tooth-level current state only
+- tooth-level current state
 - minimal status catalog `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`
 - explicit single-tooth status updates
+- minimal O/M/D/B/L surface detail inside the existing odontogram
+- minimal surface status catalog `Unknown` / `Healthy` / `Restored` / `Caries`
+- explicit single-surface status updates
+- no tooth-status auto-aggregation from surface changes in the accepted slices
 - minimal audit metadata on the odontogram and each tooth state
-- minimal patient-context UI for empty state, creation, visualization, and single-tooth editing
+- minimal patient-context UI for empty state, creation, visualization, single-tooth editing, and single-surface editing
 
 ## Expected outcome
-A user operating under the current odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context without opening later dental modules.
+A user operating under the current odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context, including minimal surface detail, without opening later dental modules.
 
 ## Core users
 - Dentist
@@ -314,22 +319,24 @@ A user operating under the current odontogram permissions can initialize, consul
 
 ## Current access note
 - `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive odontogram permissions in the currently accepted Release 4.1 slice
+- `TenantUser` does not receive odontogram permissions in the currently accepted Release 4.2 slice
 
 ## Key UX goals
 - clear patient-context navigation
 - low-friction explicit creation
 - fast single-tooth updates
-- immediately understandable tooth status representation
+- fast single-surface updates
+- immediately understandable tooth and surface status representation
 
 ## Out of scope
-- surfaces
 - multiple simultaneous findings per tooth
+- multiple simultaneous findings per surface
 - complex dental findings registration
 - treatment linkage
 - diagnosis linkage
 - documents linkage
 - dental timeline/history
+- surface history
 - odontogram restore/versioning
 - bulk editing
 - child or mixed dentition
