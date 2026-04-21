@@ -61,8 +61,11 @@ describe('PatientProfilePageComponent', () => {
       .find((link) => link.textContent?.includes('Clinical record'));
     const odontogramLink = links
       .find((link) => link.textContent?.includes('Odontogram'));
+    const treatmentPlanLink = links
+      .find((link) => link.textContent?.includes('Treatment plan'));
 
     expect(clinicalRecordLink).toBeTruthy();
     expect(odontogramLink).toBeTruthy();
+    expect(treatmentPlanLink).toBeTruthy();
   });
 });

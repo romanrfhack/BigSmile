@@ -10,6 +10,8 @@ using BigSmile.Application.Features.Patients.Queries;
 using BigSmile.Application.Features.Scheduling.Commands;
 using BigSmile.Application.Features.Scheduling.Queries;
 using BigSmile.Application.Features.Tenants.Queries;
+using BigSmile.Application.Features.TreatmentPlans.Commands;
+using BigSmile.Application.Features.TreatmentPlans.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BigSmile.Application
@@ -32,6 +34,8 @@ namespace BigSmile.Application
             services.AddScoped<IAppointmentBlockCommandService, AppointmentBlockCommandService>();
             services.AddScoped<IAppointmentQueryService, AppointmentQueryService>();
             services.AddScoped<ITenantQueryService, TenantQueryService>();
+            services.AddScoped<ITreatmentPlanCommandService, TreatmentPlanCommandService>();
+            services.AddScoped<ITreatmentPlanQueryService, TreatmentPlanQueryService>();
 
             return services;
         }

@@ -15,5 +15,7 @@ namespace BigSmile.Application.Authorization
         public const string ClinicalWrite = "clinical.write";
         public const string OdontogramRead = "odontogram.read";
         public const string OdontogramWrite = "odontogram.write";
+        public const string TreatmentPlanRead = "treatmentplan.read";
+        public const string TreatmentPlanWrite = "treatmentplan.write";
     }
 }

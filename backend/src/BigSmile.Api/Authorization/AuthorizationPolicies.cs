@@ -17,6 +17,8 @@ namespace BigSmile.Api.Authorization
         public const string ClinicalWrite = "clinical.write";
         public const string OdontogramRead = "odontogram.read";
         public const string OdontogramWrite = "odontogram.write";
+        public const string TreatmentPlanRead = "treatmentplan.read";
+        public const string TreatmentPlanWrite = "treatmentplan.write";
 
         public static void AddPolicies(AuthorizationOptions options)
         {
@@ -98,6 +100,18 @@ namespace BigSmile.Api.Authorization
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(new PermissionRequirement(Permissions.OdontogramWrite));
+            });
+
+            options.AddPolicy(TreatmentPlanRead, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(Permissions.TreatmentPlanRead));
+            });
+
+            options.AddPolicy(TreatmentPlanWrite, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(Permissions.TreatmentPlanWrite));
             });
         }
     }

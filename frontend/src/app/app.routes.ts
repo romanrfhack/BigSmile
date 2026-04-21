@@ -8,6 +8,7 @@ import { PatientFormPageComponent } from './features/patients/pages/patient-form
 import { PatientListPageComponent } from './features/patients/pages/patient-list.page';
 import { PatientProfilePageComponent } from './features/patients/pages/patient-profile.page';
 import { SchedulingPageComponent } from './features/scheduling/pages/scheduling.page';
+import { TreatmentPlanPageComponent } from './features/treatments/pages/treatment-plan.page';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, canActivate: [anonymousOnlyGuard] },
@@ -65,6 +66,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       requiredPermissions: ['odontogram.read']
+    }
+  },
+  {
+    path: 'patients/:id/treatment-plan',
+    component: TreatmentPlanPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['treatmentplan.read']
     }
   },
   {

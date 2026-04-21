@@ -24,6 +24,8 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<OdontogramSurfaceState> OdontogramSurfaceStates => Set<OdontogramSurfaceState>();
         public DbSet<OdontogramSurfaceFinding> OdontogramSurfaceFindings => Set<OdontogramSurfaceFinding>();
         public DbSet<OdontogramSurfaceFindingHistoryEntry> OdontogramSurfaceFindingHistoryEntries => Set<OdontogramSurfaceFindingHistoryEntry>();
+        public DbSet<TreatmentPlan> TreatmentPlans => Set<TreatmentPlan>();
+        public DbSet<TreatmentPlanItem> TreatmentPlanItems => Set<TreatmentPlanItem>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<AppointmentBlock> AppointmentBlocks => Set<AppointmentBlock>();
 
@@ -61,6 +63,9 @@ namespace BigSmile.Infrastructure.Data
 
             modelBuilder.Entity<Odontogram>().HasQueryFilter(odontogram =>
                 !ShouldApplyTenantFilter || odontogram.TenantId == ResolvedTenantId);
+
+            modelBuilder.Entity<TreatmentPlan>().HasQueryFilter(treatmentPlan =>
+                !ShouldApplyTenantFilter || treatmentPlan.TenantId == ResolvedTenantId);
 
             modelBuilder.Entity<Appointment>().HasQueryFilter(appointment =>
                 !ShouldApplyTenantFilter || appointment.TenantId == ResolvedTenantId);
