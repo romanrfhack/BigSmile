@@ -363,10 +363,11 @@ Connect diagnosis with operational and commercial treatment planning.
 
 ## Current status
 - Release 5.1 — Treatment Plan Foundation is accepted
-- Release 5 remains in progress; formal quotes and pricing are still deferred beyond the accepted 5.1 slice
+- The repository now includes the bounded implementation of Release 5.2 — Quote Basics on top of Release 5.1
+- Release 5 remains in progress; advanced pricing, taxes, discounts, billing linkage, and wider commercial workflows remain deferred beyond the implemented 5.2 slice
 
 ## Scope
-Release 5 is being delivered in bounded slices. The currently accepted slice is Release 5.1, and it covers:
+Release 5 is being delivered in bounded slices. The currently accepted slice is Release 5.1, and the repository now also includes a bounded Release 5.2 implementation. Together they currently cover:
 - explicit treatment plan creation for an existing patient
 - exactly one active treatment plan per patient per tenant
 - `GET` returning `404` when the treatment plan does not exist
@@ -376,16 +377,25 @@ Release 5 is being delivered in bounded slices. The currently accepted slice is 
 - explicit add/remove item flows
 - bounded plan status with `Draft` / `Proposed` / `Accepted`
 - minimal patient-context UI for empty state, explicit creation, item add/remove, and status changes
-- no pricing
-- no formal quote generation
+- explicit treatment quote creation from the existing treatment plan
+- exactly one quote per treatment plan in this slice
+- `GET` returning `404` when the quote does not exist
+- no autocreation of the quote
+- quote items as a snapshot-only copy of the current treatment plan items
+- fixed `CurrencyCode = MXN` in this slice
+- line-level `UnitPrice`, `LineTotal`, and `QuoteTotal`
+- bounded quote status with `Draft` / `Proposed` / `Accepted`
+- minimal patient-context UI for explicit quote creation, empty state, no-treatment-plan message, line pricing, totals, and quote status changes
+- `treatmentquote.read` and `treatmentquote.write` restricted to `PlatformAdmin` and `TenantAdmin`
 - no discounts or taxes
 - no billing linkage
 - no scheduling linkage
 - no treatment execution tracking
+- no quote regenerate/versioning or multi-quote negotiation
 - no plan versioning or archive
 
 ## Expected outcome
-Clinicians and tenant administrators can move from clinical or odontogram context to a structured, minimal treatment plan without yet opening the full commercial quote workflow.
+Clinicians and tenant administrators can move from clinical or odontogram context to a structured, minimal treatment plan and then into a bounded commercial quote workflow without yet opening billing or advanced pricing.
 
 ## Core users
 - Dentist
@@ -395,6 +405,8 @@ Clinicians and tenant administrators can move from clinical or odontogram contex
 ## Current access note
 - `treatmentplan.read` and `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`
 - `TenantUser` does not receive treatment plan permissions in the accepted Release 5.1 slice
+- `treatmentquote.read` and `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`
+- `TenantUser` does not receive treatment quote permissions in the implemented Release 5.2 slice
 
 ## Key UX goals
 - easy transition from diagnosis to treatment
@@ -404,12 +416,13 @@ Clinicians and tenant administrators can move from clinical or odontogram contex
 - simple treatment lifecycle
 
 ## Out of scope
-- formal quotes in the accepted 5.1 slice
-- price breakdowns and totals
+- advanced pricing beyond the bounded 5.2 slice
 - discounts and taxes
 - billing handoff
 - scheduling handoff
 - treatment execution/progress tracking
+- quote regenerate/versioning
+- multiple quotes per patient/negotiation
 - plan archive/versioning
 - complex insurance processing
 - installment financing logic
