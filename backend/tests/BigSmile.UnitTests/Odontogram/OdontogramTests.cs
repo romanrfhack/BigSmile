@@ -129,6 +129,14 @@ namespace BigSmile.UnitTests.Odontogram
             Assert.Equal(OdontogramSurfaceFindingType.Caries, finding.FindingType);
             Assert.Equal(actorUserId, finding.CreatedByUserId);
             Assert.Contains(odontogram.SurfaceFindings, entry => entry.Id == finding.Id);
+            var historyEntry = Assert.Single(odontogram.SurfaceFindingHistoryEntries);
+            Assert.Equal(OdontogramSurfaceFindingHistoryEntryType.FindingAdded, historyEntry.EntryType);
+            Assert.Equal("11", historyEntry.ToothCode);
+            Assert.Equal("O", historyEntry.SurfaceCode);
+            Assert.Equal(OdontogramSurfaceFindingType.Caries, historyEntry.FindingType);
+            Assert.Equal(actorUserId, historyEntry.ChangedByUserId);
+            Assert.Equal("Finding added", historyEntry.Summary);
+            Assert.Equal(finding.Id, historyEntry.ReferenceFindingId);
             Assert.Equal(actorUserId, odontogram.LastUpdatedByUserId);
             Assert.True(odontogram.LastUpdatedAtUtc >= originalUpdatedAtUtc);
         }
@@ -138,11 +146,13 @@ namespace BigSmile.UnitTests.Odontogram
         {
             var odontogram = CreateOdontogram();
             odontogram.AddSurfaceFinding("11", "O", OdontogramSurfaceFindingType.Caries, Guid.NewGuid());
+            var originalHistoryCount = odontogram.SurfaceFindingHistoryEntries.Count;
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 odontogram.AddSurfaceFinding("11", "O", OdontogramSurfaceFindingType.Caries, Guid.NewGuid()));
 
             Assert.Contains("already exists", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(originalHistoryCount, odontogram.SurfaceFindingHistoryEntries.Count);
         }
 
         [Fact]
@@ -157,7 +167,28 @@ namespace BigSmile.UnitTests.Odontogram
 
             Assert.DoesNotContain(odontogram.SurfaceFindings, entry => entry.Id == removedFinding.Id);
             Assert.Contains(odontogram.SurfaceFindings, entry => entry.Id == keptFinding.Id);
+            var historyEntry = odontogram.SurfaceFindingHistoryEntries.Single(entry =>
+                entry.EntryType == OdontogramSurfaceFindingHistoryEntryType.FindingRemoved &&
+                entry.ReferenceFindingId == removedFinding.Id);
+            Assert.Equal("11", historyEntry.ToothCode);
+            Assert.Equal("O", historyEntry.SurfaceCode);
+            Assert.Equal(OdontogramSurfaceFindingType.Sealant, historyEntry.FindingType);
+            Assert.Equal(actorUserId, historyEntry.ChangedByUserId);
+            Assert.Equal("Finding removed", historyEntry.Summary);
             Assert.Equal(actorUserId, odontogram.LastUpdatedByUserId);
+        }
+
+        [Fact]
+        public void RemoveSurfaceFinding_DoesNotCreateHistory_WhenFindingDoesNotExist()
+        {
+            var odontogram = CreateOdontogram();
+            var originalHistoryCount = odontogram.SurfaceFindingHistoryEntries.Count;
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                odontogram.RemoveSurfaceFinding("11", "O", Guid.NewGuid(), Guid.NewGuid()));
+
+            Assert.Contains("does not exist", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(originalHistoryCount, odontogram.SurfaceFindingHistoryEntries.Count);
         }
 
         [Fact]

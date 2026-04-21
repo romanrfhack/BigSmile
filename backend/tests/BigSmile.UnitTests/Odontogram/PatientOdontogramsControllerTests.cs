@@ -10,6 +10,7 @@ namespace BigSmile.UnitTests.Odontogram
     public class PatientOdontogramsControllerTests
     {
         private static readonly IReadOnlyList<OdontogramSurfaceFindingDto> NoFindings = [];
+        private static readonly IReadOnlyList<OdontogramSurfaceFindingHistoryEntryDto> NoFindingHistory = [];
 
         [Fact]
         public async Task GetByPatientId_ReturnsNotFound_WhenOdontogramDoesNotExist()
@@ -47,6 +48,7 @@ namespace BigSmile.UnitTests.Odontogram
                             new OdontogramSurfaceStateDto("O", "Unknown", DateTime.UtcNow, Guid.NewGuid(), NoFindings)
                         })
                 },
+                NoFindingHistory,
                 DateTime.UtcNow,
                 Guid.NewGuid(),
                 DateTime.UtcNow,
@@ -86,6 +88,7 @@ namespace BigSmile.UnitTests.Odontogram
                             new OdontogramSurfaceStateDto("O", "Healthy", DateTime.UtcNow, Guid.NewGuid(), NoFindings)
                         })
                 },
+                NoFindingHistory,
                 DateTime.UtcNow,
                 Guid.NewGuid(),
                 DateTime.UtcNow,
@@ -133,6 +136,7 @@ namespace BigSmile.UnitTests.Odontogram
                             new OdontogramSurfaceStateDto("O", "Caries", DateTime.UtcNow, Guid.NewGuid(), NoFindings)
                         })
                 },
+                NoFindingHistory,
                 DateTime.UtcNow,
                 Guid.NewGuid(),
                 DateTime.UtcNow,
@@ -244,6 +248,7 @@ namespace BigSmile.UnitTests.Odontogram
                                 findings)
                         })
                 },
+                NoFindingHistory,
                 DateTime.UtcNow,
                 Guid.NewGuid(),
                 DateTime.UtcNow,

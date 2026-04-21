@@ -23,6 +23,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<OdontogramToothState> OdontogramToothStates => Set<OdontogramToothState>();
         public DbSet<OdontogramSurfaceState> OdontogramSurfaceStates => Set<OdontogramSurfaceState>();
         public DbSet<OdontogramSurfaceFinding> OdontogramSurfaceFindings => Set<OdontogramSurfaceFinding>();
+        public DbSet<OdontogramSurfaceFindingHistoryEntry> OdontogramSurfaceFindingHistoryEntries => Set<OdontogramSurfaceFindingHistoryEntry>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<AppointmentBlock> AppointmentBlocks => Set<AppointmentBlock>();
 

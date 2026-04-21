@@ -19,6 +19,7 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .Include(odontogram => odontogram.Teeth)
                 .Include(odontogram => odontogram.Surfaces)
                 .Include(odontogram => odontogram.SurfaceFindings)
+                .Include(odontogram => odontogram.SurfaceFindingHistoryEntries)
                 .SingleOrDefaultAsync(odontogram => odontogram.PatientId == patientId, cancellationToken);
         }
 
@@ -90,6 +91,21 @@ namespace BigSmile.Infrastructure.Data.Repositories
             {
                 var entry = _dbContext.Entry(finding);
                 if (!persistedFindingIds.Contains(finding.Id))
+                {
+                    entry.State = EntityState.Added;
+                }
+            }
+
+            var persistedHistoryIds = await _dbContext.OdontogramSurfaceFindingHistoryEntries
+                .AsNoTracking()
+                .Where(entry => entry.OdontogramId == odontogram.Id)
+                .Select(entry => entry.Id)
+                .ToHashSetAsync(cancellationToken);
+
+            foreach (var historyEntry in odontogram.SurfaceFindingHistoryEntries)
+            {
+                var entry = _dbContext.Entry(historyEntry);
+                if (!persistedHistoryIds.Contains(historyEntry.Id))
                 {
                     entry.State = EntityState.Added;
                 }

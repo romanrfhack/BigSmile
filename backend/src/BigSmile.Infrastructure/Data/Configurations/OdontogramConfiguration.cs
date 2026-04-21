@@ -51,6 +51,11 @@ namespace BigSmile.Infrastructure.Data.Configurations
                 .WithOne(finding => finding.Odontogram)
                 .HasForeignKey(finding => finding.OdontogramId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(odontogram => odontogram.SurfaceFindingHistoryEntries)
+                .WithOne(entry => entry.Odontogram)
+                .HasForeignKey(entry => entry.OdontogramId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

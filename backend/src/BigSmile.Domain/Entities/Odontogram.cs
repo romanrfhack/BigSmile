@@ -5,6 +5,9 @@ namespace BigSmile.Domain.Entities
 {
     public sealed class Odontogram : Entity<Guid>, ITenantOwnedEntity
     {
+        private const string FindingAddedSummary = "Finding added";
+        private const string FindingRemovedSummary = "Finding removed";
+
         public Guid TenantId { get; private set; }
         public Tenant Tenant { get; private set; } = null!;
 
@@ -19,6 +22,7 @@ namespace BigSmile.Domain.Entities
         public ICollection<OdontogramToothState> Teeth { get; private set; } = new List<OdontogramToothState>();
         public ICollection<OdontogramSurfaceState> Surfaces { get; private set; } = new List<OdontogramSurfaceState>();
         public ICollection<OdontogramSurfaceFinding> SurfaceFindings { get; private set; } = new List<OdontogramSurfaceFinding>();
+        public ICollection<OdontogramSurfaceFindingHistoryEntry> SurfaceFindingHistoryEntries { get; private set; } = new List<OdontogramSurfaceFindingHistoryEntry>();
 
         private Odontogram()
         {
@@ -138,6 +142,15 @@ namespace BigSmile.Domain.Entities
                 DateTime.UtcNow);
 
             SurfaceFindings.Add(finding);
+            SurfaceFindingHistoryEntries.Add(new OdontogramSurfaceFindingHistoryEntry(
+                Id,
+                normalizedToothCode,
+                normalizedSurfaceCode,
+                findingType,
+                OdontogramSurfaceFindingHistoryEntryType.FindingAdded,
+                FindingAddedSummary,
+                createdByUserId,
+                finding.Id));
             Touch(createdByUserId);
 
             return finding;
@@ -170,6 +183,15 @@ namespace BigSmile.Domain.Entities
                 throw new InvalidOperationException("The requested finding does not exist on the current tooth surface.");
             }
 
+            SurfaceFindingHistoryEntries.Add(new OdontogramSurfaceFindingHistoryEntry(
+                Id,
+                normalizedToothCode,
+                normalizedSurfaceCode,
+                finding.FindingType,
+                OdontogramSurfaceFindingHistoryEntryType.FindingRemoved,
+                FindingRemovedSummary,
+                removedByUserId,
+                finding.Id));
             SurfaceFindings.Remove(finding);
             Touch(removedByUserId);
         }

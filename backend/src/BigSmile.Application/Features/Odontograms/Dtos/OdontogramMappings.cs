@@ -51,6 +51,19 @@ namespace BigSmile.Application.Features.Odontograms.Dtos
                             ? surfaces
                             : []))
                     .ToList(),
+                odontogram.SurfaceFindingHistoryEntries
+                    .OrderByDescending(entry => entry.ChangedAtUtc)
+                    .ThenByDescending(entry => entry.Id)
+                    .Select(entry => new OdontogramSurfaceFindingHistoryEntryDto(
+                        entry.EntryType.ToString(),
+                        entry.ToothCode,
+                        entry.SurfaceCode,
+                        entry.FindingType.ToString(),
+                        entry.ChangedAtUtc,
+                        entry.ChangedByUserId,
+                        entry.Summary,
+                        entry.ReferenceFindingId))
+                    .ToList(),
                 odontogram.CreatedAtUtc,
                 odontogram.CreatedByUserId,
                 odontogram.LastUpdatedAtUtc,

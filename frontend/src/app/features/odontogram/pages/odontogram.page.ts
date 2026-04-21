@@ -28,10 +28,10 @@ import {
     <section class="odontogram-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 4.3 / Basic Dental Findings Foundation</p>
+          <p class="eyebrow">Release 4.4 / Dental Findings Change History</p>
           <h2>Odontogram</h2>
           <p class="subtitle">
-            Patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering, a minimal O/M/D/B/L surface set, and basic surface findings.
+            Patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering, the minimal O/M/D/B/L surface set, the basic finding catalog, and bounded surface finding add/remove history.
           </p>
         </div>
 
@@ -88,7 +88,7 @@ import {
             <div>
               <p class="eyebrow">Tooth and surface states</p>
               <h3>32 permanent adult teeth</h3>
-              <p class="section-copy">Surface detail uses the minimal O/M/D/B/L set. Basic findings stay separate from tooth and surface status. No findings history, treatment linkage, documents, or advanced charting in Release 4.3.</p>
+              <p class="section-copy">Surface detail uses the minimal O/M/D/B/L set. Basic findings stay separate from tooth and surface status, and findings history stays separate from any future dental timeline. No restore, full odontogram versioning, treatment linkage, documents, or advanced charting in Release 4.4.</p>
             </div>
           </div>
 
@@ -107,6 +107,7 @@ import {
           [savingFinding]="savingFinding"
           [removingFindingId]="removingFindingId"
           [error]="actionError"
+          [findingsHistory]="odontogram.findingsHistory"
           (updateRequested)="updateToothStatus($event)"
           (surfaceUpdateRequested)="updateSurfaceStatus($event)"
           (findingAddRequested)="addSurfaceFinding($event)"

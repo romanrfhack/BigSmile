@@ -13,6 +13,16 @@ namespace BigSmile.Application.Features.Odontograms.Dtos
         DateTime CreatedAtUtc,
         Guid CreatedByUserId);
 
+    public sealed record OdontogramSurfaceFindingHistoryEntryDto(
+        string EntryType,
+        string ToothCode,
+        string SurfaceCode,
+        string FindingType,
+        DateTime ChangedAtUtc,
+        Guid ChangedByUserId,
+        string Summary,
+        Guid? ReferenceFindingId);
+
     public sealed record OdontogramToothStateDto(
         string ToothCode,
         string Status,
@@ -24,6 +34,7 @@ namespace BigSmile.Application.Features.Odontograms.Dtos
         Guid OdontogramId,
         Guid PatientId,
         IReadOnlyList<OdontogramToothStateDto> Teeth,
+        IReadOnlyList<OdontogramSurfaceFindingHistoryEntryDto> FindingsHistory,
         DateTime CreatedAtUtc,
         Guid CreatedByUserId,
         DateTime LastUpdatedAtUtc,

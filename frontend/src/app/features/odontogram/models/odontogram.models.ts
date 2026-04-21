@@ -50,6 +50,21 @@ export interface OdontogramSurfaceFinding {
   createdByUserId: string;
 }
 
+export type OdontogramSurfaceFindingHistoryEntryType =
+  | 'FindingAdded'
+  | 'FindingRemoved';
+
+export interface OdontogramSurfaceFindingHistoryEntry {
+  entryType: OdontogramSurfaceFindingHistoryEntryType;
+  toothCode: string;
+  surfaceCode: OdontogramSurfaceCode;
+  findingType: OdontogramSurfaceFindingType;
+  changedAtUtc: string;
+  changedByUserId: string;
+  summary: string;
+  referenceFindingId: string | null;
+}
+
 export interface OdontogramSurfaceState {
   surfaceCode: OdontogramSurfaceCode;
   status: OdontogramSurfaceStatus;
@@ -70,6 +85,7 @@ export interface Odontogram {
   odontogramId: string;
   patientId: string;
   teeth: OdontogramToothState[];
+  findingsHistory: OdontogramSurfaceFindingHistoryEntry[];
   createdAtUtc: string;
   createdByUserId: string;
   lastUpdatedAtUtc: string;

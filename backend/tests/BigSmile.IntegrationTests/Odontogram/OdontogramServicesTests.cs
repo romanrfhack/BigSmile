@@ -28,6 +28,7 @@ namespace BigSmile.IntegrationTests.Odontogram
 
             Assert.Equal(patient.Id, created.PatientId);
             Assert.Equal(32, created.Teeth.Count);
+            Assert.Empty(created.FindingsHistory);
             Assert.All(created.Teeth, tooth => Assert.Equal("Unknown", tooth.Status));
             Assert.All(created.Teeth, tooth =>
             {
@@ -39,6 +40,7 @@ namespace BigSmile.IntegrationTests.Odontogram
 
             Assert.NotNull(loaded);
             Assert.Equal(32, loaded!.Teeth.Count);
+            Assert.Empty(loaded.FindingsHistory);
             Assert.All(loaded.Teeth, tooth => Assert.Equal(5, tooth.Surfaces.Count));
         }
 
@@ -149,11 +151,23 @@ namespace BigSmile.IntegrationTests.Odontogram
             var finding = Assert.Single(surface.Findings);
             Assert.Equal("Caries", finding.FindingType);
             Assert.Equal(actorUserId, finding.CreatedByUserId);
+            var historyEntry = Assert.Single(updated.FindingsHistory);
+            Assert.Equal("FindingAdded", historyEntry.EntryType);
+            Assert.Equal("11", historyEntry.ToothCode);
+            Assert.Equal("O", historyEntry.SurfaceCode);
+            Assert.Equal("Caries", historyEntry.FindingType);
+            Assert.Equal(actorUserId, historyEntry.ChangedByUserId);
+            Assert.Equal("Finding added", historyEntry.Summary);
+            Assert.Equal(finding.FindingId, historyEntry.ReferenceFindingId);
 
             var loaded = await queryService.GetByPatientIdAsync(patient.Id);
             var loadedTooth = Assert.Single(loaded!.Teeth, entry => entry.ToothCode == "11");
             var loadedSurface = Assert.Single(loadedTooth.Surfaces, entry => entry.SurfaceCode == "O");
             Assert.Single(loadedSurface.Findings);
+            var loadedHistory = Assert.Single(loaded.FindingsHistory);
+            Assert.Equal("FindingAdded", loadedHistory.EntryType);
+            Assert.Equal("11", loadedHistory.ToothCode);
+            Assert.Equal("O", loadedHistory.SurfaceCode);
         }
 
         [Fact]
@@ -184,6 +198,16 @@ namespace BigSmile.IntegrationTests.Odontogram
             var tooth = Assert.Single(updated!.Teeth, entry => entry.ToothCode == "11");
             var surface = Assert.Single(tooth.Surfaces, entry => entry.SurfaceCode == "O");
             Assert.Empty(surface.Findings);
+            Assert.Equal(
+                new[] { "FindingRemoved", "FindingAdded" },
+                updated.FindingsHistory.Select(entry => entry.EntryType).ToArray());
+            var removedEntry = updated.FindingsHistory[0];
+            Assert.Equal("11", removedEntry.ToothCode);
+            Assert.Equal("O", removedEntry.SurfaceCode);
+            Assert.Equal("Caries", removedEntry.FindingType);
+            Assert.Equal(actorUserId, removedEntry.ChangedByUserId);
+            Assert.Equal("Finding removed", removedEntry.Summary);
+            Assert.Equal(findingId, removedEntry.ReferenceFindingId);
             Assert.Equal(actorUserId, updated.LastUpdatedByUserId);
         }
 

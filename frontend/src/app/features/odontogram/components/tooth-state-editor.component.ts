@@ -6,6 +6,7 @@ import {
   ODONTOGRAM_SURFACE_FINDING_TYPES,
   ODONTOGRAM_SURFACE_STATUSES,
   OdontogramSurfaceCode,
+  OdontogramSurfaceFindingHistoryEntry,
   OdontogramSurfaceFindingType,
   OdontogramSurfaceState,
   OdontogramSurfaceStatus,
@@ -13,17 +14,18 @@ import {
   OdontogramToothState,
   OdontogramToothStatus
 } from '../models/odontogram.models';
+import { SurfaceFindingHistoryListComponent } from './surface-finding-history-list.component';
 
 @Component({
   selector: 'app-tooth-state-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SurfaceFindingHistoryListComponent],
   template: `
     <section class="editor-card">
       <ng-container *ngIf="tooth; else noSelection">
         <p class="eyebrow">Selected tooth</p>
         <h3>Tooth {{ tooth.toothCode }}</h3>
-        <p class="copy">Minimal tooth state, surface state, and basic surface findings only. No findings history, treatment linkage, or advanced charting in Release 4.3.</p>
+        <p class="copy">Minimal tooth state, surface state, and basic surface findings with bounded add/remove history only. No restore, full odontogram versioning, treatment linkage, or advanced charting in Release 4.4.</p>
 
         <div class="meta-grid">
           <div>
@@ -170,6 +172,20 @@ import {
                   {{ savingFinding ? 'Saving...' : 'Add finding' }}
                 </button>
               </div>
+            </section>
+
+            <section class="finding-section">
+              <div>
+                <p class="eyebrow">Findings history</p>
+                <h4>Current history for surface {{ surface.surfaceCode }}</h4>
+                <p class="copy">This bounded history stays separate from current findings and from any future dental timeline. Release 4.4 tracks only add/remove events for the basic finding catalog.</p>
+              </div>
+
+              <app-surface-finding-history-list
+                [entries]="findingsHistory"
+                [toothCode]="tooth.toothCode"
+                [surfaceCode]="surface.surfaceCode">
+              </app-surface-finding-history-list>
             </section>
           </ng-container>
         </section>
@@ -405,6 +421,7 @@ export class ToothStateEditorComponent implements OnChanges {
   @Input() savingFinding = false;
   @Input() removingFindingId: string | null = null;
   @Input() error: string | null = null;
+  @Input() findingsHistory: OdontogramSurfaceFindingHistoryEntry[] = [];
 
   @Output() readonly updateRequested = new EventEmitter<OdontogramToothStatus>();
   @Output() readonly surfaceUpdateRequested = new EventEmitter<{ surfaceCode: string; status: OdontogramSurfaceStatus }>();
