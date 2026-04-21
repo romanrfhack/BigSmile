@@ -56,9 +56,13 @@ describe('PatientProfilePageComponent', () => {
     const fixture = TestBed.createComponent(PatientProfilePageComponent);
     fixture.detectChanges();
 
-    const clinicalRecordLink = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>)
+    const links = Array.from(fixture.nativeElement.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>);
+    const clinicalRecordLink = links
       .find((link) => link.textContent?.includes('Clinical record'));
+    const odontogramLink = links
+      .find((link) => link.textContent?.includes('Odontogram'));
 
     expect(clinicalRecordLink).toBeTruthy();
+    expect(odontogramLink).toBeTruthy();
   });
 });

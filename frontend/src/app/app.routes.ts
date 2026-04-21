@@ -3,6 +3,7 @@ import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
 import { LoginComponent } from './features/auth/login/login.component';
 import { SessionHomeComponent } from './features/auth/session-home/session-home.component';
 import { ClinicalRecordPageComponent } from './features/clinical-records/pages/clinical-record.page';
+import { OdontogramPageComponent } from './features/odontogram/pages/odontogram.page';
 import { PatientFormPageComponent } from './features/patients/pages/patient-form.page';
 import { PatientListPageComponent } from './features/patients/pages/patient-list.page';
 import { PatientProfilePageComponent } from './features/patients/pages/patient-profile.page';
@@ -56,6 +57,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       requiredPermissions: ['clinical.read']
+    }
+  },
+  {
+    path: 'patients/:id/odontogram',
+    component: OdontogramPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['odontogram.read']
     }
   },
   {

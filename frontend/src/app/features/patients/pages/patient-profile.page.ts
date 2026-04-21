@@ -24,6 +24,12 @@ import { PatientsFacade } from '../facades/patients.facade';
             class="action-link action-secondary">
             Clinical record
           </a>
+          <a
+            *ngIf="canReadOdontogram && patientsFacade.currentPatient() as patient"
+            [routerLink]="['/patients', patient.id, 'odontogram']"
+            class="action-link action-secondary">
+            Odontogram
+          </a>
           <a *ngIf="patientsFacade.currentPatient() as patient" [routerLink]="['/patients', patient.id, 'edit']" class="action-link">
             Edit patient
           </a>
@@ -249,6 +255,7 @@ import { PatientsFacade } from '../facades/patients.facade';
 export class PatientProfilePageComponent implements OnInit {
   readonly patientsFacade = inject(PatientsFacade);
   readonly canReadClinicalRecords = inject(AuthService).hasPermissions(['clinical.read']);
+  readonly canReadOdontogram = inject(AuthService).hasPermissions(['odontogram.read']);
   private readonly route = inject(ActivatedRoute);
 
   ngOnInit(): void {

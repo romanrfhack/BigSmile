@@ -1,0 +1,312 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, effect, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
+import { PatientsFacade } from '../../patients/facades/patients.facade';
+import { OdontogramEmptyStateComponent } from '../components/odontogram-empty-state.component';
+import { OdontogramGridComponent } from '../components/odontogram-grid.component';
+import { ToothStateEditorComponent } from '../components/tooth-state-editor.component';
+import { OdontogramsFacade } from '../facades/odontograms.facade';
+import { OdontogramToothState, OdontogramToothStatus } from '../models/odontogram.models';
+
+@Component({
+  selector: 'app-odontogram-page',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterLink,
+    OdontogramEmptyStateComponent,
+    OdontogramGridComponent,
+    ToothStateEditorComponent
+  ],
+  template: `
+    <section class="odontogram-page">
+      <header class="page-head">
+        <div>
+          <p class="eyebrow">Release 4.1 / Odontogram Foundation</p>
+          <h2>Odontogram</h2>
+          <p class="subtitle">
+            Minimal patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering only.
+          </p>
+        </div>
+
+        <div class="head-actions">
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
+        </div>
+      </header>
+
+      <div *ngIf="patientsFacade.loadingPatient() || odontogramsFacade.loadingOdontogram()" class="state-card">
+        Loading odontogram...
+      </div>
+
+      <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
+        {{ patientsFacade.detailError() }}
+      </div>
+
+      <div *ngIf="odontogramsFacade.odontogramError()" class="state-card state-error">
+        {{ odontogramsFacade.odontogramError() }}
+      </div>
+
+      <div *ngIf="actionError && odontogramsFacade.odontogramMissing()" class="state-card state-error">
+        {{ actionError }}
+      </div>
+
+      <app-odontogram-empty-state
+        *ngIf="!odontogramsFacade.loadingOdontogram() && odontogramsFacade.odontogramMissing() && !odontogramsFacade.odontogramError()"
+        [canWrite]="canWrite"
+        [creating]="savingCreate"
+        (createRequested)="createOdontogram()">
+      </app-odontogram-empty-state>
+
+      <article *ngIf="odontogramsFacade.currentOdontogram() as odontogram" class="odontogram-shell">
+        <section class="meta-card">
+          <div>
+            <dt>Created</dt>
+            <dd>{{ odontogram.createdAtUtc | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Created by</dt>
+            <dd>{{ odontogram.createdByUserId }}</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd>{{ odontogram.lastUpdatedAtUtc | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Updated by</dt>
+            <dd>{{ odontogram.lastUpdatedByUserId }}</dd>
+          </div>
+        </section>
+
+        <section class="grid-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Tooth states</p>
+              <h3>32 permanent adult teeth</h3>
+              <p class="section-copy">The slice is tooth-level only: no surfaces, complex findings, treatment linkage, documents, or dental history.</p>
+            </div>
+          </div>
+
+          <app-odontogram-grid
+            [teeth]="odontogram.teeth"
+            [selectedToothCode]="selectedToothCode"
+            (toothSelected)="selectTooth($event)">
+          </app-odontogram-grid>
+        </section>
+
+        <app-tooth-state-editor
+          [tooth]="selectedTooth"
+          [canWrite]="canWrite"
+          [saving]="savingTooth"
+          [error]="actionError"
+          (updateRequested)="updateToothStatus($event)">
+        </app-tooth-state-editor>
+      </article>
+    </section>
+  `,
+  styles: [`
+    .odontogram-page {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .page-head,
+    .state-card,
+    .meta-card,
+    .grid-card {
+      border-radius: 20px;
+      border: 1px solid #d7dfe8;
+      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      padding: 1.4rem 1.5rem;
+      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+    }
+
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #56708d;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    h2,
+    h3 {
+      margin: 0;
+      color: #16324f;
+    }
+
+    .subtitle,
+    .section-copy {
+      margin: 0.45rem 0 0;
+      color: #5b6e84;
+      max-width: 62ch;
+    }
+
+    .head-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .action-link {
+      text-decoration: none;
+      color: #0a5bb5;
+      font-weight: 700;
+    }
+
+    .action-secondary {
+      color: #4d6278;
+    }
+
+    .state-error {
+      border-color: #f2c4c4;
+      background: #fff3f3;
+      color: #8c2525;
+    }
+
+    .odontogram-shell {
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .meta-card {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    dt {
+      margin-bottom: 0.25rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #718298;
+    }
+
+    dd {
+      margin: 0;
+      color: #16324f;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .grid-card {
+      display: grid;
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .page-head {
+        flex-direction: column;
+      }
+    }
+  `]
+})
+export class OdontogramPageComponent implements OnInit {
+  readonly odontogramsFacade = inject(OdontogramsFacade);
+  readonly patientsFacade = inject(PatientsFacade);
+  readonly canWrite = inject(AuthService).hasPermissions(['odontogram.write']);
+
+  private readonly route = inject(ActivatedRoute);
+
+  patientId: string | null = null;
+  savingCreate = false;
+  savingTooth = false;
+  actionError: string | null = null;
+  selectedToothCode: string | null = null;
+
+  constructor() {
+    effect(() => {
+      const odontogram = this.odontogramsFacade.currentOdontogram();
+      if (!odontogram) {
+        this.selectedToothCode = null;
+        return;
+      }
+
+      if (!this.selectedToothCode || !odontogram.teeth.some((tooth) => tooth.toothCode === this.selectedToothCode)) {
+        this.selectedToothCode = odontogram.teeth[0]?.toothCode ?? null;
+      }
+    });
+  }
+
+  get patientDisplayName(): string {
+    return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
+  }
+
+  get selectedTooth(): OdontogramToothState | null {
+    const odontogram = this.odontogramsFacade.currentOdontogram();
+    if (!odontogram || !this.selectedToothCode) {
+      return null;
+    }
+
+    return odontogram.teeth.find((tooth) => tooth.toothCode === this.selectedToothCode) ?? null;
+  }
+
+  ngOnInit(): void {
+    this.patientId = this.route.snapshot.paramMap.get('id');
+    if (!this.patientId) {
+      this.odontogramsFacade.clearOdontogram();
+      this.patientsFacade.clearCurrentPatient();
+      return;
+    }
+
+    this.patientsFacade.clearCurrentPatient();
+    this.patientsFacade.loadPatient(this.patientId);
+    this.odontogramsFacade.clearOdontogram();
+    this.odontogramsFacade.loadOdontogram(this.patientId);
+  }
+
+  createOdontogram(): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.savingCreate = true;
+    this.actionError = null;
+
+    this.odontogramsFacade.createOdontogram(this.patientId)
+      .subscribe({
+        next: (odontogram) => {
+          this.savingCreate = false;
+          this.selectedToothCode = odontogram.teeth[0]?.toothCode ?? null;
+        },
+        error: () => {
+          this.savingCreate = false;
+          this.actionError = 'The odontogram could not be created.';
+        }
+      });
+  }
+
+  selectTooth(toothCode: string): void {
+    this.selectedToothCode = toothCode;
+    this.actionError = null;
+  }
+
+  updateToothStatus(status: OdontogramToothStatus): void {
+    if (!this.patientId || !this.selectedToothCode) {
+      return;
+    }
+
+    this.savingTooth = true;
+    this.actionError = null;
+
+    this.odontogramsFacade.updateToothStatus(this.patientId, this.selectedToothCode, { status })
+      .subscribe({
+        next: () => {
+          this.savingTooth = false;
+        },
+        error: () => {
+          this.savingTooth = false;
+          this.actionError = 'The tooth state could not be updated.';
+        }
+      });
+  }
+}
