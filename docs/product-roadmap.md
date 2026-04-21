@@ -215,9 +215,10 @@ Allow clinicians to maintain a structured patient clinical record.
 - Release 3 is open and in progress
 - Release 3.1 — Clinical Record Foundation is accepted
 - Release 3.2 — Basic Diagnoses Foundation is accepted
+- Release 3.3 — Clinical Timeline Read Model is accepted
 
 ## Scope
-Release 3 is being delivered in bounded slices. The currently accepted slices are Release 3.1 and Release 3.2, and they cover:
+Release 3 is being delivered in bounded slices. The currently accepted slices are Release 3.1, Release 3.2, and Release 3.3, and they cover:
 
 - explicit clinical record creation
 - medical background summary
@@ -232,9 +233,13 @@ Release 3 is being delivered in bounded slices. The currently accepted slices ar
 - explicit diagnosis resolution
 - diagnoses included in the clinical record read model
 - diagnosis ordering with active diagnoses first and newest-first within each status group
+- clinical timeline read model inside the existing clinical record read model
+- timeline events limited to `ClinicalNoteCreated`, `ClinicalDiagnosisCreated`, and `ClinicalDiagnosisResolved`
+- timeline ordering newest-first
+- no new timeline endpoint and no new timeline table
 
 ## Expected outcome
-A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking without opening later clinical modules.
+A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking and a bounded clinical timeline read model without opening later clinical modules.
 
 ## Core users
 - Dentist
@@ -253,7 +258,8 @@ A user operating under the current clinical permissions can consult and update t
 - secure access to sensitive information
 
 ## Out of scope
-- full patient clinical timeline
+- full or advanced patient clinical timeline
+- any cross-module timeline
 - coded diagnosis catalogs such as ICD/CIE/SNOMED
 - advanced diagnosis workflows beyond basic add/resolve
 - odontogram

@@ -259,7 +259,7 @@ Completed foundation milestones:
 Current active phase:
 
 * **Release 3 — Clinical Records:** in progress
-* **Accepted slices:** **Release 3.1 — Clinical Record Foundation** and **Release 3.2 — Basic Diagnoses Foundation**
+* **Accepted slices:** **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, and **Release 3.3 — Clinical Timeline Read Model**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -271,7 +271,9 @@ Release 3 is now open. Release 3.1 is accepted with tenant-owned, patient-owned 
 
 Release 3.2 is also accepted and adds only the bounded diagnoses foundation on top of an existing clinical record: explicit diagnosis creation, explicit diagnosis resolution, diagnoses included in the clinical record read model, basic non-coded diagnosis text/notes, and `Active` / `Resolved` status with active-first ordering and newest-first ordering within each status group in reads and UI.
 
-The full clinical timeline, odontogram, treatments, documents, and other later clinical slices remain outside the currently accepted Release 3 scope.
+Release 3.3 is also accepted and adds only a bounded clinical timeline read model inside the existing clinical record read contract: no new endpoint, no new timeline table, no cross-module timeline, and only `ClinicalNoteCreated`, `ClinicalDiagnosisCreated`, and `ClinicalDiagnosisResolved` events returned newest-first from existing Clinical data.
+
+Release 3 remains open. The full or advanced clinical timeline, any cross-module timeline, odontogram, treatments, documents, and other later clinical slices remain outside the currently accepted Release 3 scope.
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
@@ -316,13 +318,14 @@ The repository should be treated as having an established technical and architec
 ### Release 3 — Clinical Records
 
 * Release 3 is in progress
-* Accepted slices: Release 3.1 — Clinical Record Foundation and Release 3.2 — Basic Diagnoses Foundation
+* Accepted slices: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, and Release 3.3 — Clinical Timeline Read Model
 * Explicit clinical record creation with `GET` returning `404` when missing and no autocreation
 * Medical background summary, current medications summary, current allergies, and append-only clinical notes
 * Notes returned newest-first in API/UI
 * Basic non-coded diagnoses on existing clinical records, with explicit add/resolve flows and `Active` / `Resolved` states
 * Diagnosis reads ordered active-first and newest-first within each status group
-* Full clinical timeline, odontogram, treatments, and documents deferred beyond the accepted slices
+* Clinical timeline read model inside the existing clinical record using only note-created / diagnosis-created / diagnosis-resolved events, newest-first, with no new endpoint and no new timeline table
+* Full or advanced clinical timeline, any cross-module timeline, odontogram, treatments, and documents deferred beyond the accepted slices
 * `clinical.read` / `clinical.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
 
 ### Release 4 — Odontogram
