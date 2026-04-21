@@ -99,7 +99,7 @@ Canonical project status:
 - `Release 2 — Scheduling`: completed
 - `Release 3 — Clinical Records`: preserved through accepted slices `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, and `Release 3.4 — Clinical Snapshot Change History`
 - `Release 4 — Odontogram`: in progress
-- accepted slices: `Release 4.1 — Odontogram Foundation` and `Release 4.2 — Odontogram Surface Foundation`
+- accepted slices: `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, and `Release 4.3 — Basic Dental Findings Foundation`
 
 Current active phase:
 - `Release 4 — Odontogram`
@@ -107,11 +107,11 @@ Current active phase:
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
 Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 3 — Clinical Records`, do not assume slices beyond the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, and `Release 3.4 — Clinical Snapshot Change History` are implemented unless the actual codebase and aligned documentation explicitly prove it.
-Within `Release 4 — Odontogram`, do not assume slices beyond the accepted `Release 4.1 — Odontogram Foundation` and `Release 4.2 — Odontogram Surface Foundation` are implemented unless the actual codebase and aligned documentation explicitly prove it.
+Within `Release 4 — Odontogram`, do not assume slices beyond the accepted `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, and `Release 4.3 — Basic Dental Findings Foundation` are implemented unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, and `Release 4.2 — Odontogram Surface Foundation` slices while continuing `Release 4 — Odontogram` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, and `Release 4.3 — Basic Dental Findings Foundation` slices while continuing `Release 4 — Odontogram` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -124,6 +124,7 @@ Immediate priorities:
 - preserve the accepted Release 3.4 scope: bounded snapshot history for the base clinical snapshot, with an initial entry on explicit clinical record creation, effective-change entries for background / medications / allergies only, separation from the Release 3.3 timeline, and no restore / full versioning / rich diff
 - preserve the accepted Release 4.1 scope: explicit odontogram creation, exactly one odontogram per patient per tenant, permanent adult FDI tooth numbering, tooth-level current status only, minimal audit metadata, and no autocreation
 - preserve the accepted Release 4.2 scope: minimal O/M/D/B/L surfaces on top of the accepted odontogram foundation, surface-level current status only, explicit surface updates, no tooth-status auto-aggregation, and no complex findings/treatment linkage/surface history
+- preserve the accepted Release 4.3 scope: basic surface findings on top of the accepted odontogram foundation and surface foundation, explicit add/remove operations, a minimal finding catalog `Caries` / `Restoration` / `MissingStructure` / `Sealant`, enriched odontogram reads, and no findings history, treatment linkage, diagnosis linkage, or auto-aggregation from findings
 - preserve the current clinical access restriction: `clinical.read` / `clinical.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive clinical permissions in this phase
 - preserve the current odontogram access restriction: `odontogram.read` / `odontogram.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive odontogram permissions in this phase
 - keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened

@@ -61,17 +61,18 @@ Canonical project status:
 * **Release 2 — Scheduling:** completed
 * **Release 3 — Clinical Records:** preserved through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, and **Release 3.4 — Clinical Snapshot Change History**
 * **Release 4 — Odontogram:** in progress
-* **Accepted slices:** **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**
+* **Accepted slices:** **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**
 
 ### Current expected priority
 
 Continue the current active phase:
 
 * **Release 4 — Odontogram**
-* preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices as the clinical base that Release 4.1 and Release 4.2 build on
+* preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices as the clinical base that Release 4.1, Release 4.2, and Release 4.3 build on
 * preserving the accepted Release 4.1 scope: tenant-owned and patient-owned odontograms, explicit creation, `GET` returning `404` when missing, no autocreation, permanent adult FDI tooth numbering, tooth-level current status only, and minimal audit metadata
 * preserving the accepted Release 4.2 scope: minimal O/M/D/B/L surfaces, enriched odontogram reads, explicit per-surface updates, and no tooth-status auto-aggregation
-* keeping rich findings, treatment linkage, dental history/versioning, surface history, bulk editing, and advanced charting outside the accepted Release 4.2 slice
+* preserving the accepted Release 4.3 scope: explicit per-surface add/remove of basic findings, enriched surface reads, minimal finding catalog `Caries` / `Restoration` / `MissingStructure` / `Sealant`, and no status auto-aggregation from findings
+* keeping rich findings, treatment linkage, dental history/versioning, surface history, bulk editing, and advanced charting outside the accepted Release 4.3 slice
 * preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
 * preserving the current odontogram access restriction where `odontogram.read` / `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive odontogram permissions in this phase
 * preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views

@@ -290,9 +290,10 @@ Introduce the dental visual layer of the product.
 - Release 4 is open and in progress
 - Release 4.1 — Odontogram Foundation is accepted
 - Release 4.2 — Odontogram Surface Foundation is accepted
+- Release 4.3 — Basic Dental Findings Foundation is accepted
 
 ## Scope
-Release 4 is being delivered in bounded slices. The currently accepted slices are Release 4.1 and Release 4.2, and they cover:
+Release 4 is being delivered in bounded slices. The currently accepted slices are Release 4.1, Release 4.2, and Release 4.3, and they cover:
 
 - explicit odontogram creation
 - exactly one odontogram per patient per tenant
@@ -306,11 +307,16 @@ Release 4 is being delivered in bounded slices. The currently accepted slices ar
 - minimal surface status catalog `Unknown` / `Healthy` / `Restored` / `Caries`
 - explicit single-surface status updates
 - no tooth-status auto-aggregation from surface changes in the accepted slices
+- basic per-surface findings on top of the accepted surface foundation
+- minimal findings catalog `Caries` / `Restoration` / `MissingStructure` / `Sealant`
+- explicit single-surface finding add/remove operations
+- findings returned inside the existing odontogram read model
+- no tooth-status or surface-status auto-aggregation from findings in the accepted slices
 - minimal audit metadata on the odontogram and each tooth state
-- minimal patient-context UI for empty state, creation, visualization, single-tooth editing, and single-surface editing
+- minimal patient-context UI for empty state, creation, visualization, single-tooth editing, single-surface editing, and single-surface findings editing
 
 ## Expected outcome
-A user operating under the current odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context, including minimal surface detail, without opening later dental modules.
+A user operating under the current odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context, including minimal surface detail and basic surface findings, without opening later dental modules.
 
 ## Core users
 - Dentist
@@ -319,7 +325,7 @@ A user operating under the current odontogram permissions can initialize, consul
 
 ## Current access note
 - `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive odontogram permissions in the currently accepted Release 4.2 slice
+- `TenantUser` does not receive odontogram permissions in the currently accepted Release 4.3 slice
 
 ## Key UX goals
 - clear patient-context navigation
@@ -329,13 +335,12 @@ A user operating under the current odontogram permissions can initialize, consul
 - immediately understandable tooth and surface status representation
 
 ## Out of scope
-- multiple simultaneous findings per tooth
-- multiple simultaneous findings per surface
 - complex dental findings registration
 - treatment linkage
 - diagnosis linkage
 - documents linkage
 - dental timeline/history
+- findings history
 - surface history
 - odontogram restore/versioning
 - bulk editing
