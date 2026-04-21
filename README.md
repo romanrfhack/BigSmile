@@ -259,7 +259,7 @@ Completed foundation milestones:
 Current active phase:
 
 * **Release 3 — Clinical Records:** in progress
-* **Accepted slices:** **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, and **Release 3.3 — Clinical Timeline Read Model**
+* **Accepted slices:** **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, and **Release 3.4 — Clinical Snapshot Change History**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -273,7 +273,9 @@ Release 3.2 is also accepted and adds only the bounded diagnoses foundation on t
 
 Release 3.3 is also accepted and adds only a bounded clinical timeline read model inside the existing clinical record read contract: no new endpoint, no new timeline table, no cross-module timeline, and only `ClinicalNoteCreated`, `ClinicalDiagnosisCreated`, and `ClinicalDiagnosisResolved` events returned newest-first from existing Clinical data.
 
-Release 3 remains open. The full or advanced clinical timeline, any cross-module timeline, odontogram, treatments, documents, and other later clinical slices remain outside the currently accepted Release 3 scope.
+Release 3.4 is also accepted and adds only a bounded snapshot change history inside the existing clinical record read contract: an initial history entry when the record is created explicitly, additional entries only for effective changes to medical background, current medications, and current allergies, and a separate `snapshotHistory` section that does not merge with the accepted Release 3.3 timeline. This bounded history does not introduce restore, full record versioning, or rich diffs.
+
+Release 3 remains open. The full or advanced clinical timeline, any cross-module timeline, restore, full clinical record versioning, rich snapshot diffs, odontogram, treatments, documents, and other later clinical slices remain outside the currently accepted Release 3 scope.
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
@@ -318,14 +320,15 @@ The repository should be treated as having an established technical and architec
 ### Release 3 — Clinical Records
 
 * Release 3 is in progress
-* Accepted slices: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, and Release 3.3 — Clinical Timeline Read Model
+* Accepted slices: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, and Release 3.4 — Clinical Snapshot Change History
 * Explicit clinical record creation with `GET` returning `404` when missing and no autocreation
 * Medical background summary, current medications summary, current allergies, and append-only clinical notes
 * Notes returned newest-first in API/UI
 * Basic non-coded diagnoses on existing clinical records, with explicit add/resolve flows and `Active` / `Resolved` states
 * Diagnosis reads ordered active-first and newest-first within each status group
 * Clinical timeline read model inside the existing clinical record using only note-created / diagnosis-created / diagnosis-resolved events, newest-first, with no new endpoint and no new timeline table
-* Full or advanced clinical timeline, any cross-module timeline, odontogram, treatments, and documents deferred beyond the accepted slices
+* Bounded snapshot history for the base clinical snapshot, returned newest-first and kept separate from the Release 3.3 timeline
+* Full or advanced clinical timeline, any cross-module timeline, restore, full versioning, rich snapshot diff, odontogram, treatments, and documents deferred beyond the accepted slices
 * `clinical.read` / `clinical.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
 
 ### Release 4 — Odontogram
