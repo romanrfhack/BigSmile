@@ -259,7 +259,7 @@ Completed foundation milestones:
 Current active phase:
 
 * **Release 4 — Odontogram:** in progress
-* **Accepted slices:** **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, and **Release 4.3 — Basic Dental Findings Foundation**
+* **Accepted slices:** **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, and **Release 4.4 — Dental Findings Change History**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -279,9 +279,9 @@ Release 3 remains preserved through the accepted slices above. The full or advan
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
-Release 4 is now open with Release 4.1 accepted as the minimal odontogram foundation, Release 4.2 accepted as the minimal surface foundation, and Release 4.3 accepted as the basic dental findings foundation on top of them: explicit `POST /api/patients/{patientId}/odontogram`, `GET` returning `404` when missing, no autocreation, 32 permanent adult teeth using FDI/ISO two-digit numbering (`11-18`, `21-28`, `31-38`, `41-48`), tooth-level statuses (`Unknown`, `Healthy`, `Missing`, `Restored`, `Caries`), minimal O/M/D/B/L surface detail with `Unknown`, `Healthy`, `Restored`, and `Caries`, explicit `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}` tooth updates, explicit `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}/surfaces/{surfaceCode}` surface updates, and explicit `POST` / `DELETE` basic findings operations per surface returning the updated odontogram.
+Release 4 is now open with Release 4.1 accepted as the minimal odontogram foundation, Release 4.2 accepted as the minimal surface foundation, Release 4.3 accepted as the basic dental findings foundation, and Release 4.4 accepted as a bounded dental findings change history slice on top of them: explicit `POST /api/patients/{patientId}/odontogram`, `GET` returning `404` when missing, no autocreation, 32 permanent adult teeth using FDI/ISO two-digit numbering (`11-18`, `21-28`, `31-38`, `41-48`), minimal O/M/D/B/L surface detail, explicit tooth and surface updates, explicit `POST` / `DELETE` basic findings operations per surface returning the updated odontogram, and a root-level `findingsHistory` read-model section that records only `FindingAdded` / `FindingRemoved` events newest-first for the basic findings catalog.
 
-Odontogram access in the accepted Release 4.3 slice remains intentionally restricted: `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive odontogram permissions. The accepted basic findings catalog is intentionally small (`Caries`, `Restoration`, `MissingStructure`, `Sealant`) and stays separate from tooth/surface status. Complex findings, treatment linkage, documents, dental timeline/history, findings history, surface history, bulk editing, and advanced charting remain outside Release 4.3.
+Odontogram access in the accepted Release 4.4 slice remains intentionally restricted: `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive odontogram permissions. The accepted basic findings catalog remains intentionally small (`Caries`, `Restoration`, `MissingStructure`, `Sealant`) and stays separate from tooth/surface status. The accepted findings history is bounded on purpose: it stays separate from any future dental timeline and does not introduce restore, full odontogram versioning, treatment linkage, diagnosis linkage, or surface history. Complex findings, treatment linkage, documents, wider dental timeline/history, surface history, bulk editing, and advanced charting remain outside Release 4.4.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -338,15 +338,16 @@ The repository should be treated as having an established technical and architec
 ### Release 4 — Odontogram
 
 * Release 4 is in progress
-* Accepted slices: Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, and Release 4.3 — Basic Dental Findings Foundation
+* Accepted slices: Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation, and Release 4.4 — Dental Findings Change History
 * Explicit odontogram creation with `GET` returning `404` when missing and no autocreation
 * Permanent adult FDI tooth numbering only (`11-18`, `21-28`, `31-38`, `41-48`)
 * Tooth-level current state with `Unknown`, `Healthy`, `Missing`, `Restored`, and `Caries`
 * Minimal O/M/D/B/L surface detail with `Unknown`, `Healthy`, `Restored`, and `Caries`
 * Minimal basic surface findings with explicit add/remove per surface and a small catalog `Caries`, `Restoration`, `MissingStructure`, and `Sealant`
+* Bounded `findingsHistory` for basic finding add/remove changes only, returned newest-first and kept separate from any future dental timeline
 * Minimal patient-context UI for empty state, explicit creation, grid/list visualization, single-tooth state updates, per-surface editing, and per-surface findings editing inside the existing odontogram page
 * `odontogram.read` / `odontogram.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
-* Complex findings, treatment linkage, diagnosis linkage, documents, dental history/versioning, findings history, surface history, and advanced charting deferred beyond Release 4.3
+* Complex findings, treatment linkage, diagnosis linkage, documents, wider dental history/timeline, surface history, restore/full versioning, and advanced charting deferred beyond Release 4.4
 
 ### Release 5 — Treatments
 
