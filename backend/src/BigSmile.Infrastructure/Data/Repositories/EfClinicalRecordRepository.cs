@@ -1,5 +1,6 @@
 using BigSmile.Application.Interfaces.Repositories;
 using BigSmile.Domain.Entities;
+using BigSmile.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
 namespace BigSmile.Infrastructure.Data.Repositories
@@ -19,6 +20,7 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .Include(clinicalRecord => clinicalRecord.Allergies)
                 .Include(clinicalRecord => clinicalRecord.Notes)
                 .Include(clinicalRecord => clinicalRecord.Diagnoses)
+                .Include(clinicalRecord => clinicalRecord.SnapshotHistory)
                 .SingleOrDefaultAsync(clinicalRecord => clinicalRecord.PatientId == patientId, cancellationToken);
         }
 
@@ -42,16 +44,48 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .Select(diagnosis => diagnosis.Id)
                 .ToListAsync(cancellationToken);
 
-            foreach (var diagnosis in clinicalRecord.Diagnoses)
+            var persistedAllergyIds = await _dbContext.Set<ClinicalAllergyEntry>()
+                .AsNoTracking()
+                .Where(allergy => allergy.ClinicalRecordId == clinicalRecord.Id)
+                .Select(allergy => allergy.Id)
+                .ToListAsync(cancellationToken);
+
+            var persistedNoteIds = await _dbContext.Set<ClinicalNote>()
+                .AsNoTracking()
+                .Where(note => note.ClinicalRecordId == clinicalRecord.Id)
+                .Select(note => note.Id)
+                .ToListAsync(cancellationToken);
+
+            var persistedSnapshotHistoryIds = await _dbContext.Set<ClinicalSnapshotHistoryEntry>()
+                .AsNoTracking()
+                .Where(entry => entry.ClinicalRecordId == clinicalRecord.Id)
+                .Select(entry => entry.Id)
+                .ToListAsync(cancellationToken);
+
+            MarkNewChildrenAsAdded(clinicalRecord.Diagnoses, persistedDiagnosisIds);
+            MarkNewChildrenAsAdded(clinicalRecord.Allergies, persistedAllergyIds);
+            MarkNewChildrenAsAdded(clinicalRecord.Notes, persistedNoteIds);
+            MarkNewChildrenAsAdded(clinicalRecord.SnapshotHistory, persistedSnapshotHistoryIds);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        private void MarkNewChildrenAsAdded<TEntity>(IEnumerable<TEntity> children, IReadOnlyCollection<Guid> persistedIds)
+            where TEntity : class
+        {
+            foreach (var child in children)
             {
-                var entry = _dbContext.Entry(diagnosis);
-                if (!persistedDiagnosisIds.Contains(diagnosis.Id))
+                if (child is not Entity<Guid> entity)
+                {
+                    continue;
+                }
+
+                var entry = _dbContext.Entry(child);
+                if (!persistedIds.Contains(entity.Id))
                 {
                     entry.State = EntityState.Added;
                 }
             }
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

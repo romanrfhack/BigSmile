@@ -5,6 +5,63 @@ namespace BigSmile.UnitTests.Clinical
     public class ClinicalRecordTests
     {
         [Fact]
+        public void CreateClinicalRecord_RegistersInitialSnapshotHistoryEntry()
+        {
+            var actorUserId = Guid.NewGuid();
+
+            var clinicalRecord = new ClinicalRecord(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                actorUserId,
+                "No relevant chronic conditions.",
+                "None reported.");
+
+            var historyEntry = Assert.Single(clinicalRecord.SnapshotHistory);
+            Assert.Equal(ClinicalSnapshotHistoryEntryType.SnapshotInitialized, historyEntry.EntryType);
+            Assert.Equal(ClinicalSnapshotHistorySection.Initial, historyEntry.Section);
+            Assert.Equal("Clinical snapshot initialized", historyEntry.Summary);
+            Assert.Equal(actorUserId, historyEntry.ChangedByUserId);
+        }
+
+        [Fact]
+        public void ApplySnapshot_RegistersMedicalBackgroundHistoryWhenChanged()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var changed = clinicalRecord.ApplySnapshot(
+                "Updated medical background.",
+                clinicalRecord.CurrentMedicationsSummary,
+                Array.Empty<ClinicalAllergyDraft>(),
+                Guid.NewGuid());
+
+            Assert.True(changed);
+            Assert.Contains(
+                clinicalRecord.SnapshotHistory,
+                entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.MedicalBackgroundUpdated
+                    && entry.Section == ClinicalSnapshotHistorySection.MedicalBackground
+                    && entry.Summary == "Medical background updated");
+        }
+
+        [Fact]
+        public void ApplySnapshot_RegistersCurrentMedicationsHistoryWhenChanged()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var changed = clinicalRecord.ApplySnapshot(
+                clinicalRecord.MedicalBackgroundSummary,
+                "Updated medications.",
+                Array.Empty<ClinicalAllergyDraft>(),
+                Guid.NewGuid());
+
+            Assert.True(changed);
+            Assert.Contains(
+                clinicalRecord.SnapshotHistory,
+                entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.CurrentMedicationsUpdated
+                    && entry.Section == ClinicalSnapshotHistorySection.CurrentMedications
+                    && entry.Summary == "Current medications updated");
+        }
+
+        [Fact]
         public void ReplaceAllergies_RejectsDuplicateSubstances()
         {
             var clinicalRecord = CreateClinicalRecord();
@@ -18,6 +75,59 @@ namespace BigSmile.UnitTests.Clinical
                 Guid.NewGuid()));
 
             Assert.Contains("duplicate substances", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void ReplaceAllergies_RegistersHistoryWhenChanged()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var changed = clinicalRecord.ReplaceAllergies(
+                new[]
+                {
+                    new ClinicalAllergyDraft("Latex", "Rash", "Use nitrile gloves.")
+                },
+                Guid.NewGuid());
+
+            Assert.True(changed);
+            Assert.Contains(
+                clinicalRecord.SnapshotHistory,
+                entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.AllergiesUpdated
+                    && entry.Section == ClinicalSnapshotHistorySection.Allergies
+                    && entry.Summary == "Current allergies updated");
+        }
+
+        [Fact]
+        public void ApplySnapshot_DoesNotRegisterHistoryForNoOpUpdate()
+        {
+            var actorUserId = Guid.NewGuid();
+            var clinicalRecord = new ClinicalRecord(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                actorUserId,
+                "No relevant chronic conditions.",
+                "None reported.",
+                new[]
+                {
+                    new ClinicalAllergyDraft("Latex", "Rash", "Use nitrile gloves.")
+                });
+            var initialHistoryCount = clinicalRecord.SnapshotHistory.Count;
+            var originalLastUpdatedAtUtc = clinicalRecord.LastUpdatedAtUtc;
+            var originalLastUpdatedByUserId = clinicalRecord.LastUpdatedByUserId;
+
+            var changed = clinicalRecord.ApplySnapshot(
+                "No relevant chronic conditions.",
+                "None reported.",
+                new[]
+                {
+                    new ClinicalAllergyDraft(" latex ", "Rash", "Use nitrile gloves.")
+                },
+                Guid.NewGuid());
+
+            Assert.False(changed);
+            Assert.Equal(initialHistoryCount, clinicalRecord.SnapshotHistory.Count);
+            Assert.Equal(originalLastUpdatedAtUtc, clinicalRecord.LastUpdatedAtUtc);
+            Assert.Equal(originalLastUpdatedByUserId, clinicalRecord.LastUpdatedByUserId);
         }
 
         [Fact]
@@ -96,6 +206,7 @@ namespace BigSmile.UnitTests.Clinical
             Assert.Single(clinicalRecord.Allergies);
             Assert.Equal("Latex", clinicalRecord.Allergies.First().Substance);
             Assert.Single(clinicalRecord.Diagnoses);
+            Assert.Contains(clinicalRecord.SnapshotHistory, entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.SnapshotInitialized);
         }
 
         private static ClinicalRecord CreateClinicalRecord()

@@ -112,13 +112,17 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
                 return null;
             }
 
-            clinicalRecord.UpdateSnapshot(
+            var snapshotChanged = clinicalRecord.ApplySnapshot(
                 command.MedicalBackgroundSummary,
                 command.CurrentMedicationsSummary,
+                command.Allergies.Select(ToDraft),
                 actorUserId);
-            clinicalRecord.ReplaceAllergies(command.Allergies.Select(ToDraft), actorUserId);
 
-            await _clinicalRecordRepository.UpdateAsync(clinicalRecord, cancellationToken);
+            if (snapshotChanged)
+            {
+                await _clinicalRecordRepository.UpdateAsync(clinicalRecord, cancellationToken);
+            }
+
             return clinicalRecord.ToDetailDto();
         }
 

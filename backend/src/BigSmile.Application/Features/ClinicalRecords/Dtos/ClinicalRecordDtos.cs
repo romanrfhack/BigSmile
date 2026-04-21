@@ -30,6 +30,13 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         string Summary,
         Guid ReferenceId);
 
+    public sealed record ClinicalSnapshotHistoryEntryDto(
+        string EntryType,
+        DateTime ChangedAtUtc,
+        Guid ChangedByUserId,
+        string Section,
+        string Summary);
+
     public sealed record ClinicalRecordDetailDto(
         Guid ClinicalRecordId,
         Guid PatientId,
@@ -38,6 +45,7 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         IReadOnlyList<ClinicalAllergyEntryDto> Allergies,
         IReadOnlyList<ClinicalNoteDto> Notes,
         IReadOnlyList<ClinicalDiagnosisDto> Diagnoses,
+        IReadOnlyList<ClinicalSnapshotHistoryEntryDto> SnapshotHistory,
         IReadOnlyList<ClinicalTimelineEntryDto> Timeline,
         DateTime CreatedAtUtc,
         Guid CreatedByUserId,

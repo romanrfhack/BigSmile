@@ -11,6 +11,10 @@ namespace BigSmile.Domain.Entities
     public sealed class ClinicalRecord : Entity<Guid>, ITenantOwnedEntity
     {
         private const int SummaryMaxLength = 2000;
+        private const string SnapshotInitializedSummary = "Clinical snapshot initialized";
+        private const string MedicalBackgroundUpdatedSummary = "Medical background updated";
+        private const string CurrentMedicationsUpdatedSummary = "Current medications updated";
+        private const string AllergiesUpdatedSummary = "Current allergies updated";
 
         public Guid TenantId { get; private set; }
         public Tenant Tenant { get; private set; } = null!;
@@ -29,6 +33,7 @@ namespace BigSmile.Domain.Entities
         public ICollection<ClinicalAllergyEntry> Allergies { get; private set; } = new List<ClinicalAllergyEntry>();
         public ICollection<ClinicalNote> Notes { get; private set; } = new List<ClinicalNote>();
         public ICollection<ClinicalDiagnosis> Diagnoses { get; private set; } = new List<ClinicalDiagnosis>();
+        public ICollection<ClinicalSnapshotHistoryEntry> SnapshotHistory { get; private set; } = new List<ClinicalSnapshotHistoryEntry>();
 
         private ClinicalRecord()
         {
@@ -68,19 +73,103 @@ namespace BigSmile.Domain.Entities
             CurrentMedicationsSummary = NormalizeOptional(currentMedicationsSummary, nameof(currentMedicationsSummary), SummaryMaxLength);
 
             ReplaceAllergiesInternal(allergies);
+            AddSnapshotHistoryEntry(
+                ClinicalSnapshotHistoryEntryType.SnapshotInitialized,
+                ClinicalSnapshotHistorySection.Initial,
+                SnapshotInitializedSummary,
+                createdByUserId);
         }
 
-        public void UpdateSnapshot(string? medicalBackgroundSummary, string? currentMedicationsSummary, Guid updatedByUserId)
+        public bool ApplySnapshot(
+            string? medicalBackgroundSummary,
+            string? currentMedicationsSummary,
+            IEnumerable<ClinicalAllergyDraft>? allergies,
+            Guid updatedByUserId)
         {
-            MedicalBackgroundSummary = NormalizeOptional(medicalBackgroundSummary, nameof(medicalBackgroundSummary), SummaryMaxLength);
-            CurrentMedicationsSummary = NormalizeOptional(currentMedicationsSummary, nameof(currentMedicationsSummary), SummaryMaxLength);
+            EnsureActor(updatedByUserId);
+
+            var normalizedMedicalBackgroundSummary = NormalizeOptional(
+                medicalBackgroundSummary,
+                nameof(medicalBackgroundSummary),
+                SummaryMaxLength);
+            var normalizedCurrentMedicationsSummary = NormalizeOptional(
+                currentMedicationsSummary,
+                nameof(currentMedicationsSummary),
+                SummaryMaxLength);
+            var normalizedAllergies = NormalizeAllergies(allergies);
+
+            var medicalBackgroundChanged = !string.Equals(
+                MedicalBackgroundSummary,
+                normalizedMedicalBackgroundSummary,
+                StringComparison.Ordinal);
+            var currentMedicationsChanged = !string.Equals(
+                CurrentMedicationsSummary,
+                normalizedCurrentMedicationsSummary,
+                StringComparison.Ordinal);
+            var allergiesChanged = !AllergiesMatch(normalizedAllergies);
+
+            if (!medicalBackgroundChanged && !currentMedicationsChanged && !allergiesChanged)
+            {
+                return false;
+            }
+
+            if (medicalBackgroundChanged)
+            {
+                MedicalBackgroundSummary = normalizedMedicalBackgroundSummary;
+                AddSnapshotHistoryEntry(
+                    ClinicalSnapshotHistoryEntryType.MedicalBackgroundUpdated,
+                    ClinicalSnapshotHistorySection.MedicalBackground,
+                    MedicalBackgroundUpdatedSummary,
+                    updatedByUserId);
+            }
+
+            if (currentMedicationsChanged)
+            {
+                CurrentMedicationsSummary = normalizedCurrentMedicationsSummary;
+                AddSnapshotHistoryEntry(
+                    ClinicalSnapshotHistoryEntryType.CurrentMedicationsUpdated,
+                    ClinicalSnapshotHistorySection.CurrentMedications,
+                    CurrentMedicationsUpdatedSummary,
+                    updatedByUserId);
+            }
+
+            if (allergiesChanged)
+            {
+                ReplaceAllergiesInternal(normalizedAllergies);
+                AddSnapshotHistoryEntry(
+                    ClinicalSnapshotHistoryEntryType.AllergiesUpdated,
+                    ClinicalSnapshotHistorySection.Allergies,
+                    AllergiesUpdatedSummary,
+                    updatedByUserId);
+            }
+
             Touch(updatedByUserId);
+            return true;
         }
 
-        public void ReplaceAllergies(IEnumerable<ClinicalAllergyDraft>? allergies, Guid updatedByUserId)
+        public bool UpdateSnapshot(string? medicalBackgroundSummary, string? currentMedicationsSummary, Guid updatedByUserId)
         {
-            ReplaceAllergiesInternal(allergies);
+            return ApplySnapshot(medicalBackgroundSummary, currentMedicationsSummary, Allergies.Select(ToDraft).ToArray(), updatedByUserId);
+        }
+
+        public bool ReplaceAllergies(IEnumerable<ClinicalAllergyDraft>? allergies, Guid updatedByUserId)
+        {
+            EnsureActor(updatedByUserId);
+
+            var normalizedAllergies = NormalizeAllergies(allergies);
+            if (AllergiesMatch(normalizedAllergies))
+            {
+                return false;
+            }
+
+            ReplaceAllergiesInternal(normalizedAllergies);
+            AddSnapshotHistoryEntry(
+                ClinicalSnapshotHistoryEntryType.AllergiesUpdated,
+                ClinicalSnapshotHistorySection.Allergies,
+                AllergiesUpdatedSummary,
+                updatedByUserId);
             Touch(updatedByUserId);
+            return true;
         }
 
         public ClinicalNote AddClinicalNote(string noteText, Guid createdByUserId)
@@ -124,7 +213,76 @@ namespace BigSmile.Domain.Entities
         {
             Allergies.Clear();
 
+            foreach (var allergy in NormalizeAllergies(allergies))
+            {
+                Allergies.Add(new ClinicalAllergyEntry(
+                    Id,
+                    allergy.Substance,
+                    allergy.ReactionSummary,
+                    allergy.Notes));
+            }
+        }
+
+        private void Touch(Guid updatedByUserId)
+        {
+            EnsureActor(updatedByUserId);
+
+            LastUpdatedAtUtc = DateTime.UtcNow;
+            LastUpdatedByUserId = updatedByUserId;
+        }
+
+        private void EnsureActor(Guid updatedByUserId)
+        {
+            if (updatedByUserId == Guid.Empty)
+            {
+                throw new ArgumentException("Clinical record actor is required.", nameof(updatedByUserId));
+            }
+        }
+
+        private void AddSnapshotHistoryEntry(
+            ClinicalSnapshotHistoryEntryType entryType,
+            ClinicalSnapshotHistorySection section,
+            string summary,
+            Guid changedByUserId)
+        {
+            SnapshotHistory.Add(new ClinicalSnapshotHistoryEntry(
+                Id,
+                entryType,
+                section,
+                summary,
+                changedByUserId));
+        }
+
+        private bool AllergiesMatch(IReadOnlyCollection<ClinicalAllergyDraft> normalizedAllergies)
+        {
+            var currentAllergies = Allergies
+                .Select(allergy => new ClinicalAllergyDraft(
+                    allergy.Substance,
+                    allergy.ReactionSummary,
+                    allergy.Notes))
+                .OrderBy(allergy => allergy.Substance, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(allergy => allergy.ReactionSummary, StringComparer.Ordinal)
+                .ThenBy(allergy => allergy.Notes, StringComparer.Ordinal)
+                .ToList();
+
+            if (currentAllergies.Count != normalizedAllergies.Count)
+            {
+                return false;
+            }
+
+            return currentAllergies
+                .Zip(normalizedAllergies, (left, right) =>
+                    string.Equals(left.Substance, right.Substance, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(left.ReactionSummary, right.ReactionSummary, StringComparison.Ordinal) &&
+                    string.Equals(left.Notes, right.Notes, StringComparison.Ordinal))
+                .All(isEqual => isEqual);
+        }
+
+        private static IReadOnlyCollection<ClinicalAllergyDraft> NormalizeAllergies(IEnumerable<ClinicalAllergyDraft>? allergies)
+        {
+            var normalizedAllergies = new List<ClinicalAllergyDraft>();
             var seenSubstances = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var allergy in allergies ?? Array.Empty<ClinicalAllergyDraft>())
             {
                 var normalizedSubstance = ClinicalAllergyEntry.NormalizeSubstance(allergy.Substance);
@@ -133,23 +291,22 @@ namespace BigSmile.Domain.Entities
                     throw new InvalidOperationException("Clinical allergies cannot contain duplicate substances.");
                 }
 
-                Allergies.Add(new ClinicalAllergyEntry(
-                    Id,
+                normalizedAllergies.Add(new ClinicalAllergyDraft(
                     normalizedSubstance,
-                    allergy.ReactionSummary,
-                    allergy.Notes));
+                    ClinicalAllergyEntry.NormalizeReactionSummary(allergy.ReactionSummary),
+                    ClinicalAllergyEntry.NormalizeNotes(allergy.Notes)));
             }
+
+            return normalizedAllergies
+                .OrderBy(allergy => allergy.Substance, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(allergy => allergy.ReactionSummary, StringComparer.Ordinal)
+                .ThenBy(allergy => allergy.Notes, StringComparer.Ordinal)
+                .ToList();
         }
 
-        private void Touch(Guid updatedByUserId)
+        private static ClinicalAllergyDraft ToDraft(ClinicalAllergyEntry allergy)
         {
-            if (updatedByUserId == Guid.Empty)
-            {
-                throw new ArgumentException("Clinical record actor is required.", nameof(updatedByUserId));
-            }
-
-            LastUpdatedAtUtc = DateTime.UtcNow;
-            LastUpdatedByUserId = updatedByUserId;
+            return new ClinicalAllergyDraft(allergy.Substance, allergy.ReactionSummary, allergy.Notes);
         }
 
         private static string? NormalizeOptional(string? value, string paramName, int maxLength)

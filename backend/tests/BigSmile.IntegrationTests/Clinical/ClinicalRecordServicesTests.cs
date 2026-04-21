@@ -35,6 +35,9 @@ namespace BigSmile.IntegrationTests.Clinical
             Assert.Equal(patient.Id, created.PatientId);
             Assert.Empty(created.Allergies);
             Assert.Empty(created.Notes);
+            var createdHistory = Assert.Single(created.SnapshotHistory);
+            Assert.Equal("SnapshotInitialized", createdHistory.EntryType);
+            Assert.Equal("Initial", createdHistory.Section);
             Assert.Empty(created.Timeline);
 
             var loaded = await queryService.GetByPatientIdAsync(patient.Id);
@@ -42,6 +45,7 @@ namespace BigSmile.IntegrationTests.Clinical
             Assert.NotNull(loaded);
             Assert.Equal("History of bruxism.", loaded!.MedicalBackgroundSummary);
             Assert.Empty(loaded.Allergies);
+            Assert.Single(loaded.SnapshotHistory);
             Assert.Empty(loaded.Timeline);
         }
 
@@ -73,6 +77,8 @@ namespace BigSmile.IntegrationTests.Clinical
             Assert.NotNull(loaded);
             Assert.Single(loaded!.Allergies);
             Assert.Equal("Latex", loaded.Allergies[0].Substance);
+            Assert.Single(loaded.SnapshotHistory);
+            Assert.Equal("SnapshotInitialized", loaded.SnapshotHistory[0].EntryType);
         }
 
         [Fact]
@@ -265,6 +271,108 @@ namespace BigSmile.IntegrationTests.Clinical
         }
 
         [Fact]
+        public async Task GetByPatientIdAsync_IncludesSnapshotHistoryNewestFirst()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordWithSnapshotHistoryAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext);
+
+            var loaded = await queryService.GetByPatientIdAsync(patient.Id);
+
+            Assert.NotNull(loaded);
+            Assert.Equal(
+                new[]
+                {
+                    "AllergiesUpdated",
+                    "CurrentMedicationsUpdated",
+                    "MedicalBackgroundUpdated",
+                    "SnapshotInitialized"
+                },
+                loaded!.SnapshotHistory.Select(entry => entry.EntryType).ToArray());
+            Assert.Equal(
+                new[]
+                {
+                    "Allergies",
+                    "CurrentMedications",
+                    "MedicalBackground",
+                    "Initial"
+                },
+                loaded.SnapshotHistory.Select(entry => entry.Section).ToArray());
+        }
+
+        [Fact]
+        public async Task UpdateAsync_AddsSnapshotHistoryOnlyForChangedSections()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.UpdateAsync(
+                patient.Id,
+                new SaveClinicalRecordSnapshotCommand(
+                    "Updated background.",
+                    "Seeded medications.",
+                    new[]
+                    {
+                        new ClinicalAllergyInput("Latex", "Rash", "Use nitrile gloves.")
+                    }));
+
+            Assert.NotNull(updated);
+            Assert.Equal(3, updated!.SnapshotHistory.Count);
+            Assert.Equal(1, updated.SnapshotHistory.Count(entry => entry.EntryType == "SnapshotInitialized"));
+            Assert.Equal(1, updated.SnapshotHistory.Count(entry => entry.EntryType == "MedicalBackgroundUpdated"));
+            Assert.Equal(1, updated.SnapshotHistory.Count(entry => entry.EntryType == "AllergiesUpdated"));
+            Assert.DoesNotContain(updated.SnapshotHistory, entry => entry.EntryType == "CurrentMedicationsUpdated");
+        }
+
+        [Fact]
+        public async Task UpdateAsync_DoesNotAddSnapshotHistoryForNoOpSnapshot()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            var beforeUpdate = await commandService.UpdateAsync(
+                patient.Id,
+                new SaveClinicalRecordSnapshotCommand(
+                    "Seeded background.",
+                    "Seeded medications.",
+                    Array.Empty<ClinicalAllergyInput>()));
+
+            Assert.NotNull(beforeUpdate);
+            Assert.Single(beforeUpdate!.SnapshotHistory);
+            Assert.Equal("SnapshotInitialized", beforeUpdate.SnapshotHistory[0].EntryType);
+
+            var noOpUpdate = await commandService.UpdateAsync(
+                patient.Id,
+                new SaveClinicalRecordSnapshotCommand(
+                    "Seeded background.",
+                    "Seeded medications.",
+                    Array.Empty<ClinicalAllergyInput>()));
+
+            Assert.NotNull(noOpUpdate);
+            Assert.Single(noOpUpdate!.SnapshotHistory);
+            Assert.Equal("SnapshotInitialized", noOpUpdate.SnapshotHistory[0].EntryType);
+        }
+
+        [Fact]
         public async Task GetByPatientIdAsync_TimelineRemainsBlockedForCrossTenantAccess()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -334,6 +442,29 @@ namespace BigSmile.IntegrationTests.Clinical
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.AddDiagnosisAsync(
                 foreignPatient.Id,
                 new AddClinicalDiagnosisCommand("Occlusal caries", null)));
+
+            Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_BlocksCrossTenantWrite()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var foreignPatient = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            await SeedClinicalRecordAsync(databaseName, tenantB.Id, foreignPatient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateAsync(
+                foreignPatient.Id,
+                new SaveClinicalRecordSnapshotCommand(
+                    "Updated background.",
+                    "Updated medications.",
+                    Array.Empty<ClinicalAllergyInput>())));
 
             Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -470,6 +601,44 @@ namespace BigSmile.IntegrationTests.Clinical
             await context.SaveChangesAsync();
         }
 
+        private static async Task SeedClinicalRecordWithSnapshotHistoryAsync(string databaseName, Guid tenantId, Guid patientId, Guid actorUserId)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var clinicalRecord = new ClinicalRecord(
+                tenantId,
+                patientId,
+                actorUserId,
+                "Seeded background.",
+                "Seeded medications.");
+
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(),
+                new DateTime(2026, 4, 20, 9, 0, 0, DateTimeKind.Utc));
+
+            clinicalRecord.ApplySnapshot("Updated background.", "Seeded medications.", Array.Empty<ClinicalAllergyDraft>(), actorUserId);
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.MedicalBackgroundUpdated),
+                new DateTime(2026, 4, 20, 10, 0, 0, DateTimeKind.Utc));
+
+            clinicalRecord.ApplySnapshot("Updated background.", "Updated medications.", Array.Empty<ClinicalAllergyDraft>(), actorUserId);
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.CurrentMedicationsUpdated),
+                new DateTime(2026, 4, 20, 11, 0, 0, DateTimeKind.Utc));
+
+            clinicalRecord.ReplaceAllergies(
+                new[]
+                {
+                    new ClinicalAllergyDraft("Latex", "Rash", null)
+                },
+                actorUserId);
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.AllergiesUpdated),
+                new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc));
+
+            context.ClinicalRecords.Add(clinicalRecord);
+            await context.SaveChangesAsync();
+        }
+
         private static void SetCreatedAt(ClinicalNote note, DateTime value)
         {
             var field = typeof(ClinicalNote)
@@ -495,6 +664,14 @@ namespace BigSmile.IntegrationTests.Clinical
 
             resolvedAtField.SetValue(diagnosis, value);
             resolvedByField.SetValue(diagnosis, resolvedByUserId);
+        }
+
+        private static void SetChangedAt(ClinicalSnapshotHistoryEntry historyEntry, DateTime value)
+        {
+            var field = typeof(ClinicalSnapshotHistoryEntry)
+                .GetField($"<{nameof(ClinicalSnapshotHistoryEntry.ChangedAtUtc)}>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+            field.SetValue(historyEntry, value);
         }
 
         private static AppDbContext CreateContext(string databaseName, TenantContext tenantContext)

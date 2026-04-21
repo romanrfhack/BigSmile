@@ -46,6 +46,16 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
                         diagnosis.ResolvedAtUtc,
                         diagnosis.ResolvedByUserId))
                     .ToList(),
+                clinicalRecord.SnapshotHistory
+                    .OrderByDescending(entry => entry.ChangedAtUtc)
+                    .ThenByDescending(entry => entry.Id)
+                    .Select(entry => new ClinicalSnapshotHistoryEntryDto(
+                        entry.EntryType.ToString(),
+                        entry.ChangedAtUtc,
+                        entry.ChangedByUserId,
+                        entry.Section.ToString(),
+                        entry.Summary))
+                    .ToList(),
                 BuildTimeline(clinicalRecord),
                 clinicalRecord.CreatedAtUtc,
                 clinicalRecord.CreatedByUserId,

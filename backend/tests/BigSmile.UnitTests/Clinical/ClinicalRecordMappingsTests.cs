@@ -90,6 +90,64 @@ namespace BigSmile.UnitTests.Clinical
                 dto.Timeline.Select(entry => entry.Summary).ToArray());
         }
 
+        [Fact]
+        public void ToDetailDto_OrdersSnapshotHistoryNewestFirst()
+        {
+            var actorUserId = Guid.NewGuid();
+            var clinicalRecord = new ClinicalRecord(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                actorUserId,
+                "Background.",
+                null);
+
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(),
+                new DateTime(2026, 4, 20, 9, 0, 0, DateTimeKind.Utc));
+
+            clinicalRecord.ApplySnapshot("Updated background.", null, Array.Empty<ClinicalAllergyDraft>(), actorUserId);
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.MedicalBackgroundUpdated),
+                new DateTime(2026, 4, 20, 10, 0, 0, DateTimeKind.Utc));
+
+            clinicalRecord.ApplySnapshot("Updated background.", "Ibuprofen.", Array.Empty<ClinicalAllergyDraft>(), actorUserId);
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.CurrentMedicationsUpdated),
+                new DateTime(2026, 4, 20, 11, 0, 0, DateTimeKind.Utc));
+
+            clinicalRecord.ReplaceAllergies(
+                new[]
+                {
+                    new ClinicalAllergyDraft("Latex", "Rash", null)
+                },
+                actorUserId);
+            SetChangedAt(
+                clinicalRecord.SnapshotHistory.Single(entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.AllergiesUpdated),
+                new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc));
+
+            var dto = clinicalRecord.ToDetailDto();
+
+            Assert.Equal(
+                new[]
+                {
+                    "AllergiesUpdated",
+                    "CurrentMedicationsUpdated",
+                    "MedicalBackgroundUpdated",
+                    "SnapshotInitialized"
+                },
+                dto.SnapshotHistory.Select(entry => entry.EntryType).ToArray());
+
+            Assert.Equal(
+                new[]
+                {
+                    "Allergies",
+                    "CurrentMedications",
+                    "MedicalBackground",
+                    "Initial"
+                },
+                dto.SnapshotHistory.Select(entry => entry.Section).ToArray());
+        }
+
         private static void SetCreatedAt(ClinicalDiagnosis diagnosis, DateTime value)
         {
             var field = typeof(ClinicalDiagnosis)
@@ -115,6 +173,14 @@ namespace BigSmile.UnitTests.Clinical
 
             resolvedAtField.SetValue(diagnosis, value);
             resolvedByField.SetValue(diagnosis, resolvedByUserId);
+        }
+
+        private static void SetChangedAt(ClinicalSnapshotHistoryEntry historyEntry, DateTime value)
+        {
+            var field = typeof(ClinicalSnapshotHistoryEntry)
+                .GetField($"<{nameof(ClinicalSnapshotHistoryEntry.ChangedAtUtc)}>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+            field.SetValue(historyEntry, value);
         }
     }
 }

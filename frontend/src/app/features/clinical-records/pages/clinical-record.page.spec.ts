@@ -40,6 +40,15 @@ describe('ClinicalRecordPageComponent', () => {
           allergies: payload.allergies,
           notes: [],
           diagnoses: [],
+          snapshotHistory: [
+            {
+              entryType: 'SnapshotInitialized',
+              changedAtUtc: '2026-04-20T10:00:00Z',
+              changedByUserId: 'user-1',
+              section: 'Initial',
+              summary: 'Clinical snapshot initialized'
+            }
+          ],
           timeline: [],
           createdAtUtc: '2026-04-20T10:00:00Z',
           createdByUserId: 'user-1',
@@ -57,6 +66,7 @@ describe('ClinicalRecordPageComponent', () => {
           currentMedicationsSummary: payload.currentMedicationsSummary,
           allergies: payload.allergies,
           diagnoses: clinicalRecordsFacade.currentRecord()?.diagnoses ?? [],
+          snapshotHistory: clinicalRecordsFacade.currentRecord()?.snapshotHistory ?? [],
           timeline: clinicalRecordsFacade.currentRecord()?.timeline ?? [],
           lastUpdatedAtUtc: '2026-04-20T11:00:00Z',
           lastUpdatedByUserId: 'user-2'
@@ -225,6 +235,7 @@ describe('ClinicalRecordPageComponent', () => {
       allergies: [],
       notes: [],
       diagnoses: [],
+      snapshotHistory: [],
       timeline: [],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
@@ -255,6 +266,7 @@ describe('ClinicalRecordPageComponent', () => {
       currentMedicationsSummary: null,
       allergies: [],
       diagnoses: [],
+      snapshotHistory: [],
       timeline: [],
       notes: [
         {
@@ -311,6 +323,22 @@ describe('ClinicalRecordPageComponent', () => {
           resolvedByUserId: 'user-2'
         }
       ],
+      snapshotHistory: [
+        {
+          entryType: 'MedicalBackgroundUpdated',
+          changedAtUtc: '2026-04-20T12:30:00Z',
+          changedByUserId: 'user-2',
+          section: 'MedicalBackground',
+          summary: 'Medical background updated'
+        },
+        {
+          entryType: 'SnapshotInitialized',
+          changedAtUtc: '2026-04-20T10:00:00Z',
+          changedByUserId: 'user-1',
+          section: 'Initial',
+          summary: 'Clinical snapshot initialized'
+        }
+      ],
       timeline: [
         {
           eventType: 'ClinicalDiagnosisResolved',
@@ -342,6 +370,9 @@ describe('ClinicalRecordPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Occlusal caries');
     expect(fixture.nativeElement.textContent).toContain('Active');
     expect(fixture.nativeElement.textContent).toContain('Resolved');
+    expect(fixture.nativeElement.textContent).toContain('Snapshot history');
+    expect(fixture.nativeElement.textContent).toContain('Clinical snapshot initialized');
+    expect(fixture.nativeElement.textContent).toContain('Medical background updated');
     expect(fixture.nativeElement.textContent).toContain('Clinical timeline');
     expect(fixture.nativeElement.textContent).toContain('Diagnosis added');
     expect(fixture.nativeElement.textContent).toContain('Diagnosis resolved');
@@ -357,6 +388,7 @@ describe('ClinicalRecordPageComponent', () => {
       allergies: [],
       notes: [],
       diagnoses: [],
+      snapshotHistory: [],
       timeline: [],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',
@@ -395,6 +427,7 @@ describe('ClinicalRecordPageComponent', () => {
           resolvedByUserId: null
         }
       ],
+      snapshotHistory: [],
       timeline: [],
       createdAtUtc: '2026-04-20T10:00:00Z',
       createdByUserId: 'user-1',

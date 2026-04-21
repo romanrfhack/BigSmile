@@ -2,50 +2,47 @@ using BigSmile.SharedKernel;
 
 namespace BigSmile.Domain.Entities
 {
-    public sealed class ClinicalAllergyEntry : Entity<Guid>
+    public sealed class ClinicalSnapshotHistoryEntry : Entity<Guid>
     {
-        internal const int SubstanceMaxLength = 150;
-        internal const int ReactionSummaryMaxLength = 500;
-        internal const int NotesMaxLength = 500;
+        internal const int SummaryMaxLength = 200;
 
         public Guid ClinicalRecordId { get; private set; }
         public ClinicalRecord ClinicalRecord { get; private set; } = null!;
 
-        public string Substance { get; private set; } = string.Empty;
-        public string? ReactionSummary { get; private set; }
-        public string? Notes { get; private set; }
+        public ClinicalSnapshotHistoryEntryType EntryType { get; private set; }
+        public ClinicalSnapshotHistorySection Section { get; private set; }
+        public string Summary { get; private set; } = string.Empty;
+        public DateTime ChangedAtUtc { get; private set; }
+        public Guid ChangedByUserId { get; private set; }
 
-        private ClinicalAllergyEntry()
+        private ClinicalSnapshotHistoryEntry()
         {
         }
 
-        internal ClinicalAllergyEntry(Guid clinicalRecordId, string substance, string? reactionSummary, string? notes)
+        internal ClinicalSnapshotHistoryEntry(
+            Guid clinicalRecordId,
+            ClinicalSnapshotHistoryEntryType entryType,
+            ClinicalSnapshotHistorySection section,
+            string summary,
+            Guid changedByUserId)
         {
             if (clinicalRecordId == Guid.Empty)
             {
                 throw new ArgumentException("Clinical record reference is required.", nameof(clinicalRecordId));
             }
 
+            if (changedByUserId == Guid.Empty)
+            {
+                throw new ArgumentException("Clinical snapshot history actor is required.", nameof(changedByUserId));
+            }
+
             Id = Guid.NewGuid();
             ClinicalRecordId = clinicalRecordId;
-            Substance = NormalizeSubstance(substance);
-            ReactionSummary = NormalizeOptional(reactionSummary, nameof(reactionSummary), ReactionSummaryMaxLength);
-            Notes = NormalizeOptional(notes, nameof(notes), NotesMaxLength);
-        }
-
-        internal static string NormalizeSubstance(string substance)
-        {
-            return NormalizeRequired(substance, nameof(substance), SubstanceMaxLength);
-        }
-
-        internal static string? NormalizeReactionSummary(string? reactionSummary)
-        {
-            return NormalizeOptional(reactionSummary, nameof(reactionSummary), ReactionSummaryMaxLength);
-        }
-
-        internal static string? NormalizeNotes(string? notes)
-        {
-            return NormalizeOptional(notes, nameof(notes), NotesMaxLength);
+            EntryType = entryType;
+            Section = section;
+            Summary = NormalizeRequired(summary, nameof(summary), SummaryMaxLength);
+            ChangedAtUtc = DateTime.UtcNow;
+            ChangedByUserId = changedByUserId;
         }
 
         private static string NormalizeRequired(string value, string paramName, int maxLength)

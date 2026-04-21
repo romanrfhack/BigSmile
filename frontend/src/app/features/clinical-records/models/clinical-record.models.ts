@@ -25,6 +25,26 @@ export interface ClinicalDiagnosis {
   resolvedByUserId: string | null;
 }
 
+export type ClinicalSnapshotHistoryEntryType =
+  | 'SnapshotInitialized'
+  | 'MedicalBackgroundUpdated'
+  | 'CurrentMedicationsUpdated'
+  | 'AllergiesUpdated';
+
+export type ClinicalSnapshotHistorySection =
+  | 'Initial'
+  | 'MedicalBackground'
+  | 'CurrentMedications'
+  | 'Allergies';
+
+export interface ClinicalSnapshotHistoryEntry {
+  entryType: ClinicalSnapshotHistoryEntryType;
+  changedAtUtc: string;
+  changedByUserId: string;
+  section: ClinicalSnapshotHistorySection;
+  summary: string;
+}
+
 export type ClinicalTimelineEventType =
   | 'ClinicalNoteCreated'
   | 'ClinicalDiagnosisCreated'
@@ -47,6 +67,7 @@ export interface ClinicalRecord {
   allergies: ClinicalAllergy[];
   notes: ClinicalNote[];
   diagnoses: ClinicalDiagnosis[];
+  snapshotHistory: ClinicalSnapshotHistoryEntry[];
   timeline: ClinicalTimelineEntry[];
   createdAtUtc: string;
   createdByUserId: string;

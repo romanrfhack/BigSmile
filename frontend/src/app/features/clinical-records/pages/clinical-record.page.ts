@@ -9,6 +9,7 @@ import { ClinicalDiagnosesListComponent } from '../components/clinical-diagnoses
 import { ClinicalNoteCreateFormComponent } from '../components/clinical-note-create-form.component';
 import { ClinicalNotesListComponent } from '../components/clinical-notes-list.component';
 import { ClinicalRecordEmptyStateComponent } from '../components/clinical-record-empty-state.component';
+import { ClinicalSnapshotHistoryListComponent } from '../components/clinical-snapshot-history-list.component';
 import { ClinicalTimelineListComponent } from '../components/clinical-timeline-list.component';
 import { ClinicalRecordsFacade } from '../facades/clinical-records.facade';
 import {
@@ -29,16 +30,17 @@ import {
     ClinicalDiagnosesListComponent,
     ClinicalNoteCreateFormComponent,
     ClinicalNotesListComponent,
+    ClinicalSnapshotHistoryListComponent,
     ClinicalTimelineListComponent
   ],
   template: `
     <section class="clinical-record-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 3.3 / Clinical Timeline Read Model</p>
+          <p class="eyebrow">Release 3.4 / Clinical Snapshot Change History</p>
           <h2>Clinical record</h2>
           <p class="subtitle">
-            Minimal clinical foundation for {{ patientDisplayName }} with explicit creation, current allergies, basic diagnoses, append-only notes, and a unified clinical timeline.
+            Minimal clinical foundation for {{ patientDisplayName }} with explicit creation, base snapshot history, current allergies, basic diagnoses, append-only notes, and a separate clinical timeline.
           </p>
         </div>
 
@@ -101,6 +103,18 @@ import {
           [error]="snapshotError"
           (saved)="saveSnapshot($event)">
         </app-clinical-background-form>
+
+        <section class="snapshot-history-shell">
+          <div class="notes-head">
+            <div>
+              <p class="eyebrow">Snapshot history</p>
+              <h3>Base snapshot changes only</h3>
+              <p class="section-copy">Snapshot history and the Release 3.3 clinical timeline stay as separate sections in this slice.</p>
+            </div>
+          </div>
+
+          <app-clinical-snapshot-history-list [snapshotHistory]="record.snapshotHistory"></app-clinical-snapshot-history-list>
+        </section>
 
         <section class="timeline-shell">
           <div class="notes-head">
@@ -169,6 +183,7 @@ import {
     .page-head,
     .state-card,
     .record-meta,
+    .snapshot-history-shell,
     .timeline-shell,
     .diagnoses-shell,
     .notes-shell {
@@ -239,6 +254,11 @@ import {
     }
 
     .timeline-shell {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .snapshot-history-shell {
       display: grid;
       gap: 1rem;
     }
