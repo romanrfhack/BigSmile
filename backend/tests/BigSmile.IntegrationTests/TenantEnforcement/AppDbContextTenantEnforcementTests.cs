@@ -20,8 +20,10 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             await SeedClinicalRecordAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             await SeedOdontogramAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
             await SeedOdontogramAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
-            await SeedTreatmentPlanAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
-            await SeedTreatmentPlanAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
+            await SeedTreatmentPlanAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id), includeItem: true);
+            await SeedTreatmentPlanAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id), includeItem: true);
+            await SeedTreatmentQuoteAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
+            await SeedTreatmentQuoteAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             await SeedAppointmentAsync(databaseName, tenantA.Id, tenantA.Branches.Single().Id, (await GetSinglePatientIdAsync(databaseName, tenantA.Id)), new DateTime(2026, 4, 14, 9, 0, 0), new DateTime(2026, 4, 14, 9, 30, 0));
             await SeedAppointmentAsync(databaseName, tenantB.Id, tenantB.Branches.Single().Id, (await GetSinglePatientIdAsync(databaseName, tenantB.Id)), new DateTime(2026, 4, 14, 10, 0, 0), new DateTime(2026, 4, 14, 10, 30, 0));
             var tenantContext = new TenantContext();
@@ -35,6 +37,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             var clinicalRecords = await context.ClinicalRecords.OrderBy(clinicalRecord => clinicalRecord.PatientId).ToListAsync();
             var odontograms = await context.Odontograms.OrderBy(odontogram => odontogram.PatientId).ToListAsync();
             var treatmentPlans = await context.TreatmentPlans.OrderBy(treatmentPlan => treatmentPlan.PatientId).ToListAsync();
+            var treatmentQuotes = await context.TreatmentQuotes.OrderBy(treatmentQuote => treatmentQuote.PatientId).ToListAsync();
             var appointments = await context.Appointments.OrderBy(appointment => appointment.StartsAt).ToListAsync();
 
             Assert.Single(tenants);
@@ -43,6 +46,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Single(clinicalRecords);
             Assert.Single(odontograms);
             Assert.Single(treatmentPlans);
+            Assert.Single(treatmentQuotes);
             Assert.Single(appointments);
             Assert.Equal(tenantA.Id, tenants[0].Id);
             Assert.Equal(tenantA.Id, branches[0].TenantId);
@@ -50,6 +54,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Equal(tenantA.Id, clinicalRecords[0].TenantId);
             Assert.Equal(tenantA.Id, odontograms[0].TenantId);
             Assert.Equal(tenantA.Id, treatmentPlans[0].TenantId);
+            Assert.Equal(tenantA.Id, treatmentQuotes[0].TenantId);
             Assert.Equal(tenantA.Id, appointments[0].TenantId);
             Assert.DoesNotContain(tenants, tenant => tenant.Id == tenantB.Id);
         }
@@ -69,6 +74,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Empty(await context.ClinicalRecords.ToListAsync());
             Assert.Empty(await context.Odontograms.ToListAsync());
             Assert.Empty(await context.TreatmentPlans.ToListAsync());
+            Assert.Empty(await context.TreatmentQuotes.ToListAsync());
         }
 
         [Fact]
@@ -82,8 +88,10 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             await SeedClinicalRecordAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             await SeedOdontogramAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
             await SeedOdontogramAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
-            await SeedTreatmentPlanAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
-            await SeedTreatmentPlanAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
+            await SeedTreatmentPlanAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id), includeItem: true);
+            await SeedTreatmentPlanAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id), includeItem: true);
+            await SeedTreatmentQuoteAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
+            await SeedTreatmentQuoteAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             var tenantContext = new TenantContext();
             tenantContext.SetRequestContext(Guid.NewGuid().ToString(), AccessScope.Platform, isAuthenticated: true);
             tenantContext.EnablePlatformOverride();
@@ -96,6 +104,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Equal(2, await context.ClinicalRecords.CountAsync());
             Assert.Equal(2, await context.Odontograms.CountAsync());
             Assert.Equal(2, await context.TreatmentPlans.CountAsync());
+            Assert.Equal(2, await context.TreatmentQuotes.CountAsync());
         }
 
         [Fact]
@@ -234,6 +243,32 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Contains("does not match the current tenant context", exception.Message);
         }
 
+        [Fact]
+        public async Task TenantScopedWrite_BlocksCrossTenantTreatmentQuoteWrite()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var tenantContext = new TenantContext();
+            tenantContext.SetRequestContext(Guid.NewGuid().ToString(), AccessScope.Tenant, isAuthenticated: true, tenantA.Id.ToString());
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var foreignPlan = new TreatmentPlan(
+                tenantB.Id,
+                patientA.Id,
+                Guid.NewGuid());
+            foreignPlan.AddItem("Exam", "Diagnostics", 1, null, null, null, Guid.NewGuid());
+            context.TreatmentQuotes.Add(new TreatmentQuote(
+                tenantB.Id,
+                patientA.Id,
+                foreignPlan.Id,
+                foreignPlan.Items,
+                Guid.NewGuid()));
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => context.SaveChangesAsync());
+            Assert.Contains("does not match the current tenant context", exception.Message);
+        }
+
         private static async Task<(Tenant TenantA, Tenant TenantB)> SeedTenantsAsync(string databaseName)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
@@ -299,12 +334,34 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             await context.SaveChangesAsync();
         }
 
-        private static async Task SeedTreatmentPlanAsync(string databaseName, Guid tenantId, Guid patientId)
+        private static async Task SeedTreatmentPlanAsync(string databaseName, Guid tenantId, Guid patientId, bool includeItem = false)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
-            context.TreatmentPlans.Add(new TreatmentPlan(
+            var treatmentPlan = new TreatmentPlan(
                 tenantId,
                 patientId,
+                Guid.NewGuid());
+            if (includeItem)
+            {
+                treatmentPlan.AddItem("Exam", "Diagnostics", 1, null, null, null, Guid.NewGuid());
+            }
+
+            context.TreatmentPlans.Add(treatmentPlan);
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task SeedTreatmentQuoteAsync(string databaseName, Guid tenantId, Guid patientId)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var treatmentPlan = await context.TreatmentPlans
+                .Include(entry => entry.Items)
+                .SingleAsync(entry => entry.TenantId == tenantId && entry.PatientId == patientId);
+
+            context.TreatmentQuotes.Add(new TreatmentQuote(
+                tenantId,
+                patientId,
+                treatmentPlan.Id,
+                treatmentPlan.Items,
                 Guid.NewGuid()));
             await context.SaveChangesAsync();
         }

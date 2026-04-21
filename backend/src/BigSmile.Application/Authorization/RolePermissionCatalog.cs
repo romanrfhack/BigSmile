@@ -26,7 +26,9 @@ namespace BigSmile.Application.Authorization
                     Permissions.OdontogramRead,
                     Permissions.OdontogramWrite,
                     Permissions.TreatmentPlanRead,
-                    Permissions.TreatmentPlanWrite
+                    Permissions.TreatmentPlanWrite,
+                    Permissions.TreatmentQuoteRead,
+                    Permissions.TreatmentQuoteWrite
                 },
                 [SystemRoles.TenantAdmin] = new[]
                 {
@@ -42,7 +44,9 @@ namespace BigSmile.Application.Authorization
                     Permissions.OdontogramRead,
                     Permissions.OdontogramWrite,
                     Permissions.TreatmentPlanRead,
-                    Permissions.TreatmentPlanWrite
+                    Permissions.TreatmentPlanWrite,
+                    Permissions.TreatmentQuoteRead,
+                    Permissions.TreatmentQuoteWrite
                 },
                 [SystemRoles.TenantUser] = new[]
                 {

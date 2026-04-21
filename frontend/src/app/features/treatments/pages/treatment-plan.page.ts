@@ -37,6 +37,7 @@ import {
         </div>
 
         <div class="head-actions">
+          <a *ngIf="patientId && canReadTreatmentQuotes" [routerLink]="['/patients', patientId, 'treatment-plan', 'quote']" class="action-link action-secondary">Quote</a>
           <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
         </div>
       </header>
@@ -220,6 +221,7 @@ export class TreatmentPlanPageComponent implements OnInit {
   readonly treatmentPlansFacade = inject(TreatmentPlansFacade);
   readonly patientsFacade = inject(PatientsFacade);
   readonly canWrite = inject(AuthService).hasPermissions(['treatmentplan.write']);
+  readonly canReadTreatmentQuotes = inject(AuthService).hasPermissions(['treatmentquote.read']);
 
   private readonly route = inject(ActivatedRoute);
 

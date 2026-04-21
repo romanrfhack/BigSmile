@@ -12,6 +12,8 @@ using BigSmile.Application.Features.Scheduling.Queries;
 using BigSmile.Application.Features.Tenants.Queries;
 using BigSmile.Application.Features.TreatmentPlans.Commands;
 using BigSmile.Application.Features.TreatmentPlans.Queries;
+using BigSmile.Application.Features.TreatmentQuotes.Commands;
+using BigSmile.Application.Features.TreatmentQuotes.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BigSmile.Application
@@ -36,6 +38,8 @@ namespace BigSmile.Application
             services.AddScoped<ITenantQueryService, TenantQueryService>();
             services.AddScoped<ITreatmentPlanCommandService, TreatmentPlanCommandService>();
             services.AddScoped<ITreatmentPlanQueryService, TreatmentPlanQueryService>();
+            services.AddScoped<ITreatmentQuoteCommandService, TreatmentQuoteCommandService>();
+            services.AddScoped<ITreatmentQuoteQueryService, TreatmentQuoteQueryService>();
 
             return services;
         }
