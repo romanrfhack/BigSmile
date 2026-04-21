@@ -4,7 +4,14 @@ namespace BigSmile.Application.Features.Odontograms.Dtos
         string SurfaceCode,
         string Status,
         DateTime UpdatedAtUtc,
-        Guid UpdatedByUserId);
+        Guid UpdatedByUserId,
+        IReadOnlyList<OdontogramSurfaceFindingDto> Findings);
+
+    public sealed record OdontogramSurfaceFindingDto(
+        Guid FindingId,
+        string FindingType,
+        DateTime CreatedAtUtc,
+        Guid CreatedByUserId);
 
     public sealed record OdontogramToothStateDto(
         string ToothCode,

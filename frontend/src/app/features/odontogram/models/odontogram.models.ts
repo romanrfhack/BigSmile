@@ -13,6 +13,12 @@ export type OdontogramSurfaceStatus =
   | 'Restored'
   | 'Caries';
 
+export type OdontogramSurfaceFindingType =
+  | 'Caries'
+  | 'Restoration'
+  | 'MissingStructure'
+  | 'Sealant';
+
 export const ODONTOGRAM_TOOTH_STATUSES: OdontogramToothStatus[] = [
   'Unknown',
   'Healthy',
@@ -30,11 +36,26 @@ export const ODONTOGRAM_SURFACE_STATUSES: OdontogramSurfaceStatus[] = [
   'Caries'
 ];
 
+export const ODONTOGRAM_SURFACE_FINDING_TYPES: OdontogramSurfaceFindingType[] = [
+  'Caries',
+  'Restoration',
+  'MissingStructure',
+  'Sealant'
+];
+
+export interface OdontogramSurfaceFinding {
+  findingId: string;
+  findingType: OdontogramSurfaceFindingType;
+  createdAtUtc: string;
+  createdByUserId: string;
+}
+
 export interface OdontogramSurfaceState {
   surfaceCode: OdontogramSurfaceCode;
   status: OdontogramSurfaceStatus;
   updatedAtUtc: string;
   updatedByUserId: string;
+  findings: OdontogramSurfaceFinding[];
 }
 
 export interface OdontogramToothState {
@@ -61,4 +82,8 @@ export interface UpdateToothStatusRequest {
 
 export interface UpdateSurfaceStatusRequest {
   status: OdontogramSurfaceStatus;
+}
+
+export interface AddSurfaceFindingRequest {
+  findingType: OdontogramSurfaceFindingType;
 }

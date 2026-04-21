@@ -18,6 +18,7 @@ namespace BigSmile.Domain.Entities
 
         public ICollection<OdontogramToothState> Teeth { get; private set; } = new List<OdontogramToothState>();
         public ICollection<OdontogramSurfaceState> Surfaces { get; private set; } = new List<OdontogramSurfaceState>();
+        public ICollection<OdontogramSurfaceFinding> SurfaceFindings { get; private set; } = new List<OdontogramSurfaceFinding>();
 
         private Odontogram()
         {
@@ -95,13 +96,7 @@ namespace BigSmile.Domain.Entities
 
             var normalizedToothCode = OdontogramToothState.NormalizeToothCode(toothCode);
             var normalizedSurfaceCode = OdontogramSurfaceState.NormalizeSurfaceCode(surfaceCode);
-            var surfaceState = Surfaces.SingleOrDefault(surface =>
-                surface.ToothCode == normalizedToothCode &&
-                surface.SurfaceCode == normalizedSurfaceCode);
-            if (surfaceState is null)
-            {
-                throw new InvalidOperationException("The requested tooth surface does not exist in the current odontogram.");
-            }
+            var surfaceState = GetRequiredSurfaceState(normalizedToothCode, normalizedSurfaceCode);
 
             var changed = surfaceState.UpdateStatus(status, updatedByUserId);
             if (!changed)
@@ -112,6 +107,91 @@ namespace BigSmile.Domain.Entities
             LastUpdatedAtUtc = DateTime.UtcNow;
             LastUpdatedByUserId = updatedByUserId;
             return true;
+        }
+
+        public OdontogramSurfaceFinding AddSurfaceFinding(
+            string toothCode,
+            string surfaceCode,
+            OdontogramSurfaceFindingType findingType,
+            Guid createdByUserId)
+        {
+            EnsureActor(createdByUserId);
+
+            var normalizedToothCode = OdontogramToothState.NormalizeToothCode(toothCode);
+            var normalizedSurfaceCode = OdontogramSurfaceState.NormalizeSurfaceCode(surfaceCode);
+            GetRequiredSurfaceState(normalizedToothCode, normalizedSurfaceCode);
+
+            if (SurfaceFindings.Any(finding =>
+                    finding.ToothCode == normalizedToothCode &&
+                    finding.SurfaceCode == normalizedSurfaceCode &&
+                    finding.FindingType == findingType))
+            {
+                throw new InvalidOperationException("The requested finding already exists on the current tooth surface.");
+            }
+
+            var finding = new OdontogramSurfaceFinding(
+                Id,
+                normalizedToothCode,
+                normalizedSurfaceCode,
+                findingType,
+                createdByUserId,
+                DateTime.UtcNow);
+
+            SurfaceFindings.Add(finding);
+            Touch(createdByUserId);
+
+            return finding;
+        }
+
+        public void RemoveSurfaceFinding(
+            string toothCode,
+            string surfaceCode,
+            Guid findingId,
+            Guid removedByUserId)
+        {
+            EnsureActor(removedByUserId);
+
+            if (findingId == Guid.Empty)
+            {
+                throw new ArgumentException("Odontogram surface finding reference is required.", nameof(findingId));
+            }
+
+            var normalizedToothCode = OdontogramToothState.NormalizeToothCode(toothCode);
+            var normalizedSurfaceCode = OdontogramSurfaceState.NormalizeSurfaceCode(surfaceCode);
+            GetRequiredSurfaceState(normalizedToothCode, normalizedSurfaceCode);
+
+            var finding = SurfaceFindings.SingleOrDefault(entry =>
+                entry.Id == findingId &&
+                entry.ToothCode == normalizedToothCode &&
+                entry.SurfaceCode == normalizedSurfaceCode);
+
+            if (finding is null)
+            {
+                throw new InvalidOperationException("The requested finding does not exist on the current tooth surface.");
+            }
+
+            SurfaceFindings.Remove(finding);
+            Touch(removedByUserId);
+        }
+
+        private OdontogramSurfaceState GetRequiredSurfaceState(string toothCode, string surfaceCode)
+        {
+            var surfaceState = Surfaces.SingleOrDefault(surface =>
+                surface.ToothCode == toothCode &&
+                surface.SurfaceCode == surfaceCode);
+
+            if (surfaceState is null)
+            {
+                throw new InvalidOperationException("The requested tooth surface does not exist in the current odontogram.");
+            }
+
+            return surfaceState;
+        }
+
+        private void Touch(Guid updatedByUserId)
+        {
+            LastUpdatedAtUtc = DateTime.UtcNow;
+            LastUpdatedByUserId = updatedByUserId;
         }
 
         private static void EnsureActor(Guid actorUserId)

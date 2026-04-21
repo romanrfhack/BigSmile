@@ -6,6 +6,20 @@ namespace BigSmile.Application.Features.Odontograms.Dtos
     {
         public static OdontogramDetailDto ToDetailDto(this Odontogram odontogram)
         {
+            var findingsBySurface = odontogram.SurfaceFindings
+                .GroupBy(finding => (finding.ToothCode, finding.SurfaceCode))
+                .ToDictionary(
+                    grouping => grouping.Key,
+                    grouping => (IReadOnlyList<OdontogramSurfaceFindingDto>)grouping
+                        .OrderByDescending(finding => finding.CreatedAtUtc)
+                        .ThenByDescending(finding => finding.Id)
+                        .Select(finding => new OdontogramSurfaceFindingDto(
+                            finding.Id,
+                            finding.FindingType.ToString(),
+                            finding.CreatedAtUtc,
+                            finding.CreatedByUserId))
+                        .ToList());
+
             var surfacesByTooth = odontogram.Surfaces
                 .GroupBy(surface => surface.ToothCode, StringComparer.Ordinal)
                 .ToDictionary(
@@ -16,7 +30,10 @@ namespace BigSmile.Application.Features.Odontograms.Dtos
                             surface.SurfaceCode,
                             surface.Status.ToString(),
                             surface.UpdatedAtUtc,
-                            surface.UpdatedByUserId))
+                            surface.UpdatedByUserId,
+                            findingsBySurface.TryGetValue((surface.ToothCode, surface.SurfaceCode), out var findings)
+                                ? findings
+                                : []))
                         .ToList(),
                     StringComparer.Ordinal);
 

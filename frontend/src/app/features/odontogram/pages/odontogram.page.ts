@@ -7,7 +7,12 @@ import { OdontogramEmptyStateComponent } from '../components/odontogram-empty-st
 import { OdontogramGridComponent } from '../components/odontogram-grid.component';
 import { ToothStateEditorComponent } from '../components/tooth-state-editor.component';
 import { OdontogramsFacade } from '../facades/odontograms.facade';
-import { OdontogramSurfaceStatus, OdontogramToothState, OdontogramToothStatus } from '../models/odontogram.models';
+import {
+  OdontogramSurfaceFindingType,
+  OdontogramSurfaceStatus,
+  OdontogramToothState,
+  OdontogramToothStatus
+} from '../models/odontogram.models';
 
 @Component({
   selector: 'app-odontogram-page',
@@ -23,10 +28,10 @@ import { OdontogramSurfaceStatus, OdontogramToothState, OdontogramToothStatus } 
     <section class="odontogram-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 4.2 / Odontogram Surface Foundation</p>
+          <p class="eyebrow">Release 4.3 / Basic Dental Findings Foundation</p>
           <h2>Odontogram</h2>
           <p class="subtitle">
-            Patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering and a minimal O/M/D/B/L surface set.
+            Patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering, a minimal O/M/D/B/L surface set, and basic surface findings.
           </p>
         </div>
 
@@ -83,7 +88,7 @@ import { OdontogramSurfaceStatus, OdontogramToothState, OdontogramToothStatus } 
             <div>
               <p class="eyebrow">Tooth and surface states</p>
               <h3>32 permanent adult teeth</h3>
-              <p class="section-copy">Surface detail is limited to a minimal O/M/D/B/L set with current state only. No complex findings, treatment linkage, documents, or surface history in Release 4.2.</p>
+              <p class="section-copy">Surface detail uses the minimal O/M/D/B/L set. Basic findings stay separate from tooth and surface status. No findings history, treatment linkage, documents, or advanced charting in Release 4.3.</p>
             </div>
           </div>
 
@@ -99,9 +104,13 @@ import { OdontogramSurfaceStatus, OdontogramToothState, OdontogramToothStatus } 
           [canWrite]="canWrite"
           [savingTooth]="savingTooth"
           [savingSurface]="savingSurface"
+          [savingFinding]="savingFinding"
+          [removingFindingId]="removingFindingId"
           [error]="actionError"
           (updateRequested)="updateToothStatus($event)"
-          (surfaceUpdateRequested)="updateSurfaceStatus($event)">
+          (surfaceUpdateRequested)="updateSurfaceStatus($event)"
+          (findingAddRequested)="addSurfaceFinding($event)"
+          (findingRemoveRequested)="removeSurfaceFinding($event)">
         </app-tooth-state-editor>
       </article>
     </section>
@@ -223,6 +232,8 @@ export class OdontogramPageComponent implements OnInit {
   savingCreate = false;
   savingTooth = false;
   savingSurface = false;
+  savingFinding = false;
+  removingFindingId: string | null = null;
   actionError: string | null = null;
   selectedToothCode: string | null = null;
 
@@ -329,6 +340,51 @@ export class OdontogramPageComponent implements OnInit {
         error: () => {
           this.savingSurface = false;
           this.actionError = 'The surface state could not be updated.';
+        }
+      });
+  }
+
+  addSurfaceFinding(event: { surfaceCode: string; findingType: OdontogramSurfaceFindingType }): void {
+    if (!this.patientId || !this.selectedToothCode) {
+      return;
+    }
+
+    this.savingFinding = true;
+    this.removingFindingId = null;
+    this.actionError = null;
+
+    this.odontogramsFacade.addSurfaceFinding(this.patientId, this.selectedToothCode, event.surfaceCode, {
+      findingType: event.findingType
+    }).subscribe({
+      next: () => {
+        this.savingFinding = false;
+      },
+      error: () => {
+        this.savingFinding = false;
+        this.actionError = 'The surface finding could not be added.';
+      }
+    });
+  }
+
+  removeSurfaceFinding(event: { surfaceCode: string; findingId: string }): void {
+    if (!this.patientId || !this.selectedToothCode) {
+      return;
+    }
+
+    this.savingFinding = true;
+    this.removingFindingId = event.findingId;
+    this.actionError = null;
+
+    this.odontogramsFacade.removeSurfaceFinding(this.patientId, this.selectedToothCode, event.surfaceCode, event.findingId)
+      .subscribe({
+        next: () => {
+          this.savingFinding = false;
+          this.removingFindingId = null;
+        },
+        error: () => {
+          this.savingFinding = false;
+          this.removingFindingId = null;
+          this.actionError = 'The surface finding could not be removed.';
         }
       });
   }

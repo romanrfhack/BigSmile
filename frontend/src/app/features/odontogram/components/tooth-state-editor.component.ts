@@ -3,8 +3,10 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { FormsModule } from '@angular/forms';
 import {
   ODONTOGRAM_SURFACE_CODES,
+  ODONTOGRAM_SURFACE_FINDING_TYPES,
   ODONTOGRAM_SURFACE_STATUSES,
   OdontogramSurfaceCode,
+  OdontogramSurfaceFindingType,
   OdontogramSurfaceState,
   OdontogramSurfaceStatus,
   ODONTOGRAM_TOOTH_STATUSES,
@@ -21,7 +23,7 @@ import {
       <ng-container *ngIf="tooth; else noSelection">
         <p class="eyebrow">Selected tooth</p>
         <h3>Tooth {{ tooth.toothCode }}</h3>
-        <p class="copy">Minimal tooth and surface state only. No complex findings, treatment linkage, or surface history in Release 4.2.</p>
+        <p class="copy">Minimal tooth state, surface state, and basic surface findings only. No findings history, treatment linkage, or advanced charting in Release 4.3.</p>
 
         <div class="meta-grid">
           <div>
@@ -121,6 +123,54 @@ import {
                 {{ savingSurface ? 'Saving...' : 'Update surface state' }}
               </button>
             </div>
+
+            <section class="finding-section">
+              <div>
+                <p class="eyebrow">Basic findings</p>
+                <h4>Current findings for surface {{ surface.surfaceCode }}</h4>
+                <p class="copy">Findings coexist with the operational surface status. They do not auto-recalculate the surface or tooth state in this slice.</p>
+              </div>
+
+              <div *ngIf="surface.findings.length > 0; else noFindings" class="finding-list">
+                <article *ngFor="let finding of surface.findings" class="finding-card">
+                  <div class="finding-meta">
+                    <strong>{{ finding.findingType }}</strong>
+                    <span>{{ finding.createdAtUtc | date: 'medium' }}</span>
+                    <span>{{ finding.createdByUserId }}</span>
+                  </div>
+
+                  <button
+                    *ngIf="canWrite"
+                    type="button"
+                    class="secondary-action danger-action"
+                    [disabled]="savingFinding"
+                    (click)="emitFindingRemove(finding.findingId)">
+                    {{ removingFindingId === finding.findingId ? 'Removing...' : 'Remove finding' }}
+                  </button>
+                </article>
+              </div>
+
+              <ng-template #noFindings>
+                <p class="muted">No basic findings registered for this surface yet.</p>
+              </ng-template>
+
+              <div *ngIf="canWrite" class="editor-actions">
+                <label class="field">
+                  <span>New finding type</span>
+                  <select [(ngModel)]="selectedFindingType">
+                    <option *ngFor="let findingType of findingTypes" [ngValue]="findingType">{{ findingType }}</option>
+                  </select>
+                </label>
+
+                <button
+                  type="button"
+                  class="primary-action"
+                  [disabled]="savingFinding || !selectedSurfaceCode || surfaceHasFinding(selectedFindingType)"
+                  (click)="emitFindingAdd()">
+                  {{ savingFinding ? 'Saving...' : 'Add finding' }}
+                </button>
+              </div>
+            </section>
           </ng-container>
         </section>
 
@@ -291,6 +341,60 @@ import {
       color: #8c2525;
       font-weight: 600;
     }
+
+    .finding-section {
+      display: grid;
+      gap: 0.9rem;
+      border-top: 1px solid #e1e8ef;
+      padding-top: 1rem;
+    }
+
+    .finding-list {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .finding-card {
+      border-radius: 16px;
+      border: 1px solid #d6dfeb;
+      background: #ffffff;
+      padding: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .finding-meta {
+      display: grid;
+      gap: 0.2rem;
+      color: #5b6e84;
+    }
+
+    .finding-meta strong {
+      color: #16324f;
+    }
+
+    .secondary-action {
+      border-radius: 999px;
+      border: 1px solid #d6dfeb;
+      background: #ffffff;
+      color: #16324f;
+      padding: 0.75rem 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .secondary-action:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .danger-action {
+      border-color: #efc2c2;
+      color: #8c2525;
+    }
   `]
 })
 export class ToothStateEditorComponent implements OnChanges {
@@ -298,23 +402,30 @@ export class ToothStateEditorComponent implements OnChanges {
   @Input() canWrite = false;
   @Input() savingTooth = false;
   @Input() savingSurface = false;
+  @Input() savingFinding = false;
+  @Input() removingFindingId: string | null = null;
   @Input() error: string | null = null;
 
   @Output() readonly updateRequested = new EventEmitter<OdontogramToothStatus>();
   @Output() readonly surfaceUpdateRequested = new EventEmitter<{ surfaceCode: string; status: OdontogramSurfaceStatus }>();
+  @Output() readonly findingAddRequested = new EventEmitter<{ surfaceCode: string; findingType: OdontogramSurfaceFindingType }>();
+  @Output() readonly findingRemoveRequested = new EventEmitter<{ surfaceCode: string; findingId: string }>();
 
   readonly statuses = ODONTOGRAM_TOOTH_STATUSES;
   readonly surfaceCodes = ODONTOGRAM_SURFACE_CODES;
   readonly surfaceStatuses = ODONTOGRAM_SURFACE_STATUSES;
+  readonly findingTypes = ODONTOGRAM_SURFACE_FINDING_TYPES;
   selectedStatus: OdontogramToothStatus = 'Unknown';
   selectedSurfaceCode: OdontogramSurfaceCode | null = null;
   selectedSurfaceStatus: OdontogramSurfaceStatus = 'Unknown';
+  selectedFindingType: OdontogramSurfaceFindingType = 'Caries';
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['tooth'] && this.tooth) {
       this.selectedStatus = this.tooth.status;
       this.selectedSurfaceCode = this.tooth.surfaces[0]?.surfaceCode ?? null;
       this.selectedSurfaceStatus = this.selectedSurface?.status ?? 'Unknown';
+      this.selectedFindingType = this.selectedSurface?.findings[0]?.findingType ?? 'Caries';
     }
   }
 
@@ -343,6 +454,32 @@ export class ToothStateEditorComponent implements OnChanges {
     this.surfaceUpdateRequested.emit({
       surfaceCode: this.selectedSurfaceCode,
       status: this.selectedSurfaceStatus
+    });
+  }
+
+  surfaceHasFinding(findingType: OdontogramSurfaceFindingType): boolean {
+    return this.selectedSurface?.findings.some((finding) => finding.findingType === findingType) ?? false;
+  }
+
+  emitFindingAdd(): void {
+    if (!this.selectedSurfaceCode) {
+      return;
+    }
+
+    this.findingAddRequested.emit({
+      surfaceCode: this.selectedSurfaceCode,
+      findingType: this.selectedFindingType
+    });
+  }
+
+  emitFindingRemove(findingId: string): void {
+    if (!this.selectedSurfaceCode) {
+      return;
+    }
+
+    this.findingRemoveRequested.emit({
+      surfaceCode: this.selectedSurfaceCode,
+      findingId
     });
   }
 }

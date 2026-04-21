@@ -94,6 +94,73 @@ namespace BigSmile.UnitTests.Odontogram
         }
 
         [Fact]
+        public void AddSurfaceFinding_RejectsInvalidToothCode()
+        {
+            var odontogram = CreateOdontogram();
+
+            var exception = Assert.Throws<ArgumentException>(() =>
+                odontogram.AddSurfaceFinding("55", "O", OdontogramSurfaceFindingType.Caries, Guid.NewGuid()));
+
+            Assert.Contains("FDI permanent adult numbering", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void AddSurfaceFinding_RejectsInvalidSurfaceCode()
+        {
+            var odontogram = CreateOdontogram();
+
+            var exception = Assert.Throws<ArgumentException>(() =>
+                odontogram.AddSurfaceFinding("11", "X", OdontogramSurfaceFindingType.Caries, Guid.NewGuid()));
+
+            Assert.Contains("Surface code must be one of", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void AddSurfaceFinding_CreatesFindingWithMetadata()
+        {
+            var odontogram = CreateOdontogram();
+            var actorUserId = Guid.NewGuid();
+            var originalUpdatedAtUtc = odontogram.LastUpdatedAtUtc;
+
+            var finding = odontogram.AddSurfaceFinding("11", "O", OdontogramSurfaceFindingType.Caries, actorUserId);
+
+            Assert.Equal("11", finding.ToothCode);
+            Assert.Equal("O", finding.SurfaceCode);
+            Assert.Equal(OdontogramSurfaceFindingType.Caries, finding.FindingType);
+            Assert.Equal(actorUserId, finding.CreatedByUserId);
+            Assert.Contains(odontogram.SurfaceFindings, entry => entry.Id == finding.Id);
+            Assert.Equal(actorUserId, odontogram.LastUpdatedByUserId);
+            Assert.True(odontogram.LastUpdatedAtUtc >= originalUpdatedAtUtc);
+        }
+
+        [Fact]
+        public void AddSurfaceFinding_RejectsExactDuplicateOnSameSurface()
+        {
+            var odontogram = CreateOdontogram();
+            odontogram.AddSurfaceFinding("11", "O", OdontogramSurfaceFindingType.Caries, Guid.NewGuid());
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                odontogram.AddSurfaceFinding("11", "O", OdontogramSurfaceFindingType.Caries, Guid.NewGuid()));
+
+            Assert.Contains("already exists", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void RemoveSurfaceFinding_RemovesOnlyTheRequestedFinding()
+        {
+            var odontogram = CreateOdontogram();
+            var keptFinding = odontogram.AddSurfaceFinding("11", "O", OdontogramSurfaceFindingType.Caries, Guid.NewGuid());
+            var removedFinding = odontogram.AddSurfaceFinding("11", "O", OdontogramSurfaceFindingType.Sealant, Guid.NewGuid());
+            var actorUserId = Guid.NewGuid();
+
+            odontogram.RemoveSurfaceFinding("11", "O", removedFinding.Id, actorUserId);
+
+            Assert.DoesNotContain(odontogram.SurfaceFindings, entry => entry.Id == removedFinding.Id);
+            Assert.Contains(odontogram.SurfaceFindings, entry => entry.Id == keptFinding.Id);
+            Assert.Equal(actorUserId, odontogram.LastUpdatedByUserId);
+        }
+
+        [Fact]
         public void UpdateToothStatus_DoesNotTouchMetadataForNoOpUpdate()
         {
             var odontogram = CreateOdontogram();
@@ -152,6 +219,20 @@ namespace BigSmile.UnitTests.Odontogram
             var originalPatientId = odontogram.PatientId;
 
             odontogram.UpdateSurfaceStatus("48", "L", OdontogramSurfaceStatus.Restored, Guid.NewGuid());
+
+            Assert.Equal(originalTenantId, odontogram.TenantId);
+            Assert.Equal(originalPatientId, odontogram.PatientId);
+        }
+
+        [Fact]
+        public void SurfaceFindingMutations_DoNotChangeTenantOrPatientOwnership()
+        {
+            var odontogram = CreateOdontogram();
+            var originalTenantId = odontogram.TenantId;
+            var originalPatientId = odontogram.PatientId;
+            var finding = odontogram.AddSurfaceFinding("48", "L", OdontogramSurfaceFindingType.Restoration, Guid.NewGuid());
+
+            odontogram.RemoveSurfaceFinding("48", "L", finding.Id, Guid.NewGuid());
 
             Assert.Equal(originalTenantId, odontogram.TenantId);
             Assert.Equal(originalPatientId, odontogram.PatientId);

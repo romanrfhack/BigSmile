@@ -131,6 +131,74 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpPost("teeth/{toothCode}/surfaces/{surfaceCode}/findings")]
+        [Authorize(Policy = AuthorizationPolicies.OdontogramWrite)]
+        public async Task<ActionResult<OdontogramDetailDto>> AddSurfaceFinding(
+            Guid patientId,
+            string toothCode,
+            string surfaceCode,
+            [FromBody] AddSurfaceFindingRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var odontogram = await _odontogramCommandService.AddSurfaceFindingAsync(
+                    patientId,
+                    request.ToCommand(toothCode, surfaceCode),
+                    cancellationToken);
+
+                if (odontogram is null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(odontogram);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
+        [HttpDelete("teeth/{toothCode}/surfaces/{surfaceCode}/findings/{findingId:guid}")]
+        [Authorize(Policy = AuthorizationPolicies.OdontogramWrite)]
+        public async Task<ActionResult<OdontogramDetailDto>> RemoveSurfaceFinding(
+            Guid patientId,
+            string toothCode,
+            string surfaceCode,
+            Guid findingId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var odontogram = await _odontogramCommandService.RemoveSurfaceFindingAsync(
+                    patientId,
+                    toothCode,
+                    surfaceCode,
+                    findingId,
+                    cancellationToken);
+
+                if (odontogram is null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(odontogram);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         private ActionResult BuildValidationProblem(string message)
         {
             ModelState.AddModelError(nameof(PatientOdontogramsController), message);
@@ -172,6 +240,25 @@ namespace BigSmile.Api.Controllers
             public UpdateOdontogramSurfaceStatusCommand ToCommand(string toothCode, string surfaceCode)
             {
                 return new UpdateOdontogramSurfaceStatusCommand(toothCode, surfaceCode, Status);
+            }
+        }
+
+        public sealed class AddSurfaceFindingRequest : IValidatableObject
+        {
+            [Required]
+            public string FindingType { get; set; } = string.Empty;
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (string.IsNullOrWhiteSpace(FindingType))
+                {
+                    yield return new ValidationResult("Finding type is required.", new[] { nameof(FindingType) });
+                }
+            }
+
+            public AddOdontogramSurfaceFindingCommand ToCommand(string toothCode, string surfaceCode)
+            {
+                return new AddOdontogramSurfaceFindingCommand(toothCode, surfaceCode, FindingType);
             }
         }
     }

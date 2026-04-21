@@ -2,7 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Odontogram, UpdateSurfaceStatusRequest, UpdateToothStatusRequest } from '../models/odontogram.models';
+import {
+  AddSurfaceFindingRequest,
+  Odontogram,
+  UpdateSurfaceStatusRequest,
+  UpdateToothStatusRequest
+} from '../models/odontogram.models';
 
 @Injectable({
   providedIn: 'root'
@@ -32,6 +37,29 @@ export class OdontogramsApiService {
     return this.http.put<Odontogram>(
       `${this.baseUrl}/${patientId}/odontogram/teeth/${toothCode}/surfaces/${surfaceCode}`,
       payload
+    );
+  }
+
+  addSurfaceFinding(
+    patientId: string,
+    toothCode: string,
+    surfaceCode: string,
+    payload: AddSurfaceFindingRequest
+  ): Observable<Odontogram> {
+    return this.http.post<Odontogram>(
+      `${this.baseUrl}/${patientId}/odontogram/teeth/${toothCode}/surfaces/${surfaceCode}/findings`,
+      payload
+    );
+  }
+
+  removeSurfaceFinding(
+    patientId: string,
+    toothCode: string,
+    surfaceCode: string,
+    findingId: string
+  ): Observable<Odontogram> {
+    return this.http.delete<Odontogram>(
+      `${this.baseUrl}/${patientId}/odontogram/teeth/${toothCode}/surfaces/${surfaceCode}/findings/${findingId}`
     );
   }
 }

@@ -14,6 +14,11 @@ namespace BigSmile.Application.Features.Odontograms.Commands
         string SurfaceCode,
         string Status);
 
+    public sealed record AddOdontogramSurfaceFindingCommand(
+        string ToothCode,
+        string SurfaceCode,
+        string FindingType);
+
     public interface IOdontogramCommandService
     {
         Task<OdontogramDetailDto> CreateAsync(
@@ -28,6 +33,18 @@ namespace BigSmile.Application.Features.Odontograms.Commands
         Task<OdontogramDetailDto?> UpdateSurfaceStatusAsync(
             Guid patientId,
             UpdateOdontogramSurfaceStatusCommand command,
+            CancellationToken cancellationToken = default);
+
+        Task<OdontogramDetailDto?> AddSurfaceFindingAsync(
+            Guid patientId,
+            AddOdontogramSurfaceFindingCommand command,
+            CancellationToken cancellationToken = default);
+
+        Task<OdontogramDetailDto?> RemoveSurfaceFindingAsync(
+            Guid patientId,
+            string toothCode,
+            string surfaceCode,
+            Guid findingId,
             CancellationToken cancellationToken = default);
     }
 
@@ -123,6 +140,55 @@ namespace BigSmile.Application.Features.Odontograms.Commands
             return odontogram.ToDetailDto();
         }
 
+        public async Task<OdontogramDetailDto?> AddSurfaceFindingAsync(
+            Guid patientId,
+            AddOdontogramSurfaceFindingCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            var tenantId = GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
+
+            EnsurePatientBelongsToTenant(patient, tenantId);
+
+            var odontogram = await _odontogramRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            if (odontogram is null)
+            {
+                return null;
+            }
+
+            var findingType = ParseFindingType(command.FindingType);
+            odontogram.AddSurfaceFinding(command.ToothCode, command.SurfaceCode, findingType, actorUserId);
+            await _odontogramRepository.UpdateAsync(odontogram, cancellationToken);
+
+            return odontogram.ToDetailDto();
+        }
+
+        public async Task<OdontogramDetailDto?> RemoveSurfaceFindingAsync(
+            Guid patientId,
+            string toothCode,
+            string surfaceCode,
+            Guid findingId,
+            CancellationToken cancellationToken = default)
+        {
+            var tenantId = GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
+
+            EnsurePatientBelongsToTenant(patient, tenantId);
+
+            var odontogram = await _odontogramRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            if (odontogram is null)
+            {
+                return null;
+            }
+
+            odontogram.RemoveSurfaceFinding(toothCode, surfaceCode, findingId, actorUserId);
+            await _odontogramRepository.UpdateAsync(odontogram, cancellationToken);
+
+            return odontogram.ToDetailDto();
+        }
+
         private async Task<Patient> GetRequiredPatientAsync(Guid patientId, CancellationToken cancellationToken)
         {
             var patient = await _patientRepository.GetByIdAsync(patientId, cancellationToken);
@@ -198,6 +264,24 @@ namespace BigSmile.Application.Features.Odontograms.Commands
             }
 
             return parsedStatus;
+        }
+
+        private static OdontogramSurfaceFindingType ParseFindingType(string findingType)
+        {
+            if (string.IsNullOrWhiteSpace(findingType))
+            {
+                throw new ArgumentException("Finding type is required.", nameof(findingType));
+            }
+
+            if (!Enum.TryParse<OdontogramSurfaceFindingType>(findingType.Trim(), ignoreCase: true, out var parsedFindingType) ||
+                !Enum.IsDefined(parsedFindingType))
+            {
+                throw new ArgumentException(
+                    "Finding type must be one of: Caries, Restoration, MissingStructure, or Sealant.",
+                    nameof(findingType));
+            }
+
+            return parsedFindingType;
         }
     }
 }

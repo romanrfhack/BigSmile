@@ -9,6 +9,8 @@ namespace BigSmile.UnitTests.Odontogram
 {
     public class PatientOdontogramsControllerTests
     {
+        private static readonly IReadOnlyList<OdontogramSurfaceFindingDto> NoFindings = [];
+
         [Fact]
         public async Task GetByPatientId_ReturnsNotFound_WhenOdontogramDoesNotExist()
         {
@@ -42,7 +44,7 @@ namespace BigSmile.UnitTests.Odontogram
                         Guid.NewGuid(),
                         new[]
                         {
-                            new OdontogramSurfaceStateDto("O", "Unknown", DateTime.UtcNow, Guid.NewGuid())
+                            new OdontogramSurfaceStateDto("O", "Unknown", DateTime.UtcNow, Guid.NewGuid(), NoFindings)
                         })
                 },
                 DateTime.UtcNow,
@@ -81,7 +83,7 @@ namespace BigSmile.UnitTests.Odontogram
                         Guid.NewGuid(),
                         new[]
                         {
-                            new OdontogramSurfaceStateDto("O", "Healthy", DateTime.UtcNow, Guid.NewGuid())
+                            new OdontogramSurfaceStateDto("O", "Healthy", DateTime.UtcNow, Guid.NewGuid(), NoFindings)
                         })
                 },
                 DateTime.UtcNow,
@@ -128,7 +130,7 @@ namespace BigSmile.UnitTests.Odontogram
                         Guid.NewGuid(),
                         new[]
                         {
-                            new OdontogramSurfaceStateDto("O", "Caries", DateTime.UtcNow, Guid.NewGuid())
+                            new OdontogramSurfaceStateDto("O", "Caries", DateTime.UtcNow, Guid.NewGuid(), NoFindings)
                         })
                 },
                 DateTime.UtcNow,
@@ -158,6 +160,94 @@ namespace BigSmile.UnitTests.Odontogram
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             Assert.Same(response, ok.Value);
+        }
+
+        [Fact]
+        public async Task AddSurfaceFinding_ReturnsOk_WhenCommandServiceSucceeds()
+        {
+            var patientId = Guid.NewGuid();
+            var response = BuildOdontogramResponse(
+                patientId,
+                new OdontogramSurfaceFindingDto(Guid.NewGuid(), "Caries", DateTime.UtcNow, Guid.NewGuid()));
+
+            var commandService = new Mock<IOdontogramCommandService>();
+            commandService
+                .Setup(service => service.AddSurfaceFindingAsync(
+                    patientId,
+                    It.IsAny<AddOdontogramSurfaceFindingCommand>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var queryService = new Mock<IOdontogramQueryService>();
+            var controller = new PatientOdontogramsController(commandService.Object, queryService.Object);
+
+            var result = await controller.AddSurfaceFinding(
+                patientId,
+                "11",
+                "O",
+                new PatientOdontogramsController.AddSurfaceFindingRequest
+                {
+                    FindingType = "Caries"
+                });
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Same(response, ok.Value);
+        }
+
+        [Fact]
+        public async Task RemoveSurfaceFinding_ReturnsOk_WhenCommandServiceSucceeds()
+        {
+            var patientId = Guid.NewGuid();
+            var response = BuildOdontogramResponse(patientId);
+            var findingId = Guid.NewGuid();
+
+            var commandService = new Mock<IOdontogramCommandService>();
+            commandService
+                .Setup(service => service.RemoveSurfaceFindingAsync(
+                    patientId,
+                    "11",
+                    "O",
+                    findingId,
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var queryService = new Mock<IOdontogramQueryService>();
+            var controller = new PatientOdontogramsController(commandService.Object, queryService.Object);
+
+            var result = await controller.RemoveSurfaceFinding(patientId, "11", "O", findingId);
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Same(response, ok.Value);
+        }
+
+        private static OdontogramDetailDto BuildOdontogramResponse(
+            Guid patientId,
+            params OdontogramSurfaceFindingDto[] findings)
+        {
+            return new OdontogramDetailDto(
+                Guid.NewGuid(),
+                patientId,
+                new[]
+                {
+                    new OdontogramToothStateDto(
+                        "11",
+                        "Unknown",
+                        DateTime.UtcNow,
+                        Guid.NewGuid(),
+                        new[]
+                        {
+                            new OdontogramSurfaceStateDto(
+                                "O",
+                                "Unknown",
+                                DateTime.UtcNow,
+                                Guid.NewGuid(),
+                                findings)
+                        })
+                },
+                DateTime.UtcNow,
+                Guid.NewGuid(),
+                DateTime.UtcNow,
+                Guid.NewGuid());
         }
     }
 }

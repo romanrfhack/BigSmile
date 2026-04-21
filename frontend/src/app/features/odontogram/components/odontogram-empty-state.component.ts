@@ -7,10 +7,10 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   imports: [CommonModule],
   template: `
     <section class="empty-card">
-      <p class="eyebrow">Release 4.2 / Odontogram Surface Foundation</p>
+      <p class="eyebrow">Release 4.3 / Basic Dental Findings Foundation</p>
       <h3>No odontogram yet</h3>
       <p class="copy">
-        The odontogram is not auto-created. Start it explicitly to initialize the permanent adult FDI chart for this patient.
+        The odontogram is not auto-created. Start it explicitly to initialize the permanent adult FDI chart for this patient before registering any surface findings.
       </p>
       <button
         *ngIf="canWrite"
