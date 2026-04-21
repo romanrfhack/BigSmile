@@ -59,21 +59,20 @@ Canonical project status:
 * **Tenant-Aware Authorization Foundation:** completed
 * **Release 1 — Patients:** completed
 * **Release 2 — Scheduling:** completed
-* **Release 3 — Clinical Records:** in progress
-* **Accepted slices:** **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, and **Release 3.4 — Clinical Snapshot Change History**
+* **Release 3 — Clinical Records:** preserved through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, and **Release 3.4 — Clinical Snapshot Change History**
+* **Release 4 — Odontogram:** in progress
+* **Accepted slices:** **Release 4.1 — Odontogram Foundation**
 
 ### Current expected priority
 
 Continue the current active phase:
 
-* **Release 3 — Clinical Records**
-* keeping Release 3 explicitly open, not closed, while treating Release 3.1, Release 3.2, Release 3.3, and Release 3.4 as the accepted slices so far
-* preserving the accepted Release 3.1 scope: tenant-owned and patient-owned clinical records, explicit creation, `GET` returning `404` when missing, no autocreation, base snapshot, current allergies, and append-only notes returned newest-first
-* preserving the accepted Release 3.2 scope: basic non-coded diagnoses on existing clinical records, explicit add/resolve operations, diagnosis inclusion in the clinical record read model, and `Active` / `Resolved` status with active-first and newest-first ordering in reads and UI
-* preserving the accepted Release 3.3 scope: a clinical timeline read model inside the existing clinical record built only from note-created / diagnosis-created / diagnosis-resolved events, returned newest-first, with no new endpoint and no new timeline table
-* preserving the accepted Release 3.4 scope: a bounded snapshot history inside the existing clinical record read model, with an initial entry on explicit record creation, effective-change entries for medical background / current medications / current allergies only, newest-first ordering, and explicit separation from the accepted Release 3.3 timeline
-* keeping any full or advanced clinical timeline, any cross-module timeline, restore, full clinical record versioning, rich snapshot diff, odontogram, treatments, and documents outside the accepted Release 3 slices
+* **Release 4 — Odontogram**
+* preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices as the clinical base that Release 4.1 builds on
+* preserving the accepted Release 4.1 scope: tenant-owned and patient-owned odontograms, explicit creation, `GET` returning `404` when missing, no autocreation, permanent adult FDI tooth numbering, tooth-level current status only, and minimal audit metadata
+* keeping surfaces, rich findings, treatment linkage, dental history/versioning, bulk editing, and advanced charting outside the accepted Release 4.1 slice
 * preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
+* preserving the current odontogram access restriction where `odontogram.read` / `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive odontogram permissions in this phase
 * preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
 * keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline

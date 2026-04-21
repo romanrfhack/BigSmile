@@ -258,8 +258,8 @@ Completed foundation milestones:
 
 Current active phase:
 
-* **Release 3 — Clinical Records:** in progress
-* **Accepted slices:** **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, and **Release 3.4 — Clinical Snapshot Change History**
+* **Release 4 — Odontogram:** in progress
+* **Accepted slices:** **Release 4.1 — Odontogram Foundation**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -275,9 +275,13 @@ Release 3.3 is also accepted and adds only a bounded clinical timeline read mode
 
 Release 3.4 is also accepted and adds only a bounded snapshot change history inside the existing clinical record read contract: an initial history entry when the record is created explicitly, additional entries only for effective changes to medical background, current medications, and current allergies, and a separate `snapshotHistory` section that does not merge with the accepted Release 3.3 timeline. This bounded history does not introduce restore, full record versioning, or rich diffs.
 
-Release 3 remains open. The full or advanced clinical timeline, any cross-module timeline, restore, full clinical record versioning, rich snapshot diffs, odontogram, treatments, documents, and other later clinical slices remain outside the currently accepted Release 3 scope.
+Release 3 remains preserved through the accepted slices above. The full or advanced clinical timeline, any cross-module timeline, restore, and full clinical record versioning remain outside the accepted Release 3 scope.
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
+
+Release 4 is now open with Release 4.1 accepted as the minimal odontogram foundation: explicit `POST /api/patients/{patientId}/odontogram`, `GET` returning `404` when missing, no autocreation, 32 permanent adult teeth using FDI/ISO two-digit numbering (`11-18`, `21-28`, `31-38`, `41-48`), tooth-level statuses only (`Unknown`, `Healthy`, `Missing`, `Restored`, `Caries`), and explicit `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}` updates returning the updated odontogram.
+
+Odontogram access in the accepted Release 4.1 slice is intentionally restricted: `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive odontogram permissions. Surfaces, complex findings, treatment linkage, documents, dental timeline/history, bulk editing, and advanced charting remain outside Release 4.1.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -333,9 +337,14 @@ The repository should be treated as having an established technical and architec
 
 ### Release 4 — Odontogram
 
-* Interactive odontogram
-* Findings registration
-* Visual dental state tracking
+* Release 4 is in progress
+* Accepted slice: Release 4.1 — Odontogram Foundation
+* Explicit odontogram creation with `GET` returning `404` when missing and no autocreation
+* Permanent adult FDI tooth numbering only (`11-18`, `21-28`, `31-38`, `41-48`)
+* Tooth-level current state only with `Unknown`, `Healthy`, `Missing`, `Restored`, and `Caries`
+* Minimal patient-context UI for empty state, explicit creation, grid/list visualization, and single-tooth state updates
+* `odontogram.read` / `odontogram.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
+* Surfaces, complex findings, treatment linkage, documents, dental history/versioning, and advanced charting deferred beyond Release 4.1
 
 ### Release 5 — Treatments
 

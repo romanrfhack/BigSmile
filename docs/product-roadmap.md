@@ -286,30 +286,54 @@ A user operating under the current clinical permissions can consult and update t
 ## Goal
 Introduce the dental visual layer of the product.
 
+## Current status
+- Release 4 is open and in progress
+- Release 4.1 — Odontogram Foundation is accepted
+
 ## Scope
-- interactive odontogram
-- tooth selection
-- surface selection
-- dental findings registration
-- tooth state tracking
-- surface state tracking
-- visual update of dental status
-- linkage with treatment planning foundation
+Release 4 is being delivered in bounded slices. The currently accepted slice is Release 4.1, and it covers:
+
+- explicit odontogram creation
+- exactly one odontogram per patient per tenant
+- explicit `GET` returning `404` when missing
+- no autocreation
+- permanent adult FDI/ISO two-digit tooth numbering only (`11-18`, `21-28`, `31-38`, `41-48`)
+- tooth-level current state only
+- minimal status catalog `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`
+- explicit single-tooth status updates
+- minimal audit metadata on the odontogram and each tooth state
+- minimal patient-context UI for empty state, creation, visualization, and single-tooth editing
 
 ## Expected outcome
-Clinicians can capture and review dental findings visually in the patient context.
+A user operating under the current odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context without opening later dental modules.
 
 ## Core users
 - Dentist
 - Assistant
+- Tenant Admin
+
+## Current access note
+- `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`
+- `TenantUser` does not receive odontogram permissions in the currently accepted Release 4.1 slice
 
 ## Key UX goals
-- intuitive visual interaction
-- low-click registration
-- immediate visual feedback
-- clinically understandable state representation
+- clear patient-context navigation
+- low-friction explicit creation
+- fast single-tooth updates
+- immediately understandable tooth status representation
 
 ## Out of scope
+- surfaces
+- multiple simultaneous findings per tooth
+- complex dental findings registration
+- treatment linkage
+- diagnosis linkage
+- documents linkage
+- dental timeline/history
+- odontogram restore/versioning
+- bulk editing
+- child or mixed dentition
+- advanced charting/canvas interaction
 - advanced orthodontic charting
 - advanced perio charting
 - imaging overlays

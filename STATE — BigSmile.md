@@ -44,7 +44,7 @@
 
 [Hecho] `doctor-based views` quedó explícitamente diferido por decisión documentada a un slice futuro acotado; no forma parte del cierre efectivo de Release 2.
 
-[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a Release 3.4 — Clinical Snapshot Change History; por tanto, Release 3 — Clinical Records no debe asumirse como cerrada y Odontogram, Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
+[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores al slice aceptado Release 4.1 — Odontogram Foundation; por tanto, Release 4 — Odontogram no debe asumirse como cerrada y Treatments and Quotes, Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
 
 ## 4. Fase actual
 
@@ -54,9 +54,13 @@
 
 [Hecho] README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md ya fueron reconciliados con este estado canónico y ubican al repositorio más allá del bootstrap / early foundation stage.
 
-[Hecho] Release 3 — Clinical Records ya fue abierta y está en progreso.
+[Hecho] Release 3 — Clinical Records ya fue abierta y quedó preservada mediante los slices aceptados Release 3.1, Release 3.2, Release 3.3 y Release 3.4, sin asumir slices clínicos posteriores no probados por código y documentación alineada.
 
 [Hecho] Los slices aceptados de Release 3 son Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History.
+
+[Hecho] Release 4 — Odontogram ya fue abierta y está en progreso.
+
+[Hecho] El slice aceptado actual de Release 4 es Release 4.1 — Odontogram Foundation.
 
 [Hecho] Release 3.1 cubre, de forma acotada:
 - `ClinicalRecord` tenant-owned y patient-owned
@@ -102,9 +106,23 @@
 
 [Hecho] En esta fase, `clinical.read` y `clinical.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos clínicos.
 
-[Hecho] Release 3 completa no está cerrada. La timeline clínica aceptada en Release 3.3 sigue siendo solo un read model acotado del módulo Clinical, y el `snapshotHistory` aceptado en Release 3.4 sigue siendo solo un historial acotado de cambios del snapshot base; la timeline clínica completa o avanzada, cualquier timeline cross-module, restore, versionado completo, diff rico, odontogram, treatments y documents siguen fuera de los slices aceptados actuales.
+[Hecho] Release 4.1 cubre, de forma acotada:
+- `Odontogram` tenant-owned y patient-owned
+- exactamente 1 odontogram por Patient por Tenant
+- creación explícita vía `POST /api/patients/{patientId}/odontogram`
+- `GET /api/patients/{patientId}/odontogram` devuelve `404` si no existe
+- no hay autocreación ni por GET ni por update
+- inicialización explícita de 32 dientes permanentes de adulto usando convención FDI/ISO de 2 dígitos (`11-18`, `21-28`, `31-38`, `41-48`)
+- estados mínimos por diente `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`
+- actualización explícita del estado actual de un diente vía `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}`
+- metadata mínima de auditoría por odontograma y por diente
+- soporte frontend mínimo desde el contexto del paciente para empty state, creación explícita, visualización y edición simple
 
-[Hecho + Inferencia operativa] El proyecto ya no está solo “listo para abrir” Clinical Records; ahora está dentro de Release 3 con cuatro slices aceptados sobre una base que ya incluye Patients y Scheduling cerrados.
+[Hecho] En esta fase, `odontogram.read` y `odontogram.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de odontograma.
+
+[Hecho] Release 4 completa no está cerrada. Surfaces, findings complejos, linkage con tratamientos/diagnósticos/documentos, timeline dental, historial/versionado del odontograma, bulk editing complejo, odontograma infantil y UI avanzada de charting dental siguen fuera del slice aceptado Release 4.1.
+
+[Hecho + Inferencia operativa] El proyecto ya no está solo dentro de Release 3; ahora preserva Release 3 mediante cuatro slices aceptados y abrió Release 4 con un primer slice aceptado sobre una base que ya incluye Patients y Scheduling cerrados.
 
 [Hecho combinado] Lo ya establecido a nivel fundacional incluye, como mínimo:
 - estructura de solución
@@ -189,7 +207,7 @@
 
 **Decisión de alcance** — [Hecho] `doctor-based views` se difiere explícitamente a un slice futuro porque no es un parche pequeño de UI: requiere un slice dedicado de provider/doctor assignment, cambios de modelo y read models específicos de calendario.
 
-**Fase abierta actual** — [Hecho] Release 3 — Clinical Records, con Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History aceptadas.
+**Fase abierta actual** — [Hecho] Release 4 — Odontogram, con Release 4.1 — Odontogram Foundation aceptada y con los slices Release 3.1, Release 3.2, Release 3.3 y Release 3.4 preservados como base clínica inmediata.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -225,7 +243,7 @@ Lista priorizada:
 
 1. Preservar Releases 1 y 2 ya cerrados sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Continuar Release 3 — Clinical Records en slices acotados, auditables y compatibles con la fundación tenant-aware ya cerrada.
+2. Continuar Release 4 — Odontogram en slices acotados, auditables y compatibles con la fundación tenant-aware ya cerrada, preservando el alcance aceptado de Release 4.1.
 
 3. Mantener diferidas las `doctor-based views` hasta abrir un slice dedicado de provider/doctor assignment; no reintroducirlas como parche incidental de UI.
 
@@ -255,6 +273,6 @@ Lista priorizada:
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como fase abierta en progreso con Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History aceptadas; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerrada Release 3 ni implementados o cerrados los sub-slices posteriores del módulo Clinical o los releases funcionales posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como base inmediata preservada mediante Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History aceptadas; tratar Release 4 — Odontogram como fase abierta en progreso con Release 4.1 — Odontogram Foundation aceptada; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerradas Release 4 ni las fases posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
 
-**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History, continuar Release 3 — Clinical Records en slices acotados y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
+**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History y Release 4.1 — Odontogram Foundation, continuar Release 4 — Odontogram en slices acotados y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
