@@ -42,6 +42,12 @@ import { PatientsFacade } from '../facades/patients.facade';
             class="action-link action-secondary">
             Quote
           </a>
+          <a
+            *ngIf="canReadBillingDocuments && patientsFacade.currentPatient() as patient"
+            [routerLink]="['/patients', patient.id, 'treatment-plan', 'quote', 'billing']"
+            class="action-link action-secondary">
+            Billing
+          </a>
           <a *ngIf="patientsFacade.currentPatient() as patient" [routerLink]="['/patients', patient.id, 'edit']" class="action-link">
             Edit patient
           </a>
@@ -265,11 +271,14 @@ import { PatientsFacade } from '../facades/patients.facade';
   `]
 })
 export class PatientProfilePageComponent implements OnInit {
+  private readonly authService = inject(AuthService);
+
   readonly patientsFacade = inject(PatientsFacade);
-  readonly canReadClinicalRecords = inject(AuthService).hasPermissions(['clinical.read']);
-  readonly canReadOdontogram = inject(AuthService).hasPermissions(['odontogram.read']);
-  readonly canReadTreatmentPlans = inject(AuthService).hasPermissions(['treatmentplan.read']);
-  readonly canReadTreatmentQuotes = inject(AuthService).hasPermissions(['treatmentquote.read']);
+  readonly canReadClinicalRecords = this.authService.hasPermissions(['clinical.read']);
+  readonly canReadOdontogram = this.authService.hasPermissions(['odontogram.read']);
+  readonly canReadTreatmentPlans = this.authService.hasPermissions(['treatmentplan.read']);
+  readonly canReadTreatmentQuotes = this.authService.hasPermissions(['treatmentquote.read']);
+  readonly canReadBillingDocuments = this.authService.hasPermissions(['billing.read']);
   private readonly route = inject(ActivatedRoute);
 
   ngOnInit(): void {

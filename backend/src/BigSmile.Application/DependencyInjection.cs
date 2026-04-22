@@ -1,4 +1,6 @@
 using BigSmile.Application.Authorization;
+using BigSmile.Application.Features.BillingDocuments.Commands;
+using BigSmile.Application.Features.BillingDocuments.Queries;
 using BigSmile.Application.Features.Branches.Services;
 using BigSmile.Application.Features.Branches.Queries;
 using BigSmile.Application.Features.ClinicalRecords.Commands;
@@ -24,6 +26,8 @@ namespace BigSmile.Application
         {
             // Register application services (query handlers, command handlers, etc.)
             services.AddSingleton<IRolePermissionCatalog, RolePermissionCatalog>();
+            services.AddScoped<IBillingDocumentCommandService, BillingDocumentCommandService>();
+            services.AddScoped<IBillingDocumentQueryService, BillingDocumentQueryService>();
             services.AddScoped<IBranchAccessService, BranchAccessService>();
             services.AddScoped<IBranchQueryService, BranchQueryService>();
             services.AddScoped<IClinicalRecordCommandService, ClinicalRecordCommandService>();

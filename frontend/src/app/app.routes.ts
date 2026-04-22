@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
 import { LoginComponent } from './features/auth/login/login.component';
 import { SessionHomeComponent } from './features/auth/session-home/session-home.component';
+import { BillingDocumentPageComponent } from './features/billing/pages/billing-document.page';
 import { ClinicalRecordPageComponent } from './features/clinical-records/pages/clinical-record.page';
 import { OdontogramPageComponent } from './features/odontogram/pages/odontogram.page';
 import { PatientFormPageComponent } from './features/patients/pages/patient-form.page';
@@ -67,6 +68,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       requiredPermissions: ['odontogram.read']
+    }
+  },
+  {
+    path: 'patients/:id/treatment-plan/quote/billing',
+    component: BillingDocumentPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['billing.read']
     }
   },
   {
