@@ -63,21 +63,24 @@ Canonical project status:
 * **Release 4 — Odontogram:** preserved through accepted slices **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, **Release 4.4 — Dental Findings Change History**
 * **Release 5 — Treatments and Quotes:** in progress
 * **Accepted slices:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
+* **Release 6 — Billing:** open in progress through implemented bounded slice **Release 6.1 — Billing Foundation** (not yet accepted)
 
 ### Current expected priority
 
 Continue the current active phase:
 
-* **Release 5 — Treatments and Quotes**
+* **Release 6 — Billing**
 * preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices plus the accepted Release 4.1, Release 4.2, Release 4.3, and Release 4.4 odontogram slices as the foundation that Release 5.1 builds on
 * preserving the accepted Release 5.1 scope: tenant-owned and patient-owned treatment plans, explicit creation, `GET` returning `404` when missing, no autocreation, exactly one active treatment plan per patient per tenant, basic add/remove items, and bounded `Draft` / `Proposed` / `Accepted` status updates
 * preserving the accepted Release 5.1 item scope: required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference with `surfaceCode` requiring `toothCode`
 * preserving the accepted Release 5.2 scope: explicit quote creation from the existing treatment plan, `GET` returning `404` when missing, no autocreation, exactly one quote per treatment plan, snapshot-only quote items, fixed/simple currency handling, line-level pricing, bounded `Draft` / `Proposed` / `Accepted` quote status with positive pricing preserved through `Proposed`, and read-only quotes once accepted
-* keeping advanced pricing, discounts, taxes, billing linkage, scheduling linkage, treatment execution tracking, quote regenerate/versioning, multi-quote negotiation, plan archive/versioning, and complex reorder outside the accepted Release 5.1 and Release 5.2 scope
+* preserving the implemented Release 6.1 scope: explicit billing document creation from the accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling, bounded `Draft` / `Issued` status, and read-only behavior once issued
+* keeping payments, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, and advanced billing workflows outside the implemented Release 6.1 scope
 * preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
 * preserving the current odontogram access restriction where `odontogram.read` / `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive odontogram permissions in this phase
 * preserving the current treatment-plan access restriction where `treatmentplan.read` / `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive treatment-plan permissions in this phase
 * preserving the current treatment-quote access restriction where `treatmentquote.read` / `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive treatment-quote permissions in this phase
+* preserving the current billing access restriction where `billing.read` / `billing.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive billing permissions in this phase
 * preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
 * keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline
