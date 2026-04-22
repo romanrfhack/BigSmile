@@ -121,6 +121,11 @@ namespace BigSmile.Domain.Entities
                 throw new InvalidOperationException("The requested treatment quote item does not exist in the current quote.");
             }
 
+            if (Status == TreatmentQuoteStatus.Proposed)
+            {
+                EnsureProposedPricingInvariant(quoteItemId, unitPrice);
+            }
+
             var changed = item.UpdateUnitPrice(unitPrice);
             if (changed)
             {
@@ -145,9 +150,10 @@ namespace BigSmile.Domain.Entities
                     "Treatment quote status transitions in this slice are limited to Draft -> Proposed and Proposed -> Draft/Accepted.");
             }
 
-            if (Status == TreatmentQuoteStatus.Draft && newStatus == TreatmentQuoteStatus.Proposed)
+            if ((Status == TreatmentQuoteStatus.Draft && newStatus == TreatmentQuoteStatus.Proposed) ||
+                (Status == TreatmentQuoteStatus.Proposed && newStatus == TreatmentQuoteStatus.Accepted))
             {
-                EnsureReadyForProposal();
+                EnsureReadyForCommittedStatus();
             }
 
             Status = newStatus;
@@ -155,16 +161,24 @@ namespace BigSmile.Domain.Entities
             return true;
         }
 
-        private void EnsureReadyForProposal()
+        private void EnsureReadyForCommittedStatus()
         {
             if (Items.Count == 0)
             {
-                throw new InvalidOperationException("Treatment quotes require at least one item before moving to Proposed.");
+                throw new InvalidOperationException("Treatment quotes require at least one item before moving to Proposed or Accepted.");
             }
 
             if (Items.Any(item => item.UnitPrice <= 0))
             {
-                throw new InvalidOperationException("Every treatment quote item must have a unit price greater than zero before moving to Proposed.");
+                throw new InvalidOperationException("Every treatment quote item must have a unit price greater than zero before moving to Proposed or Accepted.");
+            }
+        }
+
+        private void EnsureProposedPricingInvariant(Guid quoteItemId, decimal unitPrice)
+        {
+            if (unitPrice <= 0 || Items.Any(item => item.Id != quoteItemId && item.UnitPrice <= 0))
+            {
+                throw new InvalidOperationException("Proposed treatment quotes require every item to keep a unit price greater than zero.");
             }
         }
 

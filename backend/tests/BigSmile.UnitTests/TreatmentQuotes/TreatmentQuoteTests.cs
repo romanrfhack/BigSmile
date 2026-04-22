@@ -91,12 +91,55 @@ namespace BigSmile.UnitTests.TreatmentQuotes
         }
 
         [Fact]
+        public void UpdateItemUnitPrice_RejectsZeroPrice_WhenQuoteIsProposed()
+        {
+            var treatmentQuote = CreateTreatmentQuote();
+            var item = Assert.Single(treatmentQuote.Items);
+            treatmentQuote.UpdateItemUnitPrice(item.Id, 250m, Guid.NewGuid());
+            treatmentQuote.ChangeStatus(TreatmentQuoteStatus.Proposed, Guid.NewGuid());
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                treatmentQuote.UpdateItemUnitPrice(item.Id, 0m, Guid.NewGuid()));
+
+            Assert.Contains("greater than zero", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void ChangeStatus_RejectsProposedWhenAnyItemHasNoPositivePrice()
         {
             var treatmentQuote = CreateTreatmentQuote();
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 treatmentQuote.ChangeStatus(TreatmentQuoteStatus.Proposed, Guid.NewGuid()));
+
+            Assert.Contains("greater than zero", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void ChangeStatus_AllowsAcceptedWhenProposedQuoteKeepsPositivePrices()
+        {
+            var treatmentQuote = CreateTreatmentQuote();
+            var item = Assert.Single(treatmentQuote.Items);
+            treatmentQuote.UpdateItemUnitPrice(item.Id, 250m, Guid.NewGuid());
+            treatmentQuote.ChangeStatus(TreatmentQuoteStatus.Proposed, Guid.NewGuid());
+
+            var changed = treatmentQuote.ChangeStatus(TreatmentQuoteStatus.Accepted, Guid.NewGuid());
+
+            Assert.True(changed);
+            Assert.Equal(TreatmentQuoteStatus.Accepted, treatmentQuote.Status);
+        }
+
+        [Fact]
+        public void ChangeStatus_RejectsAcceptedWhenProposedQuoteContainsNonPositivePrice()
+        {
+            var treatmentQuote = CreateTreatmentQuote();
+            var item = Assert.Single(treatmentQuote.Items);
+            treatmentQuote.UpdateItemUnitPrice(item.Id, 250m, Guid.NewGuid());
+            treatmentQuote.ChangeStatus(TreatmentQuoteStatus.Proposed, Guid.NewGuid());
+            ForceUnitPriceForTest(item, 0m);
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                treatmentQuote.ChangeStatus(TreatmentQuoteStatus.Accepted, Guid.NewGuid()));
 
             Assert.Contains("greater than zero", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -148,6 +191,37 @@ namespace BigSmile.UnitTests.TreatmentQuotes
             Assert.Equal(originalTreatmentPlanId, treatmentQuote.TreatmentPlanId);
         }
 
+        [Fact]
+        public void TreatmentQuote_RemainsSnapshotOnly_WhenTreatmentPlanChangesAfterQuoteCreation()
+        {
+            var actorUserId = Guid.NewGuid();
+            var treatmentPlan = CreateTreatmentPlan(actorUserId);
+            var originalItem = treatmentPlan.AddItem(
+                "Composite restoration",
+                "Restorative",
+                2,
+                "Two-surface restoration.",
+                "11",
+                "O",
+                actorUserId);
+
+            var treatmentQuote = new TreatmentQuote(
+                treatmentPlan.TenantId,
+                treatmentPlan.PatientId,
+                treatmentPlan.Id,
+                treatmentPlan.Items,
+                actorUserId);
+
+            treatmentPlan.AddItem("Crown", "Prosthodontics", 1, null, "21", null, actorUserId);
+            treatmentPlan.RemoveItem(originalItem.Id, actorUserId);
+
+            var snapshotItem = Assert.Single(treatmentQuote.Items);
+            Assert.Single(treatmentPlan.Items);
+            Assert.Equal(originalItem.Id, snapshotItem.SourceTreatmentPlanItemId);
+            Assert.Equal("Composite restoration", snapshotItem.Title);
+            Assert.DoesNotContain(treatmentPlan.Items, item => item.Id == snapshotItem.SourceTreatmentPlanItemId);
+        }
+
         private static TreatmentQuote CreateTreatmentQuote()
         {
             var actorUserId = Guid.NewGuid();
@@ -168,6 +242,19 @@ namespace BigSmile.UnitTests.TreatmentQuotes
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 actorUserId);
+        }
+
+        private static void ForceUnitPriceForTest(TreatmentQuoteItem item, decimal unitPrice)
+        {
+            var property = typeof(TreatmentQuoteItem).GetProperty(
+                nameof(TreatmentQuoteItem.UnitPrice),
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
+                ?? throw new InvalidOperationException("TreatmentQuoteItem.UnitPrice property was not found for the test.");
+
+            var setter = property.GetSetMethod(nonPublic: true)
+                ?? throw new InvalidOperationException("TreatmentQuoteItem.UnitPrice setter was not found for the test.");
+
+            setter.Invoke(item, new object[] { unitPrice });
         }
     }
 }

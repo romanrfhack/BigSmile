@@ -143,6 +143,37 @@ namespace BigSmile.IntegrationTests.TreatmentQuotes
         }
 
         [Fact]
+        public async Task UpdateItemUnitPriceAsync_BlocksNonPositivePrice_WhenQuoteIsProposed()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var treatmentQuote = await SeedTreatmentPlanWithQuoteAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            var itemId = treatmentQuote.Items.Single().Id;
+
+            await commandService.UpdateItemUnitPriceAsync(
+                patient.Id,
+                itemId,
+                new UpdateTreatmentQuoteItemPriceCommand(350m));
+
+            await commandService.ChangeStatusAsync(
+                patient.Id,
+                new ChangeTreatmentQuoteStatusCommand("Proposed"));
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateItemUnitPriceAsync(
+                patient.Id,
+                itemId,
+                new UpdateTreatmentQuoteItemPriceCommand(0m)));
+
+            Assert.Contains("greater than zero", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public async Task ChangeStatusAsync_UpdatesStatusWithinTenantScope()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -168,6 +199,59 @@ namespace BigSmile.IntegrationTests.TreatmentQuotes
             Assert.NotNull(proposed);
             Assert.Equal("Proposed", proposed!.Status);
             Assert.Equal(actorUserId, proposed.LastUpdatedByUserId);
+        }
+
+        [Fact]
+        public async Task ChangeStatusAsync_AllowsAccepted_WhenProposedQuoteKeepsPositivePrices()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var treatmentQuote = await SeedTreatmentPlanWithQuoteAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var quoteItemId = treatmentQuote.Items.Single().Id;
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            await commandService.UpdateItemUnitPriceAsync(
+                patient.Id,
+                quoteItemId,
+                new UpdateTreatmentQuoteItemPriceCommand(350m));
+
+            await commandService.ChangeStatusAsync(
+                patient.Id,
+                new ChangeTreatmentQuoteStatusCommand("Proposed"));
+
+            var accepted = await commandService.ChangeStatusAsync(
+                patient.Id,
+                new ChangeTreatmentQuoteStatusCommand("Accepted"));
+
+            Assert.NotNull(accepted);
+            Assert.Equal("Accepted", accepted!.Status);
+            Assert.Equal(actorUserId, accepted.LastUpdatedByUserId);
+        }
+
+        [Fact]
+        public async Task ChangeStatusAsync_BlocksAccepted_WhenPersistedProposedQuoteContainsNonPositivePrice()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var treatmentQuote = await SeedTreatmentPlanWithQuoteAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            await ForceQuoteStatusAsync(databaseName, treatmentQuote.Id, TreatmentQuoteStatus.Proposed);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.ChangeStatusAsync(
+                patient.Id,
+                new ChangeTreatmentQuoteStatusCommand("Accepted")));
+
+            Assert.Contains("greater than zero", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
@@ -344,6 +428,14 @@ namespace BigSmile.IntegrationTests.TreatmentQuotes
             await context.SaveChangesAsync();
 
             return treatmentQuote;
+        }
+
+        private static async Task ForceQuoteStatusAsync(string databaseName, Guid treatmentQuoteId, TreatmentQuoteStatus status)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var treatmentQuote = await context.TreatmentQuotes.SingleAsync(entry => entry.Id == treatmentQuoteId);
+            context.Entry(treatmentQuote).Property(nameof(TreatmentQuote.Status)).CurrentValue = status;
+            await context.SaveChangesAsync();
         }
 
         private static AppDbContext CreateContext(string databaseName, TenantContext tenantContext)
