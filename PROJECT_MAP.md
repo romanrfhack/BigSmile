@@ -63,7 +63,7 @@ Canonical project status:
 * **Release 4 — Odontogram:** preserved through accepted slices **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, **Release 4.4 — Dental Findings Change History**
 * **Release 5 — Treatments and Quotes:** in progress
 * **Accepted slices:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
-* **Release 6 — Billing:** open in progress through implemented bounded slice **Release 6.1 — Billing Foundation** (not yet accepted)
+* **Release 6 — Billing:** open in progress through accepted slice **Release 6.1 — Billing Foundation**
 
 ### Current expected priority
 
@@ -74,8 +74,8 @@ Continue the current active phase:
 * preserving the accepted Release 5.1 scope: tenant-owned and patient-owned treatment plans, explicit creation, `GET` returning `404` when missing, no autocreation, exactly one active treatment plan per patient per tenant, basic add/remove items, and bounded `Draft` / `Proposed` / `Accepted` status updates
 * preserving the accepted Release 5.1 item scope: required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference with `surfaceCode` requiring `toothCode`
 * preserving the accepted Release 5.2 scope: explicit quote creation from the existing treatment plan, `GET` returning `404` when missing, no autocreation, exactly one quote per treatment plan, snapshot-only quote items, fixed/simple currency handling, line-level pricing, bounded `Draft` / `Proposed` / `Accepted` quote status with positive pricing preserved through `Proposed`, and read-only quotes once accepted
-* preserving the implemented Release 6.1 scope: explicit billing document creation from the accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling, bounded `Draft` / `Issued` status, and read-only behavior once issued
-* keeping payments, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, and advanced billing workflows outside the implemented Release 6.1 scope
+* preserving the accepted Release 6.1 scope: explicit billing document creation from the accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling, bounded `Draft` / `Issued` status, and read-only behavior once issued
+* keeping payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows outside the accepted Release 6.1 scope
 * preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
 * preserving the current odontogram access restriction where `odontogram.read` / `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive odontogram permissions in this phase
 * preserving the current treatment-plan access restriction where `treatmentplan.read` / `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive treatment-plan permissions in this phase

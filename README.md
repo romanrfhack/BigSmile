@@ -260,7 +260,7 @@ Current active phase:
 
 * **Release 6 — Billing:** open in progress
 * **Accepted upstream slices preserved:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
-* **Implemented bounded slice in repo:** **Release 6.1 — Billing Foundation** (implemented, not yet accepted)
+* **Accepted current slice:** **Release 6.1 — Billing Foundation**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -294,9 +294,9 @@ Release 5.2 — Quote Basics is now also accepted on top of that foundation: exp
 
 Treatment quote access in the accepted Release 5.2 slice is intentionally restricted: `treatmentquote.read` and `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive treatment quote permissions. Advanced pricing, discounts, taxes, billing linkage, scheduling linkage, regenerate/versioning workflows, and multi-quote negotiation remain outside this slice.
 
-Release 6 is now also open through a bounded implemented slice in the repository: Release 6.1 — Billing Foundation. This slice adds only explicit billing document creation from an accepted quote, `GET` returning `404` when the billing document does not exist, no autocreation, exactly one billing document per quote, snapshot-only billing lines copied from the accepted quote, inherited `MXN` currency in the current repo implementation, bounded `Draft` / `Issued` status with explicit issue, and read-only behavior once issued.
+Release 6 remains open and is currently preserved through the accepted Release 6.1 — Billing Foundation slice. This accepted slice adds only explicit billing document creation from an accepted quote, `GET` returning `404` when the billing document does not exist, no autocreation, exactly one billing document per quote, snapshot-only billing lines copied from the accepted quote, inherited simple currency handling from that accepted quote, currently `MXN` in the repo implementation, bounded `Draft` / `Issued` status with explicit issue, and read-only behavior once issued.
 
-Billing access in the implemented Release 6.1 slice is intentionally restricted: `billing.read` and `billing.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive billing permissions. Payments, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, and advanced billing workflows remain outside this implemented slice and Release 6 itself is not yet closed.
+Billing access in the accepted Release 6.1 slice is intentionally restricted: `billing.read` and `billing.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive billing permissions. Payments, balances, receipts, taxes, discounts, CFDI/PAC, cancellations, multi-billing, and advanced billing workflows remain outside this accepted slice and Release 6 itself is not yet closed.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -381,13 +381,13 @@ The repository should be treated as having an established technical and architec
 ### Release 6 — Billing
 
 * Release 6 is now open
-* Implemented bounded slice in repo: Release 6.1 — Billing Foundation
+* Accepted current slice: Release 6.1 — Billing Foundation
 * Explicit billing document creation from an accepted quote with `GET` returning `404` when missing and no autocreation
 * Exactly one billing document per quote in this slice
-* Snapshot-only billing lines copied from the accepted quote with inherited `MXN` currency in the current repo implementation
+* Snapshot-only billing lines copied from the accepted quote with inherited simple currency handling, currently `MXN` in the repo implementation
 * Explicit `Draft` / `Issued` billing status with read-only behavior once issued
 * `billing.read` / `billing.write` restricted to `PlatformAdmin` and `TenantAdmin`
-* Payments, balances, receipts, taxes, discounts, CFDI, and advanced billing workflows deferred beyond the implemented Release 6.1 slice
+* Payments, balances, receipts, taxes, discounts, CFDI, cancellations, and advanced billing workflows deferred beyond the accepted Release 6.1 slice
 
 ### Release 7 — Documents and Dashboard
 

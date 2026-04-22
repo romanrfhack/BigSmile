@@ -439,10 +439,10 @@ Enable clinics to record charges, payments, and balances as part of the operatio
 
 ## Current status
 - Release 6 is now open in the repository
-- Release 6.1 — Billing Foundation is implemented as a bounded slice in code, but not yet accepted
-- The current implemented scope is limited to explicit billing document creation from an accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling, bounded `Draft` / `Issued` status, and read-only behavior once issued
+- Release 6.1 — Billing Foundation is accepted as the current bounded slice of Release 6
+- The current accepted scope is limited to explicit billing document creation from an accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling from the accepted quote, bounded `Draft` / `Issued` status, and read-only behavior once issued
 - `billing.read` and `billing.write` are currently restricted to `PlatformAdmin` and `TenantAdmin`
-- Payments, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, and advanced billing workflows remain deferred beyond the implemented Release 6.1 slice
+- Payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows remain deferred beyond the accepted Release 6.1 slice
 
 ## Scope
 - charges linked to treatment plans or items

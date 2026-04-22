@@ -44,7 +44,7 @@
 
 [Hecho] `doctor-based views` quedó explícitamente diferido por decisión documentada a un slice futuro acotado; no forma parte del cierre efectivo de Release 2.
 
-[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a los slices aceptados Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics; Release 5 — Treatments and Quotes no debe asumirse como cerrada, Release 6 — Billing solo debe asumirse abierta a través del slice implementado Release 6.1 — Billing Foundation mientras no exista aceptación explícita, y Documents/Dashboard no deben asumirse implementados o cerrados salvo evidencia explícita en código y documentación alineada.
+[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a los slices aceptados Release 5.1 — Treatment Plan Foundation, Release 5.2 — Quote Basics y Release 6.1 — Billing Foundation; Release 5 — Treatments and Quotes no debe asumirse como cerrada, Release 6 — Billing no debe asumirse como cerrada más allá del slice aceptado Release 6.1 — Billing Foundation, y Documents/Dashboard no deben asumirse implementados o cerrados salvo evidencia explícita en código y documentación alineada.
 
 ## 4. Fase actual
 
@@ -70,7 +70,7 @@
 
 [Hecho] Release 6 — Billing ya fue abierta y está en progreso.
 
-[Hecho] El slice implementado actual de Release 6 es Release 6.1 — Billing Foundation; está implementado en repo, pero no aceptado todavía.
+[Hecho] El slice aceptado actual de Release 6 es Release 6.1 — Billing Foundation.
 
 [Hecho] Release 3.1 cubre, de forma acotada:
 - `ClinicalRecord` tenant-owned y patient-owned
@@ -215,6 +215,33 @@
 - sin versionado completo
 
 [Hecho] En esta fase, `treatmentquote.read` y `treatmentquote.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de quote.
+
+[Hecho] Release 6.1 cubre, de forma acotada:
+- `BillingDocument` tenant-owned y patient-owned ligado explícitamente a una `TreatmentQuote` existente del mismo paciente y tenant
+- exactamente 1 billing document por `TreatmentQuote` en este slice
+- creación explícita vía `POST /api/patients/{patientId}/treatment-plan/quote/billing`
+- `GET /api/patients/{patientId}/treatment-plan/quote/billing` devuelve `404` si no existe
+- no hay autocreación ni por `GET` ni por cambios de status
+- snapshot explícito de los items actuales de la `TreatmentQuote` aceptada al momento de crear el billing document
+- items de billing con `sourceTreatmentQuoteItemId`, `title`, `category`, `quantity`, `notes`, `toothCode`, `surfaceCode`, `unitPrice` y `lineTotal`
+- `CurrencyCode` heredado/simple desde la quote aceptada; en el repo actual sigue siendo `MXN`
+- `LineTotal` y `TotalAmount` calculados de forma básica sin impuestos ni descuentos
+- endpoint mínimo para `PUT /status`
+- estados mínimos `Draft` / `Issued`
+- transición acotada `Draft -> Issued`
+- billing document read-only al quedar en `Issued`
+- UI mínima desde el contexto del paciente y de la quote para mensaje explícito cuando falta la quote, mensaje explícito cuando la quote no está `Accepted`, creación explícita, render de líneas y total, y issue explícito
+- sin edición manual de líneas
+- sin pagos
+- sin CFDI/PAC
+- sin impuestos
+- sin descuentos
+- sin cancelaciones
+- sin billing avanzado
+
+[Hecho] En esta fase, `billing.read` y `billing.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de billing.
+
+[Hecho] Release 6 completa no está cerrada. Pagos, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, cancelaciones y workflows avanzados de billing siguen fuera del alcance aceptado de Release 6.1.
 
 [Hecho + Inferencia operativa] El proyecto ya no está solo dentro de Release 3; ahora preserva Release 3 mediante cuatro slices aceptados y abrió Release 4 con cuatro slices aceptados sobre una base que ya incluye Patients y Scheduling cerrados.
 
@@ -367,6 +394,6 @@ Lista priorizada:
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como base inmediata preservada mediante Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History aceptadas; tratar Release 4 — Odontogram como base dental inmediata preservada mediante Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation y Release 4.4 — Dental Findings Change History aceptadas; tratar Release 5 — Treatments and Quotes como fase previa preservada con Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas; tratar Release 6 — Billing como fase abierta en progreso mediante el slice implementado Release 6.1 — Billing Foundation aún no aceptado; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerradas Release 6 ni las fases posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como base inmediata preservada mediante Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History aceptadas; tratar Release 4 — Odontogram como base dental inmediata preservada mediante Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation y Release 4.4 — Dental Findings Change History aceptadas; tratar Release 5 — Treatments and Quotes como fase previa preservada con Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas; tratar Release 6 — Billing como fase abierta en progreso mediante el slice aceptado Release 6.1 — Billing Foundation sin marcar todavía Release 6 como cerrada; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerradas Release 6 ni las fases posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
 
-**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation, Release 4.4 — Dental Findings Change History, Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics sin reabrir pricing avanzado, continuar Release 6 — Billing a partir del slice implementado Release 6.1 — Billing Foundation sin abrir pagos/CFDI/impuestos/cobranza, y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
+**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation, Release 4.4 — Dental Findings Change History, Release 5.1 — Treatment Plan Foundation, Release 5.2 — Quote Basics y Release 6.1 — Billing Foundation sin reabrir pricing avanzado ni billing avanzado, continuar Release 6 — Billing sin abrir pagos/CFDI/impuestos/descuentos/cancelaciones/cobranza, y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.

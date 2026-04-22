@@ -101,7 +101,7 @@ Canonical project status:
 - `Release 4 — Odontogram`: preserved through accepted slices `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, and `Release 4.4 — Dental Findings Change History`
 - `Release 5 — Treatments and Quotes`: in progress
 - accepted slices: `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics`
-- `Release 6 — Billing`: open in progress through implemented bounded slice `Release 6.1 — Billing Foundation` (not yet accepted)
+- `Release 6 — Billing`: open in progress through accepted slice `Release 6.1 — Billing Foundation`
 
 Current active phase:
 - `Release 6 — Billing`
@@ -111,7 +111,7 @@ Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Od
 Within `Release 3 — Clinical Records`, do not assume slices beyond the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, and `Release 3.4 — Clinical Snapshot Change History` are implemented unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 4 — Odontogram`, do not assume slices beyond the accepted `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, and `Release 4.4 — Dental Findings Change History` are implemented unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 5 — Treatments and Quotes`, do not assume slices beyond the accepted `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics` slices are implemented unless the actual codebase and aligned documentation explicitly prove it.
-Within `Release 6 — Billing`, do not assume slices beyond the implemented bounded `Release 6.1 — Billing Foundation` slice are implemented unless the actual codebase and aligned documentation explicitly prove it.
+Within `Release 6 — Billing`, do not assume slices beyond the accepted `Release 6.1 — Billing Foundation` slice are implemented unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
@@ -136,9 +136,9 @@ Immediate priorities:
 - preserve the current odontogram access restriction: `odontogram.read` / `odontogram.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive odontogram permissions in this phase
 - preserve the current treatment-plan access restriction: `treatmentplan.read` / `treatmentplan.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive treatment-plan permissions in this phase
 - preserve the current treatment-quote access restriction: `treatmentquote.read` / `treatmentquote.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive treatment-quote permissions in this phase
-- preserve the implemented Release 6.1 scope: explicit billing document creation from an accepted quote, `GET` returning `404` when missing, no autocreation, exactly 1 billing document per TreatmentQuote, snapshot-only billing lines, bounded `Draft` / `Issued` status, and read-only behavior once issued
+- preserve the accepted Release 6.1 scope: explicit billing document creation from an accepted quote, `GET` returning `404` when missing, no autocreation, exactly 1 billing document per TreatmentQuote, snapshot-only billing lines, inherited/simple currency handling from the accepted quote, bounded `Draft` / `Issued` status, and read-only behavior once issued
 - preserve the current billing access restriction: `billing.read` / `billing.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive billing permissions in this phase
-- keep payments, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, and advanced billing workflows deferred beyond the implemented Release 6.1 slice
+- keep payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows deferred beyond the accepted Release 6.1 slice
 - keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened
 - keep privileged/platform paths explicit and auditable
 - maintain automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios
