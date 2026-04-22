@@ -259,8 +259,7 @@ Completed foundation milestones:
 Current active phase:
 
 * **Release 5 — Treatments and Quotes:** in progress
-* **Accepted slice:** **Release 5.1 — Treatment Plan Foundation**
-* **Implemented bounded slice in repo:** **Release 5.2 — Quote Basics**
+* **Accepted slices:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -290,9 +289,9 @@ Treatment plan items in Release 5.1 stay intentionally small: required title, op
 
 Treatment plan access in the accepted Release 5.1 slice is intentionally restricted: `treatmentplan.read` and `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive treatment plan permissions.
 
-The repository now also includes the bounded implementation of Release 5.2 — Quote Basics on top of that accepted foundation: explicit `POST /api/patients/{patientId}/treatment-plan/quote`, `GET` returning `404` when the quote does not exist, no autocreation, exactly one quote per treatment plan, snapshot-only quote items copied from the current treatment plan, fixed `MXN` currency in this slice, line-level `UnitPrice`, basic line totals and quote total, and explicit `PUT` operations for line price and overall quote status across the same bounded `Draft` / `Proposed` / `Accepted` lifecycle.
+Release 5.2 — Quote Basics is now also accepted on top of that foundation: explicit `POST /api/patients/{patientId}/treatment-plan/quote`, `GET` returning `404` when the quote does not exist, no autocreation, exactly one quote per treatment plan, snapshot-only quote items copied from the current treatment plan, fixed `MXN` currency in this slice, line-level `UnitPrice`, basic line totals and quote total, and explicit `PUT` operations for line price and overall quote status across the same bounded `Draft` / `Proposed` / `Accepted` lifecycle. In this accepted slice, a `Proposed` quote must keep all line prices positive and `Proposed -> Accepted` revalidates that invariant.
 
-Treatment quote access in the implemented Release 5.2 slice is intentionally restricted: `treatmentquote.read` and `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive treatment quote permissions. Advanced pricing, discounts, taxes, billing linkage, scheduling linkage, regenerate/versioning workflows, and multi-quote negotiation remain outside this slice.
+Treatment quote access in the accepted Release 5.2 slice is intentionally restricted: `treatmentquote.read` and `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive treatment quote permissions. Advanced pricing, discounts, taxes, billing linkage, scheduling linkage, regenerate/versioning workflows, and multi-quote negotiation remain outside this slice.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -363,17 +362,16 @@ The repository should be treated as having an established technical and architec
 ### Release 5 — Treatments and Quotes
 
 * Release 5 is in progress
-* Accepted slice: Release 5.1 — Treatment Plan Foundation
-* Implemented bounded slice in repo: Release 5.2 — Quote Basics
+* Accepted slices: Release 5.1 — Treatment Plan Foundation and Release 5.2 — Quote Basics
 * Explicit treatment plan creation with `GET` returning `404` when missing and no autocreation
 * Exactly one active treatment plan per patient per tenant
 * Basic treatment plan items with required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference
 * Minimal plan lifecycle with `Draft`, `Proposed`, and `Accepted`
 * Minimal patient-context UI for empty state, explicit creation, item add/remove, and status updates
 * `treatmentplan.read` / `treatmentplan.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
-* Minimal quote creation from the existing treatment plan, fixed `MXN` currency, line-level pricing, basic totals, and bounded `Draft` / `Proposed` / `Accepted` quote status
+* Minimal quote creation from the existing treatment plan, snapshot-only quote items, fixed `MXN` currency, line-level pricing, basic totals, and bounded `Draft` / `Proposed` / `Accepted` quote status with positive pricing preserved through `Proposed` and revalidated on `Accepted`
 * `treatmentquote.read` / `treatmentquote.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
-* Advanced pricing, taxes, discounts, billing linkage, scheduling linkage, and treatment execution tracking deferred beyond the bounded Release 5.2 slice
+* Advanced pricing, taxes, discounts, billing linkage, scheduling linkage, treatment execution tracking, regenerate/versioning workflows, and multi-quote negotiation deferred beyond the accepted Release 5.2 slice
 
 ### Release 6 — Billing
 

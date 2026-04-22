@@ -363,11 +363,11 @@ Connect diagnosis with operational and commercial treatment planning.
 
 ## Current status
 - Release 5.1 — Treatment Plan Foundation is accepted
-- The repository now includes the bounded implementation of Release 5.2 — Quote Basics on top of Release 5.1
-- Release 5 remains in progress; advanced pricing, taxes, discounts, billing linkage, and wider commercial workflows remain deferred beyond the implemented 5.2 slice
+- Release 5.2 — Quote Basics is also accepted on top of Release 5.1
+- Release 5 remains in progress; advanced pricing, taxes, discounts, billing linkage, and wider commercial workflows remain deferred beyond the accepted 5.2 slice
 
 ## Scope
-Release 5 is being delivered in bounded slices. The currently accepted slice is Release 5.1, and the repository now also includes a bounded Release 5.2 implementation. Together they currently cover:
+Release 5 is being delivered in bounded slices. The currently accepted slices are Release 5.1 and Release 5.2. Together they currently cover:
 - explicit treatment plan creation for an existing patient
 - exactly one active treatment plan per patient per tenant
 - `GET` returning `404` when the treatment plan does not exist
@@ -385,6 +385,7 @@ Release 5 is being delivered in bounded slices. The currently accepted slice is 
 - fixed `CurrencyCode = MXN` in this slice
 - line-level `UnitPrice`, `LineTotal`, and `QuoteTotal`
 - bounded quote status with `Draft` / `Proposed` / `Accepted`
+- positive line pricing required to move `Draft -> Proposed`, preserved while the quote stays `Proposed`, and revalidated on `Proposed -> Accepted`
 - minimal patient-context UI for explicit quote creation, empty state, no-treatment-plan message, line pricing, totals, and quote status changes
 - `treatmentquote.read` and `treatmentquote.write` restricted to `PlatformAdmin` and `TenantAdmin`
 - no discounts or taxes
@@ -406,7 +407,7 @@ Clinicians and tenant administrators can move from clinical or odontogram contex
 - `treatmentplan.read` and `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`
 - `TenantUser` does not receive treatment plan permissions in the accepted Release 5.1 slice
 - `treatmentquote.read` and `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive treatment quote permissions in the implemented Release 5.2 slice
+- `TenantUser` does not receive treatment quote permissions in the accepted Release 5.2 slice
 
 ## Key UX goals
 - easy transition from diagnosis to treatment

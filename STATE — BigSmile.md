@@ -44,7 +44,7 @@
 
 [Hecho] `doctor-based views` quedó explícitamente diferido por decisión documentada a un slice futuro acotado; no forma parte del cierre efectivo de Release 2.
 
-[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores al slice aceptado Release 5.1 — Treatment Plan Foundation; el repositorio ya incluye una implementación acotada de Release 5.2 — Quote Basics, pero Release 5 — Treatments and Quotes no debe asumirse como cerrada y Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
+[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a los slices aceptados Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics; Release 5 — Treatments and Quotes no debe asumirse como cerrada y Billing y Documents/Dashboard no deben asumirse como implementados o cerrados salvo evidencia explícita en código y documentación alineada.
 
 ## 4. Fase actual
 
@@ -64,9 +64,9 @@
 
 [Hecho] Release 5 — Treatments and Quotes ya fue abierta y está en progreso.
 
-[Hecho] El slice aceptado actual de Release 5 es Release 5.1 — Treatment Plan Foundation.
+[Hecho] Los slices aceptados actuales de Release 5 son Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics.
 
-[Hecho] El repositorio ya incluye la implementación acotada de Release 5.2 — Quote Basics sobre la base aceptada de Release 5.1, sin marcar todavía Release 5 como cerrada ni abrir Billing.
+[Hecho] Release 5.2 — Quote Basics ya quedó aceptada sobre la base de Release 5.1, sin marcar todavía Release 5 como cerrada ni abrir Billing.
 
 [Hecho] Release 3.1 cubre, de forma acotada:
 - `ClinicalRecord` tenant-owned y patient-owned
@@ -198,7 +198,7 @@
 - `LineTotal` y `Total` calculados de forma básica sin impuestos ni descuentos
 - endpoints mínimos para `PUT /items/{quoteItemId}/price` y `PUT /status`
 - estados mínimos `Draft` / `Proposed` / `Accepted`
-- regla mínima de propuesta: todos los items deben tener `unitPrice > 0` para pasar de `Draft` a `Proposed`
+- regla mínima de pricing: todos los items deben tener `unitPrice > 0` para pasar de `Draft` a `Proposed`; una quote `Proposed` no puede conservar items con `unitPrice <= 0` y `Proposed -> Accepted` vuelve a validar precios positivos
 - quote read-only al quedar en `Accepted`
 - UI mínima desde el contexto del paciente y del treatment plan para empty state, mensaje explícito cuando falta el treatment plan, creación explícita, edición acotada de precio por línea, total y cambio de status
 - sin add/remove manual de items en la quote
@@ -297,7 +297,7 @@
 
 **Decisión de alcance** — [Hecho] `doctor-based views` se difiere explícitamente a un slice futuro porque no es un parche pequeño de UI: requiere un slice dedicado de provider/doctor assignment, cambios de modelo y read models específicos de calendario.
 
-**Fase abierta actual** — [Hecho] Release 5 — Treatments and Quotes, con Release 5.1 — Treatment Plan Foundation aceptada y la implementación acotada de Release 5.2 — Quote Basics ya presente en el repositorio sobre los slices Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 4.1, Release 4.2, Release 4.3 y Release 4.4 preservados como base clínica y dental inmediata.
+**Fase abierta actual** — [Hecho] Release 5 — Treatments and Quotes, con Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas sobre los slices Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 4.1, Release 4.2, Release 4.3 y Release 4.4 preservados como base clínica y dental inmediata.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -333,7 +333,7 @@ Lista priorizada:
 
 1. Preservar Releases 1 y 2 ya cerrados sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Preservar Release 5.1 — Treatment Plan Foundation y la implementación acotada de Release 5.2 — Quote Basics sin abrir descuentos, impuestos, pricing avanzado ni billing por accidente, y continuar Release 5 — Treatments and Quotes en slices acotados, auditables y compatibles con la fundación tenant-aware ya cerrada.
+2. Preservar Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics ya aceptadas sin abrir descuentos, impuestos, pricing avanzado ni billing por accidente, y continuar Release 5 — Treatments and Quotes en slices acotados, auditables y compatibles con la fundación tenant-aware ya cerrada.
 
 3. Mantener diferidas las `doctor-based views` hasta abrir un slice dedicado de provider/doctor assignment; no reintroducirlas como parche incidental de UI.
 
@@ -363,6 +363,6 @@ Lista priorizada:
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como base inmediata preservada mediante Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History aceptadas; tratar Release 4 — Odontogram como base dental inmediata preservada mediante Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation y Release 4.4 — Dental Findings Change History aceptadas; tratar Release 5 — Treatments and Quotes como fase abierta en progreso con Release 5.1 — Treatment Plan Foundation aceptada y Release 5.2 — Quote Basics ya implementada de forma acotada en el repositorio; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerradas Release 5 ni las fases posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como base inmediata preservada mediante Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model y Release 3.4 — Clinical Snapshot Change History aceptadas; tratar Release 4 — Odontogram como base dental inmediata preservada mediante Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation y Release 4.4 — Dental Findings Change History aceptadas; tratar Release 5 — Treatments and Quotes como fase abierta en progreso con Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerradas Release 5 ni las fases posteriores del MVP mientras no exista evidencia explícita en código y documentación alineada.
 
-**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation, Release 4.4 — Dental Findings Change History y Release 5.1 — Treatment Plan Foundation, preservar también la implementación acotada de Release 5.2 — Quote Basics sin expandir pricing/billing, continuar Release 5 — Treatments and Quotes en slices acotados y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
+**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation, Release 4.4 — Dental Findings Change History, Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics sin expandir pricing/billing, continuar Release 5 — Treatments and Quotes en slices acotados y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
