@@ -63,7 +63,10 @@ namespace BigSmile.Api.Authorization
 
             if (requirement.EnablePlatformOverride && _tenantContext.GetAccessScope() == AccessScope.Platform)
             {
-                EnablePlatformOverride(context.User, requirement.Permission, resourceId: null);
+                EnablePlatformOverride(
+                    context.User,
+                    requirement.Permission,
+                    ResolvePlatformOverrideResourceId(requirement.PlatformOverrideRouteValueKey));
             }
 
             context.Succeed(requirement);
@@ -161,6 +164,16 @@ namespace BigSmile.Api.Authorization
         {
             var routeValue = _httpContextAccessor.HttpContext?.Request.RouteValues[routeValueKey]?.ToString();
             return Guid.TryParse(routeValue, out var parsed) ? parsed : null;
+        }
+
+        private Guid? ResolvePlatformOverrideResourceId(string? routeValueKey)
+        {
+            if (string.IsNullOrWhiteSpace(routeValueKey))
+            {
+                return null;
+            }
+
+            return GetRouteGuid(routeValueKey);
         }
 
         private static bool HasPermission(ClaimsPrincipal user, string permission)

@@ -361,6 +361,34 @@ namespace BigSmile.UnitTests.Authorization
         }
 
         [Fact]
+        public async Task PermissionRequirement_AllowsExplicitPlatformOverride_ForDocumentPolicy()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Platform,
+                isAuthenticated: true);
+            _httpContext.Request.RouteValues["patientId"] = Guid.NewGuid().ToString();
+
+            var user = CreatePrincipal(userId, SystemRoles.PlatformAdmin, Permissions.DocumentRead);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[]
+                {
+                    new PermissionRequirement(
+                        Permissions.DocumentRead,
+                        enablePlatformOverride: true,
+                        platformOverrideRouteValueKey: "patientId")
+                },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.True(context.HasSucceeded);
+            Assert.True(_tenantContext.HasPlatformOverride());
+        }
+
+        [Fact]
         public void RolePermissionCatalog_DoesNotGrantClinicalPermissions_ToTenantUser()
         {
             var permissions = _rolePermissionCatalog.GetPermissions(SystemRoles.TenantUser);
@@ -376,6 +404,15 @@ namespace BigSmile.UnitTests.Authorization
 
             Assert.DoesNotContain(Permissions.OdontogramRead, permissions);
             Assert.DoesNotContain(Permissions.OdontogramWrite, permissions);
+        }
+
+        [Fact]
+        public void RolePermissionCatalog_DoesNotGrantDocumentPermissions_ToTenantUser()
+        {
+            var permissions = _rolePermissionCatalog.GetPermissions(SystemRoles.TenantUser);
+
+            Assert.DoesNotContain(Permissions.DocumentRead, permissions);
+            Assert.DoesNotContain(Permissions.DocumentWrite, permissions);
         }
 
         private static ClaimsPrincipal CreatePrincipal(Guid userId, string role, params string[] permissions)

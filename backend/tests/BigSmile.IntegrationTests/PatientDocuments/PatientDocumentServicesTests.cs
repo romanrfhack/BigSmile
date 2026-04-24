@@ -271,6 +271,60 @@ namespace BigSmile.IntegrationTests.PatientDocuments
             }
         }
 
+        [Fact]
+        public async Task PlatformAdminOverride_UploadListDownloadAndRetire_SucceedForPatientScopedDocuments()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var storageRootPath = CreateStorageRootPath();
+            var actorUserId = Guid.NewGuid();
+            var (_, tenantB) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            var tenantContext = CreatePlatformOverrideContext(actorUserId);
+
+            try
+            {
+                await using var context = CreateContext(databaseName, tenantContext);
+                var commandService = CreateCommandService(context, tenantContext, storageRootPath);
+                var queryService = CreateQueryService(context, tenantContext, storageRootPath);
+                var fileBytes = Encoding.UTF8.GetBytes("platform-pdf");
+
+                using var uploadStream = new MemoryStream(fileBytes);
+                var created = await commandService.UploadAsync(
+                    patient.Id,
+                    new UploadPatientDocumentCommand(
+                        "support-radiography.pdf",
+                        "application/pdf",
+                        fileBytes.LongLength,
+                        uploadStream));
+
+                Assert.Equal(patient.Id, created.PatientId);
+                Assert.Equal(actorUserId, created.UploadedByUserId);
+
+                var listed = await queryService.ListActiveByPatientIdAsync(patient.Id);
+
+                var listedDocument = Assert.Single(listed!);
+                Assert.Equal(created.DocumentId, listedDocument.DocumentId);
+
+                var downloaded = await queryService.DownloadAsync(patient.Id, created.DocumentId);
+
+                Assert.NotNull(downloaded);
+                await using var downloadedContentStream = downloaded!.ContentStream;
+                using var downloadBuffer = new MemoryStream();
+                await downloadedContentStream.CopyToAsync(downloadBuffer);
+                Assert.Equal(fileBytes, downloadBuffer.ToArray());
+
+                var retired = await commandService.RetireAsync(patient.Id, created.DocumentId);
+
+                Assert.True(retired);
+                Assert.Empty((await queryService.ListActiveByPatientIdAsync(patient.Id))!);
+                Assert.Null(await queryService.DownloadAsync(patient.Id, created.DocumentId));
+            }
+            finally
+            {
+                DeleteStorageRootPath(storageRootPath);
+            }
+        }
+
         private static IPatientDocumentCommandService CreateCommandService(AppDbContext context, TenantContext tenantContext, string storageRootPath)
         {
             return new PatientDocumentCommandService(
@@ -303,6 +357,14 @@ namespace BigSmile.IntegrationTests.PatientDocuments
         {
             var tenantContext = new TenantContext();
             tenantContext.SetRequestContext(userId.ToString(), AccessScope.Tenant, isAuthenticated: true, tenantId.ToString());
+            return tenantContext;
+        }
+
+        private static TenantContext CreatePlatformOverrideContext(Guid userId)
+        {
+            var tenantContext = new TenantContext();
+            tenantContext.SetRequestContext(userId.ToString(), AccessScope.Platform, isAuthenticated: true);
+            tenantContext.EnablePlatformOverride();
             return tenantContext;
         }
 

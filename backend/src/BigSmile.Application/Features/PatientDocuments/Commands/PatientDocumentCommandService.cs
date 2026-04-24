@@ -52,11 +52,9 @@ namespace BigSmile.Application.Features.PatientDocuments.Commands
         {
             ArgumentNullException.ThrowIfNull(command);
 
-            var tenantId = GetRequiredTenantId();
             var actorUserId = GetRequiredUserId();
             var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
-
-            EnsurePatientBelongsToTenant(patient, tenantId);
+            var tenantId = ResolveExecutionTenantId(patient);
 
             var originalFileName = NormalizeOriginalFileName(command.OriginalFileName);
             var storageKey = BuildStorageKey(tenantId, patientId, command.ContentType);
@@ -88,11 +86,9 @@ namespace BigSmile.Application.Features.PatientDocuments.Commands
             Guid documentId,
             CancellationToken cancellationToken = default)
         {
-            var tenantId = GetRequiredTenantId();
             var actorUserId = GetRequiredUserId();
             var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
-
-            EnsurePatientBelongsToTenant(patient, tenantId);
+            ResolveExecutionTenantId(patient);
 
             var patientDocument = await _patientDocumentRepository.GetActiveByIdAsync(patientId, documentId, cancellationToken);
             if (patientDocument is null)
@@ -122,6 +118,18 @@ namespace BigSmile.Application.Features.PatientDocuments.Commands
             {
                 throw new InvalidOperationException("Patient documents can only reference patients from the current tenant.");
             }
+        }
+
+        private Guid ResolveExecutionTenantId(Patient patient)
+        {
+            if (_tenantContext.HasPlatformOverride())
+            {
+                return patient.TenantId;
+            }
+
+            var tenantId = GetRequiredTenantId();
+            EnsurePatientBelongsToTenant(patient, tenantId);
+            return tenantId;
         }
 
         private Guid GetRequiredTenantId()

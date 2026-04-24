@@ -37,7 +37,7 @@ namespace BigSmile.Application.Features.PatientDocuments.Queries
 
         public async Task<IReadOnlyList<PatientDocumentSummaryDto>?> ListActiveByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default)
         {
-            EnsureTenantContext();
+            EnsureDocumentAccessContext();
 
             var patient = await _patientRepository.GetByIdAsync(patientId, cancellationToken);
             if (patient is null)
@@ -57,7 +57,7 @@ namespace BigSmile.Application.Features.PatientDocuments.Queries
             Guid documentId,
             CancellationToken cancellationToken = default)
         {
-            EnsureTenantContext();
+            EnsureDocumentAccessContext();
 
             var patient = await _patientRepository.GetByIdAsync(patientId, cancellationToken);
             if (patient is null)
@@ -83,12 +83,17 @@ namespace BigSmile.Application.Features.PatientDocuments.Queries
                 contentStream);
         }
 
-        private void EnsureTenantContext()
+        private void EnsureDocumentAccessContext()
         {
+            if (_tenantContext.HasPlatformOverride())
+            {
+                return;
+            }
+
             var tenantIdValue = _tenantContext.GetTenantId();
             if (!Guid.TryParse(tenantIdValue, out var tenantId) || tenantId == Guid.Empty)
             {
-                throw new InvalidOperationException("Patient document queries require a resolved tenant context.");
+                throw new InvalidOperationException("Patient document queries require a resolved tenant context or explicit platform override.");
             }
         }
     }

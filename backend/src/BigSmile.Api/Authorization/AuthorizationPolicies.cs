@@ -147,13 +147,19 @@ namespace BigSmile.Api.Authorization
             options.AddPolicy(DocumentRead, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new PermissionRequirement(Permissions.DocumentRead));
+                policy.AddRequirements(new PermissionRequirement(
+                    Permissions.DocumentRead,
+                    enablePlatformOverride: true,
+                    platformOverrideRouteValueKey: "patientId"));
             });
 
             options.AddPolicy(DocumentWrite, policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new PermissionRequirement(Permissions.DocumentWrite));
+                policy.AddRequirements(new PermissionRequirement(
+                    Permissions.DocumentWrite,
+                    enablePlatformOverride: true,
+                    platformOverrideRouteValueKey: "patientId"));
             });
         }
     }
