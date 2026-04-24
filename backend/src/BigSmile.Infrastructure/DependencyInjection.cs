@@ -1,5 +1,6 @@
 using BigSmile.Application.Interfaces.Repositories;
 using BigSmile.Application.Interfaces.Security;
+using BigSmile.Application.Interfaces.Storage;
 using BigSmile.Infrastructure.Context;
 using BigSmile.Infrastructure.Data;
 using BigSmile.Infrastructure.Data.Repositories;
@@ -9,6 +10,7 @@ using BigSmile.SharedKernel.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace BigSmile.Infrastructure
 {
@@ -16,6 +18,14 @@ namespace BigSmile.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            var patientDocumentStorageOptions = new PatientDocumentStorageOptions
+            {
+                RootPath = configuration[$"{PatientDocumentStorageOptions.SectionName}:RootPath"]
+            };
+
+            services.AddSingleton<IOptions<PatientDocumentStorageOptions>>(
+                Microsoft.Extensions.Options.Options.Create(patientDocumentStorageOptions));
+
             // Register DbContext
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
@@ -26,6 +36,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IPatientRepository, EfPatientRepository>();
             services.AddScoped<IClinicalRecordRepository, EfClinicalRecordRepository>();
             services.AddScoped<IOdontogramRepository, EfOdontogramRepository>();
+            services.AddScoped<IPatientDocumentRepository, EfPatientDocumentRepository>();
             services.AddScoped<IBillingDocumentRepository, EfBillingDocumentRepository>();
             services.AddScoped<ITreatmentPlanRepository, EfTreatmentPlanRepository>();
             services.AddScoped<ITreatmentQuoteRepository, EfTreatmentQuoteRepository>();
@@ -44,6 +55,7 @@ namespace BigSmile.Infrastructure
 
             // Register password hasher
             services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<IPatientDocumentBinaryStore, LocalPatientDocumentBinaryStore>();
 
             return services;
         }

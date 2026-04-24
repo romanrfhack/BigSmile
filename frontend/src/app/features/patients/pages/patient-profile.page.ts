@@ -48,6 +48,12 @@ import { PatientsFacade } from '../facades/patients.facade';
             class="action-link action-secondary">
             Billing
           </a>
+          <a
+            *ngIf="canReadDocuments && patientsFacade.currentPatient() as patient"
+            [routerLink]="['/patients', patient.id, 'documents']"
+            class="action-link action-secondary">
+            Documents
+          </a>
           <a *ngIf="patientsFacade.currentPatient() as patient" [routerLink]="['/patients', patient.id, 'edit']" class="action-link">
             Edit patient
           </a>
@@ -279,6 +285,7 @@ export class PatientProfilePageComponent implements OnInit {
   readonly canReadTreatmentPlans = this.authService.hasPermissions(['treatmentplan.read']);
   readonly canReadTreatmentQuotes = this.authService.hasPermissions(['treatmentquote.read']);
   readonly canReadBillingDocuments = this.authService.hasPermissions(['billing.read']);
+  readonly canReadDocuments = this.authService.hasPermissions(['document.read']);
   private readonly route = inject(ActivatedRoute);
 
   ngOnInit(): void {

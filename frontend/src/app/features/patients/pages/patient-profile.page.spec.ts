@@ -67,11 +67,14 @@ describe('PatientProfilePageComponent', () => {
       .find((link) => link.textContent?.includes('Quote'));
     const billingLink = links
       .find((link) => link.textContent?.includes('Billing'));
+    const documentsLink = links
+      .find((link) => link.textContent?.includes('Documents'));
 
     expect(clinicalRecordLink).toBeTruthy();
     expect(odontogramLink).toBeTruthy();
     expect(treatmentPlanLink).toBeTruthy();
     expect(quoteLink).toBeTruthy();
     expect(billingLink).toBeTruthy();
+    expect(documentsLink).toBeTruthy();
   });
 });

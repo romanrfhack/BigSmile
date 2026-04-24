@@ -4,6 +4,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { SessionHomeComponent } from './features/auth/session-home/session-home.component';
 import { BillingDocumentPageComponent } from './features/billing/pages/billing-document.page';
 import { ClinicalRecordPageComponent } from './features/clinical-records/pages/clinical-record.page';
+import { PatientDocumentsPageComponent } from './features/documents/pages/patient-documents.page';
 import { OdontogramPageComponent } from './features/odontogram/pages/odontogram.page';
 import { PatientFormPageComponent } from './features/patients/pages/patient-form.page';
 import { PatientListPageComponent } from './features/patients/pages/patient-list.page';
@@ -68,6 +69,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       requiredPermissions: ['odontogram.read']
+    }
+  },
+  {
+    path: 'patients/:id/documents',
+    component: PatientDocumentsPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['document.read']
     }
   },
   {
