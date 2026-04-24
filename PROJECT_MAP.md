@@ -64,7 +64,7 @@ Canonical project status:
 * **Release 5 — Treatments and Quotes:** in progress
 * **Accepted slices:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
 * **Release 6 — Billing:** open in progress through accepted slice **Release 6.1 — Billing Foundation**
-* **Release 7 — Documents and Dashboard:** open in progress with implemented bounded repo slice **Release 7.1 — Documents Foundation** not yet accepted
+* **Release 7 — Documents and Dashboard:** open in progress with accepted slice **Release 7.1 — Documents Foundation**
 
 ### Current expected priority
 
@@ -76,9 +76,9 @@ Continue the current active phase:
 * preserving the accepted Release 5.1 item scope: required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference with `surfaceCode` requiring `toothCode`
 * preserving the accepted Release 5.2 scope: explicit quote creation from the existing treatment plan, `GET` returning `404` when missing, no autocreation, exactly one quote per treatment plan, snapshot-only quote items, fixed/simple currency handling, line-level pricing, bounded `Draft` / `Proposed` / `Accepted` quote status with positive pricing preserved through `Proposed`, and read-only quotes once accepted
 * preserving the accepted Release 6.1 scope: explicit billing document creation from the accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling, bounded `Draft` / `Issued` status, and read-only behavior once issued
-* preserving the implemented bounded Release 7.1 scope: explicit patient-scoped document upload, active listing, authorized download, logical retire, private binary storage, allowlist limited to PDF/JPG/PNG, explicit 10 MB limit, and no autocreation
+* preserving the accepted Release 7.1 scope: tenant-owned and patient-owned `PatientDocument`, explicit patient-scoped document upload, active listing, authorized download, logical retire, private local binary storage, allowlist limited to `application/pdf` / `image/jpeg` / `image/png`, explicit 10 MB limit, and no autocreation
 * keeping payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows outside the accepted Release 6.1 scope
-* keeping dashboard, OCR, rich preview, versioning, external sharing, templates, generated PDFs, and advanced document workflows outside the implemented Release 7.1 scope
+* keeping dashboard, OCR, rich preview, versioning, external sharing, templates, generated PDFs, and advanced document workflows outside the accepted Release 7.1 scope
 * preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
 * preserving the current odontogram access restriction where `odontogram.read` / `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive odontogram permissions in this phase
 * preserving the current treatment-plan access restriction where `treatmentplan.read` / `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive treatment-plan permissions in this phase

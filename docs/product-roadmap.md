@@ -481,10 +481,10 @@ The clinic can register and track money related to patient care in one operation
 
 ## Current status
 - Release 7 is now open in the repository
-- Release 7.1 — Documents Foundation is implemented as a bounded repo slice and is not yet accepted
-- The current implemented scope is limited to explicit patient-scoped upload, active listing, authorized download, logical retire, private local storage, allowlist `application/pdf` / `image/jpeg` / `image/png`, and a simple 10 MB maximum size
-- `document.read` and `document.write` are currently restricted to `PlatformAdmin` and `TenantAdmin`
-- Dashboard, OCR, rich preview, versioning, external sharing, and advanced document workflows remain deferred beyond the implemented Release 7.1 slice
+- Release 7.1 — Documents Foundation is accepted as the current bounded slice of Release 7
+- The current accepted scope is limited to tenant-owned and patient-owned `PatientDocument` records with explicit patient-scoped upload, active listing, authorized download, logical retire, private local storage, allowlist `application/pdf` / `image/jpeg` / `image/png`, a simple 10 MB maximum size, and no autocreation
+- `document.read` and `document.write` are currently restricted to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive document permissions in this slice
+- Dashboard, OCR, rich preview, versioning, external sharing, templates, generated PDFs, and advanced document workflows remain deferred beyond the accepted Release 7.1 slice
 
 ## Goal
 Complete the initial operational MVP with file support and high-level visibility.

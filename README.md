@@ -260,7 +260,7 @@ Current active phase:
 
 * **Release 7 — Documents and Dashboard:** open in progress
 * **Accepted upstream slice preserved:** **Release 6.1 — Billing Foundation**
-* **Implemented bounded repo slice:** **Release 7.1 — Documents Foundation** (not yet accepted)
+* **Accepted current slice preserved:** **Release 7.1 — Documents Foundation**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -298,9 +298,9 @@ Release 6 remains open and is currently preserved through the accepted Release 6
 
 Billing access in the accepted Release 6.1 slice is intentionally restricted: `billing.read` and `billing.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive billing permissions. Payments, balances, receipts, taxes, discounts, CFDI/PAC, cancellations, multi-billing, and advanced billing workflows remain outside this accepted slice and Release 6 itself is not yet closed.
 
-Release 7 is now open in the repository through an implemented bounded Release 7.1 — Documents Foundation slice that is not yet accepted. This implemented slice adds only explicit patient-scoped document upload through multipart/form-data, active document listing, authorized download through the API, logical retire for mistaken uploads, private local filesystem storage, an allowlist limited to `application/pdf`, `image/jpeg`, and `image/png`, and a simple 10 MB maximum size. Documents are never auto-created in this slice, and OCR, rich preview, thumbnails, versioning, public sharing, templates, generated PDFs, and dashboard workflows remain outside the implemented scope.
+Release 7 remains open in the repository and is currently preserved through the accepted Release 7.1 — Documents Foundation slice. This accepted slice adds only tenant-owned, patient-owned `PatientDocument` records with explicit patient-scoped document upload through multipart/form-data, active document listing, authorized download through the API, logical retire for mistaken uploads, private local filesystem storage, an allowlist limited to `application/pdf`, `image/jpeg`, and `image/png`, and a simple 10 MB maximum size. Documents are never auto-created in this slice, and OCR, rich preview, thumbnails, versioning, public sharing, templates, generated PDFs, and dashboard workflows remain outside the accepted scope.
 
-Document access in the implemented Release 7.1 slice is intentionally restricted: `document.read` and `document.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive document permissions.
+Document access in the accepted Release 7.1 slice is intentionally restricted: `document.read` and `document.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive document permissions.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -396,12 +396,12 @@ The repository should be treated as having an established technical and architec
 ### Release 7 — Documents and Dashboard
 
 * Release 7 is now open in the repository
-* Implemented bounded repo slice: Release 7.1 — Documents Foundation (not yet accepted)
-* Explicit patient-scoped document upload through multipart/form-data
+* Accepted current slice: Release 7.1 — Documents Foundation
+* Tenant-owned and patient-owned `PatientDocument` records with explicit patient-scoped document upload through multipart/form-data
 * Active document list with authorized API download and logical retire
 * Private local filesystem storage with explicit allowlist `application/pdf`, `image/jpeg`, `image/png` and a 10 MB maximum size
-* `document.read` / `document.write` restricted to `PlatformAdmin` and `TenantAdmin`
-* OCR, rich preview, versioning, external sharing, generated PDFs, and Dashboard remain outside the implemented Release 7.1 scope
+* `document.read` / `document.write` restricted to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive document permissions in this phase
+* OCR, rich preview, versioning, external sharing, templates, generated PDFs, and Dashboard remain outside the accepted Release 7.1 scope
 
 ---
 
