@@ -258,9 +258,9 @@ Completed foundation milestones:
 
 Current active phase:
 
-* **Release 6 — Billing:** open in progress
-* **Accepted upstream slices preserved:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
-* **Accepted current slice:** **Release 6.1 — Billing Foundation**
+* **Release 7 — Documents and Dashboard:** open in progress
+* **Accepted upstream slice preserved:** **Release 6.1 — Billing Foundation**
+* **Implemented bounded repo slice:** **Release 7.1 — Documents Foundation** (not yet accepted)
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -297,6 +297,10 @@ Treatment quote access in the accepted Release 5.2 slice is intentionally restri
 Release 6 remains open and is currently preserved through the accepted Release 6.1 — Billing Foundation slice. This accepted slice adds only explicit billing document creation from an accepted quote, `GET` returning `404` when the billing document does not exist, no autocreation, exactly one billing document per quote, snapshot-only billing lines copied from the accepted quote, inherited simple currency handling from that accepted quote, currently `MXN` in the repo implementation, bounded `Draft` / `Issued` status with explicit issue, and read-only behavior once issued.
 
 Billing access in the accepted Release 6.1 slice is intentionally restricted: `billing.read` and `billing.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive billing permissions. Payments, balances, receipts, taxes, discounts, CFDI/PAC, cancellations, multi-billing, and advanced billing workflows remain outside this accepted slice and Release 6 itself is not yet closed.
+
+Release 7 is now open in the repository through an implemented bounded Release 7.1 — Documents Foundation slice that is not yet accepted. This implemented slice adds only explicit patient-scoped document upload through multipart/form-data, active document listing, authorized download through the API, logical retire for mistaken uploads, private local filesystem storage, an allowlist limited to `application/pdf`, `image/jpeg`, and `image/png`, and a simple 10 MB maximum size. Documents are never auto-created in this slice, and OCR, rich preview, thumbnails, versioning, public sharing, templates, generated PDFs, and dashboard workflows remain outside the implemented scope.
+
+Document access in the implemented Release 7.1 slice is intentionally restricted: `document.read` and `document.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive document permissions.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -391,8 +395,13 @@ The repository should be treated as having an established technical and architec
 
 ### Release 7 — Documents and Dashboard
 
-* Attachments and files
-* Operational dashboard
+* Release 7 is now open in the repository
+* Implemented bounded repo slice: Release 7.1 — Documents Foundation (not yet accepted)
+* Explicit patient-scoped document upload through multipart/form-data
+* Active document list with authorized API download and logical retire
+* Private local filesystem storage with explicit allowlist `application/pdf`, `image/jpeg`, `image/png` and a 10 MB maximum size
+* `document.read` / `document.write` restricted to `PlatformAdmin` and `TenantAdmin`
+* OCR, rich preview, versioning, external sharing, generated PDFs, and Dashboard remain outside the implemented Release 7.1 scope
 
 ---
 

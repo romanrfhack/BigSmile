@@ -64,23 +64,27 @@ Canonical project status:
 * **Release 5 — Treatments and Quotes:** in progress
 * **Accepted slices:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
 * **Release 6 — Billing:** open in progress through accepted slice **Release 6.1 — Billing Foundation**
+* **Release 7 — Documents and Dashboard:** open in progress with implemented bounded repo slice **Release 7.1 — Documents Foundation** not yet accepted
 
 ### Current expected priority
 
 Continue the current active phase:
 
-* **Release 6 — Billing**
+* **Release 7 — Documents and Dashboard**
 * preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices plus the accepted Release 4.1, Release 4.2, Release 4.3, and Release 4.4 odontogram slices as the foundation that Release 5.1 builds on
 * preserving the accepted Release 5.1 scope: tenant-owned and patient-owned treatment plans, explicit creation, `GET` returning `404` when missing, no autocreation, exactly one active treatment plan per patient per tenant, basic add/remove items, and bounded `Draft` / `Proposed` / `Accepted` status updates
 * preserving the accepted Release 5.1 item scope: required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference with `surfaceCode` requiring `toothCode`
 * preserving the accepted Release 5.2 scope: explicit quote creation from the existing treatment plan, `GET` returning `404` when missing, no autocreation, exactly one quote per treatment plan, snapshot-only quote items, fixed/simple currency handling, line-level pricing, bounded `Draft` / `Proposed` / `Accepted` quote status with positive pricing preserved through `Proposed`, and read-only quotes once accepted
 * preserving the accepted Release 6.1 scope: explicit billing document creation from the accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling, bounded `Draft` / `Issued` status, and read-only behavior once issued
+* preserving the implemented bounded Release 7.1 scope: explicit patient-scoped document upload, active listing, authorized download, logical retire, private binary storage, allowlist limited to PDF/JPG/PNG, explicit 10 MB limit, and no autocreation
 * keeping payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows outside the accepted Release 6.1 scope
+* keeping dashboard, OCR, rich preview, versioning, external sharing, templates, generated PDFs, and advanced document workflows outside the implemented Release 7.1 scope
 * preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
 * preserving the current odontogram access restriction where `odontogram.read` / `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive odontogram permissions in this phase
 * preserving the current treatment-plan access restriction where `treatmentplan.read` / `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive treatment-plan permissions in this phase
 * preserving the current treatment-quote access restriction where `treatmentquote.read` / `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive treatment-quote permissions in this phase
 * preserving the current billing access restriction where `billing.read` / `billing.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive billing permissions in this phase
+* preserving the current document access restriction where `document.read` / `document.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive document permissions in this phase
 * preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
 * keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
 * only on top of the completed tenant-aware authorization and tenant enforcement baseline
