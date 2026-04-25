@@ -4,6 +4,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { SessionHomeComponent } from './features/auth/session-home/session-home.component';
 import { BillingDocumentPageComponent } from './features/billing/pages/billing-document.page';
 import { ClinicalRecordPageComponent } from './features/clinical-records/pages/clinical-record.page';
+import { DashboardPageComponent } from './features/dashboard/pages/dashboard.page';
 import { PatientDocumentsPageComponent } from './features/documents/pages/patient-documents.page';
 import { OdontogramPageComponent } from './features/odontogram/pages/odontogram.page';
 import { PatientFormPageComponent } from './features/patients/pages/patient-form.page';
@@ -21,6 +22,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       requiredPermissions: ['auth.self.read']
+    }
+  },
+  {
+    path: 'dashboard',
+    component: DashboardPageComponent,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['dashboard.read']
     }
   },
   {

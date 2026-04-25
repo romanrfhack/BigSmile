@@ -61,6 +61,11 @@ namespace BigSmile.Api.Authorization
                 return;
             }
 
+            if (requirement.RequireResolvedTenantContext && !HasResolvedTenantOperationalContext())
+            {
+                return;
+            }
+
             if (requirement.EnablePlatformOverride && _tenantContext.GetAccessScope() == AccessScope.Platform)
             {
                 EnablePlatformOverride(
@@ -164,6 +169,16 @@ namespace BigSmile.Api.Authorization
         {
             var routeValue = _httpContextAccessor.HttpContext?.Request.RouteValues[routeValueKey]?.ToString();
             return Guid.TryParse(routeValue, out var parsed) ? parsed : null;
+        }
+
+        private bool HasResolvedTenantOperationalContext()
+        {
+            if (_tenantContext.GetAccessScope() == AccessScope.Platform)
+            {
+                return false;
+            }
+
+            return Guid.TryParse(_tenantContext.GetTenantId(), out var tenantId) && tenantId != Guid.Empty;
         }
 
         private Guid? ResolvePlatformOverrideResourceId(string? routeValueKey)

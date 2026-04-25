@@ -389,6 +389,59 @@ namespace BigSmile.UnitTests.Authorization
         }
 
         [Fact]
+        public async Task PermissionRequirement_Succeeds_ForDashboardPermissionWithResolvedTenantContext()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Tenant,
+                isAuthenticated: true,
+                Guid.NewGuid().ToString());
+
+            var user = CreatePrincipal(userId, SystemRoles.TenantAdmin, Permissions.DashboardRead);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[]
+                {
+                    new PermissionRequirement(
+                        Permissions.DashboardRead,
+                        requireResolvedTenantContext: true)
+                },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.True(context.HasSucceeded);
+            Assert.False(_tenantContext.HasPlatformOverride());
+        }
+
+        [Fact]
+        public async Task PermissionRequirement_Fails_ForDashboardPermissionInPlatformScope()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Platform,
+                isAuthenticated: true);
+
+            var user = CreatePrincipal(userId, SystemRoles.PlatformAdmin, Permissions.DashboardRead);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[]
+                {
+                    new PermissionRequirement(
+                        Permissions.DashboardRead,
+                        requireResolvedTenantContext: true)
+                },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.False(context.HasSucceeded);
+            Assert.False(_tenantContext.HasPlatformOverride());
+        }
+
+        [Fact]
         public void RolePermissionCatalog_DoesNotGrantClinicalPermissions_ToTenantUser()
         {
             var permissions = _rolePermissionCatalog.GetPermissions(SystemRoles.TenantUser);
@@ -413,6 +466,14 @@ namespace BigSmile.UnitTests.Authorization
 
             Assert.DoesNotContain(Permissions.DocumentRead, permissions);
             Assert.DoesNotContain(Permissions.DocumentWrite, permissions);
+        }
+
+        [Fact]
+        public void RolePermissionCatalog_DoesNotGrantDashboardPermission_ToTenantUser()
+        {
+            var permissions = _rolePermissionCatalog.GetPermissions(SystemRoles.TenantUser);
+
+            Assert.DoesNotContain(Permissions.DashboardRead, permissions);
         }
 
         private static ClaimsPrincipal CreatePrincipal(Guid userId, string role, params string[] permissions)

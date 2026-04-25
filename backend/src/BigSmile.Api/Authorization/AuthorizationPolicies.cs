@@ -25,6 +25,7 @@ namespace BigSmile.Api.Authorization
         public const string BillingWrite = "billing.write";
         public const string DocumentRead = "document.read";
         public const string DocumentWrite = "document.write";
+        public const string DashboardRead = "dashboard.read";
 
         public static void AddPolicies(AuthorizationOptions options)
         {
@@ -160,6 +161,14 @@ namespace BigSmile.Api.Authorization
                     Permissions.DocumentWrite,
                     enablePlatformOverride: true,
                     platformOverrideRouteValueKey: "patientId"));
+            });
+
+            options.AddPolicy(DashboardRead, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(
+                    Permissions.DashboardRead,
+                    requireResolvedTenantContext: true));
             });
         }
     }

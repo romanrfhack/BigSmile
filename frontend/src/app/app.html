@@ -6,6 +6,9 @@
     </div>
 
     <nav class="app-nav" aria-label="Primary">
+      @if (canAccessDashboard()) {
+        <a routerLink="/dashboard" routerLinkActive="is-active">Dashboard</a>
+      }
       <a routerLink="/patients" routerLinkActive="is-active">Patients</a>
       <a routerLink="/scheduling" routerLinkActive="is-active">Scheduling</a>
       <a routerLink="/app" routerLinkActive="is-active">Access Context</a>

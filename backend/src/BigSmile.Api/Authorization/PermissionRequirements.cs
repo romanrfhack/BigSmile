@@ -8,18 +8,21 @@ namespace BigSmile.Api.Authorization
             string permission,
             bool requirePlatformScope = false,
             bool enablePlatformOverride = false,
-            string? platformOverrideRouteValueKey = null)
+            string? platformOverrideRouteValueKey = null,
+            bool requireResolvedTenantContext = false)
         {
             Permission = permission;
             RequirePlatformScope = requirePlatformScope;
             EnablePlatformOverride = enablePlatformOverride;
             PlatformOverrideRouteValueKey = platformOverrideRouteValueKey;
+            RequireResolvedTenantContext = requireResolvedTenantContext;
         }
 
         public string Permission { get; }
         public bool RequirePlatformScope { get; }
         public bool EnablePlatformOverride { get; }
         public string? PlatformOverrideRouteValueKey { get; }
+        public bool RequireResolvedTenantContext { get; }
     }
 
     public sealed class TenantAccessRequirement : IAuthorizationRequirement

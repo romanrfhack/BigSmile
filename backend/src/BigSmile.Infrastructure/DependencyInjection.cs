@@ -37,6 +37,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IClinicalRecordRepository, EfClinicalRecordRepository>();
             services.AddScoped<IOdontogramRepository, EfOdontogramRepository>();
             services.AddScoped<IPatientDocumentRepository, EfPatientDocumentRepository>();
+            services.AddScoped<IDashboardSummaryRepository, EfDashboardSummaryRepository>();
             services.AddScoped<IBillingDocumentRepository, EfBillingDocumentRepository>();
             services.AddScoped<ITreatmentPlanRepository, EfTreatmentPlanRepository>();
             services.AddScoped<ITreatmentQuoteRepository, EfTreatmentQuoteRepository>();

@@ -54,7 +54,8 @@ namespace BigSmile.Application.Authorization
                     Permissions.BillingRead,
                     Permissions.BillingWrite,
                     Permissions.DocumentRead,
-                    Permissions.DocumentWrite
+                    Permissions.DocumentWrite,
+                    Permissions.DashboardRead
                 },
                 [SystemRoles.TenantUser] = new[]
                 {

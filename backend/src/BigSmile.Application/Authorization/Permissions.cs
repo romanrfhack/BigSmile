@@ -23,5 +23,6 @@ namespace BigSmile.Application.Authorization
         public const string BillingWrite = "billing.write";
         public const string DocumentRead = "document.read";
         public const string DocumentWrite = "document.write";
+        public const string DashboardRead = "dashboard.read";
     }
 }
