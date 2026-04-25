@@ -18,7 +18,7 @@ namespace BigSmile.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.TenantRead)]
+        [Authorize(Policy = AuthorizationPolicies.CurrentTenantRead)]
         public async Task<ActionResult<IReadOnlyList<BranchDto>>> GetAccessible(CancellationToken cancellationToken)
         {
             var branches = await _branchQueryService.GetAccessibleBranchesAsync(cancellationToken);

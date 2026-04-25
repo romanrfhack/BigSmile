@@ -114,6 +114,55 @@ namespace BigSmile.UnitTests.Authorization
         }
 
         [Fact]
+        public async Task PermissionRequirement_Succeeds_ForCurrentTenantRead_WhenTenantContextIsResolved()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Tenant,
+                isAuthenticated: true,
+                Guid.NewGuid().ToString());
+
+            var user = CreatePrincipal(userId, SystemRoles.TenantUser, Permissions.TenantRead);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[]
+                {
+                    new PermissionRequirement(Permissions.TenantRead, requireResolvedTenantContext: true)
+                },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.True(context.HasSucceeded);
+            Assert.False(_tenantContext.HasPlatformOverride());
+        }
+
+        [Fact]
+        public async Task PermissionRequirement_Fails_ForCurrentTenantRead_WhenTenantContextIsMissing()
+        {
+            var userId = Guid.NewGuid();
+            _tenantContext.SetRequestContext(
+                userId.ToString(),
+                BigSmile.SharedKernel.Authorization.AccessScope.Platform,
+                isAuthenticated: true);
+
+            var user = CreatePrincipal(userId, SystemRoles.PlatformAdmin, Permissions.TenantRead);
+            var context = new AuthorizationHandlerContext(
+                new IAuthorizationRequirement[]
+                {
+                    new PermissionRequirement(Permissions.TenantRead, requireResolvedTenantContext: true)
+                },
+                user,
+                resource: null);
+
+            await _handler.HandleAsync(context);
+
+            Assert.False(context.HasSucceeded);
+            Assert.False(_tenantContext.HasPlatformOverride());
+        }
+
+        [Fact]
         public async Task BranchAccessRequirement_Succeeds_ForAssignedTenantUser()
         {
             var userId = Guid.NewGuid();

@@ -8,6 +8,7 @@ namespace BigSmile.Api.Authorization
         public const string SelfRead = "auth.self.read";
         public const string PlatformTenantsRead = "platform.tenants.read";
         public const string TenantRead = "tenant.read";
+        public const string CurrentTenantRead = "tenant.current.read";
         public const string BranchRead = "branch.read";
         public const string PatientRead = "patient.read";
         public const string PatientWrite = "patient.write";
@@ -51,6 +52,14 @@ namespace BigSmile.Api.Authorization
                     Permissions.TenantRead,
                     routeValueKey: "id",
                     allowPlatformOverride: true));
+            });
+
+            options.AddPolicy(CurrentTenantRead, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(
+                    Permissions.TenantRead,
+                    requireResolvedTenantContext: true));
             });
 
             options.AddPolicy(BranchRead, policy =>
