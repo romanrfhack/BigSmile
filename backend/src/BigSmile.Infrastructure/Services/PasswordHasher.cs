@@ -15,8 +15,12 @@ namespace BigSmile.Infrastructure.Services
             byte[] salt = new byte[SaltSize];
             rng.GetBytes(salt);
 
-            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
-            byte[] hash = pbkdf2.GetBytes(HashSize);
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
+                password,
+                salt,
+                Iterations,
+                HashAlgorithmName.SHA256,
+                HashSize);
 
             byte[] hashBytes = new byte[SaltSize + HashSize];
             Array.Copy(salt, 0, hashBytes, 0, SaltSize);
@@ -31,8 +35,12 @@ namespace BigSmile.Infrastructure.Services
             byte[] salt = new byte[SaltSize];
             Array.Copy(hashBytes, 0, salt, 0, SaltSize);
 
-            using var pbkdf2 = new Rfc2898DeriveBytes(providedPassword, salt, Iterations, HashAlgorithmName.SHA256);
-            byte[] providedHash = pbkdf2.GetBytes(HashSize);
+            byte[] providedHash = Rfc2898DeriveBytes.Pbkdf2(
+                providedPassword,
+                salt,
+                Iterations,
+                HashAlgorithmName.SHA256,
+                HashSize);
 
             for (int i = 0; i < HashSize; i++)
             {
