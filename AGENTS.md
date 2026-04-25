@@ -102,7 +102,7 @@ Canonical project status:
 - `Release 5 — Treatments and Quotes`: in progress
 - accepted slices: `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics`
 - `Release 6 — Billing`: open in progress through accepted slice `Release 6.1 — Billing Foundation`
-- `Release 7 — Documents and Dashboard`: open in progress with accepted slice `Release 7.1 — Documents Foundation`
+- `Release 7 — Documents and Dashboard`: open in progress with accepted slices `Release 7.1 — Documents Foundation` and `Release 7.2 — Dashboard Foundation`
 
 Current active phase:
 - `Release 7 — Documents and Dashboard`
@@ -113,11 +113,11 @@ Within `Release 3 — Clinical Records`, do not assume slices beyond the accepte
 Within `Release 4 — Odontogram`, do not assume slices beyond the accepted `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, and `Release 4.4 — Dental Findings Change History` are implemented unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 5 — Treatments and Quotes`, do not assume slices beyond the accepted `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics` slices are implemented unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 6 — Billing`, do not assume slices beyond the accepted `Release 6.1 — Billing Foundation` slice are implemented unless the actual codebase and aligned documentation explicitly prove it.
-Within `Release 7 — Documents and Dashboard`, do not assume slices beyond the accepted slice `Release 7.1 — Documents Foundation` are implemented, accepted, or closed unless the actual codebase and aligned documentation explicitly prove it.
+Within `Release 7 — Documents and Dashboard`, treat `Release 7.1 — Documents Foundation` and `Release 7.2 — Dashboard Foundation` as accepted slices; do not assume later slices are implemented, accepted, or closed unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, `Release 4.4 — Dental Findings Change History`, the accepted `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics` slices, the accepted `Release 6.1 — Billing Foundation` slice, and the accepted `Release 7.1 — Documents Foundation` slice while continuing `Release 7 — Documents and Dashboard` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, `Release 4.4 — Dental Findings Change History`, the accepted `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics` slices, the accepted `Release 6.1 — Billing Foundation` slice, and the accepted `Release 7.1 — Documents Foundation` and `Release 7.2 — Dashboard Foundation` slices while continuing `Release 7 — Documents and Dashboard` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -142,8 +142,10 @@ Immediate priorities:
 - preserve the current billing access restriction: `billing.read` / `billing.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive billing permissions in this phase
 - preserve the accepted Release 7.1 scope: tenant-owned and patient-owned `PatientDocument`, explicit patient-scoped document upload, active-list read, authorized download, logical retire, private local binary storage, allowlist limited to `application/pdf` / `image/jpeg` / `image/png`, explicit 10 MB limit, and no autocreation
 - preserve the current document access restriction: `document.read` / `document.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive document permissions in this phase
+- preserve the accepted Release 7.2 scope: tenant-scoped dashboard summary, read-model aggregation only, `GET /api/dashboard/summary`, KPI cards for active patients, today appointments, today pending appointments, active documents, active treatment plans, accepted quotes and issued billing documents, no new dashboard table, and no persisted snapshots
+- preserve the current dashboard access restriction: `dashboard.read` belongs to `TenantAdmin`; `TenantUser` does not receive dashboard permissions in this phase; `PlatformAdmin` does not receive `dashboard.read` in this phase because there is no safe tenant-selection path yet for the tenant-scoped dashboard
 - keep payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows deferred beyond the accepted Release 6.1 slice
-- keep dashboard, OCR, rich preview, document versioning, public sharing, templates, generated PDFs, and advanced document workflows deferred beyond the accepted Release 7.1 slice
+- keep OCR, rich preview, document versioning, public sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboard, doctor dashboard, advanced reporting, and advanced document workflows deferred beyond the current accepted Release 7 scope
 - keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened
 - keep privileged/platform paths explicit and auditable
 - maintain automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios

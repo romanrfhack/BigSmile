@@ -481,10 +481,14 @@ The clinic can register and track money related to patient care in one operation
 
 ## Current status
 - Release 7 is now open in the repository
-- Release 7.1 — Documents Foundation is accepted as the current bounded slice of Release 7
-- The current accepted scope is limited to tenant-owned and patient-owned `PatientDocument` records with explicit patient-scoped upload, active listing, authorized download, logical retire, private local storage, allowlist `application/pdf` / `image/jpeg` / `image/png`, a simple 10 MB maximum size, and no autocreation
+- Release 7.1 — Documents Foundation is accepted as a bounded slice of Release 7
+- Release 7.2 — Dashboard Foundation is accepted as a bounded slice of Release 7
+- Release 7 complete is not closed
+- The accepted Release 7.1 scope is limited to tenant-owned and patient-owned `PatientDocument` records with explicit patient-scoped upload, active listing, authorized download, logical retire, private local storage, allowlist `application/pdf` / `image/jpeg` / `image/png`, a simple 10 MB maximum size, and no autocreation
 - `document.read` and `document.write` are currently restricted to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive document permissions in this slice
-- Dashboard, OCR, rich preview, versioning, external sharing, templates, generated PDFs, and advanced document workflows remain deferred beyond the accepted Release 7.1 slice
+- The accepted Release 7.2 scope is limited to a tenant-scoped dashboard summary, pure read-model aggregation, `GET /api/dashboard/summary`, KPI cards for active patients, today appointments, today pending appointments, active documents, active treatment plans, accepted quotes, issued billing documents, and `generatedAtUtc`, with no dashboard table and no persisted snapshots
+- `dashboard.read` is currently restricted to `TenantAdmin`; `TenantUser` and `PlatformAdmin` do not receive dashboard permissions in this slice
+- OCR, rich preview, versioning, external sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboard, doctor dashboard, advanced reporting, exports, and advanced document workflows remain deferred beyond the current accepted scope
 
 ## Goal
 Complete the initial operational MVP with file support and high-level visibility.
@@ -499,12 +503,15 @@ Complete the initial operational MVP with file support and high-level visibility
 - simple document access controls
 
 ### Dashboard
+- tenant-scoped operational summary foundation
+- active patients
 - appointments of the day
-- attended appointments
-- no-shows
-- daily income summary
-- pending balances
-- treatments pending acceptance
+- pending appointments of the day
+- active patient documents
+- active treatment plans
+- accepted quotes
+- issued billing documents
+- advanced analytics, charts, complex filters, daily income summaries, balances, branch dashboards, doctor dashboards, exports, and advanced reporting deferred beyond Release 7.2
 
 ## Expected outcome
 The MVP becomes operationally complete for day-to-day usage.
