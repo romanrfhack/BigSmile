@@ -1,125 +1,151 @@
 import { Routes } from '@angular/router';
 import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
-import { LoginComponent } from './features/auth/login/login.component';
-import { SessionHomeComponent } from './features/auth/session-home/session-home.component';
-import { BillingDocumentPageComponent } from './features/billing/pages/billing-document.page';
-import { ClinicalRecordPageComponent } from './features/clinical-records/pages/clinical-record.page';
-import { DashboardPageComponent } from './features/dashboard/pages/dashboard.page';
-import { PatientDocumentsPageComponent } from './features/documents/pages/patient-documents.page';
-import { OdontogramPageComponent } from './features/odontogram/pages/odontogram.page';
-import { PatientFormPageComponent } from './features/patients/pages/patient-form.page';
-import { PatientListPageComponent } from './features/patients/pages/patient-list.page';
-import { PatientProfilePageComponent } from './features/patients/pages/patient-profile.page';
-import { SchedulingPageComponent } from './features/scheduling/pages/scheduling.page';
-import { TreatmentPlanPageComponent } from './features/treatments/pages/treatment-plan.page';
-import { TreatmentQuotePageComponent } from './features/treatments/pages/treatment-quote.page';
+
+const loadLoginComponent = () =>
+  import('./features/auth/login/login.component').then((m) => m.LoginComponent);
+const loadSessionHomeComponent = () =>
+  import('./features/auth/session-home/session-home.component').then((m) => m.SessionHomeComponent);
+const loadDashboardPage = () =>
+  import('./features/dashboard/pages/dashboard.page').then((m) => m.DashboardPageComponent);
+const loadPatientListPage = () =>
+  import('./features/patients/pages/patient-list.page').then((m) => m.PatientListPageComponent);
+const loadPatientFormPage = () =>
+  import('./features/patients/pages/patient-form.page').then((m) => m.PatientFormPageComponent);
+const loadPatientProfilePage = () =>
+  import('./features/patients/pages/patient-profile.page').then(
+    (m) => m.PatientProfilePageComponent,
+  );
+const loadClinicalRecordPage = () =>
+  import('./features/clinical-records/pages/clinical-record.page').then(
+    (m) => m.ClinicalRecordPageComponent,
+  );
+const loadOdontogramPage = () =>
+  import('./features/odontogram/pages/odontogram.page').then((m) => m.OdontogramPageComponent);
+const loadPatientDocumentsPage = () =>
+  import('./features/documents/pages/patient-documents.page').then(
+    (m) => m.PatientDocumentsPageComponent,
+  );
+const loadBillingDocumentPage = () =>
+  import('./features/billing/pages/billing-document.page').then(
+    (m) => m.BillingDocumentPageComponent,
+  );
+const loadTreatmentQuotePage = () =>
+  import('./features/treatments/pages/treatment-quote.page').then(
+    (m) => m.TreatmentQuotePageComponent,
+  );
+const loadTreatmentPlanPage = () =>
+  import('./features/treatments/pages/treatment-plan.page').then(
+    (m) => m.TreatmentPlanPageComponent,
+  );
+const loadSchedulingPage = () =>
+  import('./features/scheduling/pages/scheduling.page').then((m) => m.SchedulingPageComponent);
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent, canActivate: [anonymousOnlyGuard] },
+  { path: 'login', loadComponent: loadLoginComponent, canActivate: [anonymousOnlyGuard] },
   {
     path: 'app',
-    component: SessionHomeComponent,
+    loadComponent: loadSessionHomeComponent,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['auth.self.read']
-    }
+      requiredPermissions: ['auth.self.read'],
+    },
   },
   {
     path: 'dashboard',
-    component: DashboardPageComponent,
+    loadComponent: loadDashboardPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['dashboard.read']
-    }
+      requiredPermissions: ['dashboard.read'],
+    },
   },
   {
     path: 'patients',
-    component: PatientListPageComponent,
+    loadComponent: loadPatientListPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['patient.read']
-    }
+      requiredPermissions: ['patient.read'],
+    },
   },
   {
     path: 'patients/new',
-    component: PatientFormPageComponent,
+    loadComponent: loadPatientFormPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['patient.write']
-    }
+      requiredPermissions: ['patient.write'],
+    },
   },
   {
     path: 'patients/:id/edit',
-    component: PatientFormPageComponent,
+    loadComponent: loadPatientFormPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['patient.write']
-    }
+      requiredPermissions: ['patient.write'],
+    },
   },
   {
     path: 'patients/:id',
-    component: PatientProfilePageComponent,
+    loadComponent: loadPatientProfilePage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['patient.read']
-    }
+      requiredPermissions: ['patient.read'],
+    },
   },
   {
     path: 'patients/:id/clinical-record',
-    component: ClinicalRecordPageComponent,
+    loadComponent: loadClinicalRecordPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['clinical.read']
-    }
+      requiredPermissions: ['clinical.read'],
+    },
   },
   {
     path: 'patients/:id/odontogram',
-    component: OdontogramPageComponent,
+    loadComponent: loadOdontogramPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['odontogram.read']
-    }
+      requiredPermissions: ['odontogram.read'],
+    },
   },
   {
     path: 'patients/:id/documents',
-    component: PatientDocumentsPageComponent,
+    loadComponent: loadPatientDocumentsPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['document.read']
-    }
+      requiredPermissions: ['document.read'],
+    },
   },
   {
     path: 'patients/:id/treatment-plan/quote/billing',
-    component: BillingDocumentPageComponent,
+    loadComponent: loadBillingDocumentPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['billing.read']
-    }
+      requiredPermissions: ['billing.read'],
+    },
   },
   {
     path: 'patients/:id/treatment-plan/quote',
-    component: TreatmentQuotePageComponent,
+    loadComponent: loadTreatmentQuotePage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['treatmentquote.read']
-    }
+      requiredPermissions: ['treatmentquote.read'],
+    },
   },
   {
     path: 'patients/:id/treatment-plan',
-    component: TreatmentPlanPageComponent,
+    loadComponent: loadTreatmentPlanPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['treatmentplan.read']
-    }
+      requiredPermissions: ['treatmentplan.read'],
+    },
   },
   {
     path: 'scheduling',
-    component: SchedulingPageComponent,
+    loadComponent: loadSchedulingPage,
     canActivate: [authGuard],
     data: {
-      requiredPermissions: ['scheduling.read']
-    }
+      requiredPermissions: ['scheduling.read'],
+    },
   },
   { path: '', redirectTo: '/patients', pathMatch: 'full' },
-  { path: '**', redirectTo: '/patients' }
+  { path: '**', redirectTo: '/patients' },
 ];
