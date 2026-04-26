@@ -7,12 +7,14 @@ describe('SchedulingFacade', () => {
   let facade: SchedulingFacade;
   let requestedCalendarArgs: [string, string, number] | null;
   let requestedPatientSearch: string | null;
+  let requestedReminderLogAppointmentId: string | null;
   let calendarLoadCount: number;
   let api: SchedulingApiService;
 
   beforeEach(() => {
     requestedCalendarArgs = null;
     requestedPatientSearch = null;
+    requestedReminderLogAppointmentId = null;
     calendarLoadCount = 0;
 
     api = {
@@ -115,6 +117,38 @@ describe('SchedulingFacade', () => {
         notes: 'Check-up',
         cancellationReason: null
       }),
+      getReminderLog: (appointmentId: string) => {
+        requestedReminderLogAppointmentId = appointmentId;
+        return of([
+          {
+            id: 'entry-1',
+            appointmentId,
+            channel: 'Email',
+            outcome: 'LeftMessage',
+            notes: null,
+            createdAtUtc: '2026-04-24T08:00:00Z',
+            createdByUserId: 'user-1'
+          },
+          {
+            id: 'entry-2',
+            appointmentId,
+            channel: 'Phone',
+            outcome: 'Reached',
+            notes: 'Confirmed by phone.',
+            createdAtUtc: '2026-04-25T08:00:00Z',
+            createdByUserId: 'user-2'
+          }
+        ]);
+      },
+      addReminderLogEntry: (appointmentId: string) => of({
+        id: 'entry-3',
+        appointmentId,
+        channel: 'WhatsApp',
+        outcome: 'NoAnswer',
+        notes: null,
+        createdAtUtc: '2026-04-26T08:00:00Z',
+        createdByUserId: 'user-3'
+      }),
       createAppointmentBlock: () => of({
         id: 'block-1',
         branchId: 'branch-1',
@@ -200,5 +234,27 @@ describe('SchedulingFacade', () => {
     facade.markAppointmentConfirmationPending('appointment-1').subscribe();
 
     expect(calendarLoadCount).toBe(2);
+  });
+
+  it('loads reminder log entries for the selected appointment newest-first', () => {
+    facade.loadReminderLog('appointment-1');
+
+    expect(requestedReminderLogAppointmentId).toBe('appointment-1');
+    expect(facade.reminderLog().map(entry => entry.id)).toEqual(['entry-2', 'entry-1']);
+  });
+
+  it('adds a reminder log entry without reloading the calendar', () => {
+    facade.loadInitialContext('branch-1');
+    facade.loadReminderLog('appointment-1');
+    expect(calendarLoadCount).toBe(1);
+
+    facade.addReminderLogEntry('appointment-1', {
+      channel: 'WhatsApp',
+      outcome: 'NoAnswer',
+      notes: null
+    }).subscribe();
+
+    expect(facade.reminderLog().map(entry => entry.id)).toEqual(['entry-3', 'entry-2', 'entry-1']);
+    expect(calendarLoadCount).toBe(1);
   });
 });

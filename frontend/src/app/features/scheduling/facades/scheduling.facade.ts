@@ -3,6 +3,8 @@ import { finalize, tap } from 'rxjs';
 import { SchedulingApiService } from '../data-access/scheduling-api.service';
 import {
   CreateAppointmentBlockRequest,
+  AddAppointmentReminderLogEntryRequest,
+  AppointmentReminderLogEntry,
   CalendarView,
   CalendarViewMode,
   CancelAppointmentRequest,
@@ -24,12 +26,15 @@ export class SchedulingFacade {
   readonly selectedDate = signal(getTodayIsoDate());
   readonly viewMode = signal<CalendarViewMode>('day');
   readonly calendar = signal<CalendarView | null>(null);
+  readonly reminderLog = signal<AppointmentReminderLogEntry[]>([]);
   readonly patientOptions = signal<SchedulingPatientLookup[]>([]);
   readonly loadingBranches = signal(false);
   readonly loadingCalendar = signal(false);
   readonly loadingPatients = signal(false);
   readonly branchesError = signal<string | null>(null);
   readonly calendarError = signal<string | null>(null);
+  readonly loadingReminderLog = signal(false);
+  readonly reminderLogError = signal<string | null>(null);
 
   loadInitialContext(preferredBranchId?: string | null): void {
     this.loadingBranches.set(true);
@@ -166,6 +171,38 @@ export class SchedulingFacade {
     );
   }
 
+  loadReminderLog(appointmentId: string | null): void {
+    if (!appointmentId) {
+      this.clearReminderLog();
+      return;
+    }
+
+    this.loadingReminderLog.set(true);
+    this.reminderLogError.set(null);
+
+    this.schedulingApi.getReminderLog(appointmentId)
+      .pipe(finalize(() => this.loadingReminderLog.set(false)))
+      .subscribe({
+        next: (entries) => this.reminderLog.set(sortReminderLog(entries)),
+        error: () => {
+          this.reminderLog.set([]);
+          this.reminderLogError.set('The reminder log could not be loaded.');
+        }
+      });
+  }
+
+  clearReminderLog(): void {
+    this.reminderLog.set([]);
+    this.loadingReminderLog.set(false);
+    this.reminderLogError.set(null);
+  }
+
+  addReminderLogEntry(appointmentId: string, payload: AddAppointmentReminderLogEntryRequest) {
+    return this.schedulingApi.addReminderLogEntry(appointmentId, payload).pipe(
+      tap((entry) => this.reminderLog.set(sortReminderLog([entry, ...this.reminderLog()])))
+    );
+  }
+
   createAppointmentBlock(payload: CreateAppointmentBlockRequest) {
     return this.schedulingApi.createAppointmentBlock(payload).pipe(
       tap(() => this.loadCalendar())
@@ -181,4 +218,13 @@ export class SchedulingFacade {
 
 function getTodayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function sortReminderLog(entries: AppointmentReminderLogEntry[]): AppointmentReminderLogEntry[] {
+  return [...entries].sort((first, second) => {
+    const createdCompare = second.createdAtUtc.localeCompare(first.createdAtUtc);
+    return createdCompare !== 0
+      ? createdCompare
+      : second.id.localeCompare(first.id);
+  });
 }

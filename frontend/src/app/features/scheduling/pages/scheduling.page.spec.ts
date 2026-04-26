@@ -12,12 +12,16 @@ describe('SchedulingPageComponent', () => {
   let noShowCalls: string[];
   let confirmationCalls: string[];
   let pendingCalls: string[];
+  let reminderLogLoads: (string | null)[];
+  let reminderLogAdds: unknown[];
 
   beforeEach(async () => {
     attendedCalls = [];
     noShowCalls = [];
     confirmationCalls = [];
     pendingCalls = [];
+    reminderLogLoads = [];
+    reminderLogAdds = [];
 
     facade = {
       branches: signal([
@@ -35,14 +39,23 @@ describe('SchedulingPageComponent', () => {
       selectedDate: signal('2026-04-14'),
       viewMode: signal<'day' | 'week'>('day'),
       calendar: signal(null),
+      reminderLog: signal([]),
       patientOptions: signal([]),
       loadingBranches: signal(false),
       loadingCalendar: signal(false),
+      loadingReminderLog: signal(false),
       loadingPatients: signal(false),
       branchesError: signal<string | null>(null),
       calendarError: signal<string | null>(null),
+      reminderLogError: signal<string | null>(null),
       loadInitialContext: () => undefined,
       clearPatientOptions: () => undefined,
+      loadReminderLog: (appointmentId: string | null) => {
+        reminderLogLoads.push(appointmentId);
+      },
+      clearReminderLog: () => {
+        reminderLogLoads.push(null);
+      },
       searchPatients: () => undefined,
       selectBranch: () => undefined,
       setDate: () => undefined,
@@ -119,6 +132,18 @@ describe('SchedulingPageComponent', () => {
           cancellationReason: null
         });
       },
+      addReminderLogEntry: (appointmentId: string, payload: unknown) => {
+        reminderLogAdds.push({ appointmentId, payload });
+        return of({
+          id: 'entry-1',
+          appointmentId,
+          channel: 'Phone',
+          outcome: 'Reached',
+          notes: 'Confirmed by phone.',
+          createdAtUtc: '2026-04-14T08:00:00Z',
+          createdByUserId: 'user-1'
+        });
+      },
       createAppointmentBlock: () => of(null),
       deleteAppointmentBlock: () => of(null)
     };
@@ -177,6 +202,65 @@ describe('SchedulingPageComponent', () => {
     });
 
     expect(component.editorMode).toBe('create');
+  });
+
+  it('loads reminder log entries when an appointment is selected', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+
+    component.selectAppointment({
+      id: 'appointment-1',
+      branchId: 'branch-1',
+      patientId: 'patient-1',
+      patientFullName: 'Ana Lopez',
+      startsAt: '2026-04-14T09:00:00',
+      endsAt: '2026-04-14T09:30:00',
+      status: 'Scheduled',
+      confirmationStatus: 'Pending',
+      confirmedAtUtc: null,
+      confirmedByUserId: null,
+      notes: 'Follow-up',
+      cancellationReason: null
+    });
+
+    expect(reminderLogLoads).toContain('appointment-1');
+  });
+
+  it('adds a manual reminder log entry through the scheduling facade', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+    component.selectedAppointment = {
+      id: 'appointment-1',
+      branchId: 'branch-1',
+      patientId: 'patient-1',
+      patientFullName: 'Ana Lopez',
+      startsAt: '2026-04-14T09:00:00',
+      endsAt: '2026-04-14T09:30:00',
+      status: 'NoShow',
+      confirmationStatus: 'Pending',
+      confirmedAtUtc: null,
+      confirmedByUserId: null,
+      notes: 'Follow-up',
+      cancellationReason: null
+    };
+
+    component.addReminderLogEntry({
+      channel: 'Phone',
+      outcome: 'Reached',
+      notes: 'Confirmed by phone.'
+    });
+
+    expect(reminderLogAdds).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        payload: {
+          channel: 'Phone',
+          outcome: 'Reached',
+          notes: 'Confirmed by phone.'
+        }
+      }
+    ]);
+    expect(component.savingReminderLog).toBe(false);
   });
 
   it('marks the selected appointment as attended through the scheduling facade', () => {

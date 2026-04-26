@@ -28,6 +28,7 @@ namespace BigSmile.Domain.Entities
         public string? CancellationReason { get; private set; }
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; private set; }
+        public ICollection<AppointmentReminderLogEntry> ReminderLogEntries { get; private set; } = new List<AppointmentReminderLogEntry>();
 
         protected Appointment()
         {
@@ -145,6 +146,26 @@ namespace BigSmile.Domain.Entities
             ConfirmedAtUtc = null;
             ConfirmedByUserId = null;
             UpdatedAt = DateTime.UtcNow;
+        }
+
+        public AppointmentReminderLogEntry AddReminderLogEntry(
+            AppointmentReminderChannel channel,
+            AppointmentReminderOutcome outcome,
+            string? notes,
+            Guid createdByUserId)
+        {
+            EnsureActor(createdByUserId);
+
+            var entry = new AppointmentReminderLogEntry(
+                TenantId,
+                Id,
+                channel,
+                outcome,
+                notes,
+                createdByUserId);
+
+            ReminderLogEntries.Add(entry);
+            return entry;
         }
 
         private void EnsureStatusAllows(string action)

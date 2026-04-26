@@ -4,8 +4,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   AppointmentBlockSummary,
+  AppointmentReminderLogEntry,
   AppointmentSummary,
   CalendarView,
+  AddAppointmentReminderLogEntryRequest,
   CancelAppointmentRequest,
   ChangeAppointmentConfirmationRequest,
   CreateAppointmentBlockRequest,
@@ -81,6 +83,19 @@ export class SchedulingApiService {
   markAppointmentConfirmationPending(id: string): Observable<AppointmentSummary> {
     const payload: ChangeAppointmentConfirmationRequest = { status: 'Pending' };
     return this.http.put<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/confirmation`, payload);
+  }
+
+  getReminderLog(appointmentId: string): Observable<AppointmentReminderLogEntry[]> {
+    return this.http.get<AppointmentReminderLogEntry[]>(`${this.appointmentsBaseUrl}/${appointmentId}/reminder-log`);
+  }
+
+  addReminderLogEntry(
+    appointmentId: string,
+    payload: AddAppointmentReminderLogEntryRequest
+  ): Observable<AppointmentReminderLogEntry> {
+    return this.http.post<AppointmentReminderLogEntry>(
+      `${this.appointmentsBaseUrl}/${appointmentId}/reminder-log`,
+      payload);
   }
 
   createAppointmentBlock(payload: CreateAppointmentBlockRequest): Observable<AppointmentBlockSummary> {

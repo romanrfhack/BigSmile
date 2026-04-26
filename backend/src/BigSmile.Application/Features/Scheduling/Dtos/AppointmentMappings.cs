@@ -30,5 +30,17 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
                 appointmentBlock.EndsAt,
                 appointmentBlock.Label);
         }
+
+        public static AppointmentReminderLogEntryDto ToDto(this AppointmentReminderLogEntry entry)
+        {
+            return new AppointmentReminderLogEntryDto(
+                entry.Id,
+                entry.AppointmentId,
+                entry.Channel.ToString(),
+                entry.Outcome.ToString(),
+                entry.Notes,
+                entry.CreatedAtUtc,
+                entry.CreatedByUserId);
+        }
     }
 }

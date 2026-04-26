@@ -14,13 +14,19 @@ namespace BigSmile.Api.Controllers
     {
         private readonly IAppointmentCommandService _appointmentCommandService;
         private readonly IAppointmentQueryService _appointmentQueryService;
+        private readonly IAppointmentReminderLogCommandService _reminderLogCommandService;
+        private readonly IAppointmentReminderLogQueryService _reminderLogQueryService;
 
         public AppointmentsController(
             IAppointmentCommandService appointmentCommandService,
-            IAppointmentQueryService appointmentQueryService)
+            IAppointmentQueryService appointmentQueryService,
+            IAppointmentReminderLogCommandService reminderLogCommandService,
+            IAppointmentReminderLogQueryService reminderLogQueryService)
         {
             _appointmentCommandService = appointmentCommandService ?? throw new ArgumentNullException(nameof(appointmentCommandService));
             _appointmentQueryService = appointmentQueryService ?? throw new ArgumentNullException(nameof(appointmentQueryService));
+            _reminderLogCommandService = reminderLogCommandService ?? throw new ArgumentNullException(nameof(reminderLogCommandService));
+            _reminderLogQueryService = reminderLogQueryService ?? throw new ArgumentNullException(nameof(reminderLogQueryService));
         }
 
         [HttpGet("calendar")]
@@ -218,6 +224,55 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpGet("{id:guid}/reminder-log")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingRead)]
+        public async Task<ActionResult<IReadOnlyList<AppointmentReminderLogEntryDto>>> ListReminderLog(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var entries = await _reminderLogQueryService.ListAsync(id, cancellationToken);
+                if (entries == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(entries);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
+        [HttpPost("{id:guid}/reminder-log")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingWrite)]
+        public async Task<ActionResult<AppointmentReminderLogEntryDto>> AddReminderLogEntry(
+            Guid id,
+            [FromBody] AddAppointmentReminderLogEntryRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var entry = await _reminderLogCommandService.AddAsync(id, request.ToCommand(), cancellationToken);
+                if (entry == null)
+                {
+                    return NotFound();
+                }
+
+                return CreatedAtAction(nameof(ListReminderLog), new { id }, entry);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         private ActionResult BuildValidationProblem(string message)
         {
             ModelState.AddModelError(nameof(AppointmentsController), message);
@@ -368,6 +423,36 @@ namespace BigSmile.Api.Controllers
             public ChangeAppointmentConfirmationCommand ToCommand()
             {
                 return new ChangeAppointmentConfirmationCommand(Status);
+            }
+        }
+
+        public sealed class AddAppointmentReminderLogEntryRequest : IValidatableObject
+        {
+            [Required]
+            public string Channel { get; set; } = string.Empty;
+
+            [Required]
+            public string Outcome { get; set; } = string.Empty;
+
+            [MaxLength(500)]
+            public string? Notes { get; set; }
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (string.IsNullOrWhiteSpace(Channel))
+                {
+                    yield return new ValidationResult("Appointment reminder channel is required.", new[] { nameof(Channel) });
+                }
+
+                if (string.IsNullOrWhiteSpace(Outcome))
+                {
+                    yield return new ValidationResult("Appointment reminder outcome is required.", new[] { nameof(Outcome) });
+                }
+            }
+
+            public AddAppointmentReminderLogEntryCommand ToCommand()
+            {
+                return new AddAppointmentReminderLogEntryCommand(Channel, Outcome, Notes);
             }
         }
     }

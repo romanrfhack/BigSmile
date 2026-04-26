@@ -2,6 +2,8 @@ export type CalendarViewMode = 'day' | 'week';
 export type AppointmentEditorMode = 'create' | 'edit' | 'reschedule';
 export type AppointmentStatus = 'Scheduled' | 'Cancelled' | 'Attended' | 'NoShow';
 export type AppointmentConfirmationStatus = 'Pending' | 'Confirmed';
+export type AppointmentReminderChannel = 'Phone' | 'WhatsApp' | 'Email' | 'Other';
+export type AppointmentReminderOutcome = 'Reached' | 'NoAnswer' | 'LeftMessage';
 
 export interface SchedulingBranch {
   id: string;
@@ -42,6 +44,16 @@ export interface AppointmentBlockSummary {
   startsAt: string;
   endsAt: string;
   label: string | null;
+}
+
+export interface AppointmentReminderLogEntry {
+  id: string;
+  appointmentId: string;
+  channel: AppointmentReminderChannel;
+  outcome: AppointmentReminderOutcome;
+  notes: string | null;
+  createdAtUtc: string;
+  createdByUserId: string;
 }
 
 export interface CalendarDay {
@@ -85,6 +97,12 @@ export interface ChangeAppointmentConfirmationRequest {
   status: AppointmentConfirmationStatus;
 }
 
+export interface AddAppointmentReminderLogEntryRequest {
+  channel: AppointmentReminderChannel;
+  outcome: AppointmentReminderOutcome;
+  notes: string | null;
+}
+
 export interface CreateAppointmentBlockRequest {
   branchId: string;
   startsAt: string;
@@ -103,4 +121,10 @@ export interface AppointmentBlockFormValue {
   startsAt: string;
   endsAt: string;
   label: string | null;
+}
+
+export interface AppointmentReminderLogFormValue {
+  channel: AppointmentReminderChannel;
+  outcome: AppointmentReminderOutcome;
+  notes: string | null;
 }

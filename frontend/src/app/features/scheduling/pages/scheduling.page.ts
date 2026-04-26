@@ -5,12 +5,14 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { AppointmentBlockFormComponent } from '../components/appointment-block-form.component';
 import { AppointmentCalendarComponent } from '../components/appointment-calendar.component';
 import { AppointmentFormComponent } from '../components/appointment-form.component';
+import { AppointmentReminderLogComponent } from '../components/appointment-reminder-log.component';
 import { SchedulingFacade } from '../facades/scheduling.facade';
 import {
   AppointmentBlockFormValue,
   AppointmentBlockSummary,
   AppointmentEditorMode,
   AppointmentFormValue,
+  AppointmentReminderLogFormValue,
   AppointmentSummary,
   CalendarViewMode
 } from '../models/scheduling.models';
@@ -25,7 +27,8 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     FormsModule,
     AppointmentCalendarComponent,
     AppointmentFormComponent,
-    AppointmentBlockFormComponent
+    AppointmentBlockFormComponent,
+    AppointmentReminderLogComponent
   ],
   template: `
     <section class="scheduling-page">
@@ -138,6 +141,16 @@ type SchedulingEditorSurface = 'appointment' | 'block';
           <button type="button" class="btn btn-danger" (click)="cancelSelected()">Cancel appointment</button>
         </div>
       </div>
+
+      <app-appointment-reminder-log
+        *ngIf="selectedAppointment"
+        [entries]="schedulingFacade.reminderLog()"
+        [loading]="schedulingFacade.loadingReminderLog()"
+        [error]="reminderLogSubmitError || schedulingFacade.reminderLogError()"
+        [canWrite]="canWrite"
+        [saving]="savingReminderLog"
+        (saved)="addReminderLogEntry($event)">
+      </app-appointment-reminder-log>
 
       <div *ngIf="selectedBlockedSlot" class="selection-card selection-card-block">
         <div>
@@ -405,7 +418,9 @@ export class SchedulingPageComponent implements OnInit {
   selectedBlockedSlot: AppointmentBlockSummary | null = null;
   blockEditorRevision = 0;
   saving = false;
+  savingReminderLog = false;
   submitError: string | null = null;
+  reminderLogSubmitError: string | null = null;
 
   get canWrite(): boolean {
     return this.authService.hasPermissions(['scheduling.write']);
@@ -468,6 +483,8 @@ export class SchedulingPageComponent implements OnInit {
     this.selectedAppointment = appointment;
     this.editorMode = 'edit';
     this.submitError = null;
+    this.reminderLogSubmitError = null;
+    this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
   startReschedule(appointment: AppointmentSummary): void {
@@ -476,6 +493,8 @@ export class SchedulingPageComponent implements OnInit {
     this.selectedAppointment = appointment;
     this.editorMode = 'reschedule';
     this.submitError = null;
+    this.reminderLogSubmitError = null;
+    this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
   selectAppointment(appointment: AppointmentSummary): void {
@@ -484,6 +503,8 @@ export class SchedulingPageComponent implements OnInit {
     this.selectedAppointment = appointment;
     this.editorMode = this.isScheduledAppointment(appointment) ? 'edit' : 'create';
     this.submitError = null;
+    this.reminderLogSubmitError = null;
+    this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
   selectBlockedSlot(blockedSlot: AppointmentBlockSummary): void {
@@ -492,6 +513,8 @@ export class SchedulingPageComponent implements OnInit {
     this.selectedBlockedSlot = blockedSlot;
     this.editorMode = 'create';
     this.submitError = null;
+    this.reminderLogSubmitError = null;
+    this.schedulingFacade.clearReminderLog();
     this.schedulingFacade.clearPatientOptions();
   }
 
@@ -548,6 +571,7 @@ export class SchedulingPageComponent implements OnInit {
         this.selectedAppointment = appointment.status === 'Scheduled' ? appointment : null;
         this.selectedBlockedSlot = null;
         this.editorMode = appointment.status === 'Scheduled' ? 'edit' : 'create';
+        this.schedulingFacade.loadReminderLog(this.selectedAppointment?.id ?? null);
         this.schedulingFacade.clearPatientOptions();
       },
       error: (error) => {
@@ -577,6 +601,7 @@ export class SchedulingPageComponent implements OnInit {
         this.saving = false;
         this.selectedAppointment = null;
         this.selectedBlockedSlot = blockedSlot;
+        this.schedulingFacade.clearReminderLog();
       },
       error: (error) => {
         this.saving = false;
@@ -631,6 +656,7 @@ export class SchedulingPageComponent implements OnInit {
           this.selectedAppointment = appointment;
           this.selectedBlockedSlot = null;
           this.editorMode = 'create';
+          this.schedulingFacade.loadReminderLog(appointment.id);
           this.schedulingFacade.clearPatientOptions();
         },
         error: (error) => {
@@ -660,6 +686,7 @@ export class SchedulingPageComponent implements OnInit {
           this.selectedAppointment = appointment;
           this.selectedBlockedSlot = null;
           this.editorMode = 'create';
+          this.schedulingFacade.loadReminderLog(appointment.id);
           this.schedulingFacade.clearPatientOptions();
         },
         error: (error) => {
@@ -692,6 +719,7 @@ export class SchedulingPageComponent implements OnInit {
           this.selectedAppointment = appointment;
           this.selectedBlockedSlot = null;
           this.editorMode = 'edit';
+          this.schedulingFacade.loadReminderLog(appointment.id);
           this.schedulingFacade.clearPatientOptions();
         },
         error: (error) => {
@@ -724,6 +752,7 @@ export class SchedulingPageComponent implements OnInit {
           this.selectedAppointment = appointment;
           this.selectedBlockedSlot = null;
           this.editorMode = 'edit';
+          this.schedulingFacade.loadReminderLog(appointment.id);
           this.schedulingFacade.clearPatientOptions();
         },
         error: (error) => {
@@ -760,10 +789,35 @@ export class SchedulingPageComponent implements OnInit {
       });
   }
 
+  addReminderLogEntry(payload: AppointmentReminderLogFormValue): void {
+    if (!this.selectedAppointment || !this.canWrite) {
+      return;
+    }
+
+    this.savingReminderLog = true;
+    this.reminderLogSubmitError = null;
+
+    this.schedulingFacade.addReminderLogEntry(this.selectedAppointment.id, payload)
+      .subscribe({
+        next: () => {
+          this.savingReminderLog = false;
+        },
+        error: (error) => {
+          this.savingReminderLog = false;
+          this.reminderLogSubmitError = this.getErrorMessage(
+            error,
+            'AppointmentsController',
+            'The reminder log entry could not be saved.');
+        }
+      });
+  }
+
   private clearSelection(): void {
     this.selectedAppointment = null;
     this.selectedBlockedSlot = null;
     this.submitError = null;
+    this.reminderLogSubmitError = null;
+    this.schedulingFacade.clearReminderLog();
   }
 
   isScheduledAppointment(appointment: AppointmentSummary | null): appointment is AppointmentSummary & { status: 'Scheduled' } {
