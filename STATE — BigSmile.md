@@ -294,6 +294,20 @@
 - bloqueo de cambios de confirmación cuando la cita está en estados terminales existentes `Cancelled`, `Attended` o `NoShow`
 - sin WhatsApp, email, SMS, reminders automáticos, jobs/background workers, online booking, portal de paciente, plantillas, campañas, colas, webhooks ni dashboard avanzado
 
+[Implementado en repo, pendiente de aceptación] Phase 2.2 — Manual Reminder Log Foundation agrega, de forma acotada:
+- `AppointmentReminderLogEntry` tenant-owned asociado a una `Appointment` existente
+- registro manual explícito de intentos de contacto por cita
+- canales mínimos `Phone` / `WhatsApp` / `Email` / `Other` solo como registro operativo manual, sin envío real
+- resultados mínimos `Reached` / `NoAnswer` / `LeftMessage`
+- notas opcionales acotadas a 500 caracteres
+- metadata mínima `CreatedAtUtc` y `CreatedByUserId`
+- endpoints mínimos `GET /api/appointments/{id}/reminder-log` y `POST /api/appointments/{id}/reminder-log`
+- UI mínima en Scheduling para listar intentos newest-first y agregar un intento manual
+- reutilización de `scheduling.read` / `scheduling.write` sin permisos nuevos
+- sin cambios automáticos a `AppointmentStatus` ni `AppointmentConfirmationStatus`
+- sin envío real por WhatsApp, email o SMS
+- sin providers, jobs/background workers, colas, webhooks, templates, scheduler de reminders, retry automático, campañas, patient portal, online booking ni dashboard avanzado
+
 [Hecho + Inferencia operativa] El proyecto ya no está solo dentro de Release 3; ahora preserva Release 3 mediante cuatro slices aceptados y abrió Release 4 con cuatro slices aceptados sobre una base que ya incluye Patients y Scheduling cerrados.
 
 [Hecho combinado] Lo ya establecido a nivel fundacional incluye, como mínimo:
@@ -379,7 +393,7 @@
 
 **Decisión de alcance** — [Hecho] `doctor-based views` se difiere explícitamente a un slice futuro porque no es un parche pequeño de UI: requiere un slice dedicado de provider/doctor assignment, cambios de modelo y read models específicos de calendario.
 
-**Fase abierta actual** — [Hecho] Phase 2 Expansion — Modern Operations, iniciada por `Phase 2.1 — Appointment Confirmation Foundation` ya aceptada, apoyada sobre el MVP operativo ya preservado por Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation, el slice aceptado Release 6.1 — Billing Foundation, Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas, con los slices Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 4.1, Release 4.2, Release 4.3 y Release 4.4 preservados como base clínica, dental y comercial inmediata. Phase 2 completa no debe tratarse como cerrada.
+**Fase abierta actual** — [Hecho] Phase 2 Expansion — Modern Operations, iniciada por `Phase 2.1 — Appointment Confirmation Foundation` ya aceptada y continuada en el repo por `Phase 2.2 — Manual Reminder Log Foundation` implementada pero pendiente de aceptación, apoyada sobre el MVP operativo ya preservado por Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation, el slice aceptado Release 6.1 — Billing Foundation, Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas, con los slices Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 4.1, Release 4.2, Release 4.3 y Release 4.4 preservados como base clínica, dental y comercial inmediata. Phase 2 completa no debe tratarse como cerrada.
 
 **Precondición ya resuelta** — [Hecho]
 - policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
@@ -415,7 +429,7 @@ Lista priorizada:
 
 1. Preservar Releases 1 y 2 ya cerrados sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Preservar Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics ya aceptadas, preservar Release 6.1 — Billing Foundation aceptada sin reabrir billing avanzado, preservar Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation aceptadas sin cerrar Release 7, y preservar Phase 2.1 — Appointment Confirmation Foundation ya aceptada sin asumir cerrada Phase 2 completa.
+2. Preservar Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics ya aceptadas, preservar Release 6.1 — Billing Foundation aceptada sin reabrir billing avanzado, preservar Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation aceptadas sin cerrar Release 7, preservar Phase 2.1 — Appointment Confirmation Foundation ya aceptada y revisar Phase 2.2 — Manual Reminder Log Foundation implementada en repo sin asumir cerrada Phase 2 completa.
 
 3. Mantener diferidas las `doctor-based views` hasta abrir un slice dedicado de provider/doctor assignment; no reintroducirlas como parche incidental de UI.
 
