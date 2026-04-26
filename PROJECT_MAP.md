@@ -65,12 +65,14 @@ Canonical project status:
 * **Accepted slices:** **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Basics**
 * **Release 6 — Billing:** open in progress through accepted slice **Release 6.1 — Billing Foundation**
 * **Release 7 — Documents and Dashboard:** open in progress with accepted slices **Release 7.1 — Documents Foundation** and **Release 7.2 — Dashboard Foundation**
+* **Phase 2 Expansion — Modern Operations:** open in progress through **Phase 2.1 — Appointment Confirmation Foundation**, implemented in repo and pending acceptance
 
 ### Current expected priority
 
 Continue the current active phase:
 
-* **Release 7 — Documents and Dashboard**
+* **Phase 2 Expansion — Modern Operations**
+* preserving **Phase 2.1 — Appointment Confirmation Foundation** as an implemented-but-not-yet-accepted bounded slice over existing Scheduling: separate `Pending` / `Confirmed` confirmation status on `Appointment`, minimal confirmation metadata, existing `scheduling.read` / `scheduling.write`, no permissions added, and no WhatsApp/email/SMS/reminders/providers/jobs/online booking/portal/templates/campaigns/dashboard-advanced scope
 * preserving the accepted Release 3.1, Release 3.2, Release 3.3, and Release 3.4 clinical slices plus the accepted Release 4.1, Release 4.2, Release 4.3, and Release 4.4 odontogram slices as the foundation that Release 5.1 builds on
 * preserving the accepted Release 5.1 scope: tenant-owned and patient-owned treatment plans, explicit creation, `GET` returning `404` when missing, no autocreation, exactly one active treatment plan per patient per tenant, basic add/remove items, and bounded `Draft` / `Proposed` / `Accepted` status updates
 * preserving the accepted Release 5.1 item scope: required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference with `surfaceCode` requiring `toothCode`

@@ -103,9 +103,10 @@ Canonical project status:
 - accepted slices: `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics`
 - `Release 6 — Billing`: open in progress through accepted slice `Release 6.1 — Billing Foundation`
 - `Release 7 — Documents and Dashboard`: open in progress with accepted slices `Release 7.1 — Documents Foundation` and `Release 7.2 — Dashboard Foundation`
+- `Phase 2 Expansion — Modern Operations`: open in progress through `Phase 2.1 — Appointment Confirmation Foundation`, implemented in repo and pending acceptance
 
 Current active phase:
-- `Release 7 — Documents and Dashboard`
+- `Phase 2 Expansion — Modern Operations`
 
 Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
 Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
@@ -114,10 +115,11 @@ Within `Release 4 — Odontogram`, do not assume slices beyond the accepted `Rel
 Within `Release 5 — Treatments and Quotes`, do not assume slices beyond the accepted `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics` slices are implemented unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 6 — Billing`, do not assume slices beyond the accepted `Release 6.1 — Billing Foundation` slice are implemented unless the actual codebase and aligned documentation explicitly prove it.
 Within `Release 7 — Documents and Dashboard`, treat `Release 7.1 — Documents Foundation` and `Release 7.2 — Dashboard Foundation` as accepted slices; do not assume later slices are implemented, accepted, or closed unless the actual codebase and aligned documentation explicitly prove it.
+Within `Phase 2 Expansion — Modern Operations`, treat `Phase 2.1 — Appointment Confirmation Foundation` as implemented in repo and pending acceptance; do not assume WhatsApp, email, SMS, reminders automáticos, online booking, patient portal, templates, campaigns, jobs, queues, webhooks, dashboard avanzado, or later Phase 2 slices are implemented or accepted unless the actual codebase and aligned documentation explicitly prove it.
 After the current phase, continue following `docs/product-roadmap.md`.
 
 # Immediate objective
-Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, `Release 4.4 — Dental Findings Change History`, the accepted `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics` slices, the accepted `Release 6.1 — Billing Foundation` slice, and the accepted `Release 7.1 — Documents Foundation` and `Release 7.2 — Dashboard Foundation` slices while continuing `Release 7 — Documents and Dashboard` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, the accepted `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 4.1 — Odontogram Foundation`, `Release 4.2 — Odontogram Surface Foundation`, `Release 4.3 — Basic Dental Findings Foundation`, `Release 4.4 — Dental Findings Change History`, the accepted `Release 5.1 — Treatment Plan Foundation` and `Release 5.2 — Quote Basics` slices, the accepted `Release 6.1 — Billing Foundation` slice, and the accepted `Release 7.1 — Documents Foundation` and `Release 7.2 — Dashboard Foundation` slices while continuing `Phase 2 Expansion — Modern Operations` in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -144,8 +146,10 @@ Immediate priorities:
 - preserve the current document access restriction: `document.read` / `document.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive document permissions in this phase
 - preserve the accepted Release 7.2 scope: tenant-scoped dashboard summary, read-model aggregation only, `GET /api/dashboard/summary`, KPI cards for active patients, today appointments, today pending appointments, active documents, active treatment plans, accepted quotes and issued billing documents, no new dashboard table, and no persisted snapshots
 - preserve the current dashboard access restriction: `dashboard.read` belongs to `TenantAdmin`; `TenantUser` does not receive dashboard permissions in this phase; `PlatformAdmin` does not receive `dashboard.read` in this phase because there is no safe tenant-selection path yet for the tenant-scoped dashboard
+- preserve the implemented Phase 2.1 scope: appointment confirmation status separate from `AppointmentStatus`, minimal `Pending` / `Confirmed` catalog, new appointments defaulting to `Pending`, explicit confirm and mark-pending operations, confirmation metadata `ConfirmedAtUtc` / `ConfirmedByUserId`, enriched scheduling read model and UI, terminal appointment statuses blocking confirmation changes, and no new permissions
 - keep payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows deferred beyond the accepted Release 6.1 slice
 - keep OCR, rich preview, document versioning, public sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboard, doctor dashboard, advanced reporting, and advanced document workflows deferred beyond the current accepted Release 7 scope
+- keep WhatsApp, email, SMS, external providers, reminders automáticos, background jobs, online booking, patient portal, templates, campaigns, queues, webhooks, and advanced dashboard behavior deferred beyond Phase 2.1
 - keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened
 - keep privileged/platform paths explicit and auditable
 - maintain automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios

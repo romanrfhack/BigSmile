@@ -559,6 +559,12 @@ This MVP should be strong enough to validate:
 
 Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 
+## Current status
+- Phase 2 is open in progress
+- Phase 2.1 — Appointment Confirmation Foundation is implemented in the repository and pending acceptance
+- The current implementation only adds appointment confirmation as an operational signal on existing Scheduling
+- WhatsApp, email, SMS, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, and advanced dashboard behavior remain outside Phase 2.1
+
 ## Candidate features
 - WhatsApp reminders
 - email reminders

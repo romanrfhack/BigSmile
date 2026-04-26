@@ -258,9 +258,10 @@ Completed foundation milestones:
 
 Current active phase:
 
-* **Release 7 — Documents and Dashboard:** open in progress
+* **Phase 2 Expansion — Modern Operations:** open in progress
+* **Implemented in repo, pending acceptance:** **Phase 2.1 — Appointment Confirmation Foundation**
+* **Accepted MVP slices preserved:** **Release 7.1 — Documents Foundation** and **Release 7.2 — Dashboard Foundation**
 * **Accepted upstream slice preserved:** **Release 6.1 — Billing Foundation**
-* **Accepted current slices preserved:** **Release 7.1 — Documents Foundation** and **Release 7.2 — Dashboard Foundation**
 
 The latest completed delivery phase remains **Release 2 — Scheduling**.
 
@@ -303,6 +304,8 @@ Release 7 remains open in the repository and is currently preserved through the 
 Document access in the accepted Release 7.1 slice is intentionally restricted: `document.read` and `document.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive document permissions.
 
 Release 7.2 — Dashboard Foundation is accepted without closing Release 7. It adds only a tenant-scoped operational dashboard summary through `GET /api/dashboard/summary`, simple KPI cards, and the `dashboard.read` permission for `TenantAdmin`. `TenantUser` does not receive dashboard permissions in this phase. `PlatformAdmin` also does not receive `dashboard.read` in this phase because the tenant-scoped dashboard does not yet have a safe platform tenant-selection path. The implementation does not add dashboard tables or persisted snapshots, and does not open advanced analytics, charts, complex filters, branch dashboards, doctor dashboards, exports, real-time alerts, or historical reporting.
+
+Phase 2 Expansion — Modern Operations is now open in the repo through Phase 2.1 — Appointment Confirmation Foundation, implemented in code and pending acceptance. This slice adds only a separate appointment confirmation status (`Pending` / `Confirmed`) on existing appointments, confirmation metadata (`confirmedAtUtc`, `confirmedByUserId`), a minimal `PUT /api/appointments/{appointmentId}/confirmation` API protected by existing `scheduling.write`, enriched scheduling reads, and minimal scheduling UI actions to confirm or mark pending. It does not implement WhatsApp, email, SMS, automatic reminders, external providers, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, or advanced dashboard behavior.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -406,6 +409,16 @@ The repository should be treated as having an established technical and architec
 * Tenant-scoped dashboard summary implemented as a bounded read model with active patients, today appointments, today pending appointments, active documents, active treatment plans, accepted quotes, issued billing documents, and generated timestamp
 * `dashboard.read` restricted to `TenantAdmin`; `TenantUser` and `PlatformAdmin` do not receive dashboard permissions in this phase
 * OCR, rich preview, versioning, external sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboards, doctor dashboards, exports, and advanced reporting remain outside the current accepted scope
+
+### Phase 2 Expansion — Modern Operations
+
+* Phase 2 is open in progress
+* Implemented in repo, pending acceptance: Phase 2.1 — Appointment Confirmation Foundation
+* Appointment confirmation status is separate from `AppointmentStatus`
+* Minimal confirmation catalog: `Pending` and `Confirmed`
+* Existing scheduling permissions are reused: `scheduling.read` and `scheduling.write`
+* Confirmation changes are blocked for terminal appointment statuses: `Cancelled`, `Attended`, and `NoShow`
+* WhatsApp, email, SMS, automatic reminders, providers, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, and advanced dashboards remain outside Phase 2.1
 
 ---
 
