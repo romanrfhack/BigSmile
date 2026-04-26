@@ -561,14 +561,17 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 
 ## Current status
 - Phase 2 is open in progress
-- Phase 2.1 — Appointment Confirmation Foundation is implemented in the repository and pending acceptance
-- The current implementation only adds appointment confirmation as an operational signal on existing Scheduling
+- Phase 2.1 — Appointment Confirmation Foundation is accepted
+- The accepted Phase 2.1 slice only adds appointment confirmation as an operational signal on existing Scheduling
+- Appointment confirmation status remains separate from `AppointmentStatus` and uses the minimal `Pending` / `Confirmed` catalog
+- Phase 2.1 exposes the minimal mutation endpoint `PUT /api/appointments/{id}/confirmation`
+- Phase 2.1 reuses `scheduling.read` for reads and `scheduling.write` for mutations; it adds no new permissions
 - WhatsApp, email, SMS, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, and advanced dashboard behavior remain outside Phase 2.1
 
 ## Candidate features
 - WhatsApp reminders
 - email reminders
-- appointment confirmation flows
+- expanded appointment confirmation workflows beyond Phase 2.1
 - online booking
 - intake forms
 - digital patient updates before appointments
