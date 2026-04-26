@@ -154,6 +154,18 @@ export class SchedulingFacade {
     );
   }
 
+  confirmAppointment(id: string) {
+    return this.schedulingApi.confirmAppointment(id).pipe(
+      tap(() => this.loadCalendar())
+    );
+  }
+
+  markAppointmentConfirmationPending(id: string) {
+    return this.schedulingApi.markAppointmentConfirmationPending(id).pipe(
+      tap(() => this.loadCalendar())
+    );
+  }
+
   createAppointmentBlock(payload: CreateAppointmentBlockRequest) {
     return this.schedulingApi.createAppointmentBlock(payload).pipe(
       tap(() => this.loadCalendar())

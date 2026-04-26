@@ -188,6 +188,36 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpPut("{id:guid}/confirmation")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingWrite)]
+        public async Task<ActionResult<AppointmentSummaryDto>> ChangeConfirmation(
+            Guid id,
+            [FromBody] ChangeAppointmentConfirmationRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var appointment = await _appointmentCommandService.ChangeConfirmationAsync(
+                    id,
+                    request.ToCommand(),
+                    cancellationToken);
+                if (appointment == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(appointment);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         private ActionResult BuildValidationProblem(string message)
         {
             ModelState.AddModelError(nameof(AppointmentsController), message);
@@ -319,6 +349,25 @@ namespace BigSmile.Api.Controllers
             public CancelAppointmentCommand ToCommand()
             {
                 return new CancelAppointmentCommand(Reason);
+            }
+        }
+
+        public sealed class ChangeAppointmentConfirmationRequest : IValidatableObject
+        {
+            [Required]
+            public string Status { get; set; } = string.Empty;
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (string.IsNullOrWhiteSpace(Status))
+                {
+                    yield return new ValidationResult("Appointment confirmation status is required.", new[] { nameof(Status) });
+                }
+            }
+
+            public ChangeAppointmentConfirmationCommand ToCommand()
+            {
+                return new ChangeAppointmentConfirmationCommand(Status);
             }
         }
     }

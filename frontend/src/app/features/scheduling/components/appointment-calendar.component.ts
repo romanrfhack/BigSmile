@@ -50,7 +50,14 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
             <span class="time-range">{{ appointment.startsAt | date: 'shortTime' }} - {{ appointment.endsAt | date: 'shortTime' }}</span>
             <strong>{{ appointment.patientFullName }}</strong>
             <p>{{ appointment.notes || 'No operational note.' }}</p>
-            <span class="status-pill">{{ getStatusLabel(appointment.status) }}</span>
+            <span class="badge-row">
+              <span class="status-pill">{{ getStatusLabel(appointment.status) }}</span>
+              <span
+                class="confirmation-pill"
+                [class.confirmation-confirmed]="appointment.confirmationStatus === 'Confirmed'">
+                {{ getConfirmationLabel(appointment.confirmationStatus) }}
+              </span>
+            </span>
           </button>
         </article>
       </div>
@@ -172,6 +179,31 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       font-weight: 700;
     }
 
+    .badge-row {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge-row .status-pill {
+      margin-top: 0;
+    }
+
+    .confirmation-pill {
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      background: #fbe6bf;
+      color: #8b4f0f;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .confirmation-confirmed {
+      background: #dff2e5;
+      color: #1d6a3a;
+    }
+
     .appointment-cancelled .status-pill {
       background: #fde3e3;
       color: #9b2d30;
@@ -211,5 +243,9 @@ export class AppointmentCalendarComponent {
 
   getStatusLabel(status: AppointmentSummary['status']): string {
     return status === 'NoShow' ? 'No-show' : status;
+  }
+
+  getConfirmationLabel(status: AppointmentSummary['confirmationStatus']): string {
+    return status === 'Confirmed' ? 'Confirmed' : 'Pending confirmation';
   }
 }

@@ -36,6 +36,9 @@ namespace BigSmile.IntegrationTests.Scheduling
             Assert.Equal(patient.Id, appointment.PatientId);
             Assert.Equal("Ana Lopez", appointment.PatientFullName);
             Assert.Equal("Scheduled", appointment.Status);
+            Assert.Equal("Pending", appointment.ConfirmationStatus);
+            Assert.Null(appointment.ConfirmedAtUtc);
+            Assert.Null(appointment.ConfirmedByUserId);
 
             await using var verificationContext = CreateContext(databaseName, new TenantContext());
             var storedAppointment = await verificationContext.Appointments.SingleAsync();
@@ -43,6 +46,9 @@ namespace BigSmile.IntegrationTests.Scheduling
             Assert.Equal(seedData.Tenant.Id, storedAppointment.TenantId);
             Assert.Equal(seedData.PrimaryBranch.Id, storedAppointment.BranchId);
             Assert.Equal(patient.Id, storedAppointment.PatientId);
+            Assert.Equal(AppointmentConfirmationStatus.Pending, storedAppointment.ConfirmationStatus);
+            Assert.Null(storedAppointment.ConfirmedAtUtc);
+            Assert.Null(storedAppointment.ConfirmedByUserId);
         }
 
         [Fact]
@@ -222,6 +228,140 @@ namespace BigSmile.IntegrationTests.Scheduling
         }
 
         [Fact]
+        public async Task ChangeConfirmationAsync_ConfirmsAppointmentInsideTenantAndBranchScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.ChangeConfirmationAsync(
+                appointment.Id,
+                new ChangeAppointmentConfirmationCommand("Confirmed"));
+
+            Assert.NotNull(updated);
+            Assert.Equal("Confirmed", updated!.ConfirmationStatus);
+            Assert.NotNull(updated.ConfirmedAtUtc);
+            Assert.Equal(seedData.User.Id, updated.ConfirmedByUserId);
+            Assert.Equal("Scheduled", updated.Status);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+
+            Assert.Equal(AppointmentConfirmationStatus.Confirmed, storedAppointment.ConfirmationStatus);
+            Assert.NotNull(storedAppointment.ConfirmedAtUtc);
+            Assert.Equal(seedData.User.Id, storedAppointment.ConfirmedByUserId);
+            Assert.Equal(AppointmentStatus.Scheduled, storedAppointment.Status);
+            Assert.Equal(seedData.Tenant.Id, storedAppointment.TenantId);
+            Assert.Equal(seedData.PrimaryBranch.Id, storedAppointment.BranchId);
+            Assert.Equal(patient.Id, storedAppointment.PatientId);
+        }
+
+        [Fact]
+        public async Task ChangeConfirmationAsync_MarksConfirmedAppointmentPendingAndClearsMetadata()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            await commandService.ChangeConfirmationAsync(
+                appointment.Id,
+                new ChangeAppointmentConfirmationCommand("Confirmed"));
+            var updated = await commandService.ChangeConfirmationAsync(
+                appointment.Id,
+                new ChangeAppointmentConfirmationCommand("Pending"));
+
+            Assert.NotNull(updated);
+            Assert.Equal("Pending", updated!.ConfirmationStatus);
+            Assert.Null(updated.ConfirmedAtUtc);
+            Assert.Null(updated.ConfirmedByUserId);
+            Assert.Equal("Scheduled", updated.Status);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+
+            Assert.Equal(AppointmentConfirmationStatus.Pending, storedAppointment.ConfirmationStatus);
+            Assert.Null(storedAppointment.ConfirmedAtUtc);
+            Assert.Null(storedAppointment.ConfirmedByUserId);
+            Assert.Equal(AppointmentStatus.Scheduled, storedAppointment.Status);
+            Assert.Equal(seedData.Tenant.Id, storedAppointment.TenantId);
+            Assert.Equal(seedData.PrimaryBranch.Id, storedAppointment.BranchId);
+            Assert.Equal(patient.Id, storedAppointment.PatientId);
+        }
+
+        [Fact]
+        public async Task ChangeConfirmationAsync_ReturnsNullForAppointmentOutsideCurrentTenant()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var tenantASeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant A", tenantSubdomain: "tenant-a");
+            var tenantBSeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant B", tenantSubdomain: "tenant-b");
+            var patientB = await SeedPatientAsync(databaseName, tenantBSeed.Tenant.Id, "Bruno", "Garcia");
+            var foreignAppointment = await SeedAppointmentAsync(
+                databaseName,
+                tenantBSeed.Tenant.Id,
+                tenantBSeed.PrimaryBranch.Id,
+                patientB.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0));
+            var tenantContext = CreateTenantContext(tenantASeed.User.Id, tenantASeed.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var updated = await commandService.ChangeConfirmationAsync(
+                foreignAppointment.Id,
+                new ChangeAppointmentConfirmationCommand("Confirmed"));
+
+            Assert.Null(updated);
+        }
+
+        [Fact]
+        public async Task ChangeConfirmationAsync_BlocksBranchOutsideAssignedScope_ForTenantUser()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.SecondaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 11, 0, 0),
+                new DateTime(2026, 4, 14, 11, 30, 0));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.ChangeConfirmationAsync(
+                appointment.Id,
+                new ChangeAppointmentConfirmationCommand("Confirmed")));
+
+            Assert.Contains("branch is not accessible", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public async Task MarkAttendedAsync_BlocksCancelledAppointments()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -377,6 +517,41 @@ namespace BigSmile.IntegrationTests.Scheduling
                 1);
 
             Assert.Equal(new[] { "Attended", "NoShow" }, calendar.CalendarDays[0].Appointments.Select(appointment => appointment.Status));
+        }
+
+        [Fact]
+        public async Task GetCalendarAsync_ExposesAppointmentConfirmationFields()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                new DateTime(2026, 4, 14, 9, 0, 0),
+                new DateTime(2026, 4, 14, 9, 30, 0));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var commandContext = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(commandContext, tenantContext);
+            await commandService.ChangeConfirmationAsync(
+                appointment.Id,
+                new ChangeAppointmentConfirmationCommand("Confirmed"));
+
+            await using var queryContext = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(queryContext, tenantContext);
+
+            var calendar = await queryService.GetCalendarAsync(
+                seedData.PrimaryBranch.Id,
+                new DateOnly(2026, 4, 14),
+                1);
+
+            var calendarAppointment = Assert.Single(calendar.CalendarDays[0].Appointments);
+            Assert.Equal("Confirmed", calendarAppointment.ConfirmationStatus);
+            Assert.NotNull(calendarAppointment.ConfirmedAtUtc);
+            Assert.Equal(seedData.User.Id, calendarAppointment.ConfirmedByUserId);
         }
 
         [Fact]

@@ -96,6 +96,15 @@ type SchedulingEditorSurface = 'appointment' | 'block';
           <p>
             {{ selectedAppointment.startsAt | date: 'medium' }} to {{ selectedAppointment.endsAt | date: 'shortTime' }}
           </p>
+          <p class="confirmation-note">
+            Confirmation:
+            <strong [class.confirmed-text]="selectedAppointment.confirmationStatus === 'Confirmed'">
+              {{ selectedAppointment.confirmationStatus }}
+            </strong>
+            <span *ngIf="selectedAppointment.confirmedAtUtc">
+              · {{ selectedAppointment.confirmedAtUtc | date: 'short' }}
+            </span>
+          </p>
           <p *ngIf="selectedAppointment.status === 'Cancelled'" class="cancelled-note">
             This appointment is cancelled and remains visible only for calendar traceability.
           </p>
@@ -108,6 +117,20 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         </div>
 
         <div class="selection-actions" *ngIf="canWrite && isScheduledAppointment(selectedAppointment)">
+          <button
+            *ngIf="selectedAppointment.confirmationStatus === 'Pending'"
+            type="button"
+            class="btn btn-success"
+            (click)="confirmSelectedAppointment()">
+            Confirm appointment
+          </button>
+          <button
+            *ngIf="selectedAppointment.confirmationStatus === 'Confirmed'"
+            type="button"
+            class="btn btn-warning"
+            (click)="markSelectedConfirmationPending()">
+            Mark as pending
+          </button>
           <button type="button" class="btn btn-secondary" (click)="startEdit(selectedAppointment)">Edit</button>
           <button type="button" class="btn btn-secondary" (click)="startReschedule(selectedAppointment)">Reschedule</button>
           <button type="button" class="btn btn-success" (click)="markSelectedAttended()">Mark attended</button>
@@ -293,6 +316,14 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     .no-show-note {
       color: #8b4f0f;
       font-weight: 600;
+    }
+
+    .confirmation-note strong {
+      color: #8b4f0f;
+    }
+
+    .confirmation-note .confirmed-text {
+      color: #1d6a3a;
     }
 
     .btn {
@@ -634,6 +665,70 @@ export class SchedulingPageComponent implements OnInit {
         error: (error) => {
           this.saving = false;
           this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be marked as no-show.');
+        }
+      });
+  }
+
+  confirmSelectedAppointment(): void {
+    if (!this.selectedAppointment ||
+        !this.isScheduledAppointment(this.selectedAppointment) ||
+        this.selectedAppointment.confirmationStatus === 'Confirmed' ||
+        !this.canWrite) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Confirm the appointment for ${this.selectedAppointment.patientFullName}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    this.schedulingFacade.confirmAppointment(this.selectedAppointment.id)
+      .subscribe({
+        next: (appointment) => {
+          this.saving = false;
+          this.selectedAppointment = appointment;
+          this.selectedBlockedSlot = null;
+          this.editorMode = 'edit';
+          this.schedulingFacade.clearPatientOptions();
+        },
+        error: (error) => {
+          this.saving = false;
+          this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be confirmed.');
+        }
+      });
+  }
+
+  markSelectedConfirmationPending(): void {
+    if (!this.selectedAppointment ||
+        !this.isScheduledAppointment(this.selectedAppointment) ||
+        this.selectedAppointment.confirmationStatus === 'Pending' ||
+        !this.canWrite) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Mark the appointment for ${this.selectedAppointment.patientFullName} as pending confirmation?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving = true;
+    this.submitError = null;
+
+    this.schedulingFacade.markAppointmentConfirmationPending(this.selectedAppointment.id)
+      .subscribe({
+        next: (appointment) => {
+          this.saving = false;
+          this.selectedAppointment = appointment;
+          this.selectedBlockedSlot = null;
+          this.editorMode = 'edit';
+          this.schedulingFacade.clearPatientOptions();
+        },
+        error: (error) => {
+          this.saving = false;
+          this.submitError = this.getErrorMessage(error, 'AppointmentsController', 'The appointment could not be marked pending.');
         }
       });
   }

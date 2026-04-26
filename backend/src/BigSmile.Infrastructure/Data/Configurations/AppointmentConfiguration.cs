@@ -29,6 +29,16 @@ namespace BigSmile.Infrastructure.Data.Configurations
                 .HasMaxLength(32)
                 .IsRequired();
 
+            builder.Property(appointment => appointment.ConfirmationStatus)
+                .HasConversion<string>()
+                .HasMaxLength(32)
+                .HasDefaultValue(AppointmentConfirmationStatus.Pending)
+                .IsRequired();
+
+            builder.Property(appointment => appointment.ConfirmedAtUtc);
+
+            builder.Property(appointment => appointment.ConfirmedByUserId);
+
             builder.Property(appointment => appointment.CreatedAt)
                 .IsRequired();
 

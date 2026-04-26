@@ -8,6 +8,9 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
         DateTime StartsAt,
         DateTime EndsAt,
         string Status,
+        string ConfirmationStatus,
+        DateTime? ConfirmedAtUtc,
+        Guid? ConfirmedByUserId,
         string? Notes,
         string? CancellationReason);
 

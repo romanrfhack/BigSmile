@@ -67,6 +67,9 @@ describe('AppointmentFormComponent', () => {
       startsAt: '2026-04-11T09:00:00',
       endsAt: '2026-04-11T09:30:00',
       status: 'Scheduled',
+      confirmationStatus: 'Pending',
+      confirmedAtUtc: null,
+      confirmedByUserId: null,
       notes: 'Check-up',
       cancellationReason: null
     };

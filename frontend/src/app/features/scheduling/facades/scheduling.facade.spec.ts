@@ -67,6 +67,9 @@ describe('SchedulingFacade', () => {
         startsAt: '2026-04-16T09:00:00',
         endsAt: '2026-04-16T09:30:00',
         status: 'Attended',
+        confirmationStatus: 'Pending',
+        confirmedAtUtc: null,
+        confirmedByUserId: null,
         notes: 'Check-up',
         cancellationReason: null
       }),
@@ -78,6 +81,37 @@ describe('SchedulingFacade', () => {
         startsAt: '2026-04-16T09:00:00',
         endsAt: '2026-04-16T09:30:00',
         status: 'NoShow',
+        confirmationStatus: 'Pending',
+        confirmedAtUtc: null,
+        confirmedByUserId: null,
+        notes: 'Check-up',
+        cancellationReason: null
+      }),
+      confirmAppointment: () => of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-16T09:00:00',
+        endsAt: '2026-04-16T09:30:00',
+        status: 'Scheduled',
+        confirmationStatus: 'Confirmed',
+        confirmedAtUtc: '2026-04-16T08:00:00Z',
+        confirmedByUserId: 'user-1',
+        notes: 'Check-up',
+        cancellationReason: null
+      }),
+      markAppointmentConfirmationPending: () => of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-16T09:00:00',
+        endsAt: '2026-04-16T09:30:00',
+        status: 'Scheduled',
+        confirmationStatus: 'Pending',
+        confirmedAtUtc: null,
+        confirmedByUserId: null,
         notes: 'Check-up',
         cancellationReason: null
       }),
@@ -146,6 +180,24 @@ describe('SchedulingFacade', () => {
     expect(calendarLoadCount).toBe(1);
 
     facade.markAppointmentNoShow('appointment-1').subscribe();
+
+    expect(calendarLoadCount).toBe(2);
+  });
+
+  it('reloads the calendar after an appointment is confirmed', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+
+    facade.confirmAppointment('appointment-1').subscribe();
+
+    expect(calendarLoadCount).toBe(2);
+  });
+
+  it('reloads the calendar after an appointment confirmation is marked pending', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+
+    facade.markAppointmentConfirmationPending('appointment-1').subscribe();
 
     expect(calendarLoadCount).toBe(2);
   });

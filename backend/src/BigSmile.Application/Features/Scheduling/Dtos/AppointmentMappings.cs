@@ -14,6 +14,9 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
                 appointment.StartsAt,
                 appointment.EndsAt,
                 appointment.Status.ToString(),
+                appointment.ConfirmationStatus.ToString(),
+                appointment.ConfirmedAtUtc,
+                appointment.ConfirmedByUserId,
                 appointment.Notes,
                 appointment.CancellationReason);
         }

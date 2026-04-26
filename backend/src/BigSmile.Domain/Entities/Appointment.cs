@@ -21,6 +21,9 @@ namespace BigSmile.Domain.Entities
         public DateTime EndsAt { get; private set; }
         public string? Notes { get; private set; }
         public AppointmentStatus Status { get; private set; } = AppointmentStatus.Scheduled;
+        public AppointmentConfirmationStatus ConfirmationStatus { get; private set; } = AppointmentConfirmationStatus.Pending;
+        public DateTime? ConfirmedAtUtc { get; private set; }
+        public Guid? ConfirmedByUserId { get; private set; }
         public DateTime? CancelledAt { get; private set; }
         public string? CancellationReason { get; private set; }
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
@@ -60,6 +63,7 @@ namespace BigSmile.Domain.Entities
 
             SetSchedule(startsAt, endsAt);
             Notes = NormalizeOptional(notes, nameof(notes), NotesMaxLength);
+            ConfirmationStatus = AppointmentConfirmationStatus.Pending;
         }
 
         public void Update(Guid patientId, DateTime startsAt, DateTime endsAt, string? notes)
@@ -115,6 +119,34 @@ namespace BigSmile.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void Confirm(Guid actorUserId)
+        {
+            EnsureActor(actorUserId);
+            EnsureConfirmationCanChange();
+
+            var confirmedAtUtc = DateTime.UtcNow;
+            ConfirmationStatus = AppointmentConfirmationStatus.Confirmed;
+            ConfirmedAtUtc = confirmedAtUtc;
+            ConfirmedByUserId = actorUserId;
+            UpdatedAt = confirmedAtUtc;
+        }
+
+        public void MarkConfirmationPending(Guid actorUserId)
+        {
+            EnsureActor(actorUserId);
+            EnsureConfirmationCanChange();
+
+            if (ConfirmationStatus == AppointmentConfirmationStatus.Pending)
+            {
+                return;
+            }
+
+            ConfirmationStatus = AppointmentConfirmationStatus.Pending;
+            ConfirmedAtUtc = null;
+            ConfirmedByUserId = null;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         private void EnsureStatusAllows(string action)
         {
             if (Status == AppointmentStatus.Scheduled)
@@ -129,6 +161,30 @@ namespace BigSmile.Domain.Entities
             };
 
             throw new InvalidOperationException($"{statusName} appointments cannot be {action}.");
+        }
+
+        private void EnsureConfirmationCanChange()
+        {
+            if (Status == AppointmentStatus.Scheduled)
+            {
+                return;
+            }
+
+            var statusName = Status switch
+            {
+                AppointmentStatus.NoShow => "No-show",
+                _ => Status.ToString()
+            };
+
+            throw new InvalidOperationException($"{statusName} appointments cannot have confirmation changed.");
+        }
+
+        private static void EnsureActor(Guid actorUserId)
+        {
+            if (actorUserId == Guid.Empty)
+            {
+                throw new ArgumentException("Appointment confirmation actor is required.", nameof(actorUserId));
+            }
         }
 
         private void SetSchedule(DateTime startsAt, DateTime endsAt)

@@ -28,6 +28,9 @@ describe('AppointmentCalendarComponent', () => {
               startsAt: '2026-04-14T09:00:00',
               endsAt: '2026-04-14T09:30:00',
               status: 'Attended',
+              confirmationStatus: 'Confirmed',
+              confirmedAtUtc: '2026-04-14T08:00:00Z',
+              confirmedByUserId: 'user-1',
               notes: 'Follow-up',
               cancellationReason: null
             },
@@ -39,6 +42,9 @@ describe('AppointmentCalendarComponent', () => {
               startsAt: '2026-04-14T10:00:00',
               endsAt: '2026-04-14T10:30:00',
               status: 'NoShow',
+              confirmationStatus: 'Pending',
+              confirmedAtUtc: null,
+              confirmedByUserId: null,
               notes: null,
               cancellationReason: null
             }
@@ -54,6 +60,8 @@ describe('AppointmentCalendarComponent', () => {
     const noShowCard = fixture.nativeElement.querySelector('.appointment-no-show');
 
     expect(attendedCard?.textContent).toContain('Attended');
+    expect(attendedCard?.textContent).toContain('Confirmed');
     expect(noShowCard?.textContent).toContain('No-show');
+    expect(noShowCard?.textContent).toContain('Pending confirmation');
   });
 });

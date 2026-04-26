@@ -7,6 +7,7 @@ import {
   AppointmentSummary,
   CalendarView,
   CancelAppointmentRequest,
+  ChangeAppointmentConfirmationRequest,
   CreateAppointmentBlockRequest,
   CreateAppointmentRequest,
   RescheduleAppointmentRequest,
@@ -70,6 +71,16 @@ export class SchedulingApiService {
 
   markAppointmentNoShow(id: string): Observable<AppointmentSummary> {
     return this.http.post<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/no-show`, {});
+  }
+
+  confirmAppointment(id: string): Observable<AppointmentSummary> {
+    const payload: ChangeAppointmentConfirmationRequest = { status: 'Confirmed' };
+    return this.http.put<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/confirmation`, payload);
+  }
+
+  markAppointmentConfirmationPending(id: string): Observable<AppointmentSummary> {
+    const payload: ChangeAppointmentConfirmationRequest = { status: 'Pending' };
+    return this.http.put<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/confirmation`, payload);
   }
 
   createAppointmentBlock(payload: CreateAppointmentBlockRequest): Observable<AppointmentBlockSummary> {

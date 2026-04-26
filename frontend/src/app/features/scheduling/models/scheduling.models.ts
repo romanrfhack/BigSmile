@@ -1,6 +1,7 @@
 export type CalendarViewMode = 'day' | 'week';
 export type AppointmentEditorMode = 'create' | 'edit' | 'reschedule';
 export type AppointmentStatus = 'Scheduled' | 'Cancelled' | 'Attended' | 'NoShow';
+export type AppointmentConfirmationStatus = 'Pending' | 'Confirmed';
 
 export interface SchedulingBranch {
   id: string;
@@ -28,6 +29,9 @@ export interface AppointmentSummary {
   startsAt: string;
   endsAt: string;
   status: AppointmentStatus;
+  confirmationStatus: AppointmentConfirmationStatus;
+  confirmedAtUtc: string | null;
+  confirmedByUserId: string | null;
   notes: string | null;
   cancellationReason: string | null;
 }
@@ -75,6 +79,10 @@ export interface RescheduleAppointmentRequest {
 
 export interface CancelAppointmentRequest {
   reason: string | null;
+}
+
+export interface ChangeAppointmentConfirmationRequest {
+  status: AppointmentConfirmationStatus;
 }
 
 export interface CreateAppointmentBlockRequest {

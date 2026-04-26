@@ -26,6 +26,9 @@ namespace BigSmile.Application.Features.Scheduling.Commands
     public sealed record CancelAppointmentCommand(
         string? Reason);
 
+    public sealed record ChangeAppointmentConfirmationCommand(
+        string Status);
+
     public interface IAppointmentCommandService
     {
         Task<AppointmentSummaryDto> CreateAsync(CreateAppointmentCommand command, CancellationToken cancellationToken = default);
@@ -34,6 +37,7 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         Task<AppointmentSummaryDto?> CancelAsync(Guid id, CancelAppointmentCommand command, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> MarkAttendedAsync(Guid id, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> MarkNoShowAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<AppointmentSummaryDto?> ChangeConfirmationAsync(Guid id, ChangeAppointmentConfirmationCommand command, CancellationToken cancellationToken = default);
     }
 
     public sealed class AppointmentCommandService : IAppointmentCommandService
@@ -187,6 +191,40 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
         }
 
+        public async Task<AppointmentSummaryDto?> ChangeConfirmationAsync(
+            Guid id,
+            ChangeAppointmentConfirmationCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
+            if (appointment == null)
+            {
+                return null;
+            }
+
+            await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
+
+            var confirmationStatus = ParseConfirmationStatus(command.Status);
+            switch (confirmationStatus)
+            {
+                case AppointmentConfirmationStatus.Confirmed:
+                    appointment.Confirm(actorUserId);
+                    break;
+                case AppointmentConfirmationStatus.Pending:
+                    appointment.MarkConfirmationPending(actorUserId);
+                    break;
+                default:
+                    throw new ArgumentException(
+                        "Appointment confirmation status must be one of: Pending or Confirmed.",
+                        nameof(command.Status));
+            }
+
+            await _appointmentRepository.UpdateAsync(appointment, cancellationToken);
+            return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
+        }
+
         private async Task<AppointmentSummaryDto> GetRequiredSummaryAsync(Guid appointmentId, CancellationToken cancellationToken)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(appointmentId, cancellationToken);
@@ -266,6 +304,35 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             }
 
             return tenantId;
+        }
+
+        private Guid GetRequiredUserId()
+        {
+            var userIdValue = _tenantContext.GetUserId();
+            if (!Guid.TryParse(userIdValue, out var userId) || userId == Guid.Empty)
+            {
+                throw new InvalidOperationException("Appointment confirmation write operations require a resolved user context.");
+            }
+
+            return userId;
+        }
+
+        private static AppointmentConfirmationStatus ParseConfirmationStatus(string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                throw new ArgumentException("Appointment confirmation status is required.", nameof(status));
+            }
+
+            if (!Enum.TryParse<AppointmentConfirmationStatus>(status.Trim(), ignoreCase: true, out var parsedStatus) ||
+                !Enum.IsDefined(parsedStatus))
+            {
+                throw new ArgumentException(
+                    "Appointment confirmation status must be one of: Pending or Confirmed.",
+                    nameof(status));
+            }
+
+            return parsedStatus;
         }
     }
 }
