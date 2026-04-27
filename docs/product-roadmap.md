@@ -562,14 +562,15 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 ## Current status
 - Phase 2 is open in progress
 - Phase 2.1 — Appointment Confirmation Foundation is accepted
-- Phase 2.2 — Manual Reminder Log Foundation is implemented in the repository but not yet accepted
+- Phase 2.2 — Manual Reminder Log Foundation is accepted
+- Phase 2 complete is not closed
 - The accepted Phase 2.1 slice only adds appointment confirmation as an operational signal on existing Scheduling
 - Appointment confirmation status remains separate from `AppointmentStatus` and uses the minimal `Pending` / `Confirmed` catalog
 - Phase 2.1 exposes the minimal mutation endpoint `PUT /api/appointments/{id}/confirmation`
 - Phase 2.1 reuses `scheduling.read` for reads and `scheduling.write` for mutations; it adds no new permissions
 - Phase 2.2 adds only manual contact-attempt logging per existing appointment through `GET /api/appointments/{id}/reminder-log` and `POST /api/appointments/{id}/reminder-log`, with minimal channel/outcome catalogs, optional short notes, creator/timestamp metadata, newest-first reads, existing `scheduling.read` / `scheduling.write`, and no new permissions
 - Phase 2.2 does not change `AppointmentStatus` or `AppointmentConfirmationStatus`
-- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, retry automation, reminder scheduling, and advanced dashboard behavior remain outside Phase 2.2
+- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, retry automation, reminder scheduler, and advanced dashboard behavior remain outside Phase 2.2
 
 ## Candidate features
 - WhatsApp reminders
