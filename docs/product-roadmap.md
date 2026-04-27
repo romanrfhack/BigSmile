@@ -564,7 +564,7 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 - Phase 2.1 — Appointment Confirmation Foundation is accepted
 - Phase 2.2 — Manual Reminder Log Foundation is accepted
 - Phase 2.3 — Reminder Scheduling Preparation is accepted
-- Phase 2.4 — Reminder Worklist Follow-up Actions is implemented in the repository and pending acceptance
+- Phase 2.4 — Reminder Worklist Follow-up Actions is accepted
 - Phase 2 complete is not closed
 - The accepted Phase 2.1 slice only adds appointment confirmation as an operational signal on existing Scheduling
 - Appointment confirmation status remains separate from `AppointmentStatus` and uses the minimal `Pending` / `Confirmed` catalog
@@ -575,7 +575,8 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 - Phase 2.3 adds only manual reminder preparation for existing appointments through explicit set/clear/complete operations, preferred manual channel, due date/time, completion/update metadata, and a branch-aware pending/due reminder list in Scheduling
 - Phase 2.3 does not send messages, does not automatically change `AppointmentStatus` or `AppointmentConfirmationStatus`, does not automatically create reminder log entries, reuses `scheduling.read` / `scheduling.write`, and adds no new permissions
 - Phase 2.4 adds only an explicit manual follow-up action from the pending/due reminder worklist, creating exactly one reminder log entry and changing reminder completion or appointment confirmation only when explicit request flags ask for those changes
-- Phase 2.4 does not change `AppointmentStatus`, does not add permissions, and does not add persistence schema
+- Phase 2.4 does not auto-complete or auto-confirm when `outcome = Reached`
+- Phase 2.4 does not change `AppointmentStatus`, does not change `ReminderDueAtUtc` or `ReminderChannel`, does not add permissions, and does not add persistence schema
 - WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, retry automation, real reminder scheduler, and advanced dashboard behavior remain outside Phase 2.4
 
 ## Candidate features
