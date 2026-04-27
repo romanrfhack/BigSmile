@@ -68,4 +68,60 @@ describe('AppointmentReminderWorklistComponent', () => {
     expect(entries[1].nativeElement.textContent).toContain('Bruno Garcia');
     expect(entries[1].nativeElement.textContent).toContain('Pending');
   });
+
+  it('renders record follow-up action and emits explicit manual follow-up flags', () => {
+    const emitted: unknown[] = [];
+    component.canWrite = true;
+    component.items = [
+      {
+        appointmentId: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-27T09:00:00Z',
+        appointmentStatus: 'Scheduled',
+        confirmationStatus: 'Pending',
+        reminderChannel: 'Phone',
+        reminderDueAtUtc: '2026-04-27T08:00:00Z',
+        reminderState: 'Due',
+        reminderCompletedAtUtc: null,
+        reminderCompletedByUserId: null
+      }
+    ];
+    component.followUpSaved.subscribe(value => emitted.push(value));
+
+    fixture.detectChanges();
+    const action = fixture.debugElement.query(By.css('button.btn-secondary'));
+    expect(action.nativeElement.textContent).toContain('Record follow-up');
+    action.triggerEventHandler('click');
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Manual record only. BigSmile does not send messages.');
+    expect(text).toContain('Mark reminder completed');
+    expect(text).toContain('Confirm appointment');
+    const sendButtons = fixture.debugElement
+      .queryAll(By.css('button'))
+      .filter(button => button.nativeElement.textContent.trim() === 'Send');
+    expect(sendButtons.length).toBe(0);
+
+    component.outcome = 'Reached';
+    component.notes = ' Confirmed by phone. ';
+    component.completeReminder = true;
+    component.confirmAppointment = true;
+    component.submitFollowUp(component.items[0]!);
+
+    expect(emitted).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        value: {
+          channel: 'Phone',
+          outcome: 'Reached',
+          notes: 'Confirmed by phone.',
+          completeReminder: true,
+          confirmAppointment: true
+        }
+      }
+    ]);
+  });
 });

@@ -132,6 +132,19 @@ export interface AddAppointmentReminderLogEntryRequest {
   notes: string | null;
 }
 
+export interface ManualReminderFollowUpRequest {
+  channel: AppointmentReminderChannel;
+  outcome: AppointmentReminderOutcome;
+  notes: string | null;
+  completeReminder: boolean;
+  confirmAppointment: boolean;
+}
+
+export interface ManualReminderFollowUpResult {
+  appointment: AppointmentSummary;
+  reminderLogEntry: AppointmentReminderLogEntry;
+}
+
 export interface CreateAppointmentBlockRequest {
   branchId: string;
   startsAt: string;
@@ -156,6 +169,14 @@ export interface AppointmentReminderLogFormValue {
   channel: AppointmentReminderChannel;
   outcome: AppointmentReminderOutcome;
   notes: string | null;
+}
+
+export interface AppointmentReminderFollowUpFormValue {
+  channel: AppointmentReminderChannel;
+  outcome: AppointmentReminderOutcome;
+  notes: string | null;
+  completeReminder: boolean;
+  confirmAppointment: boolean;
 }
 
 export interface AppointmentManualReminderFormValue {

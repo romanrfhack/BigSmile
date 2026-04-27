@@ -11,6 +11,7 @@ import {
   CancelAppointmentRequest,
   ConfigureAppointmentManualReminderRequest,
   CreateAppointmentRequest,
+  ManualReminderFollowUpRequest,
   RescheduleAppointmentRequest,
   SchedulingBranch,
   SchedulingPatientLookup,
@@ -248,6 +249,15 @@ export class SchedulingFacade {
   addReminderLogEntry(appointmentId: string, payload: AddAppointmentReminderLogEntryRequest) {
     return this.schedulingApi.addReminderLogEntry(appointmentId, payload).pipe(
       tap((entry) => this.reminderLog.set(sortReminderLog([entry, ...this.reminderLog()])))
+    );
+  }
+
+  recordManualReminderFollowUp(appointmentId: string, payload: ManualReminderFollowUpRequest) {
+    return this.schedulingApi.recordManualReminderFollowUp(appointmentId, payload).pipe(
+      tap(() => {
+        this.loadCalendar();
+        this.loadManualReminders();
+      })
     );
   }
 

@@ -207,10 +207,345 @@ namespace BigSmile.IntegrationTests.Scheduling
             Assert.Contains("branch is not accessible", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
+        [Fact]
+        public async Task FollowUpManualReminderAsync_CreatesOneLogCompletesReminderAndConfirmsAppointmentOnlyWhenExplicitlyRequested()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+            var dueAtUtc = DateTime.UtcNow.AddHours(-1);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Phone", dueAtUtc));
+
+            var result = await commandService.FollowUpManualReminderAsync(
+                appointment.Id,
+                new ManualReminderFollowUpCommand(
+                    "Phone",
+                    "Reached",
+                    " Confirmed by phone. ",
+                    CompleteReminder: true,
+                    ConfirmAppointment: true));
+
+            Assert.NotNull(result);
+            Assert.Equal("Confirmed", result!.Appointment.ConfirmationStatus);
+            Assert.NotNull(result.Appointment.ConfirmedAtUtc);
+            Assert.Equal(seedData.User.Id, result.Appointment.ConfirmedByUserId);
+            Assert.True(result.Appointment.ReminderRequired);
+            Assert.Equal("Phone", result.Appointment.ReminderChannel);
+            Assert.Equal(dueAtUtc, result.Appointment.ReminderDueAtUtc);
+            Assert.NotNull(result.Appointment.ReminderCompletedAtUtc);
+            Assert.Equal(seedData.User.Id, result.Appointment.ReminderCompletedByUserId);
+            Assert.Equal("Scheduled", result.Appointment.Status);
+            Assert.Equal("Phone", result.ReminderLogEntry.Channel);
+            Assert.Equal("Reached", result.ReminderLogEntry.Outcome);
+            Assert.Equal("Confirmed by phone.", result.ReminderLogEntry.Notes);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+            var storedEntry = await verificationContext.AppointmentReminderLogEntries.SingleAsync();
+
+            Assert.Equal(AppointmentStatus.Scheduled, storedAppointment.Status);
+            Assert.Equal(AppointmentConfirmationStatus.Confirmed, storedAppointment.ConfirmationStatus);
+            Assert.Equal(AppointmentReminderChannel.Phone, storedAppointment.ReminderChannel);
+            Assert.Equal(dueAtUtc, storedAppointment.ReminderDueAtUtc);
+            Assert.NotNull(storedAppointment.ReminderCompletedAtUtc);
+            Assert.Equal(seedData.Tenant.Id, storedEntry.TenantId);
+            Assert.Equal(appointment.Id, storedEntry.AppointmentId);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_OutcomeReachedDoesNotAutoCompleteOrAutoConfirm()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+            var dueAtUtc = DateTime.UtcNow.AddHours(-1);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "WhatsApp", dueAtUtc));
+
+            var result = await commandService.FollowUpManualReminderAsync(
+                appointment.Id,
+                new ManualReminderFollowUpCommand(
+                    "WhatsApp",
+                    "Reached",
+                    null,
+                    CompleteReminder: false,
+                    ConfirmAppointment: false));
+
+            Assert.NotNull(result);
+            Assert.Equal("Pending", result!.Appointment.ConfirmationStatus);
+            Assert.Null(result.Appointment.ConfirmedAtUtc);
+            Assert.Null(result.Appointment.ConfirmedByUserId);
+            Assert.Null(result.Appointment.ReminderCompletedAtUtc);
+            Assert.Null(result.Appointment.ReminderCompletedByUserId);
+            Assert.Equal("Scheduled", result.Appointment.Status);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+
+            Assert.Equal(AppointmentStatus.Scheduled, storedAppointment.Status);
+            Assert.Equal(AppointmentConfirmationStatus.Pending, storedAppointment.ConfirmationStatus);
+            Assert.Null(storedAppointment.ReminderCompletedAtUtc);
+            Assert.Single(await verificationContext.AppointmentReminderLogEntries.ToListAsync());
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_FailsWhenReminderIsNotRequired()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    appointment.Id,
+                    new ManualReminderFollowUpCommand("Phone", "NoAnswer", null, false, false)));
+
+            Assert.Contains("active reminder intention", exception.Message, StringComparison.OrdinalIgnoreCase);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            Assert.Empty(await verificationContext.AppointmentReminderLogEntries.ToListAsync());
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_AllowsTerminalAppointmentLogAndCompletionButBlocksConfirmation()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var terminalAppointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var confirmBlockedAppointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(6),
+                DateTime.UtcNow.AddHours(7));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                terminalAppointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Other", DateTime.UtcNow.AddHours(-2)));
+            await commandService.ConfigureManualReminderAsync(
+                confirmBlockedAppointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Phone", DateTime.UtcNow.AddHours(-1)));
+            await commandService.MarkNoShowAsync(terminalAppointment.Id);
+            await commandService.MarkAttendedAsync(confirmBlockedAppointment.Id);
+
+            var allowed = await commandService.FollowUpManualReminderAsync(
+                terminalAppointment.Id,
+                new ManualReminderFollowUpCommand("Other", "LeftMessage", null, true, false));
+
+            Assert.NotNull(allowed);
+            Assert.Equal("NoShow", allowed!.Appointment.Status);
+            Assert.NotNull(allowed.Appointment.ReminderCompletedAtUtc);
+            Assert.Equal("Pending", allowed.Appointment.ConfirmationStatus);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    confirmBlockedAppointment.Id,
+                    new ManualReminderFollowUpCommand("Phone", "Reached", null, true, true)));
+
+            Assert.Contains("cannot have confirmation changed", exception.Message, StringComparison.OrdinalIgnoreCase);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedEntries = await verificationContext.AppointmentReminderLogEntries.ToListAsync();
+            var blockedStoredAppointment = await verificationContext.Appointments
+                .SingleAsync(storedAppointment => storedAppointment.Id == confirmBlockedAppointment.Id);
+
+            Assert.Single(storedEntries);
+            Assert.Equal(AppointmentStatus.Attended, blockedStoredAppointment.Status);
+            Assert.Null(blockedStoredAppointment.ReminderCompletedAtUtc);
+            Assert.Equal(AppointmentConfirmationStatus.Pending, blockedStoredAppointment.ConfirmationStatus);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_AlreadyCompletedReminderIsIdempotentAndCreatesExactlyOneEntryForTheFollowUp()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Email", DateTime.UtcNow.AddHours(-1)));
+            await commandService.CompleteManualReminderAsync(appointment.Id);
+
+            var result = await commandService.FollowUpManualReminderAsync(
+                appointment.Id,
+                new ManualReminderFollowUpCommand("Email", "LeftMessage", null, true, false));
+
+            Assert.NotNull(result);
+            Assert.NotNull(result!.Appointment.ReminderCompletedAtUtc);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            Assert.Single(await verificationContext.AppointmentReminderLogEntries.ToListAsync());
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_ReturnsNullForAppointmentOutsideCurrentTenant()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var tenantASeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant A", tenantSubdomain: "tenant-a");
+            var tenantBSeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant B", tenantSubdomain: "tenant-b");
+            var patientB = await SeedPatientAsync(databaseName, tenantBSeed.Tenant.Id, "Bruno", "Garcia");
+            var foreignAppointment = await SeedAppointmentAsync(
+                databaseName,
+                tenantBSeed.Tenant.Id,
+                tenantBSeed.PrimaryBranch.Id,
+                patientB.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var tenantContext = CreateTenantContext(tenantASeed.User.Id, tenantASeed.Tenant.Id);
+
+            await using var tenantBContext = CreateContext(databaseName, CreateTenantContext(tenantBSeed.User.Id, tenantBSeed.Tenant.Id));
+            var tenantBCommandService = CreateCommandService(tenantBContext, CreateTenantContext(tenantBSeed.User.Id, tenantBSeed.Tenant.Id));
+            await tenantBCommandService.ConfigureManualReminderAsync(
+                foreignAppointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Phone", DateTime.UtcNow.AddHours(-1)));
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var result = await commandService.FollowUpManualReminderAsync(
+                foreignAppointment.Id,
+                new ManualReminderFollowUpCommand("Phone", "Reached", null, true, true));
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_BlocksBranchOutsideAssignedScopeForTenantUser()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.SecondaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var unrestrictedContext = CreateContext(databaseName, new TenantContext());
+            var storedAppointment = await unrestrictedContext.Appointments.SingleAsync(stored => stored.Id == appointment.Id);
+            storedAppointment.ConfigureManualReminder(AppointmentReminderChannel.Phone, DateTime.UtcNow.AddHours(-1), seedData.User.Id);
+            await unrestrictedContext.SaveChangesAsync();
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    appointment.Id,
+                    new ManualReminderFollowUpCommand("Phone", "Reached", null, true, false)));
+
+            Assert.Contains("branch is not accessible", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_RejectsInvalidChannelOutcomeAndLongNotes()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Phone", DateTime.UtcNow.AddHours(-1)));
+
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    appointment.Id,
+                    new ManualReminderFollowUpCommand("SMS", "Reached", null, false, false)));
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    appointment.Id,
+                    new ManualReminderFollowUpCommand("Phone", "Unknown", null, false, false)));
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    appointment.Id,
+                    new ManualReminderFollowUpCommand(
+                        "Phone",
+                        "Reached",
+                        new string('a', AppointmentReminderLogEntry.NotesMaxLength + 1),
+                        false,
+                        false)));
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            Assert.Empty(await verificationContext.AppointmentReminderLogEntries.ToListAsync());
+        }
+
         private static AppointmentCommandService CreateCommandService(AppDbContext context, TenantContext tenantContext)
         {
             return new AppointmentCommandService(
                 new EfAppointmentRepository(context),
+                new EfAppointmentReminderLogRepository(context),
                 new EfAppointmentBlockRepository(context),
                 new EfPatientRepository(context),
                 new BranchAccessService(
@@ -288,10 +623,24 @@ namespace BigSmile.IntegrationTests.Scheduling
             Guid patientId,
             DateTime startsAt,
             DateTime endsAt,
-            Guid? confirmByUserId = null)
+            Guid? confirmByUserId = null,
+            AppointmentStatus status = AppointmentStatus.Scheduled)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
             var appointment = new Appointment(tenantId, branchId, patientId, startsAt, endsAt, "Follow-up");
+
+            switch (status)
+            {
+                case AppointmentStatus.Cancelled:
+                    appointment.Cancel("Cancelled during test setup.");
+                    break;
+                case AppointmentStatus.Attended:
+                    appointment.MarkAttended();
+                    break;
+                case AppointmentStatus.NoShow:
+                    appointment.MarkNoShow();
+                    break;
+            }
 
             if (confirmByUserId.HasValue)
             {

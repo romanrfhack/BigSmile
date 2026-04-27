@@ -14,6 +14,7 @@ import {
   AppointmentBlockSummary,
   AppointmentEditorMode,
   AppointmentFormValue,
+  AppointmentReminderFollowUpFormValue,
   AppointmentManualReminderFormValue,
   AppointmentReminderLogFormValue,
   AppointmentSummary,
@@ -101,7 +102,11 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         *ngIf="schedulingFacade.selectedBranchId()"
         [items]="schedulingFacade.manualReminders()"
         [loading]="schedulingFacade.loadingManualReminders()"
-        [error]="schedulingFacade.manualRemindersError()">
+        [error]="schedulingFacade.manualRemindersError()"
+        [followUpError]="reminderFollowUpError"
+        [canWrite]="canWrite"
+        [savingAppointmentId]="savingReminderFollowUpAppointmentId"
+        (followUpSaved)="recordManualReminderFollowUp($event.appointmentId, $event.value)">
       </app-appointment-reminder-worklist>
 
       <div *ngIf="selectedAppointment" class="selection-card">
@@ -443,9 +448,11 @@ export class SchedulingPageComponent implements OnInit {
   saving = false;
   savingReminderLog = false;
   savingManualReminder = false;
+  savingReminderFollowUpAppointmentId: string | null = null;
   submitError: string | null = null;
   reminderLogSubmitError: string | null = null;
   manualReminderError: string | null = null;
+  reminderFollowUpError: string | null = null;
 
   get canWrite(): boolean {
     return this.authService.hasPermissions(['scheduling.write']);
@@ -510,6 +517,7 @@ export class SchedulingPageComponent implements OnInit {
     this.submitError = null;
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
+    this.reminderFollowUpError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -521,6 +529,7 @@ export class SchedulingPageComponent implements OnInit {
     this.submitError = null;
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
+    this.reminderFollowUpError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -532,6 +541,7 @@ export class SchedulingPageComponent implements OnInit {
     this.submitError = null;
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
+    this.reminderFollowUpError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -543,6 +553,7 @@ export class SchedulingPageComponent implements OnInit {
     this.submitError = null;
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
+    this.reminderFollowUpError = null;
     this.schedulingFacade.clearReminderLog();
     this.schedulingFacade.clearPatientOptions();
   }
@@ -919,12 +930,41 @@ export class SchedulingPageComponent implements OnInit {
       });
   }
 
+  recordManualReminderFollowUp(appointmentId: string, payload: AppointmentReminderFollowUpFormValue): void {
+    if (!this.canWrite) {
+      return;
+    }
+
+    this.savingReminderFollowUpAppointmentId = appointmentId;
+    this.reminderFollowUpError = null;
+
+    this.schedulingFacade.recordManualReminderFollowUp(appointmentId, payload)
+      .subscribe({
+        next: (result) => {
+          this.savingReminderFollowUpAppointmentId = null;
+          if (this.selectedAppointment?.id === result.appointment.id) {
+            this.selectedAppointment = result.appointment;
+            this.schedulingFacade.loadReminderLog(result.appointment.id);
+          }
+        },
+        error: (error) => {
+          this.savingReminderFollowUpAppointmentId = null;
+          this.reminderFollowUpError = this.getErrorMessage(
+            error,
+            'AppointmentsController',
+            'The reminder follow-up could not be saved.');
+        }
+      });
+  }
+
   private clearSelection(): void {
     this.selectedAppointment = null;
     this.selectedBlockedSlot = null;
     this.submitError = null;
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
+    this.reminderFollowUpError = null;
+    this.savingReminderFollowUpAppointmentId = null;
     this.schedulingFacade.clearReminderLog();
   }
 

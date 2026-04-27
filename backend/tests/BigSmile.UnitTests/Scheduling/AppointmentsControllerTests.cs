@@ -289,6 +289,125 @@ namespace BigSmile.UnitTests.Scheduling
         }
 
         [Fact]
+        public async Task FollowUpManualReminder_ReturnsOk_WhenCommandServiceSucceeds()
+        {
+            var appointmentId = Guid.NewGuid();
+            var appointment = BuildAppointmentSummary(
+                "Confirmed",
+                DateTime.UtcNow,
+                Guid.NewGuid(),
+                reminderRequired: true,
+                reminderChannel: "Phone",
+                reminderDueAtUtc: DateTime.UtcNow.AddHours(-1),
+                reminderCompletedAtUtc: DateTime.UtcNow,
+                reminderCompletedByUserId: Guid.NewGuid());
+            var entry = BuildReminderLogEntry(appointmentId, "Phone", "Reached", DateTime.UtcNow);
+            var response = new ManualReminderFollowUpResultDto(appointment, entry);
+            ManualReminderFollowUpCommand? capturedCommand = null;
+            var commandService = new Mock<IAppointmentCommandService>();
+            commandService
+                .Setup(service => service.FollowUpManualReminderAsync(
+                    appointmentId,
+                    It.IsAny<ManualReminderFollowUpCommand>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Guid, ManualReminderFollowUpCommand, CancellationToken>((_, command, _) => capturedCommand = command)
+                .ReturnsAsync(response);
+            var queryService = new Mock<IAppointmentQueryService>();
+            var reminderLogCommandService = new Mock<IAppointmentReminderLogCommandService>();
+            var reminderLogQueryService = new Mock<IAppointmentReminderLogQueryService>();
+            var controller = new AppointmentsController(
+                commandService.Object,
+                queryService.Object,
+                reminderLogCommandService.Object,
+                reminderLogQueryService.Object);
+
+            var result = await controller.FollowUpManualReminder(
+                appointmentId,
+                new AppointmentsController.ManualReminderFollowUpRequest
+                {
+                    Channel = "Phone",
+                    Outcome = "Reached",
+                    Notes = "Confirmed by phone.",
+                    CompleteReminder = true,
+                    ConfirmAppointment = true
+                });
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Same(response, ok.Value);
+            Assert.Equal("Phone", capturedCommand?.Channel);
+            Assert.Equal("Reached", capturedCommand?.Outcome);
+            Assert.Equal("Confirmed by phone.", capturedCommand?.Notes);
+            Assert.True(capturedCommand?.CompleteReminder);
+            Assert.True(capturedCommand?.ConfirmAppointment);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminder_ReturnsNotFound_WhenAppointmentDoesNotExistInScope()
+        {
+            var appointmentId = Guid.NewGuid();
+            var commandService = new Mock<IAppointmentCommandService>();
+            commandService
+                .Setup(service => service.FollowUpManualReminderAsync(
+                    appointmentId,
+                    It.IsAny<ManualReminderFollowUpCommand>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((ManualReminderFollowUpResultDto?)null);
+            var queryService = new Mock<IAppointmentQueryService>();
+            var reminderLogCommandService = new Mock<IAppointmentReminderLogCommandService>();
+            var reminderLogQueryService = new Mock<IAppointmentReminderLogQueryService>();
+            var controller = new AppointmentsController(
+                commandService.Object,
+                queryService.Object,
+                reminderLogCommandService.Object,
+                reminderLogQueryService.Object);
+
+            var result = await controller.FollowUpManualReminder(
+                appointmentId,
+                new AppointmentsController.ManualReminderFollowUpRequest
+                {
+                    Channel = "Phone",
+                    Outcome = "Reached"
+                });
+
+            Assert.IsType<NotFoundResult>(result.Result);
+        }
+
+        [Theory]
+        [InlineData("Appointment reminder channel must be one of: Phone, WhatsApp, Email or Other.")]
+        [InlineData("Appointment reminder outcome must be one of: Reached, NoAnswer or LeftMessage.")]
+        [InlineData("Manual reminder follow-up requires an active reminder intention.")]
+        public async Task FollowUpManualReminder_ReturnsValidationProblem_WhenCommandServiceRejectsRequest(string message)
+        {
+            var appointmentId = Guid.NewGuid();
+            var commandService = new Mock<IAppointmentCommandService>();
+            commandService
+                .Setup(service => service.FollowUpManualReminderAsync(
+                    appointmentId,
+                    It.IsAny<ManualReminderFollowUpCommand>(),
+                    It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException(message));
+            var queryService = new Mock<IAppointmentQueryService>();
+            var reminderLogCommandService = new Mock<IAppointmentReminderLogCommandService>();
+            var reminderLogQueryService = new Mock<IAppointmentReminderLogQueryService>();
+            var controller = new AppointmentsController(
+                commandService.Object,
+                queryService.Object,
+                reminderLogCommandService.Object,
+                reminderLogQueryService.Object);
+
+            var result = await controller.FollowUpManualReminder(
+                appointmentId,
+                new AppointmentsController.ManualReminderFollowUpRequest
+                {
+                    Channel = "Phone",
+                    Outcome = "Reached"
+                });
+
+            Assert.IsType<ObjectResult>(result.Result);
+            Assert.False(controller.ModelState.IsValid);
+        }
+
+        [Fact]
         public async Task ListManualReminders_ReturnsWorkItems()
         {
             var branchId = Guid.NewGuid();

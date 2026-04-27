@@ -16,6 +16,7 @@ describe('SchedulingPageComponent', () => {
   let reminderLogAdds: unknown[];
   let manualReminderConfigs: unknown[];
   let manualReminderCompletions: string[];
+  let reminderFollowUps: unknown[];
 
   beforeEach(async () => {
     attendedCalls = [];
@@ -26,6 +27,7 @@ describe('SchedulingPageComponent', () => {
     reminderLogAdds = [];
     manualReminderConfigs = [];
     manualReminderCompletions = [];
+    reminderFollowUps = [];
 
     facade = {
       branches: signal([
@@ -198,6 +200,41 @@ describe('SchedulingPageComponent', () => {
           reminderUpdatedByUserId: 'user-1',
           notes: 'Follow-up',
           cancellationReason: null
+        });
+      },
+      recordManualReminderFollowUp: (appointmentId: string, payload: unknown) => {
+        reminderFollowUps.push({ appointmentId, payload });
+        return of({
+          appointment: {
+            id: appointmentId,
+            branchId: 'branch-1',
+            patientId: 'patient-1',
+            patientFullName: 'Ana Lopez',
+            startsAt: '2026-04-14T09:00:00',
+            endsAt: '2026-04-14T09:30:00',
+            status: 'Scheduled',
+            confirmationStatus: 'Confirmed',
+            confirmedAtUtc: '2026-04-14T08:30:00Z',
+            confirmedByUserId: 'user-1',
+            reminderRequired: true,
+            reminderChannel: 'Phone',
+            reminderDueAtUtc: '2026-04-14T08:00:00Z',
+            reminderCompletedAtUtc: '2026-04-14T08:30:00Z',
+            reminderCompletedByUserId: 'user-1',
+            reminderUpdatedAtUtc: '2026-04-14T08:30:00Z',
+            reminderUpdatedByUserId: 'user-1',
+            notes: 'Follow-up',
+            cancellationReason: null
+          },
+          reminderLogEntry: {
+            id: 'entry-4',
+            appointmentId,
+            channel: 'Phone',
+            outcome: 'Reached',
+            notes: 'Confirmed by phone.',
+            createdAtUtc: '2026-04-14T08:30:00Z',
+            createdByUserId: 'user-1'
+          }
         });
       },
       createAppointmentBlock: () => of(null),
@@ -419,6 +456,53 @@ describe('SchedulingPageComponent', () => {
     expect(manualReminderCompletions).toEqual(['appointment-1']);
     expect(component.selectedAppointment?.reminderCompletedAtUtc).toBe('2026-04-14T08:30:00Z');
     expect(component.savingManualReminder).toBe(false);
+  });
+
+  it('records a manual reminder follow-up from the worklist through the scheduling facade', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+    component.selectedAppointment = {
+      id: 'appointment-1',
+      branchId: 'branch-1',
+      patientId: 'patient-1',
+      patientFullName: 'Ana Lopez',
+      startsAt: '2026-04-14T09:00:00',
+      endsAt: '2026-04-14T09:30:00',
+      status: 'Scheduled',
+      confirmationStatus: 'Pending',
+      confirmedAtUtc: null,
+      confirmedByUserId: null,
+      reminderRequired: true,
+      reminderChannel: 'Phone',
+      reminderDueAtUtc: '2026-04-14T08:00:00Z',
+      notes: 'Follow-up',
+      cancellationReason: null
+    };
+
+    component.recordManualReminderFollowUp('appointment-1', {
+      channel: 'Phone',
+      outcome: 'Reached',
+      notes: 'Confirmed by phone.',
+      completeReminder: true,
+      confirmAppointment: true
+    });
+
+    expect(reminderFollowUps).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        payload: {
+          channel: 'Phone',
+          outcome: 'Reached',
+          notes: 'Confirmed by phone.',
+          completeReminder: true,
+          confirmAppointment: true
+        }
+      }
+    ]);
+    expect(component.selectedAppointment?.confirmationStatus).toBe('Confirmed');
+    expect(component.selectedAppointment?.reminderCompletedAtUtc).toBe('2026-04-14T08:30:00Z');
+    expect(reminderLogLoads).toContain('appointment-1');
+    expect(component.savingReminderFollowUpAppointmentId).toBeNull();
   });
 
   it('marks the selected appointment as attended through the scheduling facade', () => {

@@ -51,6 +51,10 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
         DateTime CreatedAtUtc,
         Guid CreatedByUserId);
 
+    public sealed record ManualReminderFollowUpResultDto(
+        AppointmentSummaryDto Appointment,
+        AppointmentReminderLogEntryDto ReminderLogEntry);
+
     public sealed record CalendarDayDto(
         DateOnly Date,
         IReadOnlyList<AppointmentSummaryDto> Appointments,

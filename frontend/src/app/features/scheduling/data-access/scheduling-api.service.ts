@@ -14,6 +14,8 @@ import {
   ConfigureAppointmentManualReminderRequest,
   CreateAppointmentBlockRequest,
   CreateAppointmentRequest,
+  ManualReminderFollowUpRequest,
+  ManualReminderFollowUpResult,
   RescheduleAppointmentRequest,
   SchedulingBranch,
   SchedulingPatientLookup,
@@ -120,6 +122,15 @@ export class SchedulingApiService {
   ): Observable<AppointmentReminderLogEntry> {
     return this.http.post<AppointmentReminderLogEntry>(
       `${this.appointmentsBaseUrl}/${appointmentId}/reminder-log`,
+      payload);
+  }
+
+  recordManualReminderFollowUp(
+    appointmentId: string,
+    payload: ManualReminderFollowUpRequest
+  ): Observable<ManualReminderFollowUpResult> {
+    return this.http.post<ManualReminderFollowUpResult>(
+      `${this.appointmentsBaseUrl}/${appointmentId}/manual-reminder/follow-up`,
       payload);
   }
 

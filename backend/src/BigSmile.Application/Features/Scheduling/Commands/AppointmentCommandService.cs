@@ -34,6 +34,13 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         string? Channel,
         DateTime? DueAtUtc);
 
+    public sealed record ManualReminderFollowUpCommand(
+        string Channel,
+        string Outcome,
+        string? Notes,
+        bool CompleteReminder,
+        bool ConfirmAppointment);
+
     public interface IAppointmentCommandService
     {
         Task<AppointmentSummaryDto> CreateAsync(CreateAppointmentCommand command, CancellationToken cancellationToken = default);
@@ -45,11 +52,13 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         Task<AppointmentSummaryDto?> ChangeConfirmationAsync(Guid id, ChangeAppointmentConfirmationCommand command, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> ConfigureManualReminderAsync(Guid id, ConfigureAppointmentManualReminderCommand command, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> CompleteManualReminderAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<ManualReminderFollowUpResultDto?> FollowUpManualReminderAsync(Guid id, ManualReminderFollowUpCommand command, CancellationToken cancellationToken = default);
     }
 
     public sealed class AppointmentCommandService : IAppointmentCommandService
     {
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IAppointmentReminderLogRepository _reminderLogRepository;
         private readonly IAppointmentBlockRepository _appointmentBlockRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IBranchAccessService _branchAccessService;
@@ -57,12 +66,14 @@ namespace BigSmile.Application.Features.Scheduling.Commands
 
         public AppointmentCommandService(
             IAppointmentRepository appointmentRepository,
+            IAppointmentReminderLogRepository reminderLogRepository,
             IAppointmentBlockRepository appointmentBlockRepository,
             IPatientRepository patientRepository,
             IBranchAccessService branchAccessService,
             ITenantContext tenantContext)
         {
             _appointmentRepository = appointmentRepository ?? throw new ArgumentNullException(nameof(appointmentRepository));
+            _reminderLogRepository = reminderLogRepository ?? throw new ArgumentNullException(nameof(reminderLogRepository));
             _appointmentBlockRepository = appointmentBlockRepository ?? throw new ArgumentNullException(nameof(appointmentBlockRepository));
             _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
             _branchAccessService = branchAccessService ?? throw new ArgumentNullException(nameof(branchAccessService));
@@ -289,6 +300,51 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
         }
 
+        public async Task<ManualReminderFollowUpResultDto?> FollowUpManualReminderAsync(
+            Guid id,
+            ManualReminderFollowUpCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
+            if (appointment == null)
+            {
+                return null;
+            }
+
+            await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
+
+            if (!appointment.ReminderRequired)
+            {
+                throw new InvalidOperationException("Manual reminder follow-up requires an active reminder intention.");
+            }
+
+            var channel = ParseReminderChannel(command.Channel);
+            var outcome = ParseReminderOutcome(command.Outcome);
+
+            if (command.ConfirmAppointment)
+            {
+                appointment.Confirm(actorUserId);
+            }
+
+            var entry = appointment.AddReminderLogEntry(
+                channel,
+                outcome,
+                command.Notes,
+                actorUserId);
+
+            if (command.CompleteReminder)
+            {
+                appointment.CompleteManualReminder(actorUserId);
+            }
+
+            await _reminderLogRepository.AddAsync(entry, cancellationToken);
+            var summary = await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
+
+            return new ManualReminderFollowUpResultDto(summary, entry.ToDto());
+        }
+
         private async Task<AppointmentSummaryDto> GetRequiredSummaryAsync(Guid appointmentId, CancellationToken cancellationToken)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(appointmentId, cancellationToken);
@@ -415,6 +471,24 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             }
 
             return parsedChannel;
+        }
+
+        private static AppointmentReminderOutcome ParseReminderOutcome(string outcome)
+        {
+            if (string.IsNullOrWhiteSpace(outcome))
+            {
+                throw new ArgumentException("Appointment reminder outcome is required.", nameof(outcome));
+            }
+
+            if (!Enum.TryParse<AppointmentReminderOutcome>(outcome.Trim(), ignoreCase: true, out var parsedOutcome) ||
+                !Enum.IsDefined(parsedOutcome))
+            {
+                throw new ArgumentException(
+                    "Appointment reminder outcome must be one of: Reached, NoAnswer or LeftMessage.",
+                    nameof(outcome));
+            }
+
+            return parsedOutcome;
         }
     }
 }

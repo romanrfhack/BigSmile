@@ -63,7 +63,11 @@ namespace BigSmile.Infrastructure.Data.Repositories
 
         public async Task UpdateAsync(Appointment appointment, CancellationToken cancellationToken = default)
         {
-            _dbContext.Entry(appointment).State = EntityState.Modified;
+            if (_dbContext.Entry(appointment).State == EntityState.Detached)
+            {
+                _dbContext.Appointments.Update(appointment);
+            }
+
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }

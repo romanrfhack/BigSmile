@@ -11,6 +11,7 @@ describe('SchedulingFacade', () => {
   let requestedManualRemindersBranchId: string | null;
   let calendarLoadCount: number;
   let manualReminderLoadCount: number;
+  let followUpRequests: unknown[];
   let api: SchedulingApiService;
 
   beforeEach(() => {
@@ -20,6 +21,7 @@ describe('SchedulingFacade', () => {
     requestedManualRemindersBranchId = null;
     calendarLoadCount = 0;
     manualReminderLoadCount = 0;
+    followUpRequests = [];
 
     api = {
       listAccessibleBranches: () => of([
@@ -229,6 +231,41 @@ describe('SchedulingFacade', () => {
         createdAtUtc: '2026-04-26T08:00:00Z',
         createdByUserId: 'user-3'
       }),
+      recordManualReminderFollowUp: (appointmentId: string, payload: unknown) => {
+        followUpRequests.push({ appointmentId, payload });
+        return of({
+          appointment: {
+            id: appointmentId,
+            branchId: 'branch-1',
+            patientId: 'patient-1',
+            patientFullName: 'Ana Lopez',
+            startsAt: '2026-04-16T09:00:00',
+            endsAt: '2026-04-16T09:30:00',
+            status: 'Scheduled',
+            confirmationStatus: 'Confirmed',
+            confirmedAtUtc: '2026-04-16T08:30:00Z',
+            confirmedByUserId: 'user-1',
+            reminderRequired: true,
+            reminderChannel: 'Phone',
+            reminderDueAtUtc: '2026-04-16T08:00:00Z',
+            reminderCompletedAtUtc: '2026-04-16T08:30:00Z',
+            reminderCompletedByUserId: 'user-1',
+            reminderUpdatedAtUtc: '2026-04-16T08:30:00Z',
+            reminderUpdatedByUserId: 'user-1',
+            notes: 'Check-up',
+            cancellationReason: null
+          },
+          reminderLogEntry: {
+            id: 'entry-4',
+            appointmentId,
+            channel: 'Phone',
+            outcome: 'Reached',
+            notes: 'Confirmed by phone.',
+            createdAtUtc: '2026-04-26T09:00:00Z',
+            createdByUserId: 'user-1'
+          }
+        });
+      },
       createAppointmentBlock: () => of({
         id: 'block-1',
         branchId: 'branch-1',
@@ -370,5 +407,34 @@ describe('SchedulingFacade', () => {
 
     expect(facade.reminderLog().map(entry => entry.id)).toEqual(['entry-3', 'entry-2', 'entry-1']);
     expect(calendarLoadCount).toBe(1);
+  });
+
+  it('reloads calendar and manual reminder list after recording a manual reminder follow-up', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+    expect(manualReminderLoadCount).toBe(1);
+
+    facade.recordManualReminderFollowUp('appointment-1', {
+      channel: 'Phone',
+      outcome: 'Reached',
+      notes: 'Confirmed by phone.',
+      completeReminder: true,
+      confirmAppointment: true
+    }).subscribe();
+
+    expect(followUpRequests).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        payload: {
+          channel: 'Phone',
+          outcome: 'Reached',
+          notes: 'Confirmed by phone.',
+          completeReminder: true,
+          confirmAppointment: true
+        }
+      }
+    ]);
+    expect(calendarLoadCount).toBe(2);
+    expect(manualReminderLoadCount).toBe(2);
   });
 });

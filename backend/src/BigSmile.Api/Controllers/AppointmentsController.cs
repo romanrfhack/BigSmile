@@ -276,6 +276,36 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpPost("{id:guid}/manual-reminder/follow-up")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingWrite)]
+        public async Task<ActionResult<ManualReminderFollowUpResultDto>> FollowUpManualReminder(
+            Guid id,
+            [FromBody] ManualReminderFollowUpRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var result = await _appointmentCommandService.FollowUpManualReminderAsync(
+                    id,
+                    request.ToCommand(),
+                    cancellationToken);
+                if (result == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(result);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         [HttpGet("manual-reminders")]
         [Authorize(Policy = AuthorizationPolicies.SchedulingRead)]
         public async Task<ActionResult<IReadOnlyList<AppointmentReminderWorkItemDto>>> ListManualReminders(
@@ -557,6 +587,44 @@ namespace BigSmile.Api.Controllers
             public AddAppointmentReminderLogEntryCommand ToCommand()
             {
                 return new AddAppointmentReminderLogEntryCommand(Channel, Outcome, Notes);
+            }
+        }
+
+        public sealed class ManualReminderFollowUpRequest : IValidatableObject
+        {
+            [Required]
+            public string Channel { get; set; } = string.Empty;
+
+            [Required]
+            public string Outcome { get; set; } = string.Empty;
+
+            [MaxLength(500)]
+            public string? Notes { get; set; }
+
+            public bool CompleteReminder { get; set; }
+            public bool ConfirmAppointment { get; set; }
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (string.IsNullOrWhiteSpace(Channel))
+                {
+                    yield return new ValidationResult("Appointment reminder channel is required.", new[] { nameof(Channel) });
+                }
+
+                if (string.IsNullOrWhiteSpace(Outcome))
+                {
+                    yield return new ValidationResult("Appointment reminder outcome is required.", new[] { nameof(Outcome) });
+                }
+            }
+
+            public ManualReminderFollowUpCommand ToCommand()
+            {
+                return new ManualReminderFollowUpCommand(
+                    Channel,
+                    Outcome,
+                    Notes,
+                    CompleteReminder,
+                    ConfirmAppointment);
             }
         }
     }
