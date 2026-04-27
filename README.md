@@ -260,6 +260,7 @@ Current active phase:
 
 * **Phase 2 Expansion — Modern Operations:** open in progress
 * **Accepted Phase 2 slices:** **Phase 2.1 — Appointment Confirmation Foundation**, **Phase 2.2 — Manual Reminder Log Foundation**, and **Phase 2.3 — Reminder Scheduling Preparation**
+* **Implemented in repo, pending acceptance:** **Phase 2.4 — Reminder Worklist Follow-up Actions**
 * **Accepted MVP slices preserved:** **Release 7.1 — Documents Foundation** and **Release 7.2 — Dashboard Foundation**
 * **Accepted upstream slice preserved:** **Release 6.1 — Billing Foundation**
 
@@ -310,6 +311,8 @@ Phase 2 Expansion — Modern Operations is now open in the repo through the acce
 Phase 2.2 — Manual Reminder Log Foundation is accepted. It adds only a tenant-owned manual contact attempt log for existing appointments, with `GET /api/appointments/{id}/reminder-log` and `POST /api/appointments/{id}/reminder-log`, minimal channel values (`Phone`, `WhatsApp`, `Email`, `Other`), minimal outcomes (`Reached`, `NoAnswer`, `LeftMessage`), optional short notes, and `createdAtUtc` / `createdByUserId` metadata. This is manual log only: BigSmile does not send WhatsApp, email, or SMS messages in this slice, does not add providers, jobs, queues, webhooks, templates, automatic reminders, scheduler workflows, retry behavior, campaigns, patient portal, online booking, or advanced dashboard behavior, and does not change `AppointmentStatus` or `AppointmentConfirmationStatus`. It reuses `scheduling.read` / `scheduling.write` and adds no new permissions.
 
 Phase 2.3 — Reminder Scheduling Preparation is accepted. It adds only manual reminder preparation on existing appointments: `ReminderRequired`, a preferred manual channel, a target reminder date/time, manual completion metadata, explicit set/clear/complete APIs, and a branch-aware pending/due reminder list inside Scheduling. This slice does not send WhatsApp, email, or SMS, does not add delivery providers, jobs, queues, webhooks, templates, a real scheduler, retry automation, campaigns, patient portal, online booking, or advanced dashboard behavior, does not automatically change `AppointmentStatus` or `AppointmentConfirmationStatus`, does not auto-create reminder log entries, reuses `scheduling.read` / `scheduling.write`, and adds no new permissions.
+
+Phase 2.4 — Reminder Worklist Follow-up Actions is implemented in the repository and pending acceptance. It adds only an explicit manual follow-up action from the pending/due reminder worklist: the operation creates exactly one manual reminder log entry, optionally completes the manual reminder only when `completeReminder = true`, and optionally confirms the appointment only when `confirmAppointment = true`. It does not change `AppointmentStatus`, adds no permissions, adds no persistence schema, and still does not send WhatsApp, email, or SMS or add providers, jobs, queues, webhooks, templates, a real scheduler, retry automation, campaigns, patient portal, online booking, or advanced dashboard behavior.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -418,6 +421,7 @@ The repository should be treated as having an established technical and architec
 
 * Phase 2 is open in progress
 * Accepted slices: Phase 2.1 — Appointment Confirmation Foundation, Phase 2.2 — Manual Reminder Log Foundation, and Phase 2.3 — Reminder Scheduling Preparation
+* Implemented in repo, pending acceptance: Phase 2.4 — Reminder Worklist Follow-up Actions
 * Appointment confirmation status is separate from `AppointmentStatus`
 * Minimal confirmation catalog: `Pending` and `Confirmed`
 * Existing scheduling permissions are reused: `scheduling.read` and `scheduling.write`
@@ -425,7 +429,8 @@ The repository should be treated as having an established technical and architec
 * Confirmation changes are blocked for terminal appointment statuses: `Cancelled`, `Attended`, and `NoShow`
 * Manual reminder/contact attempts can be logged per appointment in Phase 2.2 without changing appointment status or confirmation status
 * Manual reminder preparation can be configured, cleared, completed, and listed in Phase 2.3 without sending messages and without coupling automatically to the reminder log
-* WhatsApp, email, SMS sending, automatic reminders, providers, jobs, queues, webhooks, templates, real scheduler workflows, retry automation, campaigns, online booking, patient portal, and advanced dashboards remain outside Phase 2.3
+* Manual reminder follow-up can be recorded from the worklist in Phase 2.4, creating exactly one log entry and changing confirmation/completion only through explicit request flags
+* WhatsApp, email, SMS sending, automatic reminders, providers, jobs, queues, webhooks, templates, real scheduler workflows, retry automation, campaigns, online booking, patient portal, and advanced dashboards remain outside Phase 2.4
 
 ---
 

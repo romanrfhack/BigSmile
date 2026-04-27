@@ -82,6 +82,8 @@
 
 [Hecho] `Phase 2.3 — Reminder Scheduling Preparation` ya quedó aceptada y agrega preparación manual mínima de recordatorio por cita existente: `ReminderRequired`, canal preferido manual, fecha/hora objetivo, completado manual, metadata mínima de actualización, API/UI mínima y lista branch-aware de recordatorios pendientes/vencidos. Esto no cierra Phase 2 ni implementa WhatsApp, email, SMS, reminders automáticos, providers, jobs, colas, webhooks, templates, scheduler real, retry automático, campaigns, online booking, portal de paciente ni automatizaciones.
 
+[Implementado en repo, pendiente de aceptación] `Phase 2.4 — Reminder Worklist Follow-up Actions` agrega una acción manual explícita desde la worklist de recordatorios pendientes/vencidos para registrar exactamente un intento de contacto, completar opcionalmente el reminder solo cuando `completeReminder = true`, y confirmar opcionalmente la cita solo cuando `confirmAppointment = true`. No cambia `AppointmentStatus`, no agrega permisos, no crea tablas ni columnas, y sigue sin implementar envío real por WhatsApp/email/SMS, providers, jobs, colas, webhooks, templates, scheduler real, retry automático ni automatización.
+
 [Hecho] Release 3.1 cubre, de forma acotada:
 - `ClinicalRecord` tenant-owned y patient-owned
 - exactamente 1 expediente activo por Patient por Tenant
@@ -322,6 +324,18 @@
 - reutilización de `scheduling.read` / `scheduling.write` sin permisos nuevos
 - sin cambios automáticos a `AppointmentStatus` ni `AppointmentConfirmationStatus`
 - sin creación automática de reminder log
+- sin envío real por WhatsApp, email o SMS
+- sin providers, jobs/background workers, colas, webhooks, templates, scheduler real, retry automático, campañas, patient portal, online booking ni dashboard avanzado
+
+[Implementado en repo, pendiente de aceptación] Phase 2.4 — Reminder Worklist Follow-up Actions agrega, de forma acotada:
+- endpoint `POST /api/appointments/{id}/manual-reminder/follow-up`
+- acción manual desde la pending/due reminder worklist existente
+- creación de exactamente una `AppointmentReminderLogEntry` por follow-up
+- completado opcional del reminder manual solo con `completeReminder = true`
+- confirmación opcional de la cita solo con `confirmAppointment = true`
+- bloqueo de confirmación cuando la cita está en estado terminal
+- reutilización de `scheduling.write` sin permisos nuevos
+- sin cambios a `AppointmentStatus`
 - sin envío real por WhatsApp, email o SMS
 - sin providers, jobs/background workers, colas, webhooks, templates, scheduler real, retry automático, campañas, patient portal, online booking ni dashboard avanzado
 
