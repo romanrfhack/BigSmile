@@ -4,6 +4,7 @@ export type AppointmentStatus = 'Scheduled' | 'Cancelled' | 'Attended' | 'NoShow
 export type AppointmentConfirmationStatus = 'Pending' | 'Confirmed';
 export type AppointmentReminderChannel = 'Phone' | 'WhatsApp' | 'Email' | 'Other';
 export type AppointmentReminderOutcome = 'Reached' | 'NoAnswer' | 'LeftMessage';
+export type AppointmentReminderState = 'NotRequired' | 'Pending' | 'Due' | 'Completed';
 
 export interface SchedulingBranch {
   id: string;
@@ -34,6 +35,13 @@ export interface AppointmentSummary {
   confirmationStatus: AppointmentConfirmationStatus;
   confirmedAtUtc: string | null;
   confirmedByUserId: string | null;
+  reminderRequired?: boolean;
+  reminderChannel?: AppointmentReminderChannel | null;
+  reminderDueAtUtc?: string | null;
+  reminderCompletedAtUtc?: string | null;
+  reminderCompletedByUserId?: string | null;
+  reminderUpdatedAtUtc?: string | null;
+  reminderUpdatedByUserId?: string | null;
   notes: string | null;
   cancellationReason: string | null;
 }
@@ -54,6 +62,21 @@ export interface AppointmentReminderLogEntry {
   notes: string | null;
   createdAtUtc: string;
   createdByUserId: string;
+}
+
+export interface AppointmentReminderWorkItem {
+  appointmentId: string;
+  branchId: string;
+  patientId: string;
+  patientFullName: string;
+  startsAt: string;
+  appointmentStatus: AppointmentStatus;
+  confirmationStatus: AppointmentConfirmationStatus;
+  reminderChannel: AppointmentReminderChannel | null;
+  reminderDueAtUtc: string | null;
+  reminderState: AppointmentReminderState;
+  reminderCompletedAtUtc: string | null;
+  reminderCompletedByUserId: string | null;
 }
 
 export interface CalendarDay {
@@ -97,6 +120,12 @@ export interface ChangeAppointmentConfirmationRequest {
   status: AppointmentConfirmationStatus;
 }
 
+export interface ConfigureAppointmentManualReminderRequest {
+  required: boolean;
+  channel: AppointmentReminderChannel | null;
+  dueAtUtc: string | null;
+}
+
 export interface AddAppointmentReminderLogEntryRequest {
   channel: AppointmentReminderChannel;
   outcome: AppointmentReminderOutcome;
@@ -127,4 +156,9 @@ export interface AppointmentReminderLogFormValue {
   channel: AppointmentReminderChannel;
   outcome: AppointmentReminderOutcome;
   notes: string | null;
+}
+
+export interface AppointmentManualReminderFormValue {
+  channel: AppointmentReminderChannel;
+  dueAtUtc: string;
 }

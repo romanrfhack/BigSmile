@@ -15,6 +15,20 @@ namespace BigSmile.UnitTests.Scheduling
         }
 
         [Fact]
+        public void NewAppointment_StartsWithoutManualReminder()
+        {
+            var appointment = CreateAppointment();
+
+            Assert.False(appointment.ReminderRequired);
+            Assert.Null(appointment.ReminderChannel);
+            Assert.Null(appointment.ReminderDueAtUtc);
+            Assert.Null(appointment.ReminderCompletedAtUtc);
+            Assert.Null(appointment.ReminderCompletedByUserId);
+            Assert.Null(appointment.ReminderUpdatedAtUtc);
+            Assert.Null(appointment.ReminderUpdatedByUserId);
+        }
+
+        [Fact]
         public void Confirm_SetsConfirmationMetadataWithoutChangingOwnershipOrAppointmentStatus()
         {
             var tenantId = Guid.NewGuid();
@@ -93,6 +107,164 @@ namespace BigSmile.UnitTests.Scheduling
             var appointment = CreateAppointment();
 
             Assert.Throws<ArgumentException>(() => appointment.Confirm(Guid.Empty));
+        }
+
+        [Fact]
+        public void ConfigureManualReminder_SetsReminderMetadataWithoutChangingOwnershipOrStatuses()
+        {
+            var tenantId = Guid.NewGuid();
+            var branchId = Guid.NewGuid();
+            var patientId = Guid.NewGuid();
+            var actorUserId = Guid.NewGuid();
+            var dueAtUtc = DateTime.UtcNow.AddHours(2);
+            var appointment = CreateAppointment(tenantId, branchId, patientId);
+            var beforeUpdate = DateTime.UtcNow;
+
+            appointment.ConfigureManualReminder(AppointmentReminderChannel.Phone, dueAtUtc, actorUserId);
+
+            Assert.True(appointment.ReminderRequired);
+            Assert.Equal(AppointmentReminderChannel.Phone, appointment.ReminderChannel);
+            Assert.Equal(dueAtUtc, appointment.ReminderDueAtUtc);
+            Assert.Null(appointment.ReminderCompletedAtUtc);
+            Assert.Null(appointment.ReminderCompletedByUserId);
+            Assert.NotNull(appointment.ReminderUpdatedAtUtc);
+            Assert.True(appointment.ReminderUpdatedAtUtc >= beforeUpdate);
+            Assert.Equal(actorUserId, appointment.ReminderUpdatedByUserId);
+            Assert.Equal(tenantId, appointment.TenantId);
+            Assert.Equal(branchId, appointment.BranchId);
+            Assert.Equal(patientId, appointment.PatientId);
+            Assert.Equal(AppointmentStatus.Scheduled, appointment.Status);
+            Assert.Equal(AppointmentConfirmationStatus.Pending, appointment.ConfirmationStatus);
+        }
+
+        [Fact]
+        public void ClearManualReminder_ClearsReminderFieldsAndCompletionMetadata()
+        {
+            var actorUserId = Guid.NewGuid();
+            var appointment = CreateAppointment();
+            appointment.ConfigureManualReminder(AppointmentReminderChannel.Email, DateTime.UtcNow.AddHours(2), actorUserId);
+            appointment.CompleteManualReminder(actorUserId);
+
+            appointment.ClearManualReminder(actorUserId);
+
+            Assert.False(appointment.ReminderRequired);
+            Assert.Null(appointment.ReminderChannel);
+            Assert.Null(appointment.ReminderDueAtUtc);
+            Assert.Null(appointment.ReminderCompletedAtUtc);
+            Assert.Null(appointment.ReminderCompletedByUserId);
+            Assert.NotNull(appointment.ReminderUpdatedAtUtc);
+            Assert.Equal(actorUserId, appointment.ReminderUpdatedByUserId);
+            Assert.Equal(AppointmentStatus.Scheduled, appointment.Status);
+            Assert.Equal(AppointmentConfirmationStatus.Pending, appointment.ConfirmationStatus);
+        }
+
+        [Fact]
+        public void CompleteManualReminder_SetsCompletionMetadataWithoutChangingAppointmentOrConfirmationStatus()
+        {
+            var tenantId = Guid.NewGuid();
+            var branchId = Guid.NewGuid();
+            var patientId = Guid.NewGuid();
+            var actorUserId = Guid.NewGuid();
+            var appointment = CreateAppointment(tenantId, branchId, patientId);
+            appointment.ConfigureManualReminder(AppointmentReminderChannel.WhatsApp, DateTime.UtcNow.AddHours(2), actorUserId);
+            var beforeCompletion = DateTime.UtcNow;
+
+            appointment.CompleteManualReminder(actorUserId);
+
+            Assert.True(appointment.ReminderRequired);
+            Assert.NotNull(appointment.ReminderCompletedAtUtc);
+            Assert.True(appointment.ReminderCompletedAtUtc >= beforeCompletion);
+            Assert.Equal(actorUserId, appointment.ReminderCompletedByUserId);
+            Assert.Equal(actorUserId, appointment.ReminderUpdatedByUserId);
+            Assert.Equal(tenantId, appointment.TenantId);
+            Assert.Equal(branchId, appointment.BranchId);
+            Assert.Equal(patientId, appointment.PatientId);
+            Assert.Equal(AppointmentStatus.Scheduled, appointment.Status);
+            Assert.Equal(AppointmentConfirmationStatus.Pending, appointment.ConfirmationStatus);
+        }
+
+        [Fact]
+        public void CompleteManualReminder_RequiresActiveReminder()
+        {
+            var appointment = CreateAppointment();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => appointment.CompleteManualReminder(Guid.NewGuid()));
+
+            Assert.Contains("active reminder intention", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void ConfigureManualReminder_BlocksInvalidChannel()
+        {
+            var appointment = CreateAppointment();
+
+            Assert.Throws<ArgumentException>(() => appointment.ConfigureManualReminder(
+                (AppointmentReminderChannel)999,
+                DateTime.UtcNow.AddHours(2),
+                Guid.NewGuid()));
+        }
+
+        [Fact]
+        public void ConfigureManualReminder_BlocksMissingDueAt()
+        {
+            var appointment = CreateAppointment();
+
+            Assert.Throws<ArgumentException>(() => appointment.ConfigureManualReminder(
+                AppointmentReminderChannel.Phone,
+                default,
+                Guid.NewGuid()));
+        }
+
+        [Theory]
+        [InlineData(AppointmentStatus.Cancelled)]
+        [InlineData(AppointmentStatus.Attended)]
+        [InlineData(AppointmentStatus.NoShow)]
+        public void ConfigureManualReminder_BlocksTerminalAppointmentStatuses(AppointmentStatus terminalStatus)
+        {
+            var appointment = CreateAppointment();
+            MoveToStatus(appointment, terminalStatus);
+
+            var exception = Assert.Throws<InvalidOperationException>(() => appointment.ConfigureManualReminder(
+                AppointmentReminderChannel.Phone,
+                DateTime.UtcNow.AddHours(2),
+                Guid.NewGuid()));
+
+            Assert.Contains("cannot have new manual reminders configured", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Theory]
+        [InlineData(AppointmentStatus.Cancelled)]
+        [InlineData(AppointmentStatus.Attended)]
+        [InlineData(AppointmentStatus.NoShow)]
+        public void ClearManualReminder_AllowsTerminalAppointmentStatuses(AppointmentStatus terminalStatus)
+        {
+            var actorUserId = Guid.NewGuid();
+            var appointment = CreateAppointment();
+            appointment.ConfigureManualReminder(AppointmentReminderChannel.Phone, DateTime.UtcNow.AddHours(2), actorUserId);
+            MoveToStatus(appointment, terminalStatus);
+
+            appointment.ClearManualReminder(actorUserId);
+
+            Assert.False(appointment.ReminderRequired);
+            Assert.Equal(terminalStatus, appointment.Status);
+        }
+
+        [Theory]
+        [InlineData(AppointmentStatus.Cancelled)]
+        [InlineData(AppointmentStatus.Attended)]
+        [InlineData(AppointmentStatus.NoShow)]
+        public void CompleteManualReminder_AllowsTerminalAppointmentStatusesWhenReminderAlreadyExists(AppointmentStatus terminalStatus)
+        {
+            var actorUserId = Guid.NewGuid();
+            var appointment = CreateAppointment();
+            appointment.ConfigureManualReminder(AppointmentReminderChannel.Phone, DateTime.UtcNow.AddHours(2), actorUserId);
+            MoveToStatus(appointment, terminalStatus);
+
+            appointment.CompleteManualReminder(actorUserId);
+
+            Assert.True(appointment.ReminderRequired);
+            Assert.NotNull(appointment.ReminderCompletedAtUtc);
+            Assert.Equal(terminalStatus, appointment.Status);
         }
 
         [Fact]

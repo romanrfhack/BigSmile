@@ -5,11 +5,13 @@ import { environment } from '../../../../environments/environment';
 import {
   AppointmentBlockSummary,
   AppointmentReminderLogEntry,
+  AppointmentReminderWorkItem,
   AppointmentSummary,
   CalendarView,
   AddAppointmentReminderLogEntryRequest,
   CancelAppointmentRequest,
   ChangeAppointmentConfirmationRequest,
+  ConfigureAppointmentManualReminderRequest,
   CreateAppointmentBlockRequest,
   CreateAppointmentRequest,
   RescheduleAppointmentRequest,
@@ -83,6 +85,29 @@ export class SchedulingApiService {
   markAppointmentConfirmationPending(id: string): Observable<AppointmentSummary> {
     const payload: ChangeAppointmentConfirmationRequest = { status: 'Pending' };
     return this.http.put<AppointmentSummary>(`${this.appointmentsBaseUrl}/${id}/confirmation`, payload);
+  }
+
+  listManualReminders(branchId: string, includeCompleted = false): Observable<AppointmentReminderWorkItem[]> {
+    const params = new HttpParams()
+      .set('branchId', branchId)
+      .set('includeCompleted', includeCompleted);
+
+    return this.http.get<AppointmentReminderWorkItem[]>(`${this.appointmentsBaseUrl}/manual-reminders`, { params });
+  }
+
+  configureManualReminder(
+    appointmentId: string,
+    payload: ConfigureAppointmentManualReminderRequest
+  ): Observable<AppointmentSummary> {
+    return this.http.put<AppointmentSummary>(
+      `${this.appointmentsBaseUrl}/${appointmentId}/manual-reminder`,
+      payload);
+  }
+
+  completeManualReminder(appointmentId: string): Observable<AppointmentSummary> {
+    return this.http.put<AppointmentSummary>(
+      `${this.appointmentsBaseUrl}/${appointmentId}/manual-reminder/complete`,
+      {});
   }
 
   getReminderLog(appointmentId: string): Observable<AppointmentReminderLogEntry[]> {

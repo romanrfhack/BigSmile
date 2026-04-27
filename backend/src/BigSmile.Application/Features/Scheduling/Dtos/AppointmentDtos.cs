@@ -11,8 +11,29 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
         string ConfirmationStatus,
         DateTime? ConfirmedAtUtc,
         Guid? ConfirmedByUserId,
+        bool ReminderRequired,
+        string? ReminderChannel,
+        DateTime? ReminderDueAtUtc,
+        DateTime? ReminderCompletedAtUtc,
+        Guid? ReminderCompletedByUserId,
+        DateTime? ReminderUpdatedAtUtc,
+        Guid? ReminderUpdatedByUserId,
         string? Notes,
         string? CancellationReason);
+
+    public sealed record AppointmentReminderWorkItemDto(
+        Guid AppointmentId,
+        Guid BranchId,
+        Guid PatientId,
+        string PatientFullName,
+        DateTime StartsAt,
+        string AppointmentStatus,
+        string ConfirmationStatus,
+        string? ReminderChannel,
+        DateTime? ReminderDueAtUtc,
+        string ReminderState,
+        DateTime? ReminderCompletedAtUtc,
+        Guid? ReminderCompletedByUserId);
 
     public sealed record AppointmentBlockSummaryDto(
         Guid Id,

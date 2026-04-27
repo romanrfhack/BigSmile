@@ -10,6 +10,10 @@ namespace BigSmile.Application.Interfaces.Repositories
             DateTime rangeStart,
             DateTime rangeEnd,
             CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<Appointment>> GetManualRemindersAsync(
+            Guid branchId,
+            bool includeCompleted,
+            CancellationToken cancellationToken = default);
         Task AddAsync(Appointment appointment, CancellationToken cancellationToken = default);
         Task UpdateAsync(Appointment appointment, CancellationToken cancellationToken = default);
     }

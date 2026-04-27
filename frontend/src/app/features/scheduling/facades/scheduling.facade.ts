@@ -5,9 +5,11 @@ import {
   CreateAppointmentBlockRequest,
   AddAppointmentReminderLogEntryRequest,
   AppointmentReminderLogEntry,
+  AppointmentReminderWorkItem,
   CalendarView,
   CalendarViewMode,
   CancelAppointmentRequest,
+  ConfigureAppointmentManualReminderRequest,
   CreateAppointmentRequest,
   RescheduleAppointmentRequest,
   SchedulingBranch,
@@ -27,12 +29,15 @@ export class SchedulingFacade {
   readonly viewMode = signal<CalendarViewMode>('day');
   readonly calendar = signal<CalendarView | null>(null);
   readonly reminderLog = signal<AppointmentReminderLogEntry[]>([]);
+  readonly manualReminders = signal<AppointmentReminderWorkItem[]>([]);
   readonly patientOptions = signal<SchedulingPatientLookup[]>([]);
   readonly loadingBranches = signal(false);
   readonly loadingCalendar = signal(false);
+  readonly loadingManualReminders = signal(false);
   readonly loadingPatients = signal(false);
   readonly branchesError = signal<string | null>(null);
   readonly calendarError = signal<string | null>(null);
+  readonly manualRemindersError = signal<string | null>(null);
   readonly loadingReminderLog = signal(false);
   readonly reminderLogError = signal<string | null>(null);
 
@@ -52,11 +57,13 @@ export class SchedulingFacade {
 
           this.selectedBranchId.set(preferredBranch);
           this.loadCalendar();
+          this.loadManualReminders();
         },
         error: () => {
           this.branches.set([]);
           this.selectedBranchId.set(null);
           this.calendar.set(null);
+          this.manualReminders.set([]);
           this.branchesError.set('Accessible branches could not be loaded.');
         }
       });
@@ -65,6 +72,7 @@ export class SchedulingFacade {
   selectBranch(branchId: string | null): void {
     this.selectedBranchId.set(branchId || null);
     this.loadCalendar();
+    this.loadManualReminders();
   }
 
   setDate(date: string): void {
@@ -98,6 +106,28 @@ export class SchedulingFacade {
         error: () => {
           this.calendar.set(null);
           this.calendarError.set('The scheduling calendar could not be loaded.');
+        }
+      });
+  }
+
+  loadManualReminders(): void {
+    const branchId = this.selectedBranchId();
+    if (!branchId) {
+      this.manualReminders.set([]);
+      this.manualRemindersError.set(null);
+      return;
+    }
+
+    this.loadingManualReminders.set(true);
+    this.manualRemindersError.set(null);
+
+    this.schedulingApi.listManualReminders(branchId)
+      .pipe(finalize(() => this.loadingManualReminders.set(false)))
+      .subscribe({
+        next: (reminders) => this.manualReminders.set(sortManualReminders(reminders)),
+        error: () => {
+          this.manualReminders.set([]);
+          this.manualRemindersError.set('Manual reminders could not be loaded.');
         }
       });
   }
@@ -171,6 +201,24 @@ export class SchedulingFacade {
     );
   }
 
+  configureManualReminder(id: string, payload: ConfigureAppointmentManualReminderRequest) {
+    return this.schedulingApi.configureManualReminder(id, payload).pipe(
+      tap(() => {
+        this.loadCalendar();
+        this.loadManualReminders();
+      })
+    );
+  }
+
+  completeManualReminder(id: string) {
+    return this.schedulingApi.completeManualReminder(id).pipe(
+      tap(() => {
+        this.loadCalendar();
+        this.loadManualReminders();
+      })
+    );
+  }
+
   loadReminderLog(appointmentId: string | null): void {
     if (!appointmentId) {
       this.clearReminderLog();
@@ -226,5 +274,14 @@ function sortReminderLog(entries: AppointmentReminderLogEntry[]): AppointmentRem
     return createdCompare !== 0
       ? createdCompare
       : second.id.localeCompare(first.id);
+  });
+}
+
+function sortManualReminders(entries: AppointmentReminderWorkItem[]): AppointmentReminderWorkItem[] {
+  return [...entries].sort((first, second) => {
+    const dueCompare = (first.reminderDueAtUtc ?? '').localeCompare(second.reminderDueAtUtc ?? '');
+    return dueCompare !== 0
+      ? dueCompare
+      : first.appointmentId.localeCompare(second.appointmentId);
   });
 }

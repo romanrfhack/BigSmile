@@ -8,14 +8,18 @@ describe('SchedulingFacade', () => {
   let requestedCalendarArgs: [string, string, number] | null;
   let requestedPatientSearch: string | null;
   let requestedReminderLogAppointmentId: string | null;
+  let requestedManualRemindersBranchId: string | null;
   let calendarLoadCount: number;
+  let manualReminderLoadCount: number;
   let api: SchedulingApiService;
 
   beforeEach(() => {
     requestedCalendarArgs = null;
     requestedPatientSearch = null;
     requestedReminderLogAppointmentId = null;
+    requestedManualRemindersBranchId = null;
     calendarLoadCount = 0;
+    manualReminderLoadCount = 0;
 
     api = {
       listAccessibleBranches: () => of([
@@ -117,6 +121,82 @@ describe('SchedulingFacade', () => {
         notes: 'Check-up',
         cancellationReason: null
       }),
+      listManualReminders: (branchId: string) => {
+        requestedManualRemindersBranchId = branchId;
+        manualReminderLoadCount += 1;
+        return of([
+          {
+            appointmentId: 'appointment-2',
+            branchId,
+            patientId: 'patient-2',
+            patientFullName: 'Bruno Garcia',
+            startsAt: '2026-04-16T11:00:00Z',
+            appointmentStatus: 'Scheduled',
+            confirmationStatus: 'Pending',
+            reminderChannel: 'Email',
+            reminderDueAtUtc: '2026-04-16T10:00:00Z',
+            reminderState: 'Pending',
+            reminderCompletedAtUtc: null,
+            reminderCompletedByUserId: null
+          },
+          {
+            appointmentId: 'appointment-1',
+            branchId,
+            patientId: 'patient-1',
+            patientFullName: 'Ana Lopez',
+            startsAt: '2026-04-16T09:00:00Z',
+            appointmentStatus: 'Scheduled',
+            confirmationStatus: 'Pending',
+            reminderChannel: 'Phone',
+            reminderDueAtUtc: '2026-04-16T08:00:00Z',
+            reminderState: 'Due',
+            reminderCompletedAtUtc: null,
+            reminderCompletedByUserId: null
+          }
+        ]);
+      },
+      configureManualReminder: () => of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-16T09:00:00',
+        endsAt: '2026-04-16T09:30:00',
+        status: 'Scheduled',
+        confirmationStatus: 'Pending',
+        confirmedAtUtc: null,
+        confirmedByUserId: null,
+        reminderRequired: true,
+        reminderChannel: 'Phone',
+        reminderDueAtUtc: '2026-04-16T08:00:00Z',
+        reminderCompletedAtUtc: null,
+        reminderCompletedByUserId: null,
+        reminderUpdatedAtUtc: '2026-04-16T07:00:00Z',
+        reminderUpdatedByUserId: 'user-1',
+        notes: 'Check-up',
+        cancellationReason: null
+      }),
+      completeManualReminder: () => of({
+        id: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-16T09:00:00',
+        endsAt: '2026-04-16T09:30:00',
+        status: 'Scheduled',
+        confirmationStatus: 'Pending',
+        confirmedAtUtc: null,
+        confirmedByUserId: null,
+        reminderRequired: true,
+        reminderChannel: 'Phone',
+        reminderDueAtUtc: '2026-04-16T08:00:00Z',
+        reminderCompletedAtUtc: '2026-04-16T08:30:00Z',
+        reminderCompletedByUserId: 'user-1',
+        reminderUpdatedAtUtc: '2026-04-16T08:30:00Z',
+        reminderUpdatedByUserId: 'user-1',
+        notes: 'Check-up',
+        cancellationReason: null
+      }),
       getReminderLog: (appointmentId: string) => {
         requestedReminderLogAppointmentId = appointmentId;
         return of([
@@ -175,6 +255,7 @@ describe('SchedulingFacade', () => {
     expect(facade.selectedBranchId()).toBe('branch-1');
     expect(requestedCalendarArgs?.[0]).toBe('branch-1');
     expect(requestedCalendarArgs?.[2]).toBe(1);
+    expect(requestedManualRemindersBranchId).toBe('branch-1');
     expect(facade.calendar()?.branchId).toBe('branch-1');
   });
 
@@ -241,6 +322,39 @@ describe('SchedulingFacade', () => {
 
     expect(requestedReminderLogAppointmentId).toBe('appointment-1');
     expect(facade.reminderLog().map(entry => entry.id)).toEqual(['entry-2', 'entry-1']);
+  });
+
+  it('loads manual reminder work items ordered by due date', () => {
+    facade.loadInitialContext('branch-1');
+
+    expect(facade.manualReminders().map(item => item.appointmentId)).toEqual(['appointment-1', 'appointment-2']);
+    expect(facade.manualReminders()[0]?.reminderState).toBe('Due');
+  });
+
+  it('reloads calendar and manual reminder list after configuring a manual reminder', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+    expect(manualReminderLoadCount).toBe(1);
+
+    facade.configureManualReminder('appointment-1', {
+      required: true,
+      channel: 'Phone',
+      dueAtUtc: '2026-04-16T08:00:00Z'
+    }).subscribe();
+
+    expect(calendarLoadCount).toBe(2);
+    expect(manualReminderLoadCount).toBe(2);
+  });
+
+  it('reloads calendar and manual reminder list after completing a manual reminder', () => {
+    facade.loadInitialContext('branch-1');
+    expect(calendarLoadCount).toBe(1);
+    expect(manualReminderLoadCount).toBe(1);
+
+    facade.completeManualReminder('appointment-1').subscribe();
+
+    expect(calendarLoadCount).toBe(2);
+    expect(manualReminderLoadCount).toBe(2);
   });
 
   it('adds a reminder log entry without reloading the calendar', () => {

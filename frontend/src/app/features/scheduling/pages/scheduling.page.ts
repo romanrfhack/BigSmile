@@ -5,13 +5,16 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { AppointmentBlockFormComponent } from '../components/appointment-block-form.component';
 import { AppointmentCalendarComponent } from '../components/appointment-calendar.component';
 import { AppointmentFormComponent } from '../components/appointment-form.component';
+import { AppointmentManualReminderComponent } from '../components/appointment-manual-reminder.component';
 import { AppointmentReminderLogComponent } from '../components/appointment-reminder-log.component';
+import { AppointmentReminderWorklistComponent } from '../components/appointment-reminder-worklist.component';
 import { SchedulingFacade } from '../facades/scheduling.facade';
 import {
   AppointmentBlockFormValue,
   AppointmentBlockSummary,
   AppointmentEditorMode,
   AppointmentFormValue,
+  AppointmentManualReminderFormValue,
   AppointmentReminderLogFormValue,
   AppointmentSummary,
   CalendarViewMode
@@ -28,6 +31,8 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     AppointmentCalendarComponent,
     AppointmentFormComponent,
     AppointmentBlockFormComponent,
+    AppointmentManualReminderComponent,
+    AppointmentReminderWorklistComponent,
     AppointmentReminderLogComponent
   ],
   template: `
@@ -92,6 +97,13 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         No accessible branches are available for the current scheduling session.
       </div>
 
+      <app-appointment-reminder-worklist
+        *ngIf="schedulingFacade.selectedBranchId()"
+        [items]="schedulingFacade.manualReminders()"
+        [loading]="schedulingFacade.loadingManualReminders()"
+        [error]="schedulingFacade.manualRemindersError()">
+      </app-appointment-reminder-worklist>
+
       <div *ngIf="selectedAppointment" class="selection-card">
         <div>
           <p class="selection-label">Selected appointment</p>
@@ -141,6 +153,17 @@ type SchedulingEditorSurface = 'appointment' | 'block';
           <button type="button" class="btn btn-danger" (click)="cancelSelected()">Cancel appointment</button>
         </div>
       </div>
+
+      <app-appointment-manual-reminder
+        *ngIf="selectedAppointment"
+        [appointment]="selectedAppointment"
+        [canWrite]="canWrite"
+        [saving]="savingManualReminder"
+        [error]="manualReminderError"
+        (saved)="setManualReminder($event)"
+        (cleared)="clearManualReminder()"
+        (completed)="completeManualReminder()">
+      </app-appointment-manual-reminder>
 
       <app-appointment-reminder-log
         *ngIf="selectedAppointment"
@@ -419,8 +442,10 @@ export class SchedulingPageComponent implements OnInit {
   blockEditorRevision = 0;
   saving = false;
   savingReminderLog = false;
+  savingManualReminder = false;
   submitError: string | null = null;
   reminderLogSubmitError: string | null = null;
+  manualReminderError: string | null = null;
 
   get canWrite(): boolean {
     return this.authService.hasPermissions(['scheduling.write']);
@@ -484,6 +509,7 @@ export class SchedulingPageComponent implements OnInit {
     this.editorMode = 'edit';
     this.submitError = null;
     this.reminderLogSubmitError = null;
+    this.manualReminderError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -494,6 +520,7 @@ export class SchedulingPageComponent implements OnInit {
     this.editorMode = 'reschedule';
     this.submitError = null;
     this.reminderLogSubmitError = null;
+    this.manualReminderError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -504,6 +531,7 @@ export class SchedulingPageComponent implements OnInit {
     this.editorMode = this.isScheduledAppointment(appointment) ? 'edit' : 'create';
     this.submitError = null;
     this.reminderLogSubmitError = null;
+    this.manualReminderError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -514,6 +542,7 @@ export class SchedulingPageComponent implements OnInit {
     this.editorMode = 'create';
     this.submitError = null;
     this.reminderLogSubmitError = null;
+    this.manualReminderError = null;
     this.schedulingFacade.clearReminderLog();
     this.schedulingFacade.clearPatientOptions();
   }
@@ -812,11 +841,90 @@ export class SchedulingPageComponent implements OnInit {
       });
   }
 
+  setManualReminder(payload: AppointmentManualReminderFormValue): void {
+    if (!this.selectedAppointment || !this.canWrite) {
+      return;
+    }
+
+    this.savingManualReminder = true;
+    this.manualReminderError = null;
+
+    this.schedulingFacade.configureManualReminder(this.selectedAppointment.id, {
+      required: true,
+      channel: payload.channel,
+      dueAtUtc: payload.dueAtUtc
+    }).subscribe({
+      next: (appointment) => {
+        this.savingManualReminder = false;
+        this.selectedAppointment = appointment;
+      },
+      error: (error) => {
+        this.savingManualReminder = false;
+        this.manualReminderError = this.getErrorMessage(
+          error,
+          'AppointmentsController',
+          'The manual reminder could not be saved.');
+      }
+    });
+  }
+
+  clearManualReminder(): void {
+    if (!this.selectedAppointment || !this.canWrite) {
+      return;
+    }
+
+    this.savingManualReminder = true;
+    this.manualReminderError = null;
+
+    this.schedulingFacade.configureManualReminder(this.selectedAppointment.id, {
+      required: false,
+      channel: null,
+      dueAtUtc: null
+    }).subscribe({
+      next: (appointment) => {
+        this.savingManualReminder = false;
+        this.selectedAppointment = appointment;
+      },
+      error: (error) => {
+        this.savingManualReminder = false;
+        this.manualReminderError = this.getErrorMessage(
+          error,
+          'AppointmentsController',
+          'The manual reminder could not be cleared.');
+      }
+    });
+  }
+
+  completeManualReminder(): void {
+    if (!this.selectedAppointment || !this.canWrite) {
+      return;
+    }
+
+    this.savingManualReminder = true;
+    this.manualReminderError = null;
+
+    this.schedulingFacade.completeManualReminder(this.selectedAppointment.id)
+      .subscribe({
+        next: (appointment) => {
+          this.savingManualReminder = false;
+          this.selectedAppointment = appointment;
+        },
+        error: (error) => {
+          this.savingManualReminder = false;
+          this.manualReminderError = this.getErrorMessage(
+            error,
+            'AppointmentsController',
+            'The manual reminder could not be marked completed.');
+        }
+      });
+  }
+
   private clearSelection(): void {
     this.selectedAppointment = null;
     this.selectedBlockedSlot = null;
     this.submitError = null;
     this.reminderLogSubmitError = null;
+    this.manualReminderError = null;
     this.schedulingFacade.clearReminderLog();
   }
 

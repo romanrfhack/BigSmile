@@ -14,6 +14,8 @@ describe('SchedulingPageComponent', () => {
   let pendingCalls: string[];
   let reminderLogLoads: (string | null)[];
   let reminderLogAdds: unknown[];
+  let manualReminderConfigs: unknown[];
+  let manualReminderCompletions: string[];
 
   beforeEach(async () => {
     attendedCalls = [];
@@ -22,6 +24,8 @@ describe('SchedulingPageComponent', () => {
     pendingCalls = [];
     reminderLogLoads = [];
     reminderLogAdds = [];
+    manualReminderConfigs = [];
+    manualReminderCompletions = [];
 
     facade = {
       branches: signal([
@@ -40,15 +44,19 @@ describe('SchedulingPageComponent', () => {
       viewMode: signal<'day' | 'week'>('day'),
       calendar: signal(null),
       reminderLog: signal([]),
+      manualReminders: signal([]),
       patientOptions: signal([]),
       loadingBranches: signal(false),
       loadingCalendar: signal(false),
       loadingReminderLog: signal(false),
+      loadingManualReminders: signal(false),
       loadingPatients: signal(false),
       branchesError: signal<string | null>(null),
       calendarError: signal<string | null>(null),
       reminderLogError: signal<string | null>(null),
+      manualRemindersError: signal<string | null>(null),
       loadInitialContext: () => undefined,
+      loadManualReminders: () => undefined,
       clearPatientOptions: () => undefined,
       loadReminderLog: (appointmentId: string | null) => {
         reminderLogLoads.push(appointmentId);
@@ -142,6 +150,54 @@ describe('SchedulingPageComponent', () => {
           notes: 'Confirmed by phone.',
           createdAtUtc: '2026-04-14T08:00:00Z',
           createdByUserId: 'user-1'
+        });
+      },
+      configureManualReminder: (appointmentId: string, payload: unknown) => {
+        manualReminderConfigs.push({ appointmentId, payload });
+        return of({
+          id: 'appointment-1',
+          branchId: 'branch-1',
+          patientId: 'patient-1',
+          patientFullName: 'Ana Lopez',
+          startsAt: '2026-04-14T09:00:00',
+          endsAt: '2026-04-14T09:30:00',
+          status: 'Scheduled',
+          confirmationStatus: 'Pending',
+          confirmedAtUtc: null,
+          confirmedByUserId: null,
+          reminderRequired: (payload as any).required,
+          reminderChannel: (payload as any).channel,
+          reminderDueAtUtc: (payload as any).dueAtUtc,
+          reminderCompletedAtUtc: null,
+          reminderCompletedByUserId: null,
+          reminderUpdatedAtUtc: '2026-04-14T08:00:00Z',
+          reminderUpdatedByUserId: 'user-1',
+          notes: 'Follow-up',
+          cancellationReason: null
+        });
+      },
+      completeManualReminder: (appointmentId: string) => {
+        manualReminderCompletions.push(appointmentId);
+        return of({
+          id: 'appointment-1',
+          branchId: 'branch-1',
+          patientId: 'patient-1',
+          patientFullName: 'Ana Lopez',
+          startsAt: '2026-04-14T09:00:00',
+          endsAt: '2026-04-14T09:30:00',
+          status: 'Scheduled',
+          confirmationStatus: 'Pending',
+          confirmedAtUtc: null,
+          confirmedByUserId: null,
+          reminderRequired: true,
+          reminderChannel: 'Phone',
+          reminderDueAtUtc: '2026-04-14T08:00:00Z',
+          reminderCompletedAtUtc: '2026-04-14T08:30:00Z',
+          reminderCompletedByUserId: 'user-1',
+          reminderUpdatedAtUtc: '2026-04-14T08:30:00Z',
+          reminderUpdatedByUserId: 'user-1',
+          notes: 'Follow-up',
+          cancellationReason: null
         });
       },
       createAppointmentBlock: () => of(null),
@@ -261,6 +317,108 @@ describe('SchedulingPageComponent', () => {
       }
     ]);
     expect(component.savingReminderLog).toBe(false);
+  });
+
+  it('configures a manual reminder through the scheduling facade', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+    component.selectedAppointment = {
+      id: 'appointment-1',
+      branchId: 'branch-1',
+      patientId: 'patient-1',
+      patientFullName: 'Ana Lopez',
+      startsAt: '2026-04-14T09:00:00',
+      endsAt: '2026-04-14T09:30:00',
+      status: 'Scheduled',
+      confirmationStatus: 'Pending',
+      confirmedAtUtc: null,
+      confirmedByUserId: null,
+      notes: 'Follow-up',
+      cancellationReason: null
+    };
+
+    component.setManualReminder({
+      channel: 'Phone',
+      dueAtUtc: '2026-04-14T08:00:00Z'
+    });
+
+    expect(manualReminderConfigs).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        payload: {
+          required: true,
+          channel: 'Phone',
+          dueAtUtc: '2026-04-14T08:00:00Z'
+        }
+      }
+    ]);
+    expect(component.selectedAppointment?.reminderRequired).toBe(true);
+    expect(component.savingManualReminder).toBe(false);
+  });
+
+  it('clears a manual reminder through the scheduling facade', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+    component.selectedAppointment = {
+      id: 'appointment-1',
+      branchId: 'branch-1',
+      patientId: 'patient-1',
+      patientFullName: 'Ana Lopez',
+      startsAt: '2026-04-14T09:00:00',
+      endsAt: '2026-04-14T09:30:00',
+      status: 'Scheduled',
+      confirmationStatus: 'Pending',
+      confirmedAtUtc: null,
+      confirmedByUserId: null,
+      reminderRequired: true,
+      reminderChannel: 'Phone',
+      reminderDueAtUtc: '2026-04-14T08:00:00Z',
+      notes: 'Follow-up',
+      cancellationReason: null
+    };
+
+    component.clearManualReminder();
+
+    expect(manualReminderConfigs).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        payload: {
+          required: false,
+          channel: null,
+          dueAtUtc: null
+        }
+      }
+    ]);
+    expect(component.selectedAppointment?.reminderRequired).toBe(false);
+    expect(component.savingManualReminder).toBe(false);
+  });
+
+  it('completes a manual reminder through the scheduling facade', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+    component.selectedAppointment = {
+      id: 'appointment-1',
+      branchId: 'branch-1',
+      patientId: 'patient-1',
+      patientFullName: 'Ana Lopez',
+      startsAt: '2026-04-14T09:00:00',
+      endsAt: '2026-04-14T09:30:00',
+      status: 'Scheduled',
+      confirmationStatus: 'Pending',
+      confirmedAtUtc: null,
+      confirmedByUserId: null,
+      reminderRequired: true,
+      reminderChannel: 'Phone',
+      reminderDueAtUtc: '2026-04-14T08:00:00Z',
+      notes: 'Follow-up',
+      cancellationReason: null
+    };
+
+    component.completeManualReminder();
+
+    expect(manualReminderCompletions).toEqual(['appointment-1']);
+    expect(component.selectedAppointment?.reminderCompletedAtUtc).toBe('2026-04-14T08:30:00Z');
+    expect(component.savingManualReminder).toBe(false);
   });
 
   it('marks the selected appointment as attended through the scheduling facade', () => {

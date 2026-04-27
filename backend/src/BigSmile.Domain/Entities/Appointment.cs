@@ -24,6 +24,13 @@ namespace BigSmile.Domain.Entities
         public AppointmentConfirmationStatus ConfirmationStatus { get; private set; } = AppointmentConfirmationStatus.Pending;
         public DateTime? ConfirmedAtUtc { get; private set; }
         public Guid? ConfirmedByUserId { get; private set; }
+        public bool ReminderRequired { get; private set; }
+        public AppointmentReminderChannel? ReminderChannel { get; private set; }
+        public DateTime? ReminderDueAtUtc { get; private set; }
+        public DateTime? ReminderCompletedAtUtc { get; private set; }
+        public Guid? ReminderCompletedByUserId { get; private set; }
+        public DateTime? ReminderUpdatedAtUtc { get; private set; }
+        public Guid? ReminderUpdatedByUserId { get; private set; }
         public DateTime? CancelledAt { get; private set; }
         public string? CancellationReason { get; private set; }
         public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
@@ -148,6 +155,74 @@ namespace BigSmile.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void ConfigureManualReminder(
+            AppointmentReminderChannel channel,
+            DateTime dueAtUtc,
+            Guid actorUserId)
+        {
+            EnsureActor(actorUserId);
+            EnsureManualReminderCanBeConfigured();
+
+            if (!Enum.IsDefined(channel))
+            {
+                throw new ArgumentException(
+                    "Appointment reminder channel must be one of: Phone, WhatsApp, Email or Other.",
+                    nameof(channel));
+            }
+
+            if (dueAtUtc == default)
+            {
+                throw new ArgumentException("Manual reminder due date/time is required.", nameof(dueAtUtc));
+            }
+
+            var updatedAtUtc = DateTime.UtcNow;
+            ReminderRequired = true;
+            ReminderChannel = channel;
+            ReminderDueAtUtc = dueAtUtc;
+            ReminderCompletedAtUtc = null;
+            ReminderCompletedByUserId = null;
+            ReminderUpdatedAtUtc = updatedAtUtc;
+            ReminderUpdatedByUserId = actorUserId;
+            UpdatedAt = updatedAtUtc;
+        }
+
+        public void ClearManualReminder(Guid actorUserId)
+        {
+            EnsureActor(actorUserId);
+
+            var updatedAtUtc = DateTime.UtcNow;
+            ReminderRequired = false;
+            ReminderChannel = null;
+            ReminderDueAtUtc = null;
+            ReminderCompletedAtUtc = null;
+            ReminderCompletedByUserId = null;
+            ReminderUpdatedAtUtc = updatedAtUtc;
+            ReminderUpdatedByUserId = actorUserId;
+            UpdatedAt = updatedAtUtc;
+        }
+
+        public void CompleteManualReminder(Guid actorUserId)
+        {
+            EnsureActor(actorUserId);
+
+            if (!ReminderRequired)
+            {
+                throw new InvalidOperationException("Manual reminder completion requires an active reminder intention.");
+            }
+
+            if (ReminderCompletedAtUtc.HasValue)
+            {
+                return;
+            }
+
+            var completedAtUtc = DateTime.UtcNow;
+            ReminderCompletedAtUtc = completedAtUtc;
+            ReminderCompletedByUserId = actorUserId;
+            ReminderUpdatedAtUtc = completedAtUtc;
+            ReminderUpdatedByUserId = actorUserId;
+            UpdatedAt = completedAtUtc;
+        }
+
         public AppointmentReminderLogEntry AddReminderLogEntry(
             AppointmentReminderChannel channel,
             AppointmentReminderOutcome outcome,
@@ -200,11 +275,27 @@ namespace BigSmile.Domain.Entities
             throw new InvalidOperationException($"{statusName} appointments cannot have confirmation changed.");
         }
 
+        private void EnsureManualReminderCanBeConfigured()
+        {
+            if (Status == AppointmentStatus.Scheduled)
+            {
+                return;
+            }
+
+            var statusName = Status switch
+            {
+                AppointmentStatus.NoShow => "No-show",
+                _ => Status.ToString()
+            };
+
+            throw new InvalidOperationException($"{statusName} appointments cannot have new manual reminders configured.");
+        }
+
         private static void EnsureActor(Guid actorUserId)
         {
             if (actorUserId == Guid.Empty)
             {
-                throw new ArgumentException("Appointment confirmation actor is required.", nameof(actorUserId));
+                throw new ArgumentException("Appointment mutation actor is required.", nameof(actorUserId));
             }
         }
 

@@ -12,6 +12,10 @@ namespace BigSmile.Application.Features.Scheduling.Queries
             DateOnly startDate,
             int days,
             CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<AppointmentReminderWorkItemDto>> ListManualRemindersAsync(
+            Guid branchId,
+            bool includeCompleted = false,
+            CancellationToken cancellationToken = default);
     }
 
     public sealed class AppointmentQueryService : IAppointmentQueryService
@@ -84,6 +88,30 @@ namespace BigSmile.Application.Features.Scheduling.Queries
                 .ToArray();
 
             return new CalendarViewDto(branch.Id, startDate, normalizedDays, calendarDays);
+        }
+
+        public async Task<IReadOnlyList<AppointmentReminderWorkItemDto>> ListManualRemindersAsync(
+            Guid branchId,
+            bool includeCompleted = false,
+            CancellationToken cancellationToken = default)
+        {
+            EnsureTenantContext();
+
+            var branch = await _branchAccessService.GetAccessibleBranchAsync(branchId, cancellationToken);
+            if (branch == null)
+            {
+                throw new InvalidOperationException("The requested branch is not accessible in the current tenant scope.");
+            }
+
+            var appointments = await _appointmentRepository.GetManualRemindersAsync(
+                branch.Id,
+                includeCompleted,
+                cancellationToken);
+            var utcNow = DateTime.UtcNow;
+
+            return appointments
+                .Select(appointment => appointment.ToReminderWorkItemDto(utcNow))
+                .ToArray();
         }
 
         private void EnsureTenantContext()

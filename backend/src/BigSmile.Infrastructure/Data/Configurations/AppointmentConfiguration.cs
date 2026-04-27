@@ -39,6 +39,27 @@ namespace BigSmile.Infrastructure.Data.Configurations
 
             builder.Property(appointment => appointment.ConfirmedByUserId);
 
+            builder.Property(appointment => appointment.ReminderRequired)
+                .HasDefaultValue(false)
+                .IsRequired();
+
+            builder.Property(appointment => appointment.ReminderChannel)
+                .HasConversion<string>()
+                .HasMaxLength(32);
+
+            builder.Property(appointment => appointment.ReminderDueAtUtc)
+                .HasColumnType("datetime2");
+
+            builder.Property(appointment => appointment.ReminderCompletedAtUtc)
+                .HasColumnType("datetime2");
+
+            builder.Property(appointment => appointment.ReminderCompletedByUserId);
+
+            builder.Property(appointment => appointment.ReminderUpdatedAtUtc)
+                .HasColumnType("datetime2");
+
+            builder.Property(appointment => appointment.ReminderUpdatedByUserId);
+
             builder.Property(appointment => appointment.CreatedAt)
                 .IsRequired();
 
@@ -48,6 +69,7 @@ namespace BigSmile.Infrastructure.Data.Configurations
 
             builder.HasIndex(appointment => new { appointment.TenantId, appointment.BranchId, appointment.StartsAt });
             builder.HasIndex(appointment => new { appointment.TenantId, appointment.PatientId, appointment.StartsAt });
+            builder.HasIndex(appointment => new { appointment.TenantId, appointment.BranchId, appointment.ReminderRequired, appointment.ReminderDueAtUtc });
 
             builder.HasOne(appointment => appointment.Tenant)
                 .WithMany()

@@ -39,6 +39,22 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<IReadOnlyList<Appointment>> GetManualRemindersAsync(
+            Guid branchId,
+            bool includeCompleted,
+            CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.Appointments
+                .Include(appointment => appointment.Patient)
+                .Where(appointment =>
+                    appointment.BranchId == branchId &&
+                    appointment.ReminderRequired &&
+                    (includeCompleted || appointment.ReminderCompletedAtUtc == null))
+                .OrderBy(appointment => appointment.ReminderDueAtUtc)
+                .ThenBy(appointment => appointment.Id)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task AddAsync(Appointment appointment, CancellationToken cancellationToken = default)
         {
             _dbContext.Appointments.Add(appointment);

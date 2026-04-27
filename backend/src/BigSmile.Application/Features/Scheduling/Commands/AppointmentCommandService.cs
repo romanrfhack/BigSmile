@@ -29,6 +29,11 @@ namespace BigSmile.Application.Features.Scheduling.Commands
     public sealed record ChangeAppointmentConfirmationCommand(
         string Status);
 
+    public sealed record ConfigureAppointmentManualReminderCommand(
+        bool Required,
+        string? Channel,
+        DateTime? DueAtUtc);
+
     public interface IAppointmentCommandService
     {
         Task<AppointmentSummaryDto> CreateAsync(CreateAppointmentCommand command, CancellationToken cancellationToken = default);
@@ -38,6 +43,8 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         Task<AppointmentSummaryDto?> MarkAttendedAsync(Guid id, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> MarkNoShowAsync(Guid id, CancellationToken cancellationToken = default);
         Task<AppointmentSummaryDto?> ChangeConfirmationAsync(Guid id, ChangeAppointmentConfirmationCommand command, CancellationToken cancellationToken = default);
+        Task<AppointmentSummaryDto?> ConfigureManualReminderAsync(Guid id, ConfigureAppointmentManualReminderCommand command, CancellationToken cancellationToken = default);
+        Task<AppointmentSummaryDto?> CompleteManualReminderAsync(Guid id, CancellationToken cancellationToken = default);
     }
 
     public sealed class AppointmentCommandService : IAppointmentCommandService
@@ -225,6 +232,63 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
         }
 
+        public async Task<AppointmentSummaryDto?> ConfigureManualReminderAsync(
+            Guid id,
+            ConfigureAppointmentManualReminderCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
+            if (appointment == null)
+            {
+                return null;
+            }
+
+            await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
+
+            if (command.Required)
+            {
+                if (!command.DueAtUtc.HasValue)
+                {
+                    throw new ArgumentException(
+                        "Manual reminder due date/time is required when a reminder is required.",
+                        nameof(command.DueAtUtc));
+                }
+
+                appointment.ConfigureManualReminder(
+                    ParseReminderChannel(command.Channel),
+                    command.DueAtUtc.Value,
+                    actorUserId);
+            }
+            else
+            {
+                appointment.ClearManualReminder(actorUserId);
+            }
+
+            await _appointmentRepository.UpdateAsync(appointment, cancellationToken);
+            return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
+        }
+
+        public async Task<AppointmentSummaryDto?> CompleteManualReminderAsync(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
+            if (appointment == null)
+            {
+                return null;
+            }
+
+            await GetRequiredActiveBranchAsync(appointment.BranchId, cancellationToken);
+
+            appointment.CompleteManualReminder(actorUserId);
+            await _appointmentRepository.UpdateAsync(appointment, cancellationToken);
+            return await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
+        }
+
         private async Task<AppointmentSummaryDto> GetRequiredSummaryAsync(Guid appointmentId, CancellationToken cancellationToken)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(appointmentId, cancellationToken);
@@ -333,6 +397,24 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             }
 
             return parsedStatus;
+        }
+
+        private static AppointmentReminderChannel ParseReminderChannel(string? channel)
+        {
+            if (string.IsNullOrWhiteSpace(channel))
+            {
+                throw new ArgumentException("Appointment reminder channel is required.", nameof(channel));
+            }
+
+            if (!Enum.TryParse<AppointmentReminderChannel>(channel.Trim(), ignoreCase: true, out var parsedChannel) ||
+                !Enum.IsDefined(parsedChannel))
+            {
+                throw new ArgumentException(
+                    "Appointment reminder channel must be one of: Phone, WhatsApp, Email or Other.",
+                    nameof(channel));
+            }
+
+            return parsedChannel;
         }
     }
 }

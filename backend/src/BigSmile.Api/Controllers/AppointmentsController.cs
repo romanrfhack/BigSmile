@@ -224,6 +224,80 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpPut("{id:guid}/manual-reminder")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingWrite)]
+        public async Task<ActionResult<AppointmentSummaryDto>> ConfigureManualReminder(
+            Guid id,
+            [FromBody] ConfigureAppointmentManualReminderRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var appointment = await _appointmentCommandService.ConfigureManualReminderAsync(
+                    id,
+                    request.ToCommand(),
+                    cancellationToken);
+                if (appointment == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(appointment);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
+        [HttpPut("{id:guid}/manual-reminder/complete")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingWrite)]
+        public async Task<ActionResult<AppointmentSummaryDto>> CompleteManualReminder(
+            Guid id,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var appointment = await _appointmentCommandService.CompleteManualReminderAsync(id, cancellationToken);
+                if (appointment == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(appointment);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
+        [HttpGet("manual-reminders")]
+        [Authorize(Policy = AuthorizationPolicies.SchedulingRead)]
+        public async Task<ActionResult<IReadOnlyList<AppointmentReminderWorkItemDto>>> ListManualReminders(
+            [FromQuery] Guid branchId,
+            [FromQuery] bool includeCompleted = false,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var reminders = await _appointmentQueryService.ListManualRemindersAsync(
+                    branchId,
+                    includeCompleted,
+                    cancellationToken);
+
+                return Ok(reminders);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         [HttpGet("{id:guid}/reminder-log")]
         [Authorize(Policy = AuthorizationPolicies.SchedulingRead)]
         public async Task<ActionResult<IReadOnlyList<AppointmentReminderLogEntryDto>>> ListReminderLog(
@@ -423,6 +497,36 @@ namespace BigSmile.Api.Controllers
             public ChangeAppointmentConfirmationCommand ToCommand()
             {
                 return new ChangeAppointmentConfirmationCommand(Status);
+            }
+        }
+
+        public sealed class ConfigureAppointmentManualReminderRequest : IValidatableObject
+        {
+            public bool Required { get; set; }
+            public string? Channel { get; set; }
+            public DateTime? DueAtUtc { get; set; }
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (!Required)
+                {
+                    yield break;
+                }
+
+                if (string.IsNullOrWhiteSpace(Channel))
+                {
+                    yield return new ValidationResult("Appointment reminder channel is required.", new[] { nameof(Channel) });
+                }
+
+                if (!DueAtUtc.HasValue)
+                {
+                    yield return new ValidationResult("Manual reminder due date/time is required.", new[] { nameof(DueAtUtc) });
+                }
+            }
+
+            public ConfigureAppointmentManualReminderCommand ToCommand()
+            {
+                return new ConfigureAppointmentManualReminderCommand(Required, Channel, DueAtUtc);
             }
         }
 
