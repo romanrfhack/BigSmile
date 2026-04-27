@@ -563,7 +563,7 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 - Phase 2 is open in progress
 - Phase 2.1 — Appointment Confirmation Foundation is accepted
 - Phase 2.2 — Manual Reminder Log Foundation is accepted
-- Phase 2.3 — Reminder Scheduling Preparation is implemented in the repository and pending acceptance
+- Phase 2.3 — Reminder Scheduling Preparation is accepted
 - Phase 2 complete is not closed
 - The accepted Phase 2.1 slice only adds appointment confirmation as an operational signal on existing Scheduling
 - Appointment confirmation status remains separate from `AppointmentStatus` and uses the minimal `Pending` / `Confirmed` catalog
