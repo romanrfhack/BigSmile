@@ -21,7 +21,7 @@ import {
         <div>
           <p class="section-label">Pending reminders</p>
           <h3>Manual reminder work</h3>
-          <p class="manual-note">Manual preparation only. No providers, jobs, queues, templates, scheduler, or retry automation.</p>
+          <p class="manual-note">Manual preparation only. No providers, jobs, queues, external delivery templates, scheduler, or retry automation.</p>
         </div>
       </header>
 
