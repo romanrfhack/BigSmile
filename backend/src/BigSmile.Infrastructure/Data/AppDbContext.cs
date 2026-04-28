@@ -34,6 +34,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<AppointmentBlock> AppointmentBlocks => Set<AppointmentBlock>();
         public DbSet<AppointmentReminderLogEntry> AppointmentReminderLogEntries => Set<AppointmentReminderLogEntry>();
+        public DbSet<ReminderTemplate> ReminderTemplates => Set<ReminderTemplate>();
 
         private readonly IConfiguration _configuration;
         private readonly TenantContext _tenantContext;
@@ -90,6 +91,9 @@ namespace BigSmile.Infrastructure.Data
 
             modelBuilder.Entity<AppointmentReminderLogEntry>().HasQueryFilter(entry =>
                 !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
+
+            modelBuilder.Entity<ReminderTemplate>().HasQueryFilter(template =>
+                !ShouldApplyTenantFilter || template.TenantId == ResolvedTenantId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

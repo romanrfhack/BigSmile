@@ -124,4 +124,82 @@ describe('AppointmentReminderWorklistComponent', () => {
       }
     ]);
   });
+
+  it('previews a template and uses rendered body as manual follow-up notes only', () => {
+    const previewRequests: unknown[] = [];
+    const followUps: unknown[] = [];
+    component.canWrite = true;
+    component.reminderTemplates = [
+      {
+        id: 'template-1',
+        name: 'Confirmacion',
+        body: 'Hola {{patientName}}.',
+        isActive: true,
+        createdAtUtc: '2026-04-27T08:00:00Z',
+        createdByUserId: 'user-1',
+        updatedAtUtc: null,
+        updatedByUserId: null,
+        deactivatedAtUtc: null,
+        deactivatedByUserId: null
+      }
+    ];
+    component.items = [
+      {
+        appointmentId: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-27T09:00:00Z',
+        appointmentStatus: 'Scheduled',
+        confirmationStatus: 'Pending',
+        reminderChannel: 'Phone',
+        reminderDueAtUtc: '2026-04-27T08:00:00Z',
+        reminderState: 'Due',
+        reminderCompletedAtUtc: null,
+        reminderCompletedByUserId: null
+      }
+    ];
+    component.templatePreviewRequested.subscribe(value => previewRequests.push(value));
+    component.followUpSaved.subscribe(value => followUps.push(value));
+
+    component.startFollowUp(component.items[0]!);
+    component.selectedTemplateId = 'template-1';
+    component.requestTemplatePreview(component.items[0]!);
+
+    expect(previewRequests).toEqual([
+      {
+        templateId: 'template-1',
+        appointmentId: 'appointment-1'
+      }
+    ]);
+
+    component.templatePreview = {
+      templateId: 'template-1',
+      appointmentId: 'appointment-1',
+      renderedBody: 'Hola Ana Lopez, le recordamos su cita.',
+      unknownPlaceholders: ['doctorName']
+    };
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Rendered preview');
+    expect(text).toContain('Unknown placeholders: doctorName');
+    expect(text).not.toContain('Send');
+
+    component.usePreviewAsNote();
+    component.submitFollowUp(component.items[0]!);
+
+    expect(followUps).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        value: {
+          channel: 'Phone',
+          outcome: 'Reached',
+          notes: 'Hola Ana Lopez, le recordamos su cita.',
+          completeReminder: false,
+          confirmAppointment: false
+        }
+      }
+    ]);
+  });
 });

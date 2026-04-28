@@ -17,6 +17,11 @@ describe('SchedulingPageComponent', () => {
   let manualReminderConfigs: unknown[];
   let manualReminderCompletions: string[];
   let reminderFollowUps: unknown[];
+  let reminderTemplateCreates: unknown[];
+  let reminderTemplateUpdates: unknown[];
+  let reminderTemplateDeactivations: string[];
+  let reminderTemplatePreviews: unknown[];
+  let reminderTemplateLoads: number;
 
   beforeEach(async () => {
     attendedCalls = [];
@@ -28,6 +33,11 @@ describe('SchedulingPageComponent', () => {
     manualReminderConfigs = [];
     manualReminderCompletions = [];
     reminderFollowUps = [];
+    reminderTemplateCreates = [];
+    reminderTemplateUpdates = [];
+    reminderTemplateDeactivations = [];
+    reminderTemplatePreviews = [];
+    reminderTemplateLoads = 0;
 
     facade = {
       branches: signal([
@@ -47,24 +57,49 @@ describe('SchedulingPageComponent', () => {
       calendar: signal(null),
       reminderLog: signal([]),
       manualReminders: signal([]),
+      reminderTemplates: signal([
+        {
+          id: 'template-1',
+          name: 'Confirmacion',
+          body: 'Hola {{patientName}}.',
+          isActive: true,
+          createdAtUtc: '2026-04-14T08:00:00Z',
+          createdByUserId: 'user-1',
+          updatedAtUtc: null,
+          updatedByUserId: null,
+          deactivatedAtUtc: null,
+          deactivatedByUserId: null
+        }
+      ]),
+      reminderTemplatePreview: signal(null),
       patientOptions: signal([]),
       loadingBranches: signal(false),
       loadingCalendar: signal(false),
       loadingReminderLog: signal(false),
       loadingManualReminders: signal(false),
+      loadingReminderTemplates: signal(false),
+      loadingReminderTemplatePreview: signal(false),
       loadingPatients: signal(false),
       branchesError: signal<string | null>(null),
       calendarError: signal<string | null>(null),
       reminderLogError: signal<string | null>(null),
       manualRemindersError: signal<string | null>(null),
+      reminderTemplatesError: signal<string | null>(null),
+      reminderTemplatePreviewError: signal<string | null>(null),
       loadInitialContext: () => undefined,
       loadManualReminders: () => undefined,
+      loadReminderTemplates: () => {
+        reminderTemplateLoads += 1;
+      },
       clearPatientOptions: () => undefined,
       loadReminderLog: (appointmentId: string | null) => {
         reminderLogLoads.push(appointmentId);
       },
       clearReminderLog: () => {
         reminderLogLoads.push(null);
+      },
+      clearReminderTemplatePreview: () => {
+        facade.reminderTemplatePreview.set(null);
       },
       searchPatients: () => undefined,
       selectBranch: () => undefined,
@@ -237,6 +272,51 @@ describe('SchedulingPageComponent', () => {
           }
         });
       },
+      createReminderTemplate: (payload: unknown) => {
+        reminderTemplateCreates.push(payload);
+        return of({
+          id: 'template-2',
+          name: (payload as any).name,
+          body: (payload as any).body,
+          isActive: true,
+          createdAtUtc: '2026-04-14T08:00:00Z',
+          createdByUserId: 'user-1',
+          updatedAtUtc: null,
+          updatedByUserId: null,
+          deactivatedAtUtc: null,
+          deactivatedByUserId: null
+        });
+      },
+      updateReminderTemplate: (id: string, payload: unknown) => {
+        reminderTemplateUpdates.push({ id, payload });
+        return of({
+          id,
+          name: (payload as any).name,
+          body: (payload as any).body,
+          isActive: true,
+          createdAtUtc: '2026-04-14T08:00:00Z',
+          createdByUserId: 'user-1',
+          updatedAtUtc: '2026-04-14T09:00:00Z',
+          updatedByUserId: 'user-1',
+          deactivatedAtUtc: null,
+          deactivatedByUserId: null
+        });
+      },
+      deactivateReminderTemplate: (id: string) => {
+        reminderTemplateDeactivations.push(id);
+        return of(void 0);
+      },
+      previewReminderTemplate: (templateId: string, appointmentId: string) => {
+        reminderTemplatePreviews.push({ templateId, appointmentId });
+        const preview = {
+          templateId,
+          appointmentId,
+          renderedBody: 'Hola Ana Lopez.',
+          unknownPlaceholders: ['doctorName']
+        };
+        facade.reminderTemplatePreview.set(preview);
+        return of(preview);
+      },
       createAppointmentBlock: () => of(null),
       deleteAppointmentBlock: () => of(null)
     };
@@ -317,6 +397,14 @@ describe('SchedulingPageComponent', () => {
     });
 
     expect(reminderLogLoads).toContain('appointment-1');
+  });
+
+  it('loads reminder templates on init', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+
+    fixture.componentInstance.ngOnInit();
+
+    expect(reminderTemplateLoads).toBe(1);
   });
 
   it('adds a manual reminder log entry through the scheduling facade', () => {
@@ -503,6 +591,58 @@ describe('SchedulingPageComponent', () => {
     expect(component.selectedAppointment?.reminderCompletedAtUtc).toBe('2026-04-14T08:30:00Z');
     expect(reminderLogLoads).toContain('appointment-1');
     expect(component.savingReminderFollowUpAppointmentId).toBeNull();
+  });
+
+  it('creates and updates reminder templates through the scheduling facade', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+
+    component.saveReminderTemplate({
+      id: null,
+      name: 'Confirmacion',
+      body: 'Hola {{patientName}}.'
+    });
+    component.saveReminderTemplate({
+      id: 'template-1',
+      name: 'Updated',
+      body: 'Updated body'
+    });
+
+    expect(reminderTemplateCreates).toEqual([{ name: 'Confirmacion', body: 'Hola {{patientName}}.' }]);
+    expect(reminderTemplateUpdates).toEqual([{ id: 'template-1', payload: { name: 'Updated', body: 'Updated body' } }]);
+    expect(component.savingReminderTemplate).toBe(false);
+  });
+
+  it('deactivates reminder templates only after confirmation', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+    const originalConfirm = window.confirm;
+    window.confirm = () => true;
+
+    try {
+      component.deactivateReminderTemplate('template-1');
+
+      expect(reminderTemplateDeactivations).toEqual(['template-1']);
+      expect(component.savingReminderTemplate).toBe(false);
+    } finally {
+      window.confirm = originalConfirm;
+    }
+  });
+
+  it('previews a reminder template for an appointment without saving follow-up notes', () => {
+    const fixture = TestBed.createComponent(SchedulingPageComponent);
+    const component = fixture.componentInstance;
+
+    component.previewReminderTemplate('template-1', 'appointment-1');
+
+    expect(reminderTemplatePreviews).toEqual([
+      {
+        templateId: 'template-1',
+        appointmentId: 'appointment-1'
+      }
+    ]);
+    expect(reminderFollowUps).toEqual([]);
+    expect(facade.reminderTemplatePreview()?.renderedBody).toBe('Hola Ana Lopez.');
   });
 
   it('marks the selected appointment as attended through the scheduling facade', () => {

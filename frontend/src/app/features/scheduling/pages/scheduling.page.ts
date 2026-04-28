@@ -8,6 +8,7 @@ import { AppointmentFormComponent } from '../components/appointment-form.compone
 import { AppointmentManualReminderComponent } from '../components/appointment-manual-reminder.component';
 import { AppointmentReminderLogComponent } from '../components/appointment-reminder-log.component';
 import { AppointmentReminderWorklistComponent } from '../components/appointment-reminder-worklist.component';
+import { ReminderTemplateManagerComponent } from '../components/reminder-template-manager.component';
 import { SchedulingFacade } from '../facades/scheduling.facade';
 import {
   AppointmentBlockFormValue,
@@ -18,7 +19,8 @@ import {
   AppointmentManualReminderFormValue,
   AppointmentReminderLogFormValue,
   AppointmentSummary,
-  CalendarViewMode
+  CalendarViewMode,
+  ReminderTemplateFormValue
 } from '../models/scheduling.models';
 
 type SchedulingEditorSurface = 'appointment' | 'block';
@@ -34,7 +36,8 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     AppointmentBlockFormComponent,
     AppointmentManualReminderComponent,
     AppointmentReminderWorklistComponent,
-    AppointmentReminderLogComponent
+    AppointmentReminderLogComponent,
+    ReminderTemplateManagerComponent
   ],
   template: `
     <section class="scheduling-page">
@@ -98,6 +101,21 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         No accessible branches are available for the current scheduling session.
       </div>
 
+      <app-reminder-template-manager
+        [templates]="schedulingFacade.reminderTemplates()"
+        [loading]="schedulingFacade.loadingReminderTemplates()"
+        [error]="schedulingFacade.reminderTemplatesError()"
+        [submitError]="reminderTemplateSubmitError"
+        [canWrite]="canWrite"
+        [saving]="savingReminderTemplate"
+        [previewAppointmentId]="selectedAppointment?.id ?? null"
+        [preview]="schedulingFacade.reminderTemplatePreview()"
+        [previewing]="!!previewingReminderTemplateId"
+        (saved)="saveReminderTemplate($event)"
+        (deactivateRequested)="deactivateReminderTemplate($event)"
+        (previewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
+      </app-reminder-template-manager>
+
       <app-appointment-reminder-worklist
         *ngIf="schedulingFacade.selectedBranchId()"
         [items]="schedulingFacade.manualReminders()"
@@ -106,7 +124,12 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         [followUpError]="reminderFollowUpError"
         [canWrite]="canWrite"
         [savingAppointmentId]="savingReminderFollowUpAppointmentId"
-        (followUpSaved)="recordManualReminderFollowUp($event.appointmentId, $event.value)">
+        [reminderTemplates]="schedulingFacade.reminderTemplates()"
+        [templatePreview]="schedulingFacade.reminderTemplatePreview()"
+        [previewingTemplateId]="previewingReminderTemplateId"
+        [templatePreviewError]="reminderTemplatePreviewError"
+        (followUpSaved)="recordManualReminderFollowUp($event.appointmentId, $event.value)"
+        (templatePreviewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
       </app-appointment-reminder-worklist>
 
       <div *ngIf="selectedAppointment" class="selection-card">
@@ -449,10 +472,14 @@ export class SchedulingPageComponent implements OnInit {
   savingReminderLog = false;
   savingManualReminder = false;
   savingReminderFollowUpAppointmentId: string | null = null;
+  savingReminderTemplate = false;
+  previewingReminderTemplateId: string | null = null;
   submitError: string | null = null;
   reminderLogSubmitError: string | null = null;
   manualReminderError: string | null = null;
   reminderFollowUpError: string | null = null;
+  reminderTemplateSubmitError: string | null = null;
+  reminderTemplatePreviewError: string | null = null;
 
   get canWrite(): boolean {
     return this.authService.hasPermissions(['scheduling.write']);
@@ -473,6 +500,7 @@ export class SchedulingPageComponent implements OnInit {
     this.tenantName = this.authService.getCurrentTenant()?.name ?? 'the current tenant';
     const preferredBranchId = this.authService.getCurrent()?.currentBranch?.id ?? null;
     this.schedulingFacade.loadInitialContext(preferredBranchId);
+    this.schedulingFacade.loadReminderTemplates();
   }
 
   changeBranch(branchId: string | null): void {
@@ -518,6 +546,7 @@ export class SchedulingPageComponent implements OnInit {
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
     this.reminderFollowUpError = null;
+    this.reminderTemplatePreviewError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -530,6 +559,7 @@ export class SchedulingPageComponent implements OnInit {
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
     this.reminderFollowUpError = null;
+    this.reminderTemplatePreviewError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -542,6 +572,7 @@ export class SchedulingPageComponent implements OnInit {
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
     this.reminderFollowUpError = null;
+    this.reminderTemplatePreviewError = null;
     this.schedulingFacade.loadReminderLog(appointment.id);
   }
 
@@ -554,6 +585,7 @@ export class SchedulingPageComponent implements OnInit {
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
     this.reminderFollowUpError = null;
+    this.reminderTemplatePreviewError = null;
     this.schedulingFacade.clearReminderLog();
     this.schedulingFacade.clearPatientOptions();
   }
@@ -957,6 +989,85 @@ export class SchedulingPageComponent implements OnInit {
       });
   }
 
+  saveReminderTemplate(payload: ReminderTemplateFormValue): void {
+    if (!this.canWrite) {
+      return;
+    }
+
+    this.savingReminderTemplate = true;
+    this.reminderTemplateSubmitError = null;
+
+    const request$ = payload.id
+      ? this.schedulingFacade.updateReminderTemplate(payload.id, {
+          name: payload.name,
+          body: payload.body
+        })
+      : this.schedulingFacade.createReminderTemplate({
+          name: payload.name,
+          body: payload.body
+        });
+
+    request$.subscribe({
+      next: () => {
+        this.savingReminderTemplate = false;
+      },
+      error: (error) => {
+        this.savingReminderTemplate = false;
+        this.reminderTemplateSubmitError = this.getErrorMessage(
+          error,
+          'ReminderTemplatesController',
+          'The reminder template could not be saved.');
+      }
+    });
+  }
+
+  deactivateReminderTemplate(templateId: string): void {
+    if (!this.canWrite) {
+      return;
+    }
+
+    const confirmed = window.confirm('Deactivate this reminder template?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.savingReminderTemplate = true;
+    this.reminderTemplateSubmitError = null;
+
+    this.schedulingFacade.deactivateReminderTemplate(templateId)
+      .subscribe({
+        next: () => {
+          this.savingReminderTemplate = false;
+        },
+        error: (error) => {
+          this.savingReminderTemplate = false;
+          this.reminderTemplateSubmitError = this.getErrorMessage(
+            error,
+            'ReminderTemplatesController',
+            'The reminder template could not be deactivated.');
+        }
+      });
+  }
+
+  previewReminderTemplate(templateId: string, appointmentId: string): void {
+    this.previewingReminderTemplateId = templateId;
+    this.reminderTemplatePreviewError = null;
+
+    this.schedulingFacade.previewReminderTemplate(templateId, appointmentId)
+      .subscribe({
+        next: () => {
+          this.previewingReminderTemplateId = null;
+        },
+        error: (error) => {
+          this.previewingReminderTemplateId = null;
+          this.reminderTemplatePreviewError = this.getErrorMessage(
+            error,
+            'ReminderTemplatesController',
+            'The reminder template could not be previewed for this appointment.');
+        }
+      });
+  }
+
   private clearSelection(): void {
     this.selectedAppointment = null;
     this.selectedBlockedSlot = null;
@@ -964,8 +1075,10 @@ export class SchedulingPageComponent implements OnInit {
     this.reminderLogSubmitError = null;
     this.manualReminderError = null;
     this.reminderFollowUpError = null;
+    this.reminderTemplatePreviewError = null;
     this.savingReminderFollowUpAppointmentId = null;
     this.schedulingFacade.clearReminderLog();
+    this.schedulingFacade.clearReminderTemplatePreview();
   }
 
   isScheduledAppointment(appointment: AppointmentSummary | null): appointment is AppointmentSummary & { status: 'Scheduled' } {

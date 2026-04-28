@@ -47,6 +47,8 @@ namespace BigSmile.Application
             services.AddScoped<IAppointmentQueryService, AppointmentQueryService>();
             services.AddScoped<IAppointmentReminderLogCommandService, AppointmentReminderLogCommandService>();
             services.AddScoped<IAppointmentReminderLogQueryService, AppointmentReminderLogQueryService>();
+            services.AddScoped<IReminderTemplateCommandService, ReminderTemplateCommandService>();
+            services.AddScoped<IReminderTemplateQueryService, ReminderTemplateQueryService>();
             services.AddScoped<ITenantQueryService, TenantQueryService>();
             services.AddScoped<ITreatmentPlanCommandService, TreatmentPlanCommandService>();
             services.AddScoped<ITreatmentPlanQueryService, TreatmentPlanQueryService>();

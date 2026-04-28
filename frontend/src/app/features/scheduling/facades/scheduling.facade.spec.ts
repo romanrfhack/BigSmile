@@ -12,6 +12,11 @@ describe('SchedulingFacade', () => {
   let calendarLoadCount: number;
   let manualReminderLoadCount: number;
   let followUpRequests: unknown[];
+  let reminderTemplateLoadCount: number;
+  let reminderTemplatePreviews: unknown[];
+  let reminderTemplateCreates: unknown[];
+  let reminderTemplateUpdates: unknown[];
+  let reminderTemplateDeactivations: string[];
   let api: SchedulingApiService;
 
   beforeEach(() => {
@@ -22,6 +27,11 @@ describe('SchedulingFacade', () => {
     calendarLoadCount = 0;
     manualReminderLoadCount = 0;
     followUpRequests = [];
+    reminderTemplateLoadCount = 0;
+    reminderTemplatePreviews = [];
+    reminderTemplateCreates = [];
+    reminderTemplateUpdates = [];
+    reminderTemplateDeactivations = [];
 
     api = {
       listAccessibleBranches: () => of([
@@ -266,6 +276,78 @@ describe('SchedulingFacade', () => {
           }
         });
       },
+      listReminderTemplates: () => {
+        reminderTemplateLoadCount += 1;
+        return of([
+          {
+            id: 'template-2',
+            name: 'Second template',
+            body: 'Second body',
+            isActive: true,
+            createdAtUtc: '2026-04-26T08:00:00Z',
+            createdByUserId: 'user-1',
+            updatedAtUtc: null,
+            updatedByUserId: null,
+            deactivatedAtUtc: null,
+            deactivatedByUserId: null
+          },
+          {
+            id: 'template-1',
+            name: 'First template',
+            body: 'Hola {{patientName}}.',
+            isActive: true,
+            createdAtUtc: '2026-04-25T08:00:00Z',
+            createdByUserId: 'user-1',
+            updatedAtUtc: null,
+            updatedByUserId: null,
+            deactivatedAtUtc: null,
+            deactivatedByUserId: null
+          }
+        ]);
+      },
+      createReminderTemplate: (payload: unknown) => {
+        reminderTemplateCreates.push(payload);
+        return of({
+          id: 'template-3',
+          name: (payload as any).name,
+          body: (payload as any).body,
+          isActive: true,
+          createdAtUtc: '2026-04-27T08:00:00Z',
+          createdByUserId: 'user-1',
+          updatedAtUtc: null,
+          updatedByUserId: null,
+          deactivatedAtUtc: null,
+          deactivatedByUserId: null
+        });
+      },
+      updateReminderTemplate: (id: string, payload: unknown) => {
+        reminderTemplateUpdates.push({ id, payload });
+        return of({
+          id,
+          name: (payload as any).name,
+          body: (payload as any).body,
+          isActive: true,
+          createdAtUtc: '2026-04-27T08:00:00Z',
+          createdByUserId: 'user-1',
+          updatedAtUtc: '2026-04-27T09:00:00Z',
+          updatedByUserId: 'user-1',
+          deactivatedAtUtc: null,
+          deactivatedByUserId: null
+        });
+      },
+      deactivateReminderTemplate: (id: string) => {
+        reminderTemplateDeactivations.push(id);
+        return of(void 0);
+      },
+      previewReminderTemplate: (templateId: string, payload: unknown) => {
+        reminderTemplatePreviews.push({ templateId, payload });
+        return of({
+          templateId,
+          appointmentId: (payload as any).appointmentId,
+          renderedBody: 'Hola Ana Lopez.',
+          unknownPlaceholders: ['doctorName']
+        });
+      },
       createAppointmentBlock: () => of({
         id: 'block-1',
         branchId: 'branch-1',
@@ -436,5 +518,45 @@ describe('SchedulingFacade', () => {
     ]);
     expect(calendarLoadCount).toBe(2);
     expect(manualReminderLoadCount).toBe(2);
+  });
+
+  it('loads active reminder templates ordered by name', () => {
+    facade.loadReminderTemplates();
+
+    expect(reminderTemplateLoadCount).toBe(1);
+    expect(facade.reminderTemplates().map(template => template.id)).toEqual(['template-1', 'template-2']);
+  });
+
+  it('reloads reminder templates after create update and deactivate', () => {
+    facade.loadReminderTemplates();
+    expect(reminderTemplateLoadCount).toBe(1);
+
+    facade.createReminderTemplate({
+      name: 'Confirmacion',
+      body: 'Hola {{patientName}}.'
+    }).subscribe();
+    facade.updateReminderTemplate('template-1', {
+      name: 'Updated',
+      body: 'Updated body'
+    }).subscribe();
+    facade.deactivateReminderTemplate('template-1').subscribe();
+
+    expect(reminderTemplateCreates).toEqual([{ name: 'Confirmacion', body: 'Hola {{patientName}}.' }]);
+    expect(reminderTemplateUpdates).toEqual([{ id: 'template-1', payload: { name: 'Updated', body: 'Updated body' } }]);
+    expect(reminderTemplateDeactivations).toEqual(['template-1']);
+    expect(reminderTemplateLoadCount).toBe(4);
+  });
+
+  it('stores reminder template preview without mutating follow-up state', () => {
+    facade.previewReminderTemplate('template-1', 'appointment-1').subscribe();
+
+    expect(reminderTemplatePreviews).toEqual([
+      {
+        templateId: 'template-1',
+        payload: { appointmentId: 'appointment-1' }
+      }
+    ]);
+    expect(facade.reminderTemplatePreview()?.renderedBody).toBe('Hola Ana Lopez.');
+    expect(facade.reminderTemplatePreview()?.unknownPlaceholders).toEqual(['doctorName']);
   });
 });

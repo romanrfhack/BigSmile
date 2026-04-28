@@ -16,7 +16,11 @@ import {
   CreateAppointmentRequest,
   ManualReminderFollowUpRequest,
   ManualReminderFollowUpResult,
+  PreviewReminderTemplateRequest,
+  ReminderTemplate,
+  ReminderTemplatePreview,
   RescheduleAppointmentRequest,
+  SaveReminderTemplateRequest,
   SchedulingBranch,
   SchedulingPatientLookup,
   UpdateAppointmentRequest
@@ -29,6 +33,7 @@ export class SchedulingApiService {
   private readonly http = inject(HttpClient);
   private readonly appointmentsBaseUrl = `${environment.apiUrl}/api/appointments`;
   private readonly appointmentBlocksBaseUrl = `${environment.apiUrl}/api/appointmentblocks`;
+  private readonly reminderTemplatesBaseUrl = `${environment.apiUrl}/api/reminder-templates`;
   private readonly branchesBaseUrl = `${environment.apiUrl}/api/branches`;
   private readonly patientsBaseUrl = `${environment.apiUrl}/api/patients`;
 
@@ -131,6 +136,33 @@ export class SchedulingApiService {
   ): Observable<ManualReminderFollowUpResult> {
     return this.http.post<ManualReminderFollowUpResult>(
       `${this.appointmentsBaseUrl}/${appointmentId}/manual-reminder/follow-up`,
+      payload);
+  }
+
+  listReminderTemplates(includeInactive = false): Observable<ReminderTemplate[]> {
+    const params = new HttpParams().set('includeInactive', includeInactive);
+
+    return this.http.get<ReminderTemplate[]>(this.reminderTemplatesBaseUrl, { params });
+  }
+
+  createReminderTemplate(payload: SaveReminderTemplateRequest): Observable<ReminderTemplate> {
+    return this.http.post<ReminderTemplate>(this.reminderTemplatesBaseUrl, payload);
+  }
+
+  updateReminderTemplate(id: string, payload: SaveReminderTemplateRequest): Observable<ReminderTemplate> {
+    return this.http.put<ReminderTemplate>(`${this.reminderTemplatesBaseUrl}/${id}`, payload);
+  }
+
+  deactivateReminderTemplate(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.reminderTemplatesBaseUrl}/${id}`);
+  }
+
+  previewReminderTemplate(
+    templateId: string,
+    payload: PreviewReminderTemplateRequest
+  ): Observable<ReminderTemplatePreview> {
+    return this.http.post<ReminderTemplatePreview>(
+      `${this.reminderTemplatesBaseUrl}/${templateId}/preview`,
       payload);
   }
 

@@ -145,6 +145,35 @@ export interface ManualReminderFollowUpResult {
   reminderLogEntry: AppointmentReminderLogEntry;
 }
 
+export interface ReminderTemplate {
+  id: string;
+  name: string;
+  body: string;
+  isActive: boolean;
+  createdAtUtc: string;
+  createdByUserId: string;
+  updatedAtUtc: string | null;
+  updatedByUserId: string | null;
+  deactivatedAtUtc: string | null;
+  deactivatedByUserId: string | null;
+}
+
+export interface ReminderTemplatePreview {
+  templateId: string;
+  appointmentId: string;
+  renderedBody: string;
+  unknownPlaceholders: string[];
+}
+
+export interface SaveReminderTemplateRequest {
+  name: string;
+  body: string;
+}
+
+export interface PreviewReminderTemplateRequest {
+  appointmentId: string;
+}
+
 export interface CreateAppointmentBlockRequest {
   branchId: string;
   startsAt: string;
@@ -182,4 +211,10 @@ export interface AppointmentReminderFollowUpFormValue {
 export interface AppointmentManualReminderFormValue {
   channel: AppointmentReminderChannel;
   dueAtUtc: string;
+}
+
+export interface ReminderTemplateFormValue {
+  id: string | null;
+  name: string;
+  body: string;
 }

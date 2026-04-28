@@ -6,7 +6,9 @@ import {
   AppointmentReminderFollowUpFormValue,
   AppointmentReminderOutcome,
   AppointmentReminderState,
-  AppointmentReminderWorkItem
+  AppointmentReminderWorkItem,
+  ReminderTemplate,
+  ReminderTemplatePreview
 } from '../models/scheduling.models';
 
 @Component({
@@ -98,6 +100,49 @@ import {
                 [(ngModel)]="notes"
                 [disabled]="savingAppointmentId === item.appointmentId"></textarea>
             </label>
+
+            <div class="template-helper">
+              <p>Template preview is a manual draft helper only.</p>
+              <div *ngIf="!reminderTemplates.length" class="template-empty">
+                No active templates are available.
+              </div>
+              <div *ngIf="reminderTemplates.length" class="template-controls">
+                <label class="control">
+                  <span>Template</span>
+                  <select
+                    name="template-{{ item.appointmentId }}"
+                    [(ngModel)]="selectedTemplateId"
+                    [disabled]="savingAppointmentId === item.appointmentId">
+                    <option [ngValue]="null">Select a template</option>
+                    <option *ngFor="let template of reminderTemplates" [ngValue]="template.id">
+                      {{ template.name }}
+                    </option>
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="!selectedTemplateId || previewingTemplateId === selectedTemplateId"
+                  (click)="requestTemplatePreview(item)">
+                  Preview template
+                </button>
+              </div>
+
+              <div
+                *ngIf="templatePreview?.appointmentId === item.appointmentId && templatePreview?.templateId === selectedTemplateId"
+                class="template-preview">
+                <strong>Rendered preview</strong>
+                <p>{{ templatePreview?.renderedBody }}</p>
+                <small *ngIf="templatePreview?.unknownPlaceholders?.length">
+                  Unknown placeholders: {{ templatePreview?.unknownPlaceholders?.join(', ') }}
+                </small>
+                <button type="button" class="btn btn-secondary" (click)="usePreviewAsNote()">
+                  Use as note
+                </button>
+              </div>
+
+              <div *ngIf="templatePreviewError" class="form-error">{{ templatePreviewError }}</div>
+            </div>
 
             <label class="checkbox-control">
               <input
@@ -262,6 +307,7 @@ import {
 
     .manual-record-note,
     .control-wide,
+    .template-helper,
     .form-error,
     .follow-up-actions {
       grid-column: 1 / -1;
@@ -314,6 +360,66 @@ import {
       font-weight: 700;
     }
 
+    .template-helper {
+      border-radius: 14px;
+      border: 1px solid #dce6ef;
+      background: #ffffff;
+      padding: 0.85rem;
+    }
+
+    .template-helper p {
+      margin: 0;
+      color: #5b6e84;
+      font-weight: 700;
+    }
+
+    .template-empty {
+      margin-top: 0.6rem;
+      color: #6a7f96;
+    }
+
+    .template-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.75rem;
+      align-items: end;
+      margin-top: 0.75rem;
+    }
+
+    .template-controls .btn-secondary {
+      margin-top: 0;
+    }
+
+    .template-preview {
+      margin-top: 0.75rem;
+      border-radius: 14px;
+      border: 1px solid #c9dfd2;
+      background: #f2fbf5;
+      padding: 0.75rem;
+    }
+
+    .template-preview strong {
+      color: #16324f;
+    }
+
+    .template-preview p {
+      margin: 0.5rem 0 0;
+      color: #42546a;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .template-preview small {
+      display: block;
+      margin-top: 0.5rem;
+      color: #8b4f0f;
+      font-weight: 700;
+    }
+
+    .template-preview .btn-secondary {
+      margin-top: 0.75rem;
+    }
+
     .follow-up-actions {
       display: flex;
       gap: 0.75rem;
@@ -343,6 +449,10 @@ import {
         grid-template-columns: 1fr;
       }
 
+      .template-controls {
+        grid-template-columns: 1fr;
+      }
+
       .btn {
         width: 100%;
       }
@@ -356,11 +466,16 @@ export class AppointmentReminderWorklistComponent {
   @Input() followUpError: string | null = null;
   @Input() canWrite = false;
   @Input() savingAppointmentId: string | null = null;
+  @Input() reminderTemplates: ReminderTemplate[] = [];
+  @Input() templatePreview: ReminderTemplatePreview | null = null;
+  @Input() previewingTemplateId: string | null = null;
+  @Input() templatePreviewError: string | null = null;
 
   @Output() followUpSaved = new EventEmitter<{
     appointmentId: string;
     value: AppointmentReminderFollowUpFormValue;
   }>();
+  @Output() templatePreviewRequested = new EventEmitter<{ templateId: string; appointmentId: string }>();
 
   readonly channelOptions: AppointmentReminderChannel[] = ['Phone', 'WhatsApp', 'Email', 'Other'];
   readonly outcomeOptions: AppointmentReminderOutcome[] = ['Reached', 'NoAnswer', 'LeftMessage'];
@@ -370,6 +485,7 @@ export class AppointmentReminderWorklistComponent {
   notes = '';
   completeReminder = false;
   confirmAppointment = false;
+  selectedTemplateId: string | null = null;
   formError: string | null = null;
 
   getStateLabel(state: AppointmentReminderState): string {
@@ -383,6 +499,7 @@ export class AppointmentReminderWorklistComponent {
     this.notes = '';
     this.completeReminder = false;
     this.confirmAppointment = false;
+    this.selectedTemplateId = null;
     this.formError = null;
   }
 
@@ -421,5 +538,26 @@ export class AppointmentReminderWorklistComponent {
       default:
         return 'Reached';
     }
+  }
+
+  requestTemplatePreview(item: AppointmentReminderWorkItem): void {
+    if (!this.selectedTemplateId) {
+      this.formError = 'Select a template before previewing.';
+      return;
+    }
+
+    this.formError = null;
+    this.templatePreviewRequested.emit({
+      templateId: this.selectedTemplateId,
+      appointmentId: item.appointmentId
+    });
+  }
+
+  usePreviewAsNote(): void {
+    if (!this.templatePreview) {
+      return;
+    }
+
+    this.notes = this.templatePreview.renderedBody;
   }
 }

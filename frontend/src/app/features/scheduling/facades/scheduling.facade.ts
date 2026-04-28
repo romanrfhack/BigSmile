@@ -12,7 +12,10 @@ import {
   ConfigureAppointmentManualReminderRequest,
   CreateAppointmentRequest,
   ManualReminderFollowUpRequest,
+  ReminderTemplate,
+  ReminderTemplatePreview,
   RescheduleAppointmentRequest,
+  SaveReminderTemplateRequest,
   SchedulingBranch,
   SchedulingPatientLookup,
   UpdateAppointmentRequest
@@ -31,6 +34,8 @@ export class SchedulingFacade {
   readonly calendar = signal<CalendarView | null>(null);
   readonly reminderLog = signal<AppointmentReminderLogEntry[]>([]);
   readonly manualReminders = signal<AppointmentReminderWorkItem[]>([]);
+  readonly reminderTemplates = signal<ReminderTemplate[]>([]);
+  readonly reminderTemplatePreview = signal<ReminderTemplatePreview | null>(null);
   readonly patientOptions = signal<SchedulingPatientLookup[]>([]);
   readonly loadingBranches = signal(false);
   readonly loadingCalendar = signal(false);
@@ -41,6 +46,10 @@ export class SchedulingFacade {
   readonly manualRemindersError = signal<string | null>(null);
   readonly loadingReminderLog = signal(false);
   readonly reminderLogError = signal<string | null>(null);
+  readonly loadingReminderTemplates = signal(false);
+  readonly reminderTemplatesError = signal<string | null>(null);
+  readonly loadingReminderTemplatePreview = signal(false);
+  readonly reminderTemplatePreviewError = signal<string | null>(null);
 
   loadInitialContext(preferredBranchId?: string | null): void {
     this.loadingBranches.set(true);
@@ -129,6 +138,21 @@ export class SchedulingFacade {
         error: () => {
           this.manualReminders.set([]);
           this.manualRemindersError.set('Manual reminders could not be loaded.');
+        }
+      });
+  }
+
+  loadReminderTemplates(includeInactive = false): void {
+    this.loadingReminderTemplates.set(true);
+    this.reminderTemplatesError.set(null);
+
+    this.schedulingApi.listReminderTemplates(includeInactive)
+      .pipe(finalize(() => this.loadingReminderTemplates.set(false)))
+      .subscribe({
+        next: (templates) => this.reminderTemplates.set(sortReminderTemplates(templates)),
+        error: () => {
+          this.reminderTemplates.set([]);
+          this.reminderTemplatesError.set('Reminder templates could not be loaded.');
         }
       });
   }
@@ -261,6 +285,43 @@ export class SchedulingFacade {
     );
   }
 
+  createReminderTemplate(payload: SaveReminderTemplateRequest) {
+    return this.schedulingApi.createReminderTemplate(payload).pipe(
+      tap(() => this.loadReminderTemplates())
+    );
+  }
+
+  updateReminderTemplate(id: string, payload: SaveReminderTemplateRequest) {
+    return this.schedulingApi.updateReminderTemplate(id, payload).pipe(
+      tap(() => this.loadReminderTemplates())
+    );
+  }
+
+  deactivateReminderTemplate(id: string) {
+    return this.schedulingApi.deactivateReminderTemplate(id).pipe(
+      tap(() => {
+        this.clearReminderTemplatePreview();
+        this.loadReminderTemplates();
+      })
+    );
+  }
+
+  previewReminderTemplate(templateId: string, appointmentId: string) {
+    this.loadingReminderTemplatePreview.set(true);
+    this.reminderTemplatePreviewError.set(null);
+
+    return this.schedulingApi.previewReminderTemplate(templateId, { appointmentId }).pipe(
+      tap((preview) => this.reminderTemplatePreview.set(preview)),
+      finalize(() => this.loadingReminderTemplatePreview.set(false))
+    );
+  }
+
+  clearReminderTemplatePreview(): void {
+    this.reminderTemplatePreview.set(null);
+    this.loadingReminderTemplatePreview.set(false);
+    this.reminderTemplatePreviewError.set(null);
+  }
+
   createAppointmentBlock(payload: CreateAppointmentBlockRequest) {
     return this.schedulingApi.createAppointmentBlock(payload).pipe(
       tap(() => this.loadCalendar())
@@ -293,5 +354,14 @@ function sortManualReminders(entries: AppointmentReminderWorkItem[]): Appointmen
     return dueCompare !== 0
       ? dueCompare
       : first.appointmentId.localeCompare(second.appointmentId);
+  });
+}
+
+function sortReminderTemplates(templates: ReminderTemplate[]): ReminderTemplate[] {
+  return [...templates].sort((first, second) => {
+    const nameCompare = first.name.localeCompare(second.name);
+    return nameCompare !== 0
+      ? nameCompare
+      : first.id.localeCompare(second.id);
   });
 }
