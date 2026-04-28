@@ -565,6 +565,7 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 - Phase 2.2 — Manual Reminder Log Foundation is accepted
 - Phase 2.3 — Reminder Scheduling Preparation is accepted
 - Phase 2.4 — Reminder Worklist Follow-up Actions is accepted
+- Phase 2.5 — Reminder Template Draft Foundation is implemented in the repo and pending acceptance
 - Phase 2 complete is not closed
 - The accepted Phase 2.1 slice only adds appointment confirmation as an operational signal on existing Scheduling
 - Appointment confirmation status remains separate from `AppointmentStatus` and uses the minimal `Pending` / `Confirmed` catalog
@@ -577,7 +578,10 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 - Phase 2.4 adds only an explicit manual follow-up action from the pending/due reminder worklist, creating exactly one reminder log entry and changing reminder completion or appointment confirmation only when explicit request flags ask for those changes
 - Phase 2.4 does not auto-complete or auto-confirm when `outcome = Reached`
 - Phase 2.4 does not change `AppointmentStatus`, does not change `ReminderDueAtUtc` or `ReminderChannel`, does not add permissions, and does not add persistence schema
-- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, templates, campaigns, retry automation, real reminder scheduler, and advanced dashboard behavior remain outside Phase 2.4
+- Phase 2.5 adds only internal tenant-owned text template drafts for manual reminder work, active listing, create/update/deactivate, preview/render against an existing appointment in current tenant/branch scope, controlled placeholders, unknown placeholder reporting, and manual use of rendered preview as suggested follow-up note text
+- Phase 2.5 adds no new permissions and reuses `scheduling.read` / `scheduling.write`
+- Phase 2.5 preview does not save anything and does not mutate appointment, template, reminder log, or reminder schedule state
+- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain outside Phase 2.5
 
 ## Candidate features
 - WhatsApp reminders
