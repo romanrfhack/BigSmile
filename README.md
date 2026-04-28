@@ -260,6 +260,7 @@ Current active phase:
 
 * **Phase 2 Expansion — Modern Operations:** open in progress
 * **Accepted Phase 2 slices:** **Phase 2.1 — Appointment Confirmation Foundation**, **Phase 2.2 — Manual Reminder Log Foundation**, **Phase 2.3 — Reminder Scheduling Preparation**, **Phase 2.4 — Reminder Worklist Follow-up Actions**, and **Phase 2.5 — Reminder Template Draft Foundation**
+* **Implemented in repo, pending acceptance:** **Phase 2.6 — Reminder Template Usage Traceability**
 * **Accepted MVP slices preserved:** **Release 7.1 — Documents Foundation** and **Release 7.2 — Dashboard Foundation**
 * **Accepted upstream slice preserved:** **Release 6.1 — Billing Foundation**
 
@@ -314,6 +315,8 @@ Phase 2.3 — Reminder Scheduling Preparation is accepted. It adds only manual r
 Phase 2.4 — Reminder Worklist Follow-up Actions is accepted. It adds only an explicit manual follow-up action from the pending/due reminder worklist: the operation creates exactly one manual reminder log entry, optionally completes the manual reminder only when `completeReminder = true`, and optionally confirms the appointment only when `confirmAppointment = true`. It does not auto-complete or auto-confirm when `outcome = Reached`, does not change `AppointmentStatus`, does not change `ReminderDueAtUtc` or `ReminderChannel`, adds no permissions, adds no persistence schema, and still does not send WhatsApp, email, or SMS or add providers, jobs, queues, webhooks, templates, a real scheduler, retry automation, campaigns, patient portal, online booking, or advanced dashboard behavior.
 
 Phase 2.5 — Reminder Template Draft Foundation is accepted. It adds tenant-owned internal text templates for manual reminder work, active template listing, create/update/deactivate operations, backend preview/render against an existing appointment in the current tenant/branch scope, controlled placeholders (`{{patientName}}`, `{{appointmentDate}}`, `{{appointmentTime}}`, `{{branchName}}`, and `{{tenantName}}`), unknown placeholders preserved and reported, and Scheduling UI support to use a rendered preview as a suggested manual follow-up note. Templates are internal drafts only: BigSmile still does not send WhatsApp, email, or SMS messages, and this slice does not add providers, jobs, queues, webhooks, external delivery templates, a real scheduler, retry automation, campaigns, patient portal, or online booking.
+
+Phase 2.6 — Reminder Template Usage Traceability is implemented in the repo and pending acceptance. It only adds internal traceability for manual follow-ups that originated from a Phase 2.5 internal template: `AppointmentReminderLogEntry` can store nullable `reminderTemplateId` and `reminderTemplateNameSnapshot`. `notes` remains the final manual text; BigSmile does not store a separate template body snapshot or rendered body snapshot. This does not close Phase 2, adds no new permissions, and still does not send WhatsApp, email, or SMS or add providers, jobs, queues, webhooks, external delivery templates, real scheduler workflows, retry automation, campaigns, patient portal, or online booking.
 
 The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
 
@@ -431,7 +434,8 @@ The repository should be treated as having an established technical and architec
 * Manual reminder preparation can be configured, cleared, completed, and listed in Phase 2.3 without sending messages and without coupling automatically to the reminder log
 * Manual reminder follow-up can be recorded from the worklist in Phase 2.4, creating exactly one log entry and changing confirmation/completion only through explicit request flags
 * Internal reminder template drafts can be managed and previewed in Phase 2.5, with preview usable only as manually copied note text
-* WhatsApp, email, SMS sending, automatic reminders, providers, jobs, queues, webhooks, external delivery templates, real scheduler workflows, retry automation, campaigns, online booking, patient portal, and advanced dashboards remain outside Phase 2.5
+* Phase 2.6 is implemented in repo and pending acceptance; it adds only nullable internal template trace fields on manual reminder log entries when follow-up uses a template preview as note source
+* WhatsApp, email, SMS sending, automatic reminders, providers, jobs, queues, webhooks, external delivery templates, real scheduler workflows, retry automation, campaigns, online booking, patient portal, and advanced dashboards remain outside Phase 2.6
 
 ---
 

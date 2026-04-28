@@ -566,6 +566,7 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 - Phase 2.3 — Reminder Scheduling Preparation is accepted
 - Phase 2.4 — Reminder Worklist Follow-up Actions is accepted
 - Phase 2.5 — Reminder Template Draft Foundation is accepted
+- Phase 2.6 — Reminder Template Usage Traceability is implemented in repo and pending acceptance
 - Phase 2 complete is not closed
 - The accepted Phase 2.1 slice only adds appointment confirmation as an operational signal on existing Scheduling
 - Appointment confirmation status remains separate from `AppointmentStatus` and uses the minimal `Pending` / `Confirmed` catalog
@@ -581,7 +582,10 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 - Phase 2.5 adds only internal tenant-owned text template drafts for manual reminder work, active listing, create/update/deactivate, preview/render against an existing appointment in current tenant/branch scope, controlled placeholders `{{patientName}}`, `{{appointmentDate}}`, `{{appointmentTime}}`, `{{branchName}}` and `{{tenantName}}`, unknown placeholders preserved and reported, and manual use of rendered preview as suggested follow-up note text
 - Phase 2.5 adds no new permissions and reuses `scheduling.read` / `scheduling.write`
 - Phase 2.5 preview does not save anything and does not mutate appointment, template, reminder log, or reminder schedule state
-- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain outside Phase 2.5
+- Phase 2.6 adds only internal traceability when a manual follow-up originated from a Phase 2.5 template source: nullable `ReminderTemplateId` and `ReminderTemplateNameSnapshot` on `AppointmentReminderLogEntry`
+- Phase 2.6 keeps `notes` as the final manual text and does not store a separate template body snapshot, rendered body snapshot, template version, delivery template, provider template, or delivery metadata
+- Phase 2.6 adds no new permissions and reuses `scheduling.read` / `scheduling.write`
+- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain outside Phase 2.6
 
 ## Candidate features
 - WhatsApp reminders
