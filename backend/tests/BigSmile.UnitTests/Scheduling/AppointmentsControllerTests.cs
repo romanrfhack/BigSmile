@@ -292,6 +292,7 @@ namespace BigSmile.UnitTests.Scheduling
         public async Task FollowUpManualReminder_ReturnsOk_WhenCommandServiceSucceeds()
         {
             var appointmentId = Guid.NewGuid();
+            var reminderTemplateId = Guid.NewGuid();
             var appointment = BuildAppointmentSummary(
                 "Confirmed",
                 DateTime.UtcNow,
@@ -329,7 +330,8 @@ namespace BigSmile.UnitTests.Scheduling
                     Outcome = "Reached",
                     Notes = "Confirmed by phone.",
                     CompleteReminder = true,
-                    ConfirmAppointment = true
+                    ConfirmAppointment = true,
+                    ReminderTemplateId = reminderTemplateId
                 });
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
@@ -339,6 +341,7 @@ namespace BigSmile.UnitTests.Scheduling
             Assert.Equal("Confirmed by phone.", capturedCommand?.Notes);
             Assert.True(capturedCommand?.CompleteReminder);
             Assert.True(capturedCommand?.ConfirmAppointment);
+            Assert.Equal(reminderTemplateId, capturedCommand?.ReminderTemplateId);
         }
 
         [Fact]
@@ -376,6 +379,7 @@ namespace BigSmile.UnitTests.Scheduling
         [InlineData("Appointment reminder channel must be one of: Phone, WhatsApp, Email or Other.")]
         [InlineData("Appointment reminder outcome must be one of: Reached, NoAnswer or LeftMessage.")]
         [InlineData("Manual reminder follow-up requires an active reminder intention.")]
+        [InlineData("The requested reminder template is not available in the current tenant scope.")]
         public async Task FollowUpManualReminder_ReturnsValidationProblem_WhenCommandServiceRejectsRequest(string message)
         {
             var appointmentId = Guid.NewGuid();
@@ -612,7 +616,9 @@ namespace BigSmile.UnitTests.Scheduling
                 outcome,
                 "Manual contact attempt.",
                 createdAtUtc,
-                Guid.NewGuid());
+                Guid.NewGuid(),
+                null,
+                null);
         }
     }
 }

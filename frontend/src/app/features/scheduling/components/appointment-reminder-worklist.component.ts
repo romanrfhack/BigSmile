@@ -112,6 +112,7 @@ import {
                   <select
                     name="template-{{ item.appointmentId }}"
                     [(ngModel)]="selectedTemplateId"
+                    (ngModelChange)="onTemplateSelectionChanged()"
                     [disabled]="savingAppointmentId === item.appointmentId">
                     <option [ngValue]="null">Select a template</option>
                     <option *ngFor="let template of reminderTemplates" [ngValue]="template.id">
@@ -486,6 +487,7 @@ export class AppointmentReminderWorklistComponent {
   completeReminder = false;
   confirmAppointment = false;
   selectedTemplateId: string | null = null;
+  selectedTemplateSourceId: string | null = null;
   formError: string | null = null;
 
   getStateLabel(state: AppointmentReminderState): string {
@@ -500,11 +502,14 @@ export class AppointmentReminderWorklistComponent {
     this.completeReminder = false;
     this.confirmAppointment = false;
     this.selectedTemplateId = null;
+    this.selectedTemplateSourceId = null;
     this.formError = null;
   }
 
   cancelFollowUp(): void {
     this.activeAppointmentId = null;
+    this.selectedTemplateId = null;
+    this.selectedTemplateSourceId = null;
     this.formError = null;
   }
 
@@ -524,7 +529,8 @@ export class AppointmentReminderWorklistComponent {
         outcome: this.outcome,
         notes: normalizedNotes || null,
         completeReminder: this.completeReminder,
-        confirmAppointment: this.confirmAppointment
+        confirmAppointment: this.confirmAppointment,
+        reminderTemplateId: this.selectedTemplateSourceId
       }
     });
   }
@@ -553,11 +559,16 @@ export class AppointmentReminderWorklistComponent {
     });
   }
 
+  onTemplateSelectionChanged(): void {
+    this.selectedTemplateSourceId = null;
+  }
+
   usePreviewAsNote(): void {
-    if (!this.templatePreview) {
+    if (!this.templatePreview || this.templatePreview.templateId !== this.selectedTemplateId) {
       return;
     }
 
     this.notes = this.templatePreview.renderedBody;
+    this.selectedTemplateSourceId = this.templatePreview.templateId;
   }
 }

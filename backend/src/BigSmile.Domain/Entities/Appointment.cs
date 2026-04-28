@@ -229,7 +229,35 @@ namespace BigSmile.Domain.Entities
             string? notes,
             Guid createdByUserId)
         {
+            return AddReminderLogEntry(
+                channel,
+                outcome,
+                notes,
+                createdByUserId,
+                reminderTemplate: null);
+        }
+
+        public AppointmentReminderLogEntry AddReminderLogEntry(
+            AppointmentReminderChannel channel,
+            AppointmentReminderOutcome outcome,
+            string? notes,
+            Guid createdByUserId,
+            ReminderTemplate? reminderTemplate)
+        {
             EnsureActor(createdByUserId);
+
+            if (reminderTemplate != null)
+            {
+                if (reminderTemplate.TenantId != TenantId)
+                {
+                    throw new InvalidOperationException("Reminder template trace must belong to the appointment tenant.");
+                }
+
+                if (!reminderTemplate.IsActive)
+                {
+                    throw new InvalidOperationException("Only active reminder templates can be traced on manual follow-up logs.");
+                }
+            }
 
             var entry = new AppointmentReminderLogEntry(
                 TenantId,
@@ -237,7 +265,9 @@ namespace BigSmile.Domain.Entities
                 channel,
                 outcome,
                 notes,
-                createdByUserId);
+                createdByUserId,
+                reminderTemplate?.Id,
+                reminderTemplate?.Name);
 
             ReminderLogEntries.Add(entry);
             return entry;

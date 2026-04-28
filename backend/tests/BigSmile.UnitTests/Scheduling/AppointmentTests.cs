@@ -287,11 +287,65 @@ namespace BigSmile.UnitTests.Scheduling
             Assert.Equal(AppointmentReminderChannel.Phone, entry.Channel);
             Assert.Equal(AppointmentReminderOutcome.Reached, entry.Outcome);
             Assert.Equal("Confirmed by phone.", entry.Notes);
+            Assert.Null(entry.ReminderTemplateId);
+            Assert.Null(entry.ReminderTemplateNameSnapshot);
             Assert.Equal(actorUserId, entry.CreatedByUserId);
             Assert.Equal(AppointmentStatus.Scheduled, appointment.Status);
             Assert.Equal(AppointmentConfirmationStatus.Pending, appointment.ConfirmationStatus);
             Assert.Null(appointment.ConfirmedAtUtc);
             Assert.Null(appointment.ConfirmedByUserId);
+        }
+
+        [Fact]
+        public void AddReminderLogEntry_WithTemplateStoresTemplateTraceSnapshot()
+        {
+            var tenantId = Guid.NewGuid();
+            var actorUserId = Guid.NewGuid();
+            var appointment = CreateAppointment(tenantId);
+            var template = new ReminderTemplate(
+                tenantId,
+                "Confirmation reminder",
+                "Hola {{patientName}}.",
+                actorUserId);
+
+            var entry = appointment.AddReminderLogEntry(
+                AppointmentReminderChannel.WhatsApp,
+                AppointmentReminderOutcome.Reached,
+                "Hola Ana, confirma por favor.",
+                actorUserId,
+                template);
+
+            Assert.Equal(template.Id, entry.ReminderTemplateId);
+            Assert.Equal("Confirmation reminder", entry.ReminderTemplateNameSnapshot);
+            Assert.Equal("Hola Ana, confirma por favor.", entry.Notes);
+            Assert.Equal(AppointmentStatus.Scheduled, appointment.Status);
+            Assert.Equal(AppointmentConfirmationStatus.Pending, appointment.ConfirmationStatus);
+        }
+
+        [Fact]
+        public void AddReminderLogEntry_TemplateNameSnapshotDoesNotChangeWhenTemplateIsRenamed()
+        {
+            var tenantId = Guid.NewGuid();
+            var actorUserId = Guid.NewGuid();
+            var appointment = CreateAppointment(tenantId);
+            var template = new ReminderTemplate(
+                tenantId,
+                "Original name",
+                "Hola {{patientName}}.",
+                actorUserId);
+
+            var entry = appointment.AddReminderLogEntry(
+                AppointmentReminderChannel.Email,
+                AppointmentReminderOutcome.LeftMessage,
+                "Manual final text.",
+                actorUserId,
+                template);
+
+            template.Update("Renamed template", "Updated body.", actorUserId);
+
+            Assert.Equal(template.Id, entry.ReminderTemplateId);
+            Assert.Equal("Original name", entry.ReminderTemplateNameSnapshot);
+            Assert.Equal("Manual final text.", entry.Notes);
         }
 
         [Fact]
@@ -347,6 +401,20 @@ namespace BigSmile.UnitTests.Scheduling
                 (AppointmentReminderOutcome)999,
                 null,
                 Guid.NewGuid()));
+        }
+
+        [Fact]
+        public void AppointmentReminderLogEntry_BlocksTemplateSnapshotWithoutTemplateReference()
+        {
+            Assert.Throws<ArgumentException>(() => new AppointmentReminderLogEntry(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                AppointmentReminderChannel.Phone,
+                AppointmentReminderOutcome.Reached,
+                null,
+                Guid.NewGuid(),
+                null,
+                "Template name"));
         }
 
         [Theory]

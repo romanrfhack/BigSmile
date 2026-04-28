@@ -64,7 +64,9 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
                 entry.Outcome.ToString(),
                 entry.Notes,
                 entry.CreatedAtUtc,
-                entry.CreatedByUserId);
+                entry.CreatedByUserId,
+                entry.ReminderTemplateId,
+                entry.ReminderTemplateNameSnapshot);
         }
 
         private static string GetReminderState(Appointment appointment, DateTime utcNow)

@@ -186,7 +186,9 @@ describe('SchedulingPageComponent', () => {
           outcome: 'Reached',
           notes: 'Confirmed by phone.',
           createdAtUtc: '2026-04-14T08:00:00Z',
-          createdByUserId: 'user-1'
+          createdByUserId: 'user-1',
+          reminderTemplateId: null,
+          reminderTemplateNameSnapshot: null
         });
       },
       configureManualReminder: (appointmentId: string, payload: unknown) => {
@@ -268,7 +270,9 @@ describe('SchedulingPageComponent', () => {
             outcome: 'Reached',
             notes: 'Confirmed by phone.',
             createdAtUtc: '2026-04-14T08:30:00Z',
-            createdByUserId: 'user-1'
+            createdByUserId: 'user-1',
+            reminderTemplateId: null,
+            reminderTemplateNameSnapshot: null
           }
         });
       },
@@ -572,7 +576,8 @@ describe('SchedulingPageComponent', () => {
       outcome: 'Reached',
       notes: 'Confirmed by phone.',
       completeReminder: true,
-      confirmAppointment: true
+      confirmAppointment: true,
+      reminderTemplateId: 'template-1'
     });
 
     expect(reminderFollowUps).toEqual([
@@ -583,7 +588,8 @@ describe('SchedulingPageComponent', () => {
           outcome: 'Reached',
           notes: 'Confirmed by phone.',
           completeReminder: true,
-          confirmAppointment: true
+          confirmAppointment: true,
+          reminderTemplateId: 'template-1'
         }
       }
     ]);

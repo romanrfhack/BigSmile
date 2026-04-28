@@ -119,7 +119,8 @@ describe('AppointmentReminderWorklistComponent', () => {
           outcome: 'Reached',
           notes: 'Confirmed by phone.',
           completeReminder: true,
-          confirmAppointment: true
+          confirmAppointment: true,
+          reminderTemplateId: null
         }
       }
     ]);
@@ -197,9 +198,87 @@ describe('AppointmentReminderWorklistComponent', () => {
           outcome: 'Reached',
           notes: 'Hola Ana Lopez, le recordamos su cita.',
           completeReminder: false,
-          confirmAppointment: false
+          confirmAppointment: false,
+          reminderTemplateId: 'template-1'
         }
       }
     ]);
+  });
+
+  it('submits no template trace when notes are typed without using a template preview', () => {
+    const followUps: unknown[] = [];
+    component.canWrite = true;
+    component.items = [
+      {
+        appointmentId: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-27T09:00:00Z',
+        appointmentStatus: 'Scheduled',
+        confirmationStatus: 'Pending',
+        reminderChannel: 'Phone',
+        reminderDueAtUtc: '2026-04-27T08:00:00Z',
+        reminderState: 'Due',
+        reminderCompletedAtUtc: null,
+        reminderCompletedByUserId: null
+      }
+    ];
+    component.followUpSaved.subscribe(value => followUps.push(value));
+
+    component.startFollowUp(component.items[0]!);
+    component.notes = 'Typed manually.';
+    component.submitFollowUp(component.items[0]!);
+
+    expect(followUps).toEqual([
+      {
+        appointmentId: 'appointment-1',
+        value: {
+          channel: 'Phone',
+          outcome: 'Reached',
+          notes: 'Typed manually.',
+          completeReminder: false,
+          confirmAppointment: false,
+          reminderTemplateId: null
+        }
+      }
+    ]);
+  });
+
+  it('clears selected template source when follow-up is cancelled', () => {
+    component.items = [
+      {
+        appointmentId: 'appointment-1',
+        branchId: 'branch-1',
+        patientId: 'patient-1',
+        patientFullName: 'Ana Lopez',
+        startsAt: '2026-04-27T09:00:00Z',
+        appointmentStatus: 'Scheduled',
+        confirmationStatus: 'Pending',
+        reminderChannel: 'Phone',
+        reminderDueAtUtc: '2026-04-27T08:00:00Z',
+        reminderState: 'Due',
+        reminderCompletedAtUtc: null,
+        reminderCompletedByUserId: null
+      }
+    ];
+
+    component.startFollowUp(component.items[0]!);
+    component.selectedTemplateId = 'template-1';
+    component.templatePreview = {
+      templateId: 'template-1',
+      appointmentId: 'appointment-1',
+      renderedBody: 'Hola Ana Lopez.',
+      unknownPlaceholders: []
+    };
+    component.usePreviewAsNote();
+
+    expect(component.selectedTemplateSourceId).toBe('template-1');
+
+    component.cancelFollowUp();
+
+    expect(component.activeAppointmentId).toBeNull();
+    expect(component.selectedTemplateId).toBeNull();
+    expect(component.selectedTemplateSourceId).toBeNull();
   });
 });

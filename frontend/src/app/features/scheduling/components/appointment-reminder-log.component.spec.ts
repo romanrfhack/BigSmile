@@ -35,7 +35,9 @@ describe('AppointmentReminderLogComponent', () => {
         outcome: 'Reached',
         notes: 'Confirmed by phone.',
         createdAtUtc: '2026-04-25T08:00:00Z',
-        createdByUserId: 'user-2'
+        createdByUserId: 'user-2',
+        reminderTemplateId: 'template-1',
+        reminderTemplateNameSnapshot: 'Confirmation reminder'
       },
       {
         id: 'entry-1',
@@ -44,7 +46,9 @@ describe('AppointmentReminderLogComponent', () => {
         outcome: 'LeftMessage',
         notes: null,
         createdAtUtc: '2026-04-24T08:00:00Z',
-        createdByUserId: 'user-1'
+        createdByUserId: 'user-1',
+        reminderTemplateId: null,
+        reminderTemplateNameSnapshot: null
       }
     ];
 
@@ -55,9 +59,11 @@ describe('AppointmentReminderLogComponent', () => {
     expect(entries[0].nativeElement.textContent).toContain('Phone');
     expect(entries[0].nativeElement.textContent).toContain('Reached');
     expect(entries[0].nativeElement.textContent).toContain('Confirmed by phone.');
+    expect(entries[0].nativeElement.textContent).toContain('Template: Confirmation reminder');
     expect(entries[0].nativeElement.textContent).toContain('user-2');
     expect(entries[1].nativeElement.textContent).toContain('Email');
     expect(entries[1].nativeElement.textContent).toContain('Left message');
+    expect(entries[1].nativeElement.textContent).not.toContain('Template:');
   });
 
   it('emits a manual reminder log form value and trims optional notes', () => {

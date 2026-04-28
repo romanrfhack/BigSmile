@@ -603,6 +603,7 @@ namespace BigSmile.Api.Controllers
 
             public bool CompleteReminder { get; set; }
             public bool ConfirmAppointment { get; set; }
+            public Guid? ReminderTemplateId { get; set; }
 
             public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
             {
@@ -615,6 +616,11 @@ namespace BigSmile.Api.Controllers
                 {
                     yield return new ValidationResult("Appointment reminder outcome is required.", new[] { nameof(Outcome) });
                 }
+
+                if (ReminderTemplateId == Guid.Empty)
+                {
+                    yield return new ValidationResult("Reminder template reference must be a non-empty identifier when provided.", new[] { nameof(ReminderTemplateId) });
+                }
             }
 
             public ManualReminderFollowUpCommand ToCommand()
@@ -624,7 +630,8 @@ namespace BigSmile.Api.Controllers
                     Outcome,
                     Notes,
                     CompleteReminder,
-                    ConfirmAppointment);
+                    ConfirmAppointment,
+                    ReminderTemplateId);
             }
         }
     }

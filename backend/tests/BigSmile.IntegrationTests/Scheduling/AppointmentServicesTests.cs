@@ -622,6 +622,7 @@ namespace BigSmile.IntegrationTests.Scheduling
             return new AppointmentCommandService(
                 new EfAppointmentRepository(context),
                 new EfAppointmentReminderLogRepository(context),
+                new EfReminderTemplateRepository(context),
                 new EfAppointmentBlockRepository(context),
                 new EfPatientRepository(context),
                 new BranchAccessService(

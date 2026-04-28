@@ -39,7 +39,8 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         string Outcome,
         string? Notes,
         bool CompleteReminder,
-        bool ConfirmAppointment);
+        bool ConfirmAppointment,
+        Guid? ReminderTemplateId = null);
 
     public interface IAppointmentCommandService
     {
@@ -59,6 +60,7 @@ namespace BigSmile.Application.Features.Scheduling.Commands
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IAppointmentReminderLogRepository _reminderLogRepository;
+        private readonly IReminderTemplateRepository _reminderTemplateRepository;
         private readonly IAppointmentBlockRepository _appointmentBlockRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IBranchAccessService _branchAccessService;
@@ -67,6 +69,7 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         public AppointmentCommandService(
             IAppointmentRepository appointmentRepository,
             IAppointmentReminderLogRepository reminderLogRepository,
+            IReminderTemplateRepository reminderTemplateRepository,
             IAppointmentBlockRepository appointmentBlockRepository,
             IPatientRepository patientRepository,
             IBranchAccessService branchAccessService,
@@ -74,6 +77,7 @@ namespace BigSmile.Application.Features.Scheduling.Commands
         {
             _appointmentRepository = appointmentRepository ?? throw new ArgumentNullException(nameof(appointmentRepository));
             _reminderLogRepository = reminderLogRepository ?? throw new ArgumentNullException(nameof(reminderLogRepository));
+            _reminderTemplateRepository = reminderTemplateRepository ?? throw new ArgumentNullException(nameof(reminderTemplateRepository));
             _appointmentBlockRepository = appointmentBlockRepository ?? throw new ArgumentNullException(nameof(appointmentBlockRepository));
             _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
             _branchAccessService = branchAccessService ?? throw new ArgumentNullException(nameof(branchAccessService));
@@ -305,7 +309,7 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             ManualReminderFollowUpCommand command,
             CancellationToken cancellationToken = default)
         {
-            GetRequiredTenantId();
+            var tenantId = GetRequiredTenantId();
             var actorUserId = GetRequiredUserId();
             var appointment = await _appointmentRepository.GetByIdAsync(id, cancellationToken);
             if (appointment == null)
@@ -322,6 +326,10 @@ namespace BigSmile.Application.Features.Scheduling.Commands
 
             var channel = ParseReminderChannel(command.Channel);
             var outcome = ParseReminderOutcome(command.Outcome);
+            var reminderTemplate = await GetTraceableReminderTemplateAsync(
+                command.ReminderTemplateId,
+                tenantId,
+                cancellationToken);
 
             if (command.ConfirmAppointment)
             {
@@ -332,7 +340,8 @@ namespace BigSmile.Application.Features.Scheduling.Commands
                 channel,
                 outcome,
                 command.Notes,
-                actorUserId);
+                actorUserId,
+                reminderTemplate);
 
             if (command.CompleteReminder)
             {
@@ -343,6 +352,34 @@ namespace BigSmile.Application.Features.Scheduling.Commands
             var summary = await GetRequiredSummaryAsync(appointment.Id, cancellationToken);
 
             return new ManualReminderFollowUpResultDto(summary, entry.ToDto());
+        }
+
+        private async Task<ReminderTemplate?> GetTraceableReminderTemplateAsync(
+            Guid? reminderTemplateId,
+            Guid tenantId,
+            CancellationToken cancellationToken)
+        {
+            if (!reminderTemplateId.HasValue)
+            {
+                return null;
+            }
+
+            if (reminderTemplateId.Value == Guid.Empty)
+            {
+                throw new ArgumentException(
+                    "Reminder template reference must be a non-empty identifier when provided.",
+                    nameof(reminderTemplateId));
+            }
+
+            var reminderTemplate = await _reminderTemplateRepository.GetByIdAsync(
+                reminderTemplateId.Value,
+                cancellationToken);
+            if (reminderTemplate == null || reminderTemplate.TenantId != tenantId || !reminderTemplate.IsActive)
+            {
+                throw new InvalidOperationException("The requested reminder template is not available in the current tenant scope.");
+            }
+
+            return reminderTemplate;
         }
 
         private async Task<AppointmentSummaryDto> GetRequiredSummaryAsync(Guid appointmentId, CancellationToken cancellationToken)

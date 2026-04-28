@@ -25,6 +25,9 @@ namespace BigSmile.Infrastructure.Data.Configurations
             builder.Property(entry => entry.Notes)
                 .HasMaxLength(AppointmentReminderLogEntry.NotesMaxLength);
 
+            builder.Property(entry => entry.ReminderTemplateNameSnapshot)
+                .HasMaxLength(ReminderTemplate.NameMaxLength);
+
             builder.Property(entry => entry.CreatedAtUtc)
                 .HasColumnType("datetime2")
                 .IsRequired();
@@ -43,6 +46,11 @@ namespace BigSmile.Infrastructure.Data.Configurations
             builder.HasOne(entry => entry.Appointment)
                 .WithMany(appointment => appointment.ReminderLogEntries)
                 .HasForeignKey(entry => entry.AppointmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(entry => entry.ReminderTemplate)
+                .WithMany()
+                .HasForeignKey(entry => entry.ReminderTemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

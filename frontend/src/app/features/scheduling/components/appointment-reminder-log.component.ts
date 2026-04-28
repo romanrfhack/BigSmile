@@ -41,6 +41,7 @@ import {
             <span>{{ getOutcomeLabel(entry.outcome) }}</span>
           </div>
           <p *ngIf="entry.notes">{{ entry.notes }}</p>
+          <small *ngIf="entry.reminderTemplateNameSnapshot">Template: {{ entry.reminderTemplateNameSnapshot }}</small>
           <small>{{ entry.createdAtUtc | date: 'short' }} - {{ entry.createdByUserId }}</small>
         </li>
       </ol>

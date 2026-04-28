@@ -62,6 +62,8 @@ export interface AppointmentReminderLogEntry {
   notes: string | null;
   createdAtUtc: string;
   createdByUserId: string;
+  reminderTemplateId: string | null;
+  reminderTemplateNameSnapshot: string | null;
 }
 
 export interface AppointmentReminderWorkItem {
@@ -138,6 +140,7 @@ export interface ManualReminderFollowUpRequest {
   notes: string | null;
   completeReminder: boolean;
   confirmAppointment: boolean;
+  reminderTemplateId?: string | null;
 }
 
 export interface ManualReminderFollowUpResult {
@@ -206,6 +209,7 @@ export interface AppointmentReminderFollowUpFormValue {
   notes: string | null;
   completeReminder: boolean;
   confirmAppointment: boolean;
+  reminderTemplateId?: string | null;
 }
 
 export interface AppointmentManualReminderFormValue {

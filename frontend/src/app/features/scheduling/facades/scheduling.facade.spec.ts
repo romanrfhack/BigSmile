@@ -219,7 +219,9 @@ describe('SchedulingFacade', () => {
             outcome: 'LeftMessage',
             notes: null,
             createdAtUtc: '2026-04-24T08:00:00Z',
-            createdByUserId: 'user-1'
+            createdByUserId: 'user-1',
+            reminderTemplateId: null,
+            reminderTemplateNameSnapshot: null
           },
           {
             id: 'entry-2',
@@ -228,7 +230,9 @@ describe('SchedulingFacade', () => {
             outcome: 'Reached',
             notes: 'Confirmed by phone.',
             createdAtUtc: '2026-04-25T08:00:00Z',
-            createdByUserId: 'user-2'
+            createdByUserId: 'user-2',
+            reminderTemplateId: 'template-1',
+            reminderTemplateNameSnapshot: 'Confirmation reminder'
           }
         ]);
       },
@@ -239,7 +243,9 @@ describe('SchedulingFacade', () => {
         outcome: 'NoAnswer',
         notes: null,
         createdAtUtc: '2026-04-26T08:00:00Z',
-        createdByUserId: 'user-3'
+        createdByUserId: 'user-3',
+        reminderTemplateId: null,
+        reminderTemplateNameSnapshot: null
       }),
       recordManualReminderFollowUp: (appointmentId: string, payload: unknown) => {
         followUpRequests.push({ appointmentId, payload });
@@ -272,7 +278,9 @@ describe('SchedulingFacade', () => {
             outcome: 'Reached',
             notes: 'Confirmed by phone.',
             createdAtUtc: '2026-04-26T09:00:00Z',
-            createdByUserId: 'user-1'
+            createdByUserId: 'user-1',
+            reminderTemplateId: null,
+            reminderTemplateNameSnapshot: null
           }
         });
       },
@@ -501,7 +509,8 @@ describe('SchedulingFacade', () => {
       outcome: 'Reached',
       notes: 'Confirmed by phone.',
       completeReminder: true,
-      confirmAppointment: true
+      confirmAppointment: true,
+      reminderTemplateId: 'template-1'
     }).subscribe();
 
     expect(followUpRequests).toEqual([
@@ -512,7 +521,8 @@ describe('SchedulingFacade', () => {
           outcome: 'Reached',
           notes: 'Confirmed by phone.',
           completeReminder: true,
-          confirmAppointment: true
+          confirmAppointment: true,
+          reminderTemplateId: 'template-1'
         }
       }
     ]);

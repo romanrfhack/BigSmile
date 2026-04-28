@@ -251,6 +251,8 @@ namespace BigSmile.IntegrationTests.Scheduling
             Assert.Equal("Phone", result.ReminderLogEntry.Channel);
             Assert.Equal("Reached", result.ReminderLogEntry.Outcome);
             Assert.Equal("Confirmed by phone.", result.ReminderLogEntry.Notes);
+            Assert.Null(result.ReminderLogEntry.ReminderTemplateId);
+            Assert.Null(result.ReminderLogEntry.ReminderTemplateNameSnapshot);
 
             await using var verificationContext = CreateContext(databaseName, tenantContext);
             var storedAppointment = await verificationContext.Appointments.SingleAsync();
@@ -263,6 +265,206 @@ namespace BigSmile.IntegrationTests.Scheduling
             Assert.NotNull(storedAppointment.ReminderCompletedAtUtc);
             Assert.Equal(seedData.Tenant.Id, storedEntry.TenantId);
             Assert.Equal(appointment.Id, storedEntry.AppointmentId);
+            Assert.Null(storedEntry.ReminderTemplateId);
+            Assert.Null(storedEntry.ReminderTemplateNameSnapshot);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_WithActiveTemplateStoresInternalTemplateTraceWithoutRerenderingNotes()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var template = await SeedReminderTemplateAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                "Confirmation reminder",
+                "Hola {{patientName}}, su cita es {{appointmentDate}}.",
+                seedData.User.Id);
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "WhatsApp", DateTime.UtcNow.AddHours(-1)));
+
+            var result = await commandService.FollowUpManualReminderAsync(
+                appointment.Id,
+                new ManualReminderFollowUpCommand(
+                    "WhatsApp",
+                    "Reached",
+                    "Edited final manual note.",
+                    CompleteReminder: false,
+                    ConfirmAppointment: false,
+                    ReminderTemplateId: template.Id));
+
+            Assert.NotNull(result);
+            Assert.Equal(template.Id, result!.ReminderLogEntry.ReminderTemplateId);
+            Assert.Equal("Confirmation reminder", result.ReminderLogEntry.ReminderTemplateNameSnapshot);
+            Assert.Equal("Edited final manual note.", result.ReminderLogEntry.Notes);
+            Assert.Equal("Pending", result.Appointment.ConfirmationStatus);
+            Assert.Null(result.Appointment.ReminderCompletedAtUtc);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedEntry = await verificationContext.AppointmentReminderLogEntries.SingleAsync();
+
+            Assert.Equal(template.Id, storedEntry.ReminderTemplateId);
+            Assert.Equal("Confirmation reminder", storedEntry.ReminderTemplateNameSnapshot);
+            Assert.Equal("Edited final manual note.", storedEntry.Notes);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_TemplateNameSnapshotDoesNotChangeAfterTemplateRename()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var template = await SeedReminderTemplateAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                "Original template",
+                "Original body",
+                seedData.User.Id);
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Email", DateTime.UtcNow.AddHours(-1)));
+            await commandService.FollowUpManualReminderAsync(
+                appointment.Id,
+                new ManualReminderFollowUpCommand(
+                    "Email",
+                    "LeftMessage",
+                    "Left a manual note.",
+                    CompleteReminder: false,
+                    ConfirmAppointment: false,
+                    ReminderTemplateId: template.Id));
+
+            await using var unrestrictedContext = CreateContext(databaseName, new TenantContext());
+            var storedTemplate = await unrestrictedContext.ReminderTemplates.SingleAsync(stored => stored.Id == template.Id);
+            storedTemplate.Update("Renamed template", "Renamed body", seedData.User.Id);
+            await unrestrictedContext.SaveChangesAsync();
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedEntry = await verificationContext.AppointmentReminderLogEntries.SingleAsync();
+
+            Assert.Equal(template.Id, storedEntry.ReminderTemplateId);
+            Assert.Equal("Original template", storedEntry.ReminderTemplateNameSnapshot);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_RejectsInactiveTemplateAndCreatesNoLog()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seedData = await SeedTenantWithUserAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, seedData.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                seedData.PrimaryBranch.Id,
+                patient.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var template = await SeedReminderTemplateAsync(
+                databaseName,
+                seedData.Tenant.Id,
+                "Inactive template",
+                "Inactive body",
+                seedData.User.Id,
+                isActive: false);
+            var tenantContext = CreateTenantContext(seedData.User.Id, seedData.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Phone", DateTime.UtcNow.AddHours(-1)));
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    appointment.Id,
+                    new ManualReminderFollowUpCommand(
+                        "Phone",
+                        "Reached",
+                        "Manual note.",
+                        CompleteReminder: true,
+                        ConfirmAppointment: true,
+                        ReminderTemplateId: template.Id)));
+
+            Assert.Contains("reminder template is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+
+            Assert.Empty(await verificationContext.AppointmentReminderLogEntries.ToListAsync());
+            Assert.Equal(AppointmentConfirmationStatus.Pending, storedAppointment.ConfirmationStatus);
+            Assert.Null(storedAppointment.ReminderCompletedAtUtc);
+        }
+
+        [Fact]
+        public async Task FollowUpManualReminderAsync_RejectsCrossTenantTemplateAndCreatesNoLog()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var tenantASeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant A", tenantSubdomain: "tenant-a");
+            var tenantBSeed = await SeedTenantWithUserAsync(databaseName, tenantName: "Tenant B", tenantSubdomain: "tenant-b");
+            var patientA = await SeedPatientAsync(databaseName, tenantASeed.Tenant.Id, "Ana", "Lopez");
+            var appointment = await SeedAppointmentAsync(
+                databaseName,
+                tenantASeed.Tenant.Id,
+                tenantASeed.PrimaryBranch.Id,
+                patientA.Id,
+                DateTime.UtcNow.AddHours(4),
+                DateTime.UtcNow.AddHours(5));
+            var foreignTemplate = await SeedReminderTemplateAsync(
+                databaseName,
+                tenantBSeed.Tenant.Id,
+                "Foreign template",
+                "Foreign body",
+                tenantBSeed.User.Id);
+            var tenantContext = CreateTenantContext(tenantASeed.User.Id, tenantASeed.Tenant.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+            await commandService.ConfigureManualReminderAsync(
+                appointment.Id,
+                new ConfigureAppointmentManualReminderCommand(true, "Phone", DateTime.UtcNow.AddHours(-1)));
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                commandService.FollowUpManualReminderAsync(
+                    appointment.Id,
+                    new ManualReminderFollowUpCommand(
+                        "Phone",
+                        "Reached",
+                        "Manual note.",
+                        CompleteReminder: true,
+                        ConfirmAppointment: true,
+                        ReminderTemplateId: foreignTemplate.Id)));
+
+            Assert.Contains("reminder template is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+
+            await using var verificationContext = CreateContext(databaseName, tenantContext);
+            var storedAppointment = await verificationContext.Appointments.SingleAsync();
+
+            Assert.Empty(await verificationContext.AppointmentReminderLogEntries.ToListAsync());
+            Assert.Equal(AppointmentConfirmationStatus.Pending, storedAppointment.ConfirmationStatus);
+            Assert.Null(storedAppointment.ReminderCompletedAtUtc);
         }
 
         [Fact]
@@ -546,6 +748,7 @@ namespace BigSmile.IntegrationTests.Scheduling
             return new AppointmentCommandService(
                 new EfAppointmentRepository(context),
                 new EfAppointmentReminderLogRepository(context),
+                new EfReminderTemplateRepository(context),
                 new EfAppointmentBlockRepository(context),
                 new EfPatientRepository(context),
                 new BranchAccessService(
@@ -651,6 +854,27 @@ namespace BigSmile.IntegrationTests.Scheduling
             await context.SaveChangesAsync();
 
             return appointment;
+        }
+
+        private static async Task<ReminderTemplate> SeedReminderTemplateAsync(
+            string databaseName,
+            Guid tenantId,
+            string name,
+            string body,
+            Guid actorUserId,
+            bool isActive = true)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var template = new ReminderTemplate(tenantId, name, body, actorUserId);
+            if (!isActive)
+            {
+                template.Deactivate(actorUserId);
+            }
+
+            context.ReminderTemplates.Add(template);
+            await context.SaveChangesAsync();
+
+            return template;
         }
 
         private static AppDbContext CreateContext(string databaseName, TenantContext tenantContext)

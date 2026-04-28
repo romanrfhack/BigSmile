@@ -16,6 +16,9 @@ namespace BigSmile.Domain.Entities
         public AppointmentReminderChannel Channel { get; private set; }
         public AppointmentReminderOutcome Outcome { get; private set; }
         public string? Notes { get; private set; }
+        public Guid? ReminderTemplateId { get; private set; }
+        public ReminderTemplate? ReminderTemplate { get; private set; }
+        public string? ReminderTemplateNameSnapshot { get; private set; }
         public DateTime CreatedAtUtc { get; private set; }
         public Guid CreatedByUserId { get; private set; }
 
@@ -30,6 +33,29 @@ namespace BigSmile.Domain.Entities
             AppointmentReminderOutcome outcome,
             string? notes,
             Guid createdByUserId,
+            DateTime? createdAtUtc = null)
+            : this(
+                tenantId,
+                appointmentId,
+                channel,
+                outcome,
+                notes,
+                createdByUserId,
+                reminderTemplateId: null,
+                reminderTemplateNameSnapshot: null,
+                createdAtUtc)
+        {
+        }
+
+        public AppointmentReminderLogEntry(
+            Guid tenantId,
+            Guid appointmentId,
+            AppointmentReminderChannel channel,
+            AppointmentReminderOutcome outcome,
+            string? notes,
+            Guid createdByUserId,
+            Guid? reminderTemplateId,
+            string? reminderTemplateNameSnapshot,
             DateTime? createdAtUtc = null)
         {
             if (tenantId == Guid.Empty)
@@ -62,12 +88,37 @@ namespace BigSmile.Domain.Entities
                 throw new ArgumentException("Appointment reminder log creation time is required.", nameof(createdAtUtc));
             }
 
+            if (reminderTemplateId == Guid.Empty)
+            {
+                throw new ArgumentException("Reminder template reference must be a non-empty identifier when provided.", nameof(reminderTemplateId));
+            }
+
+            var normalizedTemplateNameSnapshot = NormalizeOptional(
+                reminderTemplateNameSnapshot,
+                nameof(reminderTemplateNameSnapshot),
+                ReminderTemplate.NameMaxLength);
+            if (reminderTemplateId.HasValue && normalizedTemplateNameSnapshot == null)
+            {
+                throw new ArgumentException(
+                    "Reminder template name snapshot is required when a reminder template reference is provided.",
+                    nameof(reminderTemplateNameSnapshot));
+            }
+
+            if (!reminderTemplateId.HasValue && normalizedTemplateNameSnapshot != null)
+            {
+                throw new ArgumentException(
+                    "Reminder template name snapshot cannot be set without a reminder template reference.",
+                    nameof(reminderTemplateNameSnapshot));
+            }
+
             Id = Guid.NewGuid();
             TenantId = tenantId;
             AppointmentId = appointmentId;
             Channel = channel;
             Outcome = outcome;
             Notes = NormalizeOptional(notes, nameof(notes), NotesMaxLength);
+            ReminderTemplateId = reminderTemplateId;
+            ReminderTemplateNameSnapshot = normalizedTemplateNameSnapshot;
             CreatedByUserId = createdByUserId;
             CreatedAtUtc = createdAtUtc ?? DateTime.UtcNow;
         }

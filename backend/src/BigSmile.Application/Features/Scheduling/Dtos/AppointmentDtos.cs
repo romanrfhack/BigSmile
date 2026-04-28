@@ -49,7 +49,9 @@ namespace BigSmile.Application.Features.Scheduling.Dtos
         string Outcome,
         string? Notes,
         DateTime CreatedAtUtc,
-        Guid CreatedByUserId);
+        Guid CreatedByUserId,
+        Guid? ReminderTemplateId,
+        string? ReminderTemplateNameSnapshot);
 
     public sealed record ManualReminderFollowUpResultDto(
         AppointmentSummaryDto Appointment,
