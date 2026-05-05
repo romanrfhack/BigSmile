@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { AppointmentBlockFormComponent } from '../components/appointment-block-form.component';
 import { AppointmentCalendarComponent } from '../components/appointment-calendar.component';
 import { AppointmentFormComponent } from '../components/appointment-form.component';
@@ -37,37 +39,39 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     AppointmentManualReminderComponent,
     AppointmentReminderWorklistComponent,
     AppointmentReminderLogComponent,
-    ReminderTemplateManagerComponent
+    ReminderTemplateManagerComponent,
+    LocalizedDatePipe,
+    TranslatePipe
   ],
   template: `
     <section class="scheduling-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 2 / Scheduling</p>
-          <h2>Scheduling foundation</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 2 / {{ 'Scheduling' | t }}</p>
+          <h2>{{ 'Scheduling foundation' | t }}</h2>
           <p class="subtitle">
-            Daily and weekly branch-aware scheduling for {{ tenantName }} on top of the completed Patients module.
+            {{ 'Daily and weekly branch-aware scheduling for {tenantName} on top of the completed Patients module.' | t:{ tenantName } }}
           </p>
         </div>
 
         <div class="header-actions" *ngIf="canWrite">
           <button type="button" class="btn btn-primary" (click)="startCreate()">
-            New appointment
+            {{ 'New appointment' | t }}
           </button>
           <button type="button" class="btn btn-block" (click)="startCreateBlock()">
-            Block time
+            {{ 'Block time' | t }}
           </button>
         </div>
       </header>
 
       <section class="toolbar">
         <label class="control">
-          <span>Branch</span>
+          <span>{{ 'Branch' | t }}</span>
           <select
             [ngModel]="schedulingFacade.selectedBranchId()"
             (ngModelChange)="changeBranch($event)"
             [disabled]="schedulingFacade.loadingBranches()">
-            <option [ngValue]="null">Select a branch</option>
+            <option [ngValue]="null">{{ 'Select a branch' | t }}</option>
             <option *ngFor="let branch of schedulingFacade.branches()" [ngValue]="branch.id">
               {{ branch.name }}
             </option>
@@ -75,7 +79,7 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         </label>
 
         <label class="control">
-          <span>Calendar date</span>
+          <span>{{ 'Calendar date' | t }}</span>
           <input
             type="date"
             [ngModel]="schedulingFacade.selectedDate()"
@@ -83,22 +87,22 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         </label>
 
         <label class="control">
-          <span>View</span>
+          <span>{{ 'View' | t }}</span>
           <select
             [ngModel]="schedulingFacade.viewMode()"
             (ngModelChange)="changeViewMode($event)">
-            <option value="day">Day</option>
-            <option value="week">Week</option>
+            <option value="day">{{ 'Day' | t }}</option>
+            <option value="week">{{ 'Week' | t }}</option>
           </select>
         </label>
       </section>
 
       <div *ngIf="schedulingFacade.branchesError()" class="state-card state-error">
-        {{ schedulingFacade.branchesError() }}
+        {{ schedulingFacade.branchesError() | t }}
       </div>
 
       <div *ngIf="!schedulingFacade.loadingBranches() && !schedulingFacade.branches().length" class="state-card">
-        No accessible branches are available for the current scheduling session.
+        {{ 'No accessible branches are available for the current scheduling session.' | t }}
       </div>
 
       <app-reminder-template-manager
@@ -134,28 +138,28 @@ type SchedulingEditorSurface = 'appointment' | 'block';
 
       <div *ngIf="selectedAppointment" class="selection-card">
         <div>
-          <p class="selection-label">Selected appointment</p>
+          <p class="selection-label">{{ 'Selected appointment' | t }}</p>
           <strong>{{ selectedAppointment.patientFullName }}</strong>
           <p>
-            {{ selectedAppointment.startsAt | date: 'medium' }} to {{ selectedAppointment.endsAt | date: 'shortTime' }}
+            {{ selectedAppointment.startsAt | bsDate: 'medium' }} {{ 'to' | t }} {{ selectedAppointment.endsAt | bsDate: 'shortTime' }}
           </p>
           <p class="confirmation-note">
-            Confirmation:
+            {{ 'Confirmation' | t }}:
             <strong [class.confirmed-text]="selectedAppointment.confirmationStatus === 'Confirmed'">
-              {{ selectedAppointment.confirmationStatus }}
+              {{ selectedAppointment.confirmationStatus | t }}
             </strong>
             <span *ngIf="selectedAppointment.confirmedAtUtc">
-              · {{ selectedAppointment.confirmedAtUtc | date: 'short' }}
+              / {{ selectedAppointment.confirmedAtUtc | bsDate: 'short' }}
             </span>
           </p>
           <p *ngIf="selectedAppointment.status === 'Cancelled'" class="cancelled-note">
-            This appointment is cancelled and remains visible only for calendar traceability.
+            {{ 'This appointment is cancelled and remains visible only for calendar traceability.' | t }}
           </p>
           <p *ngIf="selectedAppointment.status === 'Attended'" class="attended-note">
-            This appointment was marked as attended and is now read-only in the calendar.
+            {{ 'This appointment was marked as attended and is now read-only in the calendar.' | t }}
           </p>
           <p *ngIf="selectedAppointment.status === 'NoShow'" class="no-show-note">
-            This appointment was marked as no-show and remains visible for operational follow-up.
+            {{ 'This appointment was marked as no-show and remains visible for operational follow-up.' | t }}
           </p>
         </div>
 
@@ -165,20 +169,20 @@ type SchedulingEditorSurface = 'appointment' | 'block';
             type="button"
             class="btn btn-success"
             (click)="confirmSelectedAppointment()">
-            Confirm appointment
+            {{ 'Confirm appointment' | t }}
           </button>
           <button
             *ngIf="selectedAppointment.confirmationStatus === 'Confirmed'"
             type="button"
             class="btn btn-warning"
             (click)="markSelectedConfirmationPending()">
-            Mark as pending
+            {{ 'Mark as pending' | t }}
           </button>
-          <button type="button" class="btn btn-secondary" (click)="startEdit(selectedAppointment)">Edit</button>
-          <button type="button" class="btn btn-secondary" (click)="startReschedule(selectedAppointment)">Reschedule</button>
-          <button type="button" class="btn btn-success" (click)="markSelectedAttended()">Mark attended</button>
-          <button type="button" class="btn btn-warning" (click)="markSelectedNoShow()">Mark no-show</button>
-          <button type="button" class="btn btn-danger" (click)="cancelSelected()">Cancel appointment</button>
+          <button type="button" class="btn btn-secondary" (click)="startEdit(selectedAppointment)">{{ 'Edit' | t }}</button>
+          <button type="button" class="btn btn-secondary" (click)="startReschedule(selectedAppointment)">{{ 'Reschedule' | t }}</button>
+          <button type="button" class="btn btn-success" (click)="markSelectedAttended()">{{ 'Mark attended' | t }}</button>
+          <button type="button" class="btn btn-warning" (click)="markSelectedNoShow()">{{ 'Mark no-show' | t }}</button>
+          <button type="button" class="btn btn-danger" (click)="cancelSelected()">{{ 'Cancel appointment' | t }}</button>
         </div>
       </div>
 
@@ -205,18 +209,18 @@ type SchedulingEditorSurface = 'appointment' | 'block';
 
       <div *ngIf="selectedBlockedSlot" class="selection-card selection-card-block">
         <div>
-          <p class="selection-label">Selected blocked slot</p>
-          <strong>{{ selectedBlockedSlot.label || 'Blocked slot' }}</strong>
+          <p class="selection-label">{{ 'Selected blocked slot' | t }}</p>
+          <strong>{{ selectedBlockedSlot.label || ('Blocked slot' | t) }}</strong>
           <p>
-            {{ selectedBlockedSlot.startsAt | date: 'medium' }} to {{ selectedBlockedSlot.endsAt | date: 'shortTime' }}
+            {{ selectedBlockedSlot.startsAt | bsDate: 'medium' }} {{ 'to' | t }} {{ selectedBlockedSlot.endsAt | bsDate: 'shortTime' }}
           </p>
           <p class="blocked-note">
-            Appointments are blocked for this branch during the selected range.
+            {{ 'Appointments are blocked for this branch during the selected range.' | t }}
           </p>
         </div>
 
         <div class="selection-actions" *ngIf="canWrite">
-          <button type="button" class="btn btn-danger" (click)="removeSelectedBlock()">Remove blocked slot</button>
+          <button type="button" class="btn btn-danger" (click)="removeSelectedBlock()">{{ 'Remove blocked slot' | t }}</button>
         </div>
       </div>
 
@@ -461,6 +465,7 @@ type SchedulingEditorSurface = 'appointment' | 'block';
 export class SchedulingPageComponent implements OnInit {
   readonly schedulingFacade = inject(SchedulingFacade);
   private readonly authService = inject(AuthService);
+  private readonly i18n = inject(I18nService);
 
   tenantName = 'the current tenant';
   editorSurface: SchedulingEditorSurface = 'appointment';
@@ -497,7 +502,7 @@ export class SchedulingPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.tenantName = this.authService.getCurrentTenant()?.name ?? 'the current tenant';
+    this.tenantName = this.authService.getCurrentTenant()?.name ?? this.i18n.translate('the current tenant');
     const preferredBranchId = this.authService.getCurrent()?.currentBranch?.id ?? null;
     this.schedulingFacade.loadInitialContext(preferredBranchId);
     this.schedulingFacade.loadReminderTemplates();
@@ -687,7 +692,9 @@ export class SchedulingPageComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(`Cancel the appointment for ${this.selectedAppointment.patientFullName}?`);
+    const confirmed = window.confirm(this.i18n.translate('Cancel the appointment for {patientName}?', {
+      patientName: this.selectedAppointment.patientFullName
+    }));
     if (!confirmed) {
       return;
     }
@@ -713,7 +720,9 @@ export class SchedulingPageComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(`Mark the appointment for ${this.selectedAppointment.patientFullName} as attended?`);
+    const confirmed = window.confirm(this.i18n.translate('Mark the appointment for {patientName} as attended?', {
+      patientName: this.selectedAppointment.patientFullName
+    }));
     if (!confirmed) {
       return;
     }
@@ -743,7 +752,9 @@ export class SchedulingPageComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(`Mark the appointment for ${this.selectedAppointment.patientFullName} as no-show?`);
+    const confirmed = window.confirm(this.i18n.translate('Mark the appointment for {patientName} as no-show?', {
+      patientName: this.selectedAppointment.patientFullName
+    }));
     if (!confirmed) {
       return;
     }
@@ -776,7 +787,9 @@ export class SchedulingPageComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(`Confirm the appointment for ${this.selectedAppointment.patientFullName}?`);
+    const confirmed = window.confirm(this.i18n.translate('Confirm the appointment for {patientName}?', {
+      patientName: this.selectedAppointment.patientFullName
+    }));
     if (!confirmed) {
       return;
     }
@@ -809,7 +822,9 @@ export class SchedulingPageComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(`Mark the appointment for ${this.selectedAppointment.patientFullName} as pending confirmation?`);
+    const confirmed = window.confirm(this.i18n.translate('Mark the appointment for {patientName} as pending confirmation?', {
+      patientName: this.selectedAppointment.patientFullName
+    }));
     if (!confirmed) {
       return;
     }
@@ -839,8 +854,8 @@ export class SchedulingPageComponent implements OnInit {
       return;
     }
 
-    const label = this.selectedBlockedSlot.label || 'this blocked slot';
-    const confirmed = window.confirm(`Remove ${label}?`);
+    const label = this.selectedBlockedSlot.label || this.i18n.translate('this blocked slot');
+    const confirmed = window.confirm(this.i18n.translate('Remove {label}?', { label }));
     if (!confirmed) {
       return;
     }
@@ -1026,7 +1041,7 @@ export class SchedulingPageComponent implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm('Deactivate this reminder template?');
+    const confirmed = window.confirm(this.i18n.translate('Deactivate this reminder template?'));
     if (!confirmed) {
       return;
     }

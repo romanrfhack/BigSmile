@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { TreatmentQuotesFacade } from '../../treatments/facades/treatment-quotes.facade';
 import { BillingDocumentEmptyStateComponent } from '../components/billing-document-empty-state.component';
@@ -21,43 +23,45 @@ import { BillingDocumentsFacade } from '../facades/billing-documents.facade';
     BillingDocumentItemsListComponent,
     BillingDocumentNoQuoteStateComponent,
     BillingDocumentQuoteNotAcceptedStateComponent,
-    BillingDocumentStatusEditorComponent
+    BillingDocumentStatusEditorComponent,
+    LocalizedDatePipe,
+    TranslatePipe
   ],
   template: `
     <section class="billing-document-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 6.1 / Billing Foundation</p>
-          <h2>Billing</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 6.1 / {{ 'Billing Foundation' | t }}</p>
+          <h2>{{ 'Billing' | t }}</h2>
           <p class="subtitle">
-            Minimal patient-scoped billing document for {{ patientDisplayName }} with explicit snapshot creation from an accepted quote, basic line totals, explicit issue, and read-only behavior once issued.
+            {{ 'Minimal patient-scoped billing document for {patientDisplayName} with explicit snapshot creation from an accepted quote, basic line totals, explicit issue, and read-only behavior once issued.' | t:{ patientDisplayName } }}
           </p>
         </div>
 
         <div class="head-actions">
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId, 'treatment-plan', 'quote']" class="action-link action-secondary">Quote</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">{{ 'Back to patient' | t }}</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId, 'treatment-plan', 'quote']" class="action-link action-secondary">{{ 'Quote' | t }}</a>
         </div>
       </header>
 
       <div *ngIf="patientsFacade.loadingPatient() || treatmentQuotesFacade.loadingTreatmentQuote() || billingDocumentsFacade.loadingBillingDocument()" class="state-card">
-        Loading billing document...
+        {{ 'Loading billing document...' | t }}
       </div>
 
       <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
-        {{ patientsFacade.detailError() }}
+        {{ patientsFacade.detailError() | t }}
       </div>
 
       <div *ngIf="treatmentQuotesFacade.treatmentQuoteError()" class="state-card state-error">
-        {{ treatmentQuotesFacade.treatmentQuoteError() }}
+        {{ treatmentQuotesFacade.treatmentQuoteError() | t }}
       </div>
 
       <div *ngIf="billingDocumentsFacade.billingDocumentError()" class="state-card state-error">
-        {{ billingDocumentsFacade.billingDocumentError() }}
+        {{ billingDocumentsFacade.billingDocumentError() | t }}
       </div>
 
       <div *ngIf="actionError" class="state-card state-error">
-        {{ actionError }}
+        {{ actionError | t }}
       </div>
 
       <app-billing-document-no-quote-state
@@ -93,44 +97,44 @@ import { BillingDocumentsFacade } from '../facades/billing-documents.facade';
       <article *ngIf="billingDocumentsFacade.currentBillingDocument() as billingDocument" class="billing-shell">
         <section class="billing-meta">
           <div>
-            <dt>Status</dt>
-            <dd>{{ billingDocument.status }}</dd>
+            <dt>{{ 'Status' | t }}</dt>
+            <dd>{{ billingDocument.status | t }}</dd>
           </div>
           <div>
-            <dt>Items</dt>
+            <dt>{{ 'Items' | t }}</dt>
             <dd>{{ billingDocument.items.length }}</dd>
           </div>
           <div>
-            <dt>Currency</dt>
+            <dt>{{ 'Currency' | t }}</dt>
             <dd>{{ billingDocument.currencyCode }}</dd>
           </div>
           <div>
-            <dt>Total</dt>
+            <dt>{{ 'Total' | t }}</dt>
             <dd>{{ billingDocument.totalAmount | number: '1.2-2' }} {{ billingDocument.currencyCode }}</dd>
           </div>
           <div>
-            <dt>Created</dt>
-            <dd>{{ billingDocument.createdAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Created' | t }}</dt>
+            <dd>{{ billingDocument.createdAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Created by</dt>
+            <dt>{{ 'Created by' | t }}</dt>
             <dd>{{ billingDocument.createdByUserId }}</dd>
           </div>
           <div>
-            <dt>Last updated</dt>
-            <dd>{{ billingDocument.lastUpdatedAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Last updated' | t }}</dt>
+            <dd>{{ billingDocument.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Updated by</dt>
+            <dt>{{ 'Updated by' | t }}</dt>
             <dd>{{ billingDocument.lastUpdatedByUserId }}</dd>
           </div>
           <div>
-            <dt>Issued</dt>
-            <dd>{{ billingDocument.issuedAtUtc ? (billingDocument.issuedAtUtc | date: 'medium') : 'Not issued yet' }}</dd>
+            <dt>{{ 'Issued' | t }}</dt>
+            <dd>{{ billingDocument.issuedAtUtc ? (billingDocument.issuedAtUtc | bsDate: 'medium') : ('Not issued yet' | t) }}</dd>
           </div>
           <div>
-            <dt>Issued by</dt>
-            <dd>{{ billingDocument.issuedByUserId || 'Not issued yet' }}</dd>
+            <dt>{{ 'Issued by' | t }}</dt>
+            <dd>{{ billingDocument.issuedByUserId || ('Not issued yet' | t) }}</dd>
           </div>
         </section>
 
@@ -254,6 +258,7 @@ export class BillingDocumentPageComponent implements OnInit {
   readonly treatmentQuotesFacade = inject(TreatmentQuotesFacade);
   readonly patientsFacade = inject(PatientsFacade);
   readonly canWrite = this.authService.hasPermissions(['billing.write']);
+  private readonly i18n = inject(I18nService);
 
   patientId: string | null = null;
   creatingBillingDocument = false;
@@ -261,7 +266,7 @@ export class BillingDocumentPageComponent implements OnInit {
   actionError: string | null = null;
 
   get patientDisplayName(): string {
-    return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
+    return this.patientsFacade.currentPatient()?.fullName ?? this.i18n.translate('this patient');
   }
 
   ngOnInit(): void {

@@ -2,30 +2,31 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { DashboardSummaryCardsComponent } from '../components/dashboard-summary-cards.component';
 import { DashboardFacade } from '../facades/dashboard.facade';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, DashboardSummaryCardsComponent],
+  imports: [CommonModule, DashboardSummaryCardsComponent, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="dashboard-page">
       <header class="dashboard-head">
         <div>
-          <p class="eyebrow">Release 7.2 / Dashboard Foundation</p>
-          <h2>Operational dashboard</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 7.2 / {{ 'Dashboard Foundation' | t }}</p>
+          <h2>{{ 'Operational dashboard' | t }}</h2>
           <p class="subtitle">
-            Tenant-scoped summary of current clinic operations. This foundation uses simple read-model aggregation only.
+            {{ 'Tenant-scoped summary of current clinic operations. This foundation uses simple read-model aggregation only.' | t }}
           </p>
         </div>
         <p *ngIf="dashboardFacade.summary() as summary" class="generated-at">
-          Generated {{ summary.generatedAtUtc | date: 'medium' }}
+          {{ 'Generated' | t }} {{ summary.generatedAtUtc | bsDate: 'medium' }}
         </p>
       </header>
 
-      <div *ngIf="dashboardFacade.loading()" class="state-card">Loading dashboard summary...</div>
+      <div *ngIf="dashboardFacade.loading()" class="state-card">{{ 'Loading dashboard summary...' | t }}</div>
 
       <div *ngIf="dashboardFacade.error()" class="state-card state-error">
-        {{ dashboardFacade.error() }}
+        {{ dashboardFacade.error() | t }}
       </div>
 
       <app-dashboard-summary-cards
@@ -36,7 +37,7 @@ import { DashboardFacade } from '../facades/dashboard.facade';
       <div
         *ngIf="!dashboardFacade.loading() && !dashboardFacade.error() && !dashboardFacade.summary()"
         class="state-card">
-        No dashboard summary is loaded yet.
+        {{ 'No dashboard summary is loaded yet.' | t }}
       </div>
     </section>
   `,

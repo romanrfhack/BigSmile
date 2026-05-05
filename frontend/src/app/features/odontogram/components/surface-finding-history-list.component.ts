@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
   OdontogramSurfaceCode,
   OdontogramSurfaceFindingHistoryEntry,
@@ -9,11 +11,11 @@ import {
 @Component({
   selector: 'app-surface-finding-history-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="history-list">
       <div *ngIf="!filteredEntries.length" class="empty-copy">
-        No finding history entries are available for this surface yet. Findings created before Release 4.4 may not have a previous added entry because this slice does not backfill history.
+        {{ 'No finding history entries are available for this surface yet. Findings created before Release 4.4 may not have a previous added entry because this slice does not backfill history.' | t }}
       </div>
 
       <article *ngFor="let entry of filteredEntries" class="history-card" [attr.data-entry-type]="entry.entryType">
@@ -29,13 +31,13 @@ import {
           </div>
 
           <div class="history-meta">
-            <span>{{ entry.changedAtUtc | date: 'medium' }}</span>
-            <span>User {{ entry.changedByUserId }}</span>
+            <span>{{ entry.changedAtUtc | bsDate: 'medium' }}</span>
+            <span>{{ 'User' | t }} {{ entry.changedByUserId }}</span>
           </div>
         </header>
 
         <p class="history-copy">
-          Tooth {{ entry.toothCode }} · Surface {{ entry.surfaceCode }} · {{ entry.findingType }}
+          {{ 'Tooth' | t }} {{ entry.toothCode }} / {{ 'Surface' | t }} {{ entry.surfaceCode }} / {{ getFindingTypeLabel(entry.findingType) }}
         </p>
       </article>
     </section>
@@ -127,6 +129,7 @@ import {
   `]
 })
 export class SurfaceFindingHistoryListComponent {
+  private readonly i18n = inject(I18nService);
   @Input() entries: OdontogramSurfaceFindingHistoryEntry[] = [];
   @Input() toothCode: string | null = null;
   @Input() surfaceCode: OdontogramSurfaceCode | null = null;
@@ -156,9 +159,13 @@ export class SurfaceFindingHistoryListComponent {
   getEntryLabel(entryType: OdontogramSurfaceFindingHistoryEntryType): string {
     switch (entryType) {
       case 'FindingAdded':
-        return 'Finding added';
+        return this.i18n.translate('Finding added');
       case 'FindingRemoved':
-        return 'Finding removed';
+        return this.i18n.translate('Finding removed');
     }
+  }
+
+  getFindingTypeLabel(findingType: OdontogramSurfaceFindingHistoryEntry['findingType']): string {
+    return this.i18n.translate(findingType);
   }
 }

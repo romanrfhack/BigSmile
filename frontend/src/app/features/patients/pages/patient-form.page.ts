@@ -4,32 +4,33 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PatientFormComponent } from '../components/patient-form.component';
 import { PatientsFacade } from '../facades/patients.facade';
 import { SavePatientRequest } from '../models/patient.models';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-patient-form-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, PatientFormComponent],
+  imports: [CommonModule, RouterLink, PatientFormComponent, TranslatePipe],
   template: `
     <section class="page-shell">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 1 / Patients</p>
-          <h2>{{ isEditMode ? 'Edit patient' : 'Register patient' }}</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 1 / {{ 'Patients' | t }}</p>
+          <h2>{{ (isEditMode ? 'Edit patient' : 'Register patient') | t }}</h2>
           <p class="subtitle">
-            {{ isEditMode
+            {{ (isEditMode
               ? 'Update the patient profile without changing tenant ownership.'
-              : 'Capture the minimum patient record needed for daily clinic operations.' }}
+              : 'Capture the minimum patient record needed for daily clinic operations.') | t }}
           </p>
         </div>
-        <a routerLink="/patients" class="back-link">Back to patient search</a>
+        <a routerLink="/patients" class="back-link">{{ 'Back to patient search' | t }}</a>
       </header>
 
       <div *ngIf="isEditMode && patientsFacade.loadingPatient()" class="state-card">
-        Loading patient record...
+        {{ 'Loading patient record...' | t }}
       </div>
 
       <div *ngIf="isEditMode && patientsFacade.detailError()" class="state-card state-error">
-        {{ patientsFacade.detailError() }}
+        {{ patientsFacade.detailError() | t }}
       </div>
 
       <app-patient-form

@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
   AppointmentReminderChannel,
   AppointmentReminderLogEntry,
@@ -11,27 +13,27 @@ import {
 @Component({
   selector: 'app-appointment-reminder-log',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="reminder-log-panel">
       <header class="reminder-log-head">
         <div>
-          <p class="section-label">Contact attempts</p>
-          <h3>Reminder log</h3>
-          <p class="manual-note">Manual log only. No WhatsApp, email, or SMS is sent from BigSmile.</p>
+          <p class="section-label">{{ 'Contact attempts' | t }}</p>
+          <h3>{{ 'Reminder log' | t }}</h3>
+          <p class="manual-note">{{ 'Manual log only. No WhatsApp, email, or SMS is sent from BigSmile.' | t }}</p>
         </div>
       </header>
 
       <div *ngIf="loading" class="state-card">
-        Loading contact attempts.
+        {{ 'Loading contact attempts.' | t }}
       </div>
 
       <div *ngIf="!loading && error" class="state-card state-error">
-        {{ error }}
+        {{ error | t }}
       </div>
 
       <div *ngIf="!loading && !error && !entries.length" class="state-card">
-        No contact attempts have been logged for this appointment.
+        {{ 'No contact attempts have been logged for this appointment.' | t }}
       </div>
 
       <ol *ngIf="!loading && !error && entries.length" class="log-list">
@@ -41,14 +43,14 @@ import {
             <span>{{ getOutcomeLabel(entry.outcome) }}</span>
           </div>
           <p *ngIf="entry.notes">{{ entry.notes }}</p>
-          <small *ngIf="entry.reminderTemplateNameSnapshot">Template: {{ entry.reminderTemplateNameSnapshot }}</small>
-          <small>{{ entry.createdAtUtc | date: 'short' }} - {{ entry.createdByUserId }}</small>
+          <small *ngIf="entry.reminderTemplateNameSnapshot">{{ 'Template:' | t }} {{ entry.reminderTemplateNameSnapshot }}</small>
+          <small>{{ entry.createdAtUtc | bsDate: 'short' }} - {{ entry.createdByUserId }}</small>
         </li>
       </ol>
 
       <form *ngIf="canWrite" class="log-form" (ngSubmit)="submit()">
         <label class="control">
-          <span>Channel</span>
+          <span>{{ 'Channel' | t }}</span>
           <select name="channel" [(ngModel)]="channel" [disabled]="saving">
             <option *ngFor="let option of channelOptions" [ngValue]="option">
               {{ getChannelLabel(option) }}
@@ -57,7 +59,7 @@ import {
         </label>
 
         <label class="control">
-          <span>Outcome</span>
+          <span>{{ 'Outcome' | t }}</span>
           <select name="outcome" [(ngModel)]="outcome" [disabled]="saving">
             <option *ngFor="let option of outcomeOptions" [ngValue]="option">
               {{ getOutcomeLabel(option) }}
@@ -66,7 +68,7 @@ import {
         </label>
 
         <label class="control control-wide">
-          <span>Notes</span>
+          <span>{{ 'Notes' | t }}</span>
           <textarea
             name="notes"
             rows="3"
@@ -75,9 +77,9 @@ import {
             [disabled]="saving"></textarea>
         </label>
 
-        <div *ngIf="formError" class="form-error">{{ formError }}</div>
+        <div *ngIf="formError" class="form-error">{{ formError | t }}</div>
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          Add log entry
+          {{ 'Add log entry' | t }}
         </button>
       </form>
     </section>
@@ -248,6 +250,8 @@ import {
   `]
 })
 export class AppointmentReminderLogComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input() entries: AppointmentReminderLogEntry[] = [];
   @Input() loading = false;
   @Input() error: string | null = null;
@@ -281,17 +285,17 @@ export class AppointmentReminderLogComponent {
   }
 
   getChannelLabel(channel: AppointmentReminderChannel): string {
-    return channel;
+    return this.i18n.translate(channel);
   }
 
   getOutcomeLabel(outcome: AppointmentReminderOutcome): string {
     switch (outcome) {
       case 'NoAnswer':
-        return 'No answer';
+        return this.i18n.translate('No answer');
       case 'LeftMessage':
-        return 'Left message';
+        return this.i18n.translate('Left message');
       default:
-        return 'Reached';
+        return this.i18n.translate('Reached');
     }
   }
 }

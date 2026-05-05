@@ -15,6 +15,7 @@ describe('PatientDocumentsPageComponent', () => {
   let retireCalls: string[];
 
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
     uploadCalls = [];
     downloadCalls = [];
     retireCalls = [];

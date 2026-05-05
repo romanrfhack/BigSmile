@@ -1,23 +1,24 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 import { BillingDocumentStatus } from '../models/billing-document.models';
 
 @Component({
   selector: 'app-billing-document-status-editor',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="status-shell">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Billing status</p>
-          <h3>Commercial issue step</h3>
-          <p class="copy">Draft and Issued only in Release 6.1.</p>
+          <p class="eyebrow">{{ 'Billing status' | t }}</p>
+          <h3>{{ 'Commercial issue step' | t }}</h3>
+          <p class="copy">{{ 'Draft and Issued only in Release 6.1.' | t }}</p>
         </div>
       </div>
 
       <p class="status-copy">
-        Current status: <strong>{{ currentStatus }}</strong>
+        {{ 'Current status:' | t }} <strong>{{ currentStatus | t }}</strong>
       </p>
 
       <button
@@ -26,15 +27,15 @@ import { BillingDocumentStatus } from '../models/billing-document.models';
         class="btn btn-primary"
         [disabled]="saving || !canWrite"
         (click)="issueRequested.emit()">
-        {{ saving ? 'Issuing...' : 'Issue billing document' }}
+        {{ (saving ? 'Issuing...' : 'Issue billing document') | t }}
       </button>
 
       <p *ngIf="currentStatus === 'Draft' && !canWrite" class="muted">
-        Only roles with billing write permission can issue this billing document.
+        {{ 'Only roles with billing write permission can issue this billing document.' | t }}
       </p>
 
       <p *ngIf="currentStatus === 'Issued'" class="muted">
-        Issued billing documents are read-only in this slice. Payments, taxes, discounts, CFDI, and advanced billing workflows remain outside Release 6.1.
+        {{ 'Issued billing documents are read-only in this slice. Payments, taxes, discounts, CFDI, and advanced billing workflows remain outside Release 6.1.' | t }}
       </p>
     </section>
   `,

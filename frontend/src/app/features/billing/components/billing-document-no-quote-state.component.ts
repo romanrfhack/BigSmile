@@ -1,25 +1,25 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-billing-document-no-quote-state',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   template: `
     <section class="empty-state">
-      <p class="eyebrow">Release 6.1 / Billing Foundation</p>
-      <h3>Accepted quote required first</h3>
+      <p class="eyebrow">{{ 'Release' | t }} 6.1 / {{ 'Billing Foundation' | t }}</p>
+      <h3>{{ 'Accepted quote required first' | t }}</h3>
       <p>
-        This slice never auto-creates billing, the quote, or the treatment plan.
-        Create and accept the patient quote first, then return here to snapshot it into billing.
+        {{ 'This slice never auto-creates billing, the quote, or the treatment plan. Create and accept the patient quote first, then return here to snapshot it into billing.' | t }}
       </p>
 
       <a
         *ngIf="patientId"
         [routerLink]="['/patients', patientId, 'treatment-plan', 'quote']"
         class="action-link">
-        Open quote
+        {{ 'Open quote' | t }}
       </a>
     </section>
   `,

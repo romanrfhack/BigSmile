@@ -1,34 +1,35 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import { AddClinicalNoteRequest } from '../models/clinical-record.models';
 
 @Component({
   selector: 'app-clinical-note-create-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="note-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="form-head">
         <div>
-          <p class="eyebrow">Append-only notes</p>
-          <h3>Add clinical note</h3>
+          <p class="eyebrow">{{ 'Append-only notes' | t }}</p>
+          <h3>{{ 'Add clinical note' | t }}</h3>
         </div>
       </div>
 
       <label>
-        <span>Clinical note</span>
+        <span>{{ 'Clinical note' | t }}</span>
         <textarea rows="4" formControlName="noteText"></textarea>
         <small *ngIf="form.controls.noteText.hasError('required') && form.controls.noteText.touched">
-          Clinical note text is required.
+          {{ 'Clinical note text is required.' | t }}
         </small>
       </label>
 
-      <div *ngIf="error" class="error-banner">{{ error }}</div>
+      <div *ngIf="error" class="error-banner">{{ error | t }}</div>
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : 'Add note' }}
+          {{ (saving ? 'Saving...' : 'Add note') | t }}
         </button>
       </div>
     </form>

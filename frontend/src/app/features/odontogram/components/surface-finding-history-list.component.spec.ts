@@ -3,6 +3,8 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
 
 describe('SurfaceFindingHistoryListComponent', () => {
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [SurfaceFindingHistoryListComponent]
     }).compileComponents();

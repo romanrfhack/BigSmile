@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-treatment-plan-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="empty-state">
-      <p class="eyebrow">Release 5.1 / Treatment Plan Foundation</p>
-      <h3>No treatment plan yet</h3>
+      <p class="eyebrow">{{ 'Release' | t }} 5.1 / {{ 'Treatment Plan Foundation' | t }}</p>
+      <h3>{{ 'No treatment plan yet' | t }}</h3>
       <p>
-        This patient does not have a treatment plan yet. It is not auto-created in this slice and must be initialized explicitly before adding items.
+        {{ 'This patient does not have a treatment plan yet. It is not auto-created in this slice and must be initialized explicitly before adding items.' | t }}
       </p>
 
       <button
@@ -19,11 +20,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         class="btn btn-primary"
         [disabled]="creating"
         (click)="createRequested.emit()">
-        {{ creating ? 'Creating...' : 'Create treatment plan' }}
+        {{ (creating ? 'Creating...' : 'Create treatment plan') | t }}
       </button>
 
       <p *ngIf="!canWrite" class="muted">
-        Your current session can read the patient context, but only roles with treatment plan write permission can initialize this slice.
+        {{ 'Your current session can read the patient context, but only roles with treatment plan write permission can initialize this slice.' | t }}
       </p>
     </section>
   `,

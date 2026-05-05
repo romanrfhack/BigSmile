@@ -3,44 +3,46 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { TranslatePipe } from '../../../shared/i18n';
 import { PatientSearchResultsComponent } from '../components/patient-search-results.component';
 import { PatientsFacade } from '../facades/patients.facade';
 
 @Component({
   selector: 'app-patient-list-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PatientSearchResultsComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PatientSearchResultsComponent, TranslatePipe],
   template: `
     <section class="patients-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 1 / Patients</p>
-          <h2>Patient search</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 1 / {{ 'Patients' | t }}</p>
+          <h2>{{ 'Patient search' | t }}</h2>
           <p class="subtitle">
-            Search and maintain patient records for {{ tenantName }} without leaving tenant scope.
+            {{ 'Search and maintain patient records for {tenantName} without leaving tenant scope.' | t:{ tenantName } }}
           </p>
         </div>
-        <a routerLink="/patients/new" class="btn btn-primary">Register patient</a>
+        <a routerLink="/patients/new" class="btn btn-primary">{{ 'Register patient' | t }}</a>
       </header>
 
       <section class="search-panel">
         <form class="search-form" (ngSubmit)="applySearch()">
           <label class="search-field">
-            <span>Search patients</span>
+            <span>{{ 'Search patients' | t }}</span>
             <input
               type="search"
               name="searchTerm"
               [(ngModel)]="searchTerm"
-              placeholder="Name, phone, or email"
+              [placeholder]="'Name, phone, or email' | t"
             />
           </label>
 
           <label class="toggle-field">
             <input type="checkbox" name="includeInactive" [(ngModel)]="includeInactive" />
-            <span>Include inactive patients</span>
+            <span>{{ 'Include inactive patients' | t }}</span>
           </label>
 
-          <button type="submit" class="btn btn-secondary">Run search</button>
+          <button type="submit" class="btn btn-secondary">{{ 'Run search' | t }}</button>
         </form>
       </section>
 
@@ -170,6 +172,7 @@ import { PatientsFacade } from '../facades/patients.facade';
 export class PatientListPageComponent implements OnInit {
   readonly patientsFacade = inject(PatientsFacade);
   private readonly authService = inject(AuthService);
+  private readonly i18n = inject(I18nService);
 
   searchTerm = '';
   includeInactive = false;
@@ -177,12 +180,12 @@ export class PatientListPageComponent implements OnInit {
 
   get emptyMessage(): string {
     return this.searchTerm.trim()
-      ? 'No patients match the current search.'
-      : 'No patients are registered for the current tenant yet.';
+      ? this.i18n.translate('No patients match the current search.')
+      : this.i18n.translate('No patients are registered for the current tenant yet.');
   }
 
   ngOnInit(): void {
-    this.tenantName = this.authService.getCurrentTenant()?.name ?? 'the current tenant';
+    this.tenantName = this.authService.getCurrentTenant()?.name ?? this.i18n.translate('the current tenant');
     this.patientsFacade.search();
   }
 

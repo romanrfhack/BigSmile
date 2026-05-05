@@ -7,6 +7,8 @@ import { PatientProfilePageComponent } from './patient-profile.page';
 
 describe('PatientProfilePageComponent', () => {
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [PatientProfilePageComponent],
       providers: [

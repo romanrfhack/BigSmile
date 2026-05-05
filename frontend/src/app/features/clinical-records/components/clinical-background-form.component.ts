@@ -1,32 +1,33 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import { ClinicalRecord, SaveClinicalRecordSnapshotRequest } from '../models/clinical-record.models';
 import { ClinicalAllergiesEditorComponent } from './clinical-allergies-editor.component';
 
 @Component({
   selector: 'app-clinical-background-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ClinicalAllergiesEditorComponent],
+  imports: [CommonModule, ReactiveFormsModule, ClinicalAllergiesEditorComponent, TranslatePipe],
   template: `
     <form class="clinical-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Clinical snapshot</p>
-          <h3>{{ mode === 'edit' ? 'Update clinical snapshot' : 'Create clinical record' }}</h3>
-          <p>Background, current medications, and current allergies only.</p>
+          <p class="eyebrow">{{ 'Clinical snapshot' | t }}</p>
+          <h3>{{ (mode === 'edit' ? 'Update clinical snapshot' : 'Create clinical record') | t }}</h3>
+          <p>{{ 'Background, current medications, and current allergies only.' | t }}</p>
         </div>
       </div>
 
       <section class="form-section">
         <div class="field-grid">
           <label class="field-wide">
-            <span>Medical background summary</span>
+            <span>{{ 'Medical background summary' | t }}</span>
             <textarea rows="4" formControlName="medicalBackgroundSummary"></textarea>
           </label>
 
           <label class="field-wide">
-            <span>Current medications summary</span>
+            <span>{{ 'Current medications summary' | t }}</span>
             <textarea rows="4" formControlName="currentMedicationsSummary"></textarea>
           </label>
         </div>
@@ -38,14 +39,14 @@ import { ClinicalAllergiesEditorComponent } from './clinical-allergies-editor.co
         (removeRequested)="removeAllergy($event)">
       </app-clinical-allergies-editor>
 
-      <div *ngIf="error" class="error-banner">{{ error }}</div>
+      <div *ngIf="error" class="error-banner">{{ error | t }}</div>
 
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" (click)="cancel()" [disabled]="saving">
-          {{ mode === 'edit' ? 'Reset form' : 'Cancel' }}
+          {{ (mode === 'edit' ? 'Reset form' : 'Cancel') | t }}
         </button>
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : mode === 'edit' ? 'Save clinical snapshot' : 'Create clinical record' }}
+          {{ (saving ? 'Saving...' : mode === 'edit' ? 'Save clinical snapshot' : 'Create clinical record') | t }}
         </button>
       </div>
     </form>

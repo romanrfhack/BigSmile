@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { TreatmentPlanEmptyStateComponent } from '../components/treatment-plan-empty-state.component';
 import { TreatmentPlanItemFormComponent } from '../components/treatment-plan-item-form.component';
@@ -23,39 +25,41 @@ import {
     TreatmentPlanEmptyStateComponent,
     TreatmentPlanItemFormComponent,
     TreatmentPlanItemsListComponent,
-    TreatmentPlanStatusEditorComponent
+    TreatmentPlanStatusEditorComponent,
+    LocalizedDatePipe,
+    TranslatePipe
   ],
   template: `
     <section class="treatment-plan-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 5.1 / Treatment Plan Foundation</p>
-          <h2>Treatment plan</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 5.1 / {{ 'Treatment Plan Foundation' | t }}</p>
+          <h2>{{ 'Treatment plan' | t }}</h2>
           <p class="subtitle">
-            Minimal patient-scoped treatment planning for {{ patientDisplayName }} with explicit creation, basic items, optional tooth/surface references, and a bounded Draft / Proposed / Accepted lifecycle.
+            {{ 'Minimal patient-scoped treatment planning for {patientDisplayName} with explicit creation, basic items, optional tooth/surface references, and a bounded Draft / Proposed / Accepted lifecycle.' | t:{ patientDisplayName } }}
           </p>
         </div>
 
         <div class="head-actions">
-          <a *ngIf="patientId && canReadTreatmentQuotes" [routerLink]="['/patients', patientId, 'treatment-plan', 'quote']" class="action-link action-secondary">Quote</a>
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
+          <a *ngIf="patientId && canReadTreatmentQuotes" [routerLink]="['/patients', patientId, 'treatment-plan', 'quote']" class="action-link action-secondary">{{ 'Quote' | t }}</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">{{ 'Back to patient' | t }}</a>
         </div>
       </header>
 
       <div *ngIf="patientsFacade.loadingPatient() || treatmentPlansFacade.loadingTreatmentPlan()" class="state-card">
-        Loading treatment plan...
+        {{ 'Loading treatment plan...' | t }}
       </div>
 
       <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
-        {{ patientsFacade.detailError() }}
+        {{ patientsFacade.detailError() | t }}
       </div>
 
       <div *ngIf="treatmentPlansFacade.treatmentPlanError()" class="state-card state-error">
-        {{ treatmentPlansFacade.treatmentPlanError() }}
+        {{ treatmentPlansFacade.treatmentPlanError() | t }}
       </div>
 
       <div *ngIf="actionError" class="state-card state-error">
-        {{ actionError }}
+        {{ actionError | t }}
       </div>
 
       <app-treatment-plan-empty-state
@@ -68,27 +72,27 @@ import {
       <article *ngIf="treatmentPlansFacade.currentTreatmentPlan() as treatmentPlan" class="plan-shell">
         <section class="plan-meta">
           <div>
-            <dt>Status</dt>
-            <dd>{{ treatmentPlan.status }}</dd>
+            <dt>{{ 'Status' | t }}</dt>
+            <dd>{{ treatmentPlan.status | t }}</dd>
           </div>
           <div>
-            <dt>Items</dt>
+            <dt>{{ 'Items' | t }}</dt>
             <dd>{{ treatmentPlan.items.length }}</dd>
           </div>
           <div>
-            <dt>Created</dt>
-            <dd>{{ treatmentPlan.createdAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Created' | t }}</dt>
+            <dd>{{ treatmentPlan.createdAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Created by</dt>
+            <dt>{{ 'Created by' | t }}</dt>
             <dd>{{ treatmentPlan.createdByUserId }}</dd>
           </div>
           <div>
-            <dt>Last updated</dt>
-            <dd>{{ treatmentPlan.lastUpdatedAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Last updated' | t }}</dt>
+            <dd>{{ treatmentPlan.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Updated by</dt>
+            <dt>{{ 'Updated by' | t }}</dt>
             <dd>{{ treatmentPlan.lastUpdatedByUserId }}</dd>
           </div>
         </section>
@@ -222,6 +226,7 @@ export class TreatmentPlanPageComponent implements OnInit {
   readonly patientsFacade = inject(PatientsFacade);
   readonly canWrite = inject(AuthService).hasPermissions(['treatmentplan.write']);
   readonly canReadTreatmentQuotes = inject(AuthService).hasPermissions(['treatmentquote.read']);
+  private readonly i18n = inject(I18nService);
 
   private readonly route = inject(ActivatedRoute);
 
@@ -235,7 +240,7 @@ export class TreatmentPlanPageComponent implements OnInit {
   itemFormRevision = 0;
 
   get patientDisplayName(): string {
-    return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
+    return this.patientsFacade.currentPatient()?.fullName ?? this.i18n.translate('this patient');
   }
 
   get canEditPlan(): boolean {

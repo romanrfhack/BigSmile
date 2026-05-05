@@ -1,21 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { ClinicalNote } from '../models/clinical-record.models';
 
 @Component({
   selector: 'app-clinical-notes-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="notes-list">
       <div *ngIf="!sortedNotes.length" class="empty-copy">
-        No clinical notes have been added yet.
+        {{ 'No clinical notes have been added yet.' | t }}
       </div>
 
       <article *ngFor="let note of sortedNotes" class="note-card">
         <header>
-          <strong>{{ note.createdAtUtc | date: 'medium' }}</strong>
-          <span>User {{ note.createdByUserId }}</span>
+          <strong>{{ note.createdAtUtc | bsDate: 'medium' }}</strong>
+          <span>{{ 'User' | t }} {{ note.createdByUserId }}</span>
         </header>
         <p>{{ note.noteText }}</p>
       </article>

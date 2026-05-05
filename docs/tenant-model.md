@@ -251,6 +251,7 @@ Current foundation note:
 - authenticated requests resolve `user id`, `tenant id`, `branch id`, and `scope` from JWT claims
 - development headers remain a local fallback only for anonymous requests
 - platform override is activated by explicit authorization policy/handler flow, not by general request headers
+- frontend auth/session, tenant, branch, token, and permission state must not be persisted in `localStorage`; the UI language preference `bigsmile.ui.language` is allowed because it is non-sensitive and has no authorization meaning
 
 ### 8.2 TenantContext
 

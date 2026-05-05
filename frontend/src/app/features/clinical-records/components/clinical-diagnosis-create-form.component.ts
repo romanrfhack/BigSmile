@@ -1,39 +1,40 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import { AddClinicalDiagnosisRequest } from '../models/clinical-record.models';
 
 @Component({
   selector: 'app-clinical-diagnosis-create-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="diagnosis-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="form-head">
         <div>
-          <p class="eyebrow">Basic diagnoses</p>
-          <h3>Add diagnosis</h3>
+          <p class="eyebrow">{{ 'Basic diagnoses' | t }}</p>
+          <h3>{{ 'Add diagnosis' | t }}</h3>
         </div>
       </div>
 
       <label>
-        <span>Diagnosis</span>
+        <span>{{ 'Diagnosis' | t }}</span>
         <input type="text" formControlName="diagnosisText" />
         <small *ngIf="form.controls.diagnosisText.hasError('required') && form.controls.diagnosisText.touched">
-          Diagnosis text is required.
+          {{ 'Diagnosis text is required.' | t }}
         </small>
       </label>
 
       <label>
-        <span>Brief note</span>
+        <span>{{ 'Brief note' | t }}</span>
         <textarea rows="3" formControlName="notes"></textarea>
       </label>
 
-      <div *ngIf="error" class="error-banner">{{ error }}</div>
+      <div *ngIf="error" class="error-banner">{{ error | t }}</div>
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : 'Add diagnosis' }}
+          {{ (saving ? 'Saving...' : 'Add diagnosis') | t }}
         </button>
       </div>
     </form>

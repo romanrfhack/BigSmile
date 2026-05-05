@@ -1,15 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientSummary } from '../models/patient.models';
 
 @Component({
   selector: 'app-patient-search-results',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LocalizedDatePipe, TranslatePipe],
   template: `
-    <div *ngIf="error" class="state-card state-error">{{ error }}</div>
-    <div *ngIf="loading" class="state-card">Loading patients...</div>
+    <div *ngIf="error" class="state-card state-error">{{ error | t }}</div>
+    <div *ngIf="loading" class="state-card">{{ 'Loading patients...' | t }}</div>
 
     <div *ngIf="!loading && !error && !patients.length" class="state-card">
       {{ emptyMessage }}
@@ -20,30 +21,30 @@ import { PatientSummary } from '../models/patient.models';
         <div class="card-head">
           <div>
             <h3>{{ patient.fullName }}</h3>
-            <p>{{ patient.dateOfBirth | date: 'longDate' }}</p>
+            <p>{{ patient.dateOfBirth | bsDate: 'longDate' }}</p>
           </div>
           <div class="pill-stack">
             <span class="status-pill" [class.status-inactive]="!patient.isActive">
-              {{ patient.isActive ? 'Active' : 'Inactive' }}
+              {{ (patient.isActive ? 'Active' : 'Inactive') | t }}
             </span>
-            <span *ngIf="patient.hasClinicalAlerts" class="alert-pill">Alerts</span>
+            <span *ngIf="patient.hasClinicalAlerts" class="alert-pill">{{ 'Alerts' | t }}</span>
           </div>
         </div>
 
         <dl class="meta-grid">
           <div>
-            <dt>Phone</dt>
-            <dd>{{ patient.primaryPhone || 'Not provided' }}</dd>
+            <dt>{{ 'Phone' | t }}</dt>
+            <dd>{{ patient.primaryPhone || ('Not provided' | t) }}</dd>
           </div>
           <div>
-            <dt>Email</dt>
-            <dd>{{ patient.email || 'Not provided' }}</dd>
+            <dt>{{ 'Email' | t }}</dt>
+            <dd>{{ patient.email || ('Not provided' | t) }}</dd>
           </div>
         </dl>
 
         <div class="card-actions">
-          <a [routerLink]="['/patients', patient.id]" class="action-link">View profile</a>
-          <a [routerLink]="['/patients', patient.id, 'edit']" class="action-link action-secondary">Edit</a>
+          <a [routerLink]="['/patients', patient.id]" class="action-link">{{ 'View profile' | t }}</a>
+          <a [routerLink]="['/patients', patient.id, 'edit']" class="action-link action-secondary">{{ 'Edit' | t }}</a>
         </div>
       </article>
     </div>

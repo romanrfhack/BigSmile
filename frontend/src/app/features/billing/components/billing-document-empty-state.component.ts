@@ -1,17 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-billing-document-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="empty-state">
-      <p class="eyebrow">Release 6.1 / Billing Foundation</p>
-      <h3>No billing document yet</h3>
+      <p class="eyebrow">{{ 'Release' | t }} 6.1 / {{ 'Billing Foundation' | t }}</p>
+      <h3>{{ 'No billing document yet' | t }}</h3>
       <p>
-        This patient already has an accepted quote, but the billing document is never auto-created in this slice.
-        Create it explicitly to snapshot the accepted quote lines and total into a draft billing document.
+        {{ 'This patient already has an accepted quote, but the billing document is never auto-created in this slice. Create it explicitly to snapshot the accepted quote lines and total into a draft billing document.' | t }}
       </p>
 
       <button
@@ -20,11 +20,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         class="btn btn-primary"
         [disabled]="creating"
         (click)="createRequested.emit()">
-        {{ creating ? 'Creating...' : 'Create billing document from accepted quote' }}
+        {{ (creating ? 'Creating...' : 'Create billing document from accepted quote') | t }}
       </button>
 
       <p *ngIf="!canWrite" class="muted">
-        Your current session can read this patient context, but only roles with billing write permission can initialize the billing document.
+        {{ 'Your current session can read this patient context, but only roles with billing write permission can initialize the billing document.' | t }}
       </p>
     </section>
   `,

@@ -3,6 +3,8 @@ import { ClinicalTimelineListComponent } from './clinical-timeline-list.componen
 
 describe('ClinicalTimelineListComponent', () => {
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [ClinicalTimelineListComponent]
     }).compileComponents();

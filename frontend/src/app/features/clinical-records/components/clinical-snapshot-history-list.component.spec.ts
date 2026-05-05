@@ -3,6 +3,8 @@ import { ClinicalSnapshotHistoryListComponent } from './clinical-snapshot-histor
 
 describe('ClinicalSnapshotHistoryListComponent', () => {
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [ClinicalSnapshotHistoryListComponent]
     }).compileComponents();

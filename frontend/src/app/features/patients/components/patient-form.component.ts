@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import { PatientDetail, SavePatientRequest } from '../models/patient.models';
 
 function getTodayIsoDate(): string {
@@ -39,115 +40,115 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
 @Component({
   selector: 'app-patient-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="patient-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="section-head">
         <div>
-          <h2>{{ mode === 'edit' ? 'Update patient' : 'Register patient' }}</h2>
-          <p>Keep the workflow short: core identity first, then optional responsible-party data.</p>
+          <h2>{{ (mode === 'edit' ? 'Update patient' : 'Register patient') | t }}</h2>
+          <p>{{ 'Keep the workflow short: core identity first, then optional responsible-party data.' | t }}</p>
         </div>
         <span class="status-indicator">
-          {{ form.controls.isActive.value ? 'Active record' : 'Inactive record' }}
+          {{ (form.controls.isActive.value ? 'Active record' : 'Inactive record') | t }}
         </span>
       </div>
 
       <section class="form-section">
-        <h3>Patient identity</h3>
+        <h3>{{ 'Patient identity' | t }}</h3>
         <div class="field-grid">
           <label>
-            <span>First name</span>
+            <span>{{ 'First name' | t }}</span>
             <input type="text" formControlName="firstName" />
-            <small *ngIf="showError('firstName', 'required')">First name is required.</small>
+            <small *ngIf="showError('firstName', 'required')">{{ 'First name is required.' | t }}</small>
           </label>
 
           <label>
-            <span>Last name</span>
+            <span>{{ 'Last name' | t }}</span>
             <input type="text" formControlName="lastName" />
-            <small *ngIf="showError('lastName', 'required')">Last name is required.</small>
+            <small *ngIf="showError('lastName', 'required')">{{ 'Last name is required.' | t }}</small>
           </label>
 
           <label>
-            <span>Date of birth</span>
+            <span>{{ 'Date of birth' | t }}</span>
             <input type="date" formControlName="dateOfBirth" />
-            <small *ngIf="showError('dateOfBirth', 'required')">Date of birth is required.</small>
-            <small *ngIf="showError('dateOfBirth', 'futureDateOfBirth')">Date of birth cannot be in the future.</small>
+            <small *ngIf="showError('dateOfBirth', 'required')">{{ 'Date of birth is required.' | t }}</small>
+            <small *ngIf="showError('dateOfBirth', 'futureDateOfBirth')">{{ 'Date of birth cannot be in the future.' | t }}</small>
           </label>
 
           <label class="checkbox-field">
             <input type="checkbox" formControlName="isActive" />
-            <span>Patient is active</span>
+            <span>{{ 'Patient is active' | t }}</span>
           </label>
         </div>
       </section>
 
       <section class="form-section">
-        <h3>Contact</h3>
+        <h3>{{ 'Contact' | t }}</h3>
         <div class="field-grid">
           <label>
-            <span>Primary phone</span>
+            <span>{{ 'Primary phone' | t }}</span>
             <input type="text" formControlName="primaryPhone" />
           </label>
 
           <label>
-            <span>Email</span>
+            <span>{{ 'Email' | t }}</span>
             <input type="email" formControlName="email" />
-            <small *ngIf="showError('email', 'email')">Enter a valid email address.</small>
+            <small *ngIf="showError('email', 'email')">{{ 'Enter a valid email address.' | t }}</small>
           </label>
         </div>
       </section>
 
       <section class="form-section">
-        <h3>Clinical alerts</h3>
+        <h3>{{ 'Clinical alerts' | t }}</h3>
         <div class="field-grid">
           <label class="checkbox-field">
             <input type="checkbox" formControlName="hasClinicalAlerts" />
-            <span>Patient has basic clinical alerts</span>
+            <span>{{ 'Patient has basic clinical alerts' | t }}</span>
           </label>
 
           <label class="field-wide">
-            <span>Alert summary</span>
+            <span>{{ 'Alert summary' | t }}</span>
             <textarea
               rows="3"
               formControlName="clinicalAlertsSummary"
-              placeholder="Short alert for immediate patient handling"
+              [placeholder]="'Short alert for immediate patient handling' | t"
             ></textarea>
             <small *ngIf="showError('clinicalAlertsSummary', 'maxlength')">
-              Alert summary must be 500 characters or fewer.
+              {{ 'Alert summary must be 500 characters or fewer.' | t }}
             </small>
           </label>
         </div>
       </section>
 
       <section class="form-section">
-        <h3>Responsible party</h3>
+        <h3>{{ 'Responsible party' | t }}</h3>
         <div class="field-grid">
           <label>
-            <span>Name</span>
+            <span>{{ 'Name' | t }}</span>
             <input type="text" formControlName="responsiblePartyName" />
           </label>
 
           <label>
-            <span>Relationship</span>
+            <span>{{ 'Relationship' | t }}</span>
             <input type="text" formControlName="responsiblePartyRelationship" />
           </label>
 
           <label>
-            <span>Phone</span>
+            <span>{{ 'Phone' | t }}</span>
             <input type="text" formControlName="responsiblePartyPhone" />
           </label>
         </div>
         <small *ngIf="form.errors?.['responsiblePartyNameRequired']">
-          Responsible party name is required when relationship or phone is provided.
+          {{ 'Responsible party name is required when relationship or phone is provided.' | t }}
         </small>
       </section>
 
-      <div *ngIf="error" class="error-banner">{{ error }}</div>
+      <div *ngIf="error" class="error-banner">{{ error | t }}</div>
 
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancelled.emit()" [disabled]="saving">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="cancelled.emit()" [disabled]="saving">{{ 'Cancel' | t }}</button>
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create patient' }}
+          {{ (saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create patient') | t }}
         </button>
       </div>
     </form>

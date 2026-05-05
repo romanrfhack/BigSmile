@@ -1,24 +1,25 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-billing-document-quote-not-accepted-state',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   template: `
     <section class="empty-state">
-      <p class="eyebrow">Release 6.1 / Billing Foundation</p>
-      <h3>Quote must be accepted before billing</h3>
+      <p class="eyebrow">{{ 'Release' | t }} 6.1 / {{ 'Billing Foundation' | t }}</p>
+      <h3>{{ 'Quote must be accepted before billing' | t }}</h3>
       <p>
-        The current quote status is <strong>{{ quoteStatus }}</strong>. Billing can only be created from an explicitly accepted quote in this slice.
+        {{ 'The current quote status is' | t }} <strong>{{ quoteStatus | t }}</strong>. {{ 'Billing can only be created from an explicitly accepted quote in this slice.' | t }}
       </p>
 
       <a
         *ngIf="patientId"
         [routerLink]="['/patients', patientId, 'treatment-plan', 'quote']"
         class="action-link">
-        Review quote
+        {{ 'Review quote' | t }}
       </a>
     </section>
   `,

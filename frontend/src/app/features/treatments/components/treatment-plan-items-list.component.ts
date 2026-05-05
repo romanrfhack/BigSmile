@@ -1,22 +1,23 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { TreatmentPlanItem } from '../models/treatment-plan.models';
 
 @Component({
   selector: 'app-treatment-plan-items-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="items-shell">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Current items</p>
-          <h3>Treatment plan items</h3>
+          <p class="eyebrow">{{ 'Current items' | t }}</p>
+          <h3>{{ 'Treatment plan items' | t }}</h3>
         </div>
       </div>
 
       <div *ngIf="!items.length" class="empty-list">
-        No items have been added yet.
+        {{ 'No items have been added yet.' | t }}
       </div>
 
       <ul *ngIf="items.length" class="items-list">
@@ -25,7 +26,7 @@ import { TreatmentPlanItem } from '../models/treatment-plan.models';
             <div>
               <h4>{{ item.title }}</h4>
               <p class="meta">
-                {{ item.category || 'Uncategorized' }} · Qty {{ item.quantity }}
+                {{ item.category || ('Uncategorized' | t) }} / {{ 'Qty' | t }} {{ item.quantity }}
               </p>
             </div>
 
@@ -35,7 +36,7 @@ import { TreatmentPlanItem } from '../models/treatment-plan.models';
               class="remove-btn"
               [disabled]="removingItemId === item.itemId"
               (click)="removeRequested.emit(item.itemId)">
-              {{ removingItemId === item.itemId ? 'Removing...' : 'Remove' }}
+              {{ (removingItemId === item.itemId ? 'Removing...' : 'Remove') | t }}
             </button>
           </div>
 
@@ -43,20 +44,20 @@ import { TreatmentPlanItem } from '../models/treatment-plan.models';
 
           <dl class="location-grid">
             <div>
-              <dt>Dental reference</dt>
+              <dt>{{ 'Dental reference' | t }}</dt>
               <dd>
                 <ng-container *ngIf="item.toothCode; else noDentalReference">
-                  Tooth {{ item.toothCode }}<span *ngIf="item.surfaceCode"> / Surface {{ item.surfaceCode }}</span>
+                  {{ 'Tooth' | t }} {{ item.toothCode }}<span *ngIf="item.surfaceCode"> / {{ 'Surface' | t }} {{ item.surfaceCode }}</span>
                 </ng-container>
-                <ng-template #noDentalReference>General item</ng-template>
+                <ng-template #noDentalReference>{{ 'General item' | t }}</ng-template>
               </dd>
             </div>
             <div>
-              <dt>Created</dt>
-              <dd>{{ item.createdAtUtc | date: 'medium' }}</dd>
+              <dt>{{ 'Created' | t }}</dt>
+              <dd>{{ item.createdAtUtc | bsDate: 'medium' }}</dd>
             </div>
             <div>
-              <dt>Created by</dt>
+              <dt>{{ 'Created by' | t }}</dt>
               <dd>{{ item.createdByUserId }}</dd>
             </div>
           </dl>

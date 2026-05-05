@@ -1,24 +1,25 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-treatment-quote-no-plan-state',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   template: `
     <section class="empty-state">
-      <p class="eyebrow">Release 5.2 / Quote Basics</p>
-      <h3>Treatment plan required first</h3>
+      <p class="eyebrow">{{ 'Release' | t }} 5.2 / {{ 'Quote Basics' | t }}</p>
+      <h3>{{ 'Treatment plan required first' | t }}</h3>
       <p>
-        This slice never auto-creates the quote or the treatment plan. Create the patient treatment plan first, then return here to snapshot it into a quote.
+        {{ 'This slice never auto-creates the quote or the treatment plan. Create the patient treatment plan first, then return here to snapshot it into a quote.' | t }}
       </p>
 
       <a
         *ngIf="patientId"
         [routerLink]="['/patients', patientId, 'treatment-plan']"
         class="action-link">
-        Open treatment plan
+        {{ 'Open treatment plan' | t }}
       </a>
     </section>
   `,

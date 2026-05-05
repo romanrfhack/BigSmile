@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
   AppointmentReminderChannel,
   AppointmentReminderFollowUpFormValue,
@@ -14,27 +16,27 @@ import {
 @Component({
   selector: 'app-appointment-reminder-worklist',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="worklist-panel">
       <header class="worklist-head">
         <div>
-          <p class="section-label">Pending reminders</p>
-          <h3>Manual reminder work</h3>
-          <p class="manual-note">Manual preparation only. No providers, jobs, queues, external delivery templates, scheduler, or retry automation.</p>
+          <p class="section-label">{{ 'Pending reminders' | t }}</p>
+          <h3>{{ 'Manual reminder work' | t }}</h3>
+          <p class="manual-note">{{ 'Manual preparation only. No providers, jobs, queues, external delivery templates, scheduler, or retry automation.' | t }}</p>
         </div>
       </header>
 
       <div *ngIf="loading" class="state-card">
-        Loading manual reminders.
+        {{ 'Loading manual reminders.' | t }}
       </div>
 
       <div *ngIf="!loading && error" class="state-card state-error">
-        {{ error }}
+        {{ error | t }}
       </div>
 
       <div *ngIf="!loading && !error && !items.length" class="state-card">
-        No pending or due manual reminders for this branch.
+        {{ 'No pending or due manual reminders for this branch.' | t }}
       </div>
 
       <ol *ngIf="!loading && !error && items.length" class="worklist">
@@ -46,11 +48,11 @@ import {
             </span>
           </div>
           <p>
-            {{ item.reminderDueAtUtc | date: 'short' }}
-            <span *ngIf="item.reminderChannel"> · {{ item.reminderChannel }}</span>
+            {{ item.reminderDueAtUtc | bsDate: 'short' }}
+            <span *ngIf="item.reminderChannel"> / {{ getChannelLabel(item.reminderChannel) }}</span>
           </p>
           <small>
-            Appointment {{ item.startsAt | date: 'short' }} · {{ item.appointmentStatus }} · {{ item.confirmationStatus }}
+            {{ 'Appointment' | t }} {{ item.startsAt | bsDate: 'short' }} / {{ item.appointmentStatus | t }} / {{ item.confirmationStatus | t }}
           </small>
           <button
             *ngIf="canWrite"
@@ -58,29 +60,29 @@ import {
             class="btn btn-secondary"
             [disabled]="savingAppointmentId === item.appointmentId"
             (click)="startFollowUp(item)">
-            Record follow-up
+            {{ 'Record follow-up' | t }}
           </button>
 
           <form
             *ngIf="activeAppointmentId === item.appointmentId"
             class="follow-up-form"
             (ngSubmit)="submitFollowUp(item)">
-            <p class="manual-record-note">Manual record only. BigSmile does not send messages.</p>
+            <p class="manual-record-note">{{ 'Manual record only. BigSmile does not send messages.' | t }}</p>
 
             <label class="control">
-              <span>Channel</span>
+              <span>{{ 'Channel' | t }}</span>
               <select
                 name="channel-{{ item.appointmentId }}"
                 [(ngModel)]="channel"
                 [disabled]="savingAppointmentId === item.appointmentId">
                 <option *ngFor="let option of channelOptions" [ngValue]="option">
-                  {{ option }}
+                  {{ getChannelLabel(option) }}
                 </option>
               </select>
             </label>
 
             <label class="control">
-              <span>Outcome</span>
+              <span>{{ 'Outcome' | t }}</span>
               <select
                 name="outcome-{{ item.appointmentId }}"
                 [(ngModel)]="outcome"
@@ -92,7 +94,7 @@ import {
             </label>
 
             <label class="control control-wide">
-              <span>Notes</span>
+              <span>{{ 'Notes' | t }}</span>
               <textarea
                 name="notes-{{ item.appointmentId }}"
                 rows="3"
@@ -102,19 +104,19 @@ import {
             </label>
 
             <div class="template-helper">
-              <p>Template preview is a manual draft helper only.</p>
+              <p>{{ 'Template preview is a manual draft helper only.' | t }}</p>
               <div *ngIf="!reminderTemplates.length" class="template-empty">
-                No active templates are available.
+                {{ 'No active templates are available.' | t }}
               </div>
               <div *ngIf="reminderTemplates.length" class="template-controls">
                 <label class="control">
-                  <span>Template</span>
+                  <span>{{ 'Template' | t }}</span>
                   <select
                     name="template-{{ item.appointmentId }}"
                     [(ngModel)]="selectedTemplateId"
                     (ngModelChange)="onTemplateSelectionChanged()"
                     [disabled]="savingAppointmentId === item.appointmentId">
-                    <option [ngValue]="null">Select a template</option>
+                    <option [ngValue]="null">{{ 'Select a template' | t }}</option>
                     <option *ngFor="let template of reminderTemplates" [ngValue]="template.id">
                       {{ template.name }}
                     </option>
@@ -125,20 +127,20 @@ import {
                   class="btn btn-secondary"
                   [disabled]="!selectedTemplateId || previewingTemplateId === selectedTemplateId"
                   (click)="requestTemplatePreview(item)">
-                  Preview template
+                  {{ 'Preview template' | t }}
                 </button>
               </div>
 
               <div
                 *ngIf="templatePreview?.appointmentId === item.appointmentId && templatePreview?.templateId === selectedTemplateId"
                 class="template-preview">
-                <strong>Rendered preview</strong>
+                <strong>{{ 'Rendered preview' | t }}</strong>
                 <p>{{ templatePreview?.renderedBody }}</p>
                 <small *ngIf="templatePreview?.unknownPlaceholders?.length">
-                  Unknown placeholders: {{ templatePreview?.unknownPlaceholders?.join(', ') }}
+                  {{ 'Unknown placeholders:' | t }} {{ templatePreview?.unknownPlaceholders?.join(', ') }}
                 </small>
                 <button type="button" class="btn btn-secondary" (click)="usePreviewAsNote()">
-                  Use as note
+                  {{ 'Use as note' | t }}
                 </button>
               </div>
 
@@ -151,7 +153,7 @@ import {
                 name="complete-{{ item.appointmentId }}"
                 [(ngModel)]="completeReminder"
                 [disabled]="savingAppointmentId === item.appointmentId" />
-              <span>Mark reminder completed</span>
+              <span>{{ 'Mark reminder completed' | t }}</span>
             </label>
 
             <label class="checkbox-control">
@@ -160,22 +162,22 @@ import {
                 name="confirm-{{ item.appointmentId }}"
                 [(ngModel)]="confirmAppointment"
                 [disabled]="savingAppointmentId === item.appointmentId" />
-              <span>Confirm appointment</span>
+              <span>{{ 'Confirm appointment' | t }}</span>
             </label>
 
-            <div *ngIf="formError" class="form-error">{{ formError }}</div>
-            <div *ngIf="followUpError && activeAppointmentId === item.appointmentId" class="form-error">{{ followUpError }}</div>
+            <div *ngIf="formError" class="form-error">{{ formError | t }}</div>
+            <div *ngIf="followUpError && activeAppointmentId === item.appointmentId" class="form-error">{{ followUpError | t }}</div>
 
             <div class="follow-up-actions">
               <button type="submit" class="btn btn-primary" [disabled]="savingAppointmentId === item.appointmentId">
-                Save follow-up
+                {{ 'Save follow-up' | t }}
               </button>
               <button
                 type="button"
                 class="btn btn-secondary"
                 [disabled]="savingAppointmentId === item.appointmentId"
                 (click)="cancelFollowUp()">
-                Cancel
+                {{ 'Cancel' | t }}
               </button>
             </div>
           </form>
@@ -461,6 +463,8 @@ import {
   `]
 })
 export class AppointmentReminderWorklistComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input() items: AppointmentReminderWorkItem[] = [];
   @Input() loading = false;
   @Input() error: string | null = null;
@@ -491,7 +495,7 @@ export class AppointmentReminderWorklistComponent {
   formError: string | null = null;
 
   getStateLabel(state: AppointmentReminderState): string {
-    return state === 'Due' ? 'Due' : 'Pending';
+    return this.i18n.translate(state === 'Due' ? 'Due' : 'Pending');
   }
 
   startFollowUp(item: AppointmentReminderWorkItem): void {
@@ -538,12 +542,16 @@ export class AppointmentReminderWorklistComponent {
   getOutcomeLabel(outcome: AppointmentReminderOutcome): string {
     switch (outcome) {
       case 'NoAnswer':
-        return 'No answer';
+        return this.i18n.translate('No answer');
       case 'LeftMessage':
-        return 'Left message';
+        return this.i18n.translate('Left message');
       default:
-        return 'Reached';
+        return this.i18n.translate('Reached');
     }
+  }
+
+  getChannelLabel(channel: AppointmentReminderChannel): string {
+    return this.i18n.translate(channel);
   }
 
   requestTemplatePreview(item: AppointmentReminderWorkItem): void {

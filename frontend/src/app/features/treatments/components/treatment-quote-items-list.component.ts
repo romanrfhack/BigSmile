@@ -1,19 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { QuoteItemPriceEditorComponent } from './quote-item-price-editor.component';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { TreatmentQuoteItem } from '../models/treatment-quote.models';
 
 @Component({
   selector: 'app-treatment-quote-items-list',
   standalone: true,
-  imports: [CommonModule, QuoteItemPriceEditorComponent],
+  imports: [CommonModule, QuoteItemPriceEditorComponent, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="items-shell">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Quote items</p>
-          <h3>Commercial snapshot</h3>
-          <p class="copy">Each line is copied explicitly from the current treatment plan and priced independently in this quote.</p>
+          <p class="eyebrow">{{ 'Quote items' | t }}</p>
+          <h3>{{ 'Commercial snapshot' | t }}</h3>
+          <p class="copy">{{ 'Each line is copied explicitly from the current treatment plan and priced independently in this quote.' | t }}</p>
         </div>
       </div>
 
@@ -23,13 +24,13 @@ import { TreatmentQuoteItem } from '../models/treatment-quote.models';
             <div>
               <h4>{{ item.title }}</h4>
               <p class="meta">
-                {{ item.category || 'Uncategorized' }} · Qty {{ item.quantity }}
+                {{ item.category || ('Uncategorized' | t) }} / {{ 'Qty' | t }} {{ item.quantity }}
               </p>
             </div>
 
             <div class="totals">
               <span class="amount">{{ item.lineTotal | number: '1.2-2' }} {{ currencyCode }}</span>
-              <small>Line total</small>
+              <small>{{ 'Line total' | t }}</small>
             </div>
           </div>
 
@@ -37,24 +38,24 @@ import { TreatmentQuoteItem } from '../models/treatment-quote.models';
 
           <dl class="location-grid">
             <div>
-              <dt>Dental reference</dt>
+              <dt>{{ 'Dental reference' | t }}</dt>
               <dd>
                 <ng-container *ngIf="item.toothCode; else noDentalReference">
-                  Tooth {{ item.toothCode }}<span *ngIf="item.surfaceCode"> / Surface {{ item.surfaceCode }}</span>
+                  {{ 'Tooth' | t }} {{ item.toothCode }}<span *ngIf="item.surfaceCode"> / {{ 'Surface' | t }} {{ item.surfaceCode }}</span>
                 </ng-container>
-                <ng-template #noDentalReference>General item</ng-template>
+                <ng-template #noDentalReference>{{ 'General item' | t }}</ng-template>
               </dd>
             </div>
             <div>
-              <dt>Source plan item</dt>
+              <dt>{{ 'Source plan item' | t }}</dt>
               <dd>{{ item.sourceTreatmentPlanItemId }}</dd>
             </div>
             <div>
-              <dt>Created</dt>
-              <dd>{{ item.createdAtUtc | date: 'medium' }}</dd>
+              <dt>{{ 'Created' | t }}</dt>
+              <dd>{{ item.createdAtUtc | bsDate: 'medium' }}</dd>
             </div>
             <div>
-              <dt>Created by</dt>
+              <dt>{{ 'Created by' | t }}</dt>
               <dd>{{ item.createdByUserId }}</dd>
             </div>
           </dl>

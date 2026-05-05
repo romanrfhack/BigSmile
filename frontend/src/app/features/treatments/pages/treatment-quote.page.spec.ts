@@ -16,6 +16,7 @@ describe('TreatmentQuotePageComponent', () => {
   let statusCalls: string[];
 
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
     createCalls = [];
     priceCalls = [];
     statusCalls = [];

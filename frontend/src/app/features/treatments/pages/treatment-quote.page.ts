@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { TreatmentPlansFacade } from '../facades/treatment-plans.facade';
 import { TreatmentQuoteEmptyStateComponent } from '../components/treatment-quote-empty-state.component';
@@ -23,49 +25,51 @@ import {
     TreatmentQuoteEmptyStateComponent,
     TreatmentQuoteItemsListComponent,
     TreatmentQuoteNoPlanStateComponent,
-    TreatmentQuoteStatusEditorComponent
+    TreatmentQuoteStatusEditorComponent,
+    LocalizedDatePipe,
+    TranslatePipe
   ],
   template: `
     <section class="treatment-quote-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 5.2 / Quote Basics</p>
-          <h2>Treatment quote</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 5.2 / {{ 'Quote Basics' | t }}</p>
+          <h2>{{ 'Treatment quote' | t }}</h2>
           <p class="subtitle">
-            Minimal patient-scoped commercial quote for {{ patientDisplayName }} with explicit snapshot creation from the existing treatment plan, line-level pricing, subtotal/total calculation, and a bounded Draft / Proposed / Accepted lifecycle.
+            {{ 'Minimal patient-scoped commercial quote for {patientDisplayName} with explicit snapshot creation from the existing treatment plan, line-level pricing, subtotal/total calculation, and a bounded Draft / Proposed / Accepted lifecycle.' | t:{ patientDisplayName } }}
           </p>
         </div>
 
         <div class="head-actions">
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId, 'treatment-plan']" class="action-link action-secondary">Treatment plan</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">{{ 'Back to patient' | t }}</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId, 'treatment-plan']" class="action-link action-secondary">{{ 'Treatment plan' | t }}</a>
           <a
             *ngIf="patientId && canReadBillingDocuments"
             [routerLink]="['/patients', patientId, 'treatment-plan', 'quote', 'billing']"
             class="action-link action-secondary">
-            Billing
+            {{ 'Billing' | t }}
           </a>
         </div>
       </header>
 
       <div *ngIf="patientsFacade.loadingPatient() || treatmentPlansFacade.loadingTreatmentPlan() || treatmentQuotesFacade.loadingTreatmentQuote()" class="state-card">
-        Loading treatment quote...
+        {{ 'Loading treatment quote...' | t }}
       </div>
 
       <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
-        {{ patientsFacade.detailError() }}
+        {{ patientsFacade.detailError() | t }}
       </div>
 
       <div *ngIf="treatmentPlansFacade.treatmentPlanError()" class="state-card state-error">
-        {{ treatmentPlansFacade.treatmentPlanError() }}
+        {{ treatmentPlansFacade.treatmentPlanError() | t }}
       </div>
 
       <div *ngIf="treatmentQuotesFacade.treatmentQuoteError()" class="state-card state-error">
-        {{ treatmentQuotesFacade.treatmentQuoteError() }}
+        {{ treatmentQuotesFacade.treatmentQuoteError() | t }}
       </div>
 
       <div *ngIf="actionError" class="state-card state-error">
-        {{ actionError }}
+        {{ actionError | t }}
       </div>
 
       <app-treatment-quote-no-plan-state
@@ -88,35 +92,35 @@ import {
       <article *ngIf="treatmentQuotesFacade.currentTreatmentQuote() as treatmentQuote" class="quote-shell">
         <section class="quote-meta">
           <div>
-            <dt>Status</dt>
-            <dd>{{ treatmentQuote.status }}</dd>
+            <dt>{{ 'Status' | t }}</dt>
+            <dd>{{ treatmentQuote.status | t }}</dd>
           </div>
           <div>
-            <dt>Items</dt>
+            <dt>{{ 'Items' | t }}</dt>
             <dd>{{ treatmentQuote.items.length }}</dd>
           </div>
           <div>
-            <dt>Currency</dt>
+            <dt>{{ 'Currency' | t }}</dt>
             <dd>{{ treatmentQuote.currencyCode }}</dd>
           </div>
           <div>
-            <dt>Total</dt>
+            <dt>{{ 'Total' | t }}</dt>
             <dd>{{ treatmentQuote.total | number: '1.2-2' }} {{ treatmentQuote.currencyCode }}</dd>
           </div>
           <div>
-            <dt>Created</dt>
-            <dd>{{ treatmentQuote.createdAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Created' | t }}</dt>
+            <dd>{{ treatmentQuote.createdAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Created by</dt>
+            <dt>{{ 'Created by' | t }}</dt>
             <dd>{{ treatmentQuote.createdByUserId }}</dd>
           </div>
           <div>
-            <dt>Last updated</dt>
-            <dd>{{ treatmentQuote.lastUpdatedAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Last updated' | t }}</dt>
+            <dd>{{ treatmentQuote.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Updated by</dt>
+            <dt>{{ 'Updated by' | t }}</dt>
             <dd>{{ treatmentQuote.lastUpdatedByUserId }}</dd>
           </div>
         </section>
@@ -245,6 +249,7 @@ export class TreatmentQuotePageComponent implements OnInit {
   readonly patientsFacade = inject(PatientsFacade);
   readonly canWrite = this.authService.hasPermissions(['treatmentquote.write']);
   readonly canReadBillingDocuments = this.authService.hasPermissions(['billing.read']);
+  private readonly i18n = inject(I18nService);
 
   private readonly route = inject(ActivatedRoute);
 
@@ -255,7 +260,7 @@ export class TreatmentQuotePageComponent implements OnInit {
   actionError: string | null = null;
 
   get patientDisplayName(): string {
-    return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
+    return this.patientsFacade.currentPatient()?.fullName ?? this.i18n.translate('this patient');
   }
 
   get canEditQuote(): boolean {

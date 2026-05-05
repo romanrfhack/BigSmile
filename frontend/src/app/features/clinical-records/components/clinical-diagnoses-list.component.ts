@@ -1,27 +1,29 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { ClinicalDiagnosis } from '../models/clinical-record.models';
 
 @Component({
   selector: 'app-clinical-diagnoses-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="diagnoses-list">
       <div *ngIf="!sortedDiagnoses.length" class="empty-copy">
-        No diagnoses have been added yet.
+        {{ 'No diagnoses have been added yet.' | t }}
       </div>
 
       <article *ngFor="let diagnosis of sortedDiagnoses" class="diagnosis-card">
         <header class="diagnosis-head">
           <div>
             <strong>{{ diagnosis.diagnosisText }}</strong>
-            <p>Registered {{ diagnosis.createdAtUtc | date: 'medium' }} by {{ diagnosis.createdByUserId }}</p>
+            <p>{{ 'Registered' | t }} {{ diagnosis.createdAtUtc | bsDate: 'medium' }} {{ 'by' | t }} {{ diagnosis.createdByUserId }}</p>
           </div>
 
           <div class="head-actions">
             <span class="status-badge" [class.status-resolved]="diagnosis.status === 'Resolved'">
-              {{ diagnosis.status }}
+              {{ getStatusLabel(diagnosis.status) }}
             </span>
 
             <button
@@ -30,7 +32,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
               class="resolve-btn"
               [disabled]="resolvingDiagnosisId === diagnosis.diagnosisId"
               (click)="resolveRequested.emit(diagnosis.diagnosisId)">
-              {{ resolvingDiagnosisId === diagnosis.diagnosisId ? 'Resolving...' : 'Mark resolved' }}
+              {{ (resolvingDiagnosisId === diagnosis.diagnosisId ? 'Resolving...' : 'Mark resolved') | t }}
             </button>
           </div>
         </header>
@@ -38,7 +40,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
         <p *ngIf="diagnosis.notes" class="notes-copy">{{ diagnosis.notes }}</p>
 
         <p *ngIf="diagnosis.status === 'Resolved'" class="resolved-copy">
-          Resolved {{ diagnosis.resolvedAtUtc | date: 'medium' }} by {{ diagnosis.resolvedByUserId }}
+          {{ 'Resolved' | t }} {{ diagnosis.resolvedAtUtc | bsDate: 'medium' }} {{ 'by' | t }} {{ diagnosis.resolvedByUserId }}
         </p>
       </article>
     </section>
@@ -127,6 +129,8 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
   `]
 })
 export class ClinicalDiagnosesListComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input() diagnoses: ClinicalDiagnosis[] = [];
   @Input() canWrite = false;
   @Input() resolvingDiagnosisId: string | null = null;
@@ -141,5 +145,9 @@ export class ClinicalDiagnosesListComponent {
 
       return Date.parse(right.createdAtUtc) - Date.parse(left.createdAtUtc);
     });
+  }
+
+  getStatusLabel(status: ClinicalDiagnosis['status']): string {
+    return this.i18n.translate(status);
   }
 }

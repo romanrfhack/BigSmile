@@ -8,6 +8,8 @@ describe('AppointmentManualReminderComponent', () => {
   let component: AppointmentManualReminderComponent;
 
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [AppointmentManualReminderComponent]
     }).compileComponents();

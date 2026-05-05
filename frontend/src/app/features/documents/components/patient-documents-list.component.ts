@@ -1,19 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientDocument } from '../models/patient-document.models';
 
 @Component({
   selector: 'app-patient-documents-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="documents-card">
       <div class="card-head">
         <div>
-          <h3>Active documents</h3>
-          <p>Operational patient attachments only. Retired documents are hidden from this list and cannot be downloaded through the normal flow.</p>
+          <h3>{{ 'Active documents' | t }}</h3>
+          <p>{{ 'Operational patient attachments only. Retired documents are hidden from this list and cannot be downloaded through the normal flow.' | t }}</p>
         </div>
-        <span class="count-pill">{{ documents.length }} active</span>
+        <span class="count-pill">{{ documents.length }} {{ 'active' | t }}</span>
       </div>
 
       <ul class="documents-list">
@@ -22,19 +23,19 @@ import { PatientDocument } from '../models/patient-document.models';
             <h4>{{ document.originalFileName }}</h4>
             <dl>
               <div>
-                <dt>Type</dt>
+                <dt>{{ 'Type' | t }}</dt>
                 <dd>{{ document.contentType }}</dd>
               </div>
               <div>
-                <dt>Size</dt>
+                <dt>{{ 'Size' | t }}</dt>
                 <dd>{{ formatSize(document.sizeBytes) }}</dd>
               </div>
               <div>
-                <dt>Uploaded</dt>
-                <dd>{{ document.uploadedAtUtc | date: 'medium' }}</dd>
+                <dt>{{ 'Uploaded' | t }}</dt>
+                <dd>{{ document.uploadedAtUtc | bsDate: 'medium' }}</dd>
               </div>
               <div>
-                <dt>Uploaded by</dt>
+                <dt>{{ 'Uploaded by' | t }}</dt>
                 <dd>{{ document.uploadedByUserId }}</dd>
               </div>
             </dl>
@@ -46,7 +47,7 @@ import { PatientDocument } from '../models/patient-document.models';
               class="primary-action"
               (click)="downloadRequested.emit(document)"
               [disabled]="downloadingDocumentId === document.documentId">
-              {{ downloadingDocumentId === document.documentId ? 'Downloading...' : 'Download' }}
+              {{ (downloadingDocumentId === document.documentId ? 'Downloading...' : 'Download') | t }}
             </button>
             <button
               *ngIf="canRetire"
@@ -54,7 +55,7 @@ import { PatientDocument } from '../models/patient-document.models';
               class="danger-action"
               (click)="retireRequested.emit(document.documentId)"
               [disabled]="retiringDocumentId === document.documentId">
-              {{ retiringDocumentId === document.documentId ? 'Retiring...' : 'Retire' }}
+              {{ (retiringDocumentId === document.documentId ? 'Retiring...' : 'Retire') | t }}
             </button>
           </div>
         </li>

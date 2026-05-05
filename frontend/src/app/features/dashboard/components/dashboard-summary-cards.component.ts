@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
+import { TranslatePipe } from '../../../shared/i18n';
 import { DashboardSummary } from '../models/dashboard-summary.models';
 
 type DashboardCard = {
@@ -11,9 +13,9 @@ type DashboardCard = {
 @Component({
   selector: 'app-dashboard-summary-cards',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
-    <section class="summary-grid" aria-label="Dashboard summary">
+    <section class="summary-grid" [attr.aria-label]="'Dashboard summary' | t">
       <article *ngFor="let card of cards" class="summary-card">
         <p>{{ card.label }}</p>
         <strong>{{ card.value }}</strong>
@@ -60,44 +62,46 @@ type DashboardCard = {
   `]
 })
 export class DashboardSummaryCardsComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input({ required: true }) summary!: DashboardSummary;
 
   get cards(): DashboardCard[] {
     return [
       {
-        label: 'Active patients',
+        label: this.i18n.translate('Active patients'),
         value: this.summary.activePatientsCount,
-        hint: 'Patients currently active in this tenant.'
+        hint: this.i18n.translate('Patients currently active in this tenant.')
       },
       {
-        label: 'Today appointments',
+        label: this.i18n.translate('Today appointments'),
         value: this.summary.todayAppointmentsCount,
-        hint: 'Appointments whose start time falls today.'
+        hint: this.i18n.translate('Appointments whose start time falls today.')
       },
       {
-        label: 'Today pending',
+        label: this.i18n.translate('Today pending'),
         value: this.summary.todayPendingAppointmentsCount,
-        hint: 'Today appointments still in Scheduled status.'
+        hint: this.i18n.translate('Today appointments still in Scheduled status.')
       },
       {
-        label: 'Active documents',
+        label: this.i18n.translate('Active documents'),
         value: this.summary.activeDocumentsCount,
-        hint: 'Patient documents not retired.'
+        hint: this.i18n.translate('Patient documents not retired.')
       },
       {
-        label: 'Treatment plans',
+        label: this.i18n.translate('Treatment plans'),
         value: this.summary.activeTreatmentPlansCount,
-        hint: 'Existing patient treatment plans.'
+        hint: this.i18n.translate('Existing patient treatment plans.')
       },
       {
-        label: 'Accepted quotes',
+        label: this.i18n.translate('Accepted quotes'),
         value: this.summary.acceptedQuotesCount,
-        hint: 'Treatment quotes in Accepted status.'
+        hint: this.i18n.translate('Treatment quotes in Accepted status.')
       },
       {
-        label: 'Issued billing',
+        label: this.i18n.translate('Issued billing'),
         value: this.summary.issuedBillingDocumentsCount,
-        hint: 'Billing documents in Issued status.'
+        hint: this.i18n.translate('Billing documents in Issued status.')
       }
     ];
   }

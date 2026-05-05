@@ -225,6 +225,7 @@ Cross-cutting frontend concerns:
 * guards
 * tenant context
 * global error handling
+* runtime localization service and dictionaries
 
 #### shell/
 
@@ -244,6 +245,7 @@ Reusable UI and utilities:
 * shared UI components
 * pipes
 * directives
+* app-wide localization helpers such as translation/date pipes and the language selector
 * utility helpers
 * form utilities
 

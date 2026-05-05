@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
 import { OdontogramToothState } from '../models/odontogram.models';
 
 @Component({
@@ -19,7 +20,7 @@ import { OdontogramToothState } from '../models/odontogram.models';
         [class.status-caries]="tooth.status === 'Caries'"
         (click)="toothSelected.emit(tooth.toothCode)">
         <span class="tooth-code">{{ tooth.toothCode }}</span>
-        <span class="tooth-status">{{ tooth.status }}</span>
+        <span class="tooth-status">{{ getStatusLabel(tooth.status) }}</span>
       </button>
     </section>
   `,
@@ -83,8 +84,14 @@ import { OdontogramToothState } from '../models/odontogram.models';
   `]
 })
 export class OdontogramGridComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input() teeth: OdontogramToothState[] = [];
   @Input() selectedToothCode: string | null = null;
 
   @Output() readonly toothSelected = new EventEmitter<string>();
+
+  getStatusLabel(status: OdontogramToothState['status']): string {
+    return this.i18n.translate(status);
+  }
 }

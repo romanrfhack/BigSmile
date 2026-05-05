@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import {
   ReminderTemplate,
   ReminderTemplateFormValue,
@@ -10,28 +11,28 @@ import {
 @Component({
   selector: 'app-reminder-template-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <section class="template-panel">
       <header class="template-head">
         <div>
-          <p class="section-label">Reminder templates</p>
-          <h3>Reminder templates</h3>
-          <p class="manual-note">Templates are internal drafts only. BigSmile does not send messages.</p>
+          <p class="section-label">{{ 'Reminder templates' | t }}</p>
+          <h3>{{ 'Reminder templates' | t }}</h3>
+          <p class="manual-note">{{ 'Templates are internal drafts only. BigSmile does not send messages.' | t }}</p>
         </div>
       </header>
 
       <div *ngIf="loading" class="state-card">
-        Loading reminder templates.
+        {{ 'Loading reminder templates.' | t }}
       </div>
 
       <div *ngIf="!loading && error" class="state-card state-error">
-        {{ error }}
+        {{ error | t }}
       </div>
 
       <form *ngIf="canWrite" class="template-form" (ngSubmit)="submit()">
         <label class="control">
-          <span>Name</span>
+          <span>{{ 'Name' | t }}</span>
           <input
             name="template-name"
             maxlength="120"
@@ -40,7 +41,7 @@ import {
         </label>
 
         <label class="control control-wide">
-          <span>Body</span>
+          <span>{{ 'Body' | t }}</span>
           <textarea
             name="template-body"
             rows="4"
@@ -49,12 +50,12 @@ import {
             [disabled]="saving"></textarea>
         </label>
 
-        <div *ngIf="formError" class="form-error">{{ formError }}</div>
-        <div *ngIf="submitError" class="form-error">{{ submitError }}</div>
+        <div *ngIf="formError" class="form-error">{{ formError | t }}</div>
+        <div *ngIf="submitError" class="form-error">{{ submitError | t }}</div>
 
         <div class="template-actions">
           <button type="submit" class="btn btn-primary" [disabled]="saving">
-            {{ editingTemplateId ? 'Save template' : 'Create template' }}
+            {{ (editingTemplateId ? 'Save template' : 'Create template') | t }}
           </button>
           <button
             *ngIf="editingTemplateId"
@@ -62,44 +63,44 @@ import {
             class="btn btn-secondary"
             [disabled]="saving"
             (click)="resetForm()">
-            Cancel
+            {{ 'Cancel' | t }}
           </button>
         </div>
       </form>
 
       <div *ngIf="!loading && !error && !templates.length" class="state-card">
-        No active reminder templates have been created.
+        {{ 'No active reminder templates have been created.' | t }}
       </div>
 
       <ol *ngIf="!loading && !error && templates.length" class="template-list">
         <li *ngFor="let template of templates" class="template-item">
           <div>
             <strong>{{ template.name }}</strong>
-            <span *ngIf="!template.isActive">Inactive</span>
+            <span *ngIf="!template.isActive">{{ 'Inactive' | t }}</span>
           </div>
           <p>{{ template.body }}</p>
 
           <div class="template-row-actions" *ngIf="canWrite || previewAppointmentId">
             <button *ngIf="canWrite" type="button" class="btn btn-secondary" (click)="startEdit(template)">
-              Edit
+              {{ 'Edit' | t }}
             </button>
             <button
               type="button"
               class="btn btn-secondary"
               [disabled]="!previewAppointmentId || previewing"
               (click)="requestPreview(template.id)">
-              Preview
+              {{ 'Preview' | t }}
             </button>
             <button *ngIf="canWrite" type="button" class="btn btn-danger" [disabled]="saving" (click)="deactivateRequested.emit(template.id)">
-              Deactivate
+              {{ 'Deactivate' | t }}
             </button>
           </div>
 
           <div *ngIf="preview?.templateId === template.id && preview?.appointmentId === previewAppointmentId" class="preview-card">
-            <strong>Preview</strong>
+            <strong>{{ 'Preview' | t }}</strong>
             <p>{{ preview?.renderedBody }}</p>
             <small *ngIf="preview?.unknownPlaceholders?.length">
-              Unknown placeholders: {{ preview?.unknownPlaceholders?.join(', ') }}
+              {{ 'Unknown placeholders:' | t }} {{ preview?.unknownPlaceholders?.join(', ') }}
             </small>
           </div>
         </li>

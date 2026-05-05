@@ -1,46 +1,47 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { AbstractControl, FormArray, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-clinical-allergies-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <section class="allergies-section">
       <div class="section-head">
         <div>
-          <h3>Current allergies</h3>
-          <p>Keep only current, clinically relevant allergies in this slice.</p>
+          <h3>{{ 'Current allergies' | t }}</h3>
+          <p>{{ 'Keep only current, clinically relevant allergies in this slice.' | t }}</p>
         </div>
-        <button type="button" class="btn btn-secondary" (click)="addRequested.emit()">Add allergy</button>
+        <button type="button" class="btn btn-secondary" (click)="addRequested.emit()">{{ 'Add allergy' | t }}</button>
       </div>
 
       <div *ngIf="!allergies.length" class="empty-copy">
-        No allergies are currently recorded.
+        {{ 'No allergies are currently recorded.' | t }}
       </div>
 
       <div class="allergy-list">
         <div *ngFor="let allergy of allergies.controls; let index = index" class="allergy-card" [formGroup]="asFormGroup(allergy)">
           <label>
-            <span>Substance</span>
+            <span>{{ 'Substance' | t }}</span>
             <input type="text" formControlName="substance" />
             <small *ngIf="allergy.get('substance')?.hasError('required') && allergy.get('substance')?.touched">
-              Substance is required.
+              {{ 'Substance is required.' | t }}
             </small>
           </label>
 
           <label>
-            <span>Reaction summary</span>
+            <span>{{ 'Reaction summary' | t }}</span>
             <input type="text" formControlName="reactionSummary" />
           </label>
 
           <label class="field-wide">
-            <span>Notes</span>
+            <span>{{ 'Notes' | t }}</span>
             <textarea rows="2" formControlName="notes"></textarea>
           </label>
 
-          <button type="button" class="remove-link" (click)="removeRequested.emit(index)">Remove</button>
+          <button type="button" class="remove-link" (click)="removeRequested.emit(index)">{{ 'Remove' | t }}</button>
         </div>
       </div>
     </section>

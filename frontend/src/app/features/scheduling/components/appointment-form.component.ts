@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import {
   AppointmentEditorMode,
   AppointmentFormValue,
@@ -11,35 +12,35 @@ import {
 @Component({
   selector: 'app-appointment-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="appointment-form" [formGroup]="form" (ngSubmit)="submit()">
       <header class="form-head">
         <div>
-          <p class="eyebrow">Release 2 / Scheduling</p>
-          <h3>{{ title }}</h3>
+          <p class="eyebrow">{{ 'Release' | t }} 2 / {{ 'Scheduling' | t }}</p>
+          <h3>{{ title | t }}</h3>
           <p class="subtitle">
-            {{ subtitle }}
+            {{ subtitle | t }}
           </p>
         </div>
-        <button type="button" class="text-button" (click)="cancelled.emit()">Reset</button>
+        <button type="button" class="text-button" (click)="cancelled.emit()">{{ 'Reset' | t }}</button>
       </header>
 
       <div class="branch-banner">
-        <span>Branch</span>
-        <strong>{{ selectedBranchName || 'No branch selected' }}</strong>
+        <span>{{ 'Branch' | t }}</span>
+        <strong>{{ selectedBranchName || ('No branch selected' | t) }}</strong>
       </div>
 
       <label class="field" *ngIf="mode !== 'reschedule'">
-        <span>Find patient</span>
+        <span>{{ 'Find patient' | t }}</span>
         <input
           type="search"
           formControlName="patientSearch"
-          placeholder="Search existing patients"
+          [placeholder]="'Search existing patients' | t"
           (input)="patientSearchChanged.emit(form.controls.patientSearch.value ?? '')" />
       </label>
 
-      <div *ngIf="mode !== 'reschedule' && searchingPatients" class="search-state">Searching patients...</div>
+      <div *ngIf="mode !== 'reschedule' && searchingPatients" class="search-state">{{ 'Searching patients...' | t }}</div>
 
       <div *ngIf="mode !== 'reschedule' && patientOptions.length" class="patient-results">
         <button
@@ -49,58 +50,58 @@ import {
           (click)="selectPatient(patient)">
           <span>{{ patient.fullName }}</span>
           <small>
-            {{ patient.primaryPhone || patient.email || 'No contact data' }}
-            <span *ngIf="patient.hasClinicalAlerts"> • Clinical alerts</span>
+            {{ patient.primaryPhone || patient.email || ('No contact data' | t) }}
+            <span *ngIf="patient.hasClinicalAlerts"> / {{ 'Clinical alerts' | t }}</span>
           </small>
         </button>
       </div>
 
       <div *ngIf="mode !== 'reschedule' && selectedPatientName" class="selected-patient">
-        <span>Selected patient</span>
+        <span>{{ 'Selected patient' | t }}</span>
         <strong>{{ selectedPatientName }}</strong>
       </div>
 
       <div *ngIf="mode === 'reschedule' && initialAppointment" class="selected-patient">
-        <span>Rescheduling</span>
+        <span>{{ 'Rescheduling' | t }}</span>
         <strong>{{ initialAppointment.patientFullName }}</strong>
       </div>
 
       <div class="time-grid">
         <label class="field">
-          <span>Start</span>
+          <span>{{ 'Start' | t }}</span>
           <input type="datetime-local" formControlName="startsAt" />
         </label>
 
         <label class="field">
-          <span>End</span>
+          <span>{{ 'End' | t }}</span>
           <input type="datetime-local" formControlName="endsAt" />
         </label>
       </div>
 
       <label class="field" *ngIf="mode !== 'reschedule'">
-        <span>Notes</span>
-        <textarea formControlName="notes" rows="4" placeholder="Short operational note"></textarea>
+        <span>{{ 'Notes' | t }}</span>
+        <textarea formControlName="notes" rows="4" [placeholder]="'Short operational note' | t"></textarea>
       </label>
 
       <div *ngIf="mode === 'reschedule' && initialAppointment?.notes" class="reschedule-note">
-        <span>Existing note</span>
+        <span>{{ 'Existing note' | t }}</span>
         <p>{{ initialAppointment?.notes }}</p>
       </div>
 
-      <div *ngIf="error" class="form-error">{{ error }}</div>
+      <div *ngIf="error" class="form-error">{{ error | t }}</div>
       <div *ngIf="form.errors?.['timeRangeInvalid']" class="form-error">
-        End time must be after the start time.
+        {{ 'End time must be after the start time.' | t }}
       </div>
       <div *ngIf="form.errors?.['patientRequired']" class="form-error">
-        Select an existing patient before saving the appointment.
+        {{ 'Select an existing patient before saving the appointment.' | t }}
       </div>
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : submitLabel }}
+          {{ (saving ? 'Saving...' : submitLabel) | t }}
         </button>
         <button type="button" class="btn btn-secondary" (click)="cancelled.emit()" [disabled]="saving">
-          Cancel
+          {{ 'Cancel' | t }}
         </button>
       </div>
     </form>

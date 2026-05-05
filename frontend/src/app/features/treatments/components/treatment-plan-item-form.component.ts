@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import {
   AddTreatmentPlanItemRequest,
   TREATMENT_PLAN_SURFACE_CODES,
@@ -10,66 +11,66 @@ import {
 @Component({
   selector: 'app-treatment-plan-item-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="item-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="form-head">
         <div>
-          <p class="eyebrow">Treatment items</p>
-          <h3>Add treatment item</h3>
-          <p class="copy">Minimal treatment intent only. No pricing, quotes, billing, or scheduling linkage in Release 5.1.</p>
+          <p class="eyebrow">{{ 'Treatment items' | t }}</p>
+          <h3>{{ 'Add treatment item' | t }}</h3>
+          <p class="copy">{{ 'Minimal treatment intent only. No pricing, quotes, billing, or scheduling linkage in Release 5.1.' | t }}</p>
         </div>
       </div>
 
       <div class="grid">
         <label class="full-width">
-          <span>Title</span>
+          <span>{{ 'Title' | t }}</span>
           <input type="text" formControlName="title" />
           <small *ngIf="form.controls.title.hasError('required') && form.controls.title.touched">
-            Treatment item title is required.
+            {{ 'Treatment item title is required.' | t }}
           </small>
         </label>
 
         <label>
-          <span>Category</span>
+          <span>{{ 'Category' | t }}</span>
           <input type="text" formControlName="category" />
         </label>
 
         <label>
-          <span>Quantity</span>
+          <span>{{ 'Quantity' | t }}</span>
           <input type="number" min="1" step="1" formControlName="quantity" />
           <small *ngIf="form.controls.quantity.invalid && form.controls.quantity.touched">
-            Quantity must be greater than zero.
+            {{ 'Quantity must be greater than zero.' | t }}
           </small>
         </label>
 
         <label>
-          <span>Tooth code</span>
+          <span>{{ 'Tooth code' | t }}</span>
           <select formControlName="toothCode">
-            <option value="">General / not linked</option>
+            <option value="">{{ 'General / not linked' | t }}</option>
             <option *ngFor="let toothCode of toothCodes" [value]="toothCode">{{ toothCode }}</option>
           </select>
         </label>
 
         <label>
-          <span>Surface code</span>
+          <span>{{ 'Surface code' | t }}</span>
           <select formControlName="surfaceCode">
-            <option value="">No surface</option>
+            <option value="">{{ 'No surface' | t }}</option>
             <option *ngFor="let surfaceCode of surfaceCodes" [value]="surfaceCode">{{ surfaceCode }}</option>
           </select>
         </label>
 
         <label class="full-width">
-          <span>Short note</span>
+          <span>{{ 'Short note' | t }}</span>
           <textarea rows="3" formControlName="notes"></textarea>
         </label>
       </div>
 
-      <div *ngIf="error" class="error-banner">{{ error }}</div>
+      <div *ngIf="error" class="error-banner">{{ error | t }}</div>
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving || disabled">
-          {{ saving ? 'Saving...' : 'Add item' }}
+          {{ (saving ? 'Saving...' : 'Add item') | t }}
         </button>
       </div>
     </form>

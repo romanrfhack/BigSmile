@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
   ClinicalSnapshotHistoryEntry,
   ClinicalSnapshotHistoryEntryType,
@@ -9,11 +11,11 @@ import {
 @Component({
   selector: 'app-clinical-snapshot-history-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="snapshot-history-list">
       <div *ngIf="!sortedSnapshotHistory.length" class="empty-copy">
-        No snapshot history entries are available yet.
+        {{ 'No snapshot history entries are available yet.' | t }}
       </div>
 
       <article *ngFor="let entry of sortedSnapshotHistory" class="history-card" [attr.data-entry-type]="entry.entryType">
@@ -31,12 +33,12 @@ import {
           </div>
 
           <div class="history-meta">
-            <span>{{ entry.changedAtUtc | date: 'medium' }}</span>
-            <span>User {{ entry.changedByUserId }}</span>
+            <span>{{ entry.changedAtUtc | bsDate: 'medium' }}</span>
+            <span>{{ 'User' | t }} {{ entry.changedByUserId }}</span>
           </div>
         </header>
 
-        <p class="section-copy">Section: {{ getSectionLabel(entry.section) }}</p>
+        <p class="section-copy">{{ 'Section:' | t }} {{ getSectionLabel(entry.section) }}</p>
       </article>
     </section>
   `,
@@ -137,6 +139,8 @@ import {
   `]
 })
 export class ClinicalSnapshotHistoryListComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input() snapshotHistory: ClinicalSnapshotHistoryEntry[] = [];
 
   get sortedSnapshotHistory(): ClinicalSnapshotHistoryEntry[] {
@@ -153,26 +157,26 @@ export class ClinicalSnapshotHistoryListComponent {
   getEntryLabel(entryType: ClinicalSnapshotHistoryEntryType): string {
     switch (entryType) {
       case 'SnapshotInitialized':
-        return 'Snapshot initialized';
+        return this.i18n.translate('Snapshot initialized');
       case 'MedicalBackgroundUpdated':
-        return 'Medical background';
+        return this.i18n.translate('Medical background');
       case 'CurrentMedicationsUpdated':
-        return 'Current medications';
+        return this.i18n.translate('Current medications');
       case 'AllergiesUpdated':
-        return 'Current allergies';
+        return this.i18n.translate('Current allergies');
     }
   }
 
   getSectionLabel(section: ClinicalSnapshotHistorySection): string {
     switch (section) {
       case 'Initial':
-        return 'Initial snapshot';
+        return this.i18n.translate('Initial snapshot');
       case 'MedicalBackground':
-        return 'Medical background';
+        return this.i18n.translate('Medical background');
       case 'CurrentMedications':
-        return 'Current medications';
+        return this.i18n.translate('Current medications');
       case 'Allergies':
-        return 'Current allergies';
+        return this.i18n.translate('Current allergies');
     }
   }
 }

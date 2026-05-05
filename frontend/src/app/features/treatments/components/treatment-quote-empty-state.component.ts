@@ -1,17 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-treatment-quote-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="empty-state">
-      <p class="eyebrow">Release 5.2 / Quote Basics</p>
-      <h3>No quote yet</h3>
+      <p class="eyebrow">{{ 'Release' | t }} 5.2 / {{ 'Quote Basics' | t }}</p>
+      <h3>{{ 'No quote yet' | t }}</h3>
       <p>
-        This patient already has a treatment plan, but the commercial quote is not auto-created in this slice.
-        Create it explicitly to snapshot the current treatment plan items into a fixed-currency quote.
+        {{ 'This patient already has a treatment plan, but the commercial quote is not auto-created in this slice. Create it explicitly to snapshot the current treatment plan items into a fixed-currency quote.' | t }}
       </p>
 
       <button
@@ -20,11 +20,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         class="btn btn-primary"
         [disabled]="creating"
         (click)="createRequested.emit()">
-        {{ creating ? 'Creating...' : 'Create quote from treatment plan' }}
+        {{ (creating ? 'Creating...' : 'Create quote from treatment plan') | t }}
       </button>
 
       <p *ngIf="!canWrite" class="muted">
-        Your current session can read this patient context, but only roles with treatment quote write permission can initialize the quote.
+        {{ 'Your current session can read this patient context, but only roles with treatment quote write permission can initialize the quote.' | t }}
       </p>
     </section>
   `,

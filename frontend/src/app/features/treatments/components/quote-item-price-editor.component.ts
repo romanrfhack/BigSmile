@@ -1,20 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-quote-item-price-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="price-editor" [formGroup]="form" (ngSubmit)="submit()">
       <label>
-        <span>Unit price ({{ currencyCode }})</span>
+        <span>{{ 'Unit price ({currencyCode})' | t:{ currencyCode } }}</span>
         <input type="number" min="0" step="0.01" formControlName="unitPrice" [readOnly]="!canEdit" />
       </label>
 
       <button type="submit" class="btn btn-primary" [disabled]="saving || !canEdit || !canSave">
-        {{ saving ? 'Saving...' : 'Update price' }}
+        {{ (saving ? 'Saving...' : 'Update price') | t }}
       </button>
     </form>
   `,

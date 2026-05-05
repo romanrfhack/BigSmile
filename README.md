@@ -89,6 +89,8 @@ Future phases will expand into:
 - Feature-based architecture
 - Lazy loading
 - Facades and data-access layers
+- Runtime UI localization defaults to Spanish for Mexico (`es-MX`) with English (`en-US`) as a selectable fallback.
+- The only browser-persisted frontend preference in this foundation is the non-sensitive UI language key `bigsmile.ui.language`; auth/session, tenant, branch, token, and permission state stay out of `localStorage`.
 
 ### Quality and Operations
 - GitHub Actions
@@ -217,6 +219,7 @@ This structure is intended to support growth while keeping the solution understa
 * Separation between pages, components, facades, and data access
 * Avoid oversized UI modules
 * Clear UX flows for operational tasks
+* Keep user-facing labels behind the frontend localization foundation when touching visible UI
 
 ---
 

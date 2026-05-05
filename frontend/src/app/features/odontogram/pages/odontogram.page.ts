@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, effect, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { OdontogramEmptyStateComponent } from '../components/odontogram-empty-state.component';
 import { OdontogramGridComponent } from '../components/odontogram-grid.component';
@@ -22,38 +24,40 @@ import {
     RouterLink,
     OdontogramEmptyStateComponent,
     OdontogramGridComponent,
-    ToothStateEditorComponent
+    ToothStateEditorComponent,
+    LocalizedDatePipe,
+    TranslatePipe
   ],
   template: `
     <section class="odontogram-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 4.4 / Dental Findings Change History</p>
-          <h2>Odontogram</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 4.4 / {{ 'Dental Findings Change History' | t }}</p>
+          <h2>{{ 'Odontogram' | t }}</h2>
           <p class="subtitle">
-            Patient-scoped odontogram for {{ patientDisplayName }} using FDI adult permanent tooth numbering, the minimal O/M/D/B/L surface set, the basic finding catalog, and bounded surface finding add/remove history.
+            {{ 'Patient-scoped odontogram for {patientDisplayName} using FDI adult permanent tooth numbering, the minimal O/M/D/B/L surface set, the basic finding catalog, and bounded surface finding add/remove history.' | t:{ patientDisplayName } }}
           </p>
         </div>
 
         <div class="head-actions">
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">{{ 'Back to patient' | t }}</a>
         </div>
       </header>
 
       <div *ngIf="patientsFacade.loadingPatient() || odontogramsFacade.loadingOdontogram()" class="state-card">
-        Loading odontogram...
+        {{ 'Loading odontogram...' | t }}
       </div>
 
       <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
-        {{ patientsFacade.detailError() }}
+        {{ patientsFacade.detailError() | t }}
       </div>
 
       <div *ngIf="odontogramsFacade.odontogramError()" class="state-card state-error">
-        {{ odontogramsFacade.odontogramError() }}
+        {{ odontogramsFacade.odontogramError() | t }}
       </div>
 
       <div *ngIf="actionError && odontogramsFacade.odontogramMissing()" class="state-card state-error">
-        {{ actionError }}
+        {{ actionError | t }}
       </div>
 
       <app-odontogram-empty-state
@@ -66,19 +70,19 @@ import {
       <article *ngIf="odontogramsFacade.currentOdontogram() as odontogram" class="odontogram-shell">
         <section class="meta-card">
           <div>
-            <dt>Created</dt>
-            <dd>{{ odontogram.createdAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Created' | t }}</dt>
+            <dd>{{ odontogram.createdAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Created by</dt>
+            <dt>{{ 'Created by' | t }}</dt>
             <dd>{{ odontogram.createdByUserId }}</dd>
           </div>
           <div>
-            <dt>Last updated</dt>
-            <dd>{{ odontogram.lastUpdatedAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Last updated' | t }}</dt>
+            <dd>{{ odontogram.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Updated by</dt>
+            <dt>{{ 'Updated by' | t }}</dt>
             <dd>{{ odontogram.lastUpdatedByUserId }}</dd>
           </div>
         </section>
@@ -86,9 +90,9 @@ import {
         <section class="grid-card">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Tooth and surface states</p>
-              <h3>32 permanent adult teeth</h3>
-              <p class="section-copy">Surface detail uses the minimal O/M/D/B/L set. Basic findings stay separate from tooth and surface status, and findings history stays separate from any future dental timeline. No restore, full odontogram versioning, treatment linkage, documents, or advanced charting in Release 4.4.</p>
+              <p class="eyebrow">{{ 'Tooth and surface states' | t }}</p>
+              <h3>{{ '32 permanent adult teeth' | t }}</h3>
+              <p class="section-copy">{{ 'Surface detail uses the minimal O/M/D/B/L set. Basic findings stay separate from tooth and surface status, and findings history stays separate from any future dental timeline. No restore, full odontogram versioning, treatment linkage, documents, or advanced charting in Release 4.4.' | t }}</p>
             </div>
           </div>
 
@@ -226,6 +230,7 @@ export class OdontogramPageComponent implements OnInit {
   readonly odontogramsFacade = inject(OdontogramsFacade);
   readonly patientsFacade = inject(PatientsFacade);
   readonly canWrite = inject(AuthService).hasPermissions(['odontogram.write']);
+  private readonly i18n = inject(I18nService);
 
   private readonly route = inject(ActivatedRoute);
 
@@ -253,7 +258,7 @@ export class OdontogramPageComponent implements OnInit {
   }
 
   get patientDisplayName(): string {
-    return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
+    return this.patientsFacade.currentPatient()?.fullName ?? this.i18n.translate('this patient');
   }
 
   get selectedTooth(): OdontogramToothState | null {

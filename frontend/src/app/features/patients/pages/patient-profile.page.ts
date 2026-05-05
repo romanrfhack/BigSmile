@@ -2,136 +2,137 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientsFacade } from '../facades/patients.facade';
 
 @Component({
   selector: 'app-patient-profile-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="profile-page">
       <header class="profile-head">
         <div>
-          <p class="eyebrow">Release 1 / Patients</p>
-          <h2>Patient profile</h2>
-          <p class="subtitle">Tenant-scoped patient identity, status, basic clinical alerts, and responsible-party context.</p>
+          <p class="eyebrow">{{ 'Release' | t }} 1 / {{ 'Patients' | t }}</p>
+          <h2>{{ 'Patient profile' | t }}</h2>
+          <p class="subtitle">{{ 'Tenant-scoped patient identity, status, basic clinical alerts, and responsible-party context.' | t }}</p>
         </div>
         <div class="head-actions">
-          <a routerLink="/patients" class="action-link action-secondary">Back to search</a>
+          <a routerLink="/patients" class="action-link action-secondary">{{ 'Back to search' | t }}</a>
           <a
             *ngIf="canReadClinicalRecords && patientsFacade.currentPatient() as patient"
             [routerLink]="['/patients', patient.id, 'clinical-record']"
             class="action-link action-secondary">
-            Clinical record
+            {{ 'Clinical record' | t }}
           </a>
           <a
             *ngIf="canReadOdontogram && patientsFacade.currentPatient() as patient"
             [routerLink]="['/patients', patient.id, 'odontogram']"
             class="action-link action-secondary">
-            Odontogram
+            {{ 'Odontogram' | t }}
           </a>
           <a
             *ngIf="canReadTreatmentPlans && patientsFacade.currentPatient() as patient"
             [routerLink]="['/patients', patient.id, 'treatment-plan']"
             class="action-link action-secondary">
-            Treatment plan
+            {{ 'Treatment plan' | t }}
           </a>
           <a
             *ngIf="canReadTreatmentQuotes && patientsFacade.currentPatient() as patient"
             [routerLink]="['/patients', patient.id, 'treatment-plan', 'quote']"
             class="action-link action-secondary">
-            Quote
+            {{ 'Quote' | t }}
           </a>
           <a
             *ngIf="canReadBillingDocuments && patientsFacade.currentPatient() as patient"
             [routerLink]="['/patients', patient.id, 'treatment-plan', 'quote', 'billing']"
             class="action-link action-secondary">
-            Billing
+            {{ 'Billing' | t }}
           </a>
           <a
             *ngIf="canReadDocuments && patientsFacade.currentPatient() as patient"
             [routerLink]="['/patients', patient.id, 'documents']"
             class="action-link action-secondary">
-            Documents
+            {{ 'Documents' | t }}
           </a>
           <a *ngIf="patientsFacade.currentPatient() as patient" [routerLink]="['/patients', patient.id, 'edit']" class="action-link">
-            Edit patient
+            {{ 'Edit patient' | t }}
           </a>
         </div>
       </header>
 
-      <div *ngIf="patientsFacade.loadingPatient()" class="state-card">Loading patient profile...</div>
-      <div *ngIf="patientsFacade.detailError()" class="state-card state-error">{{ patientsFacade.detailError() }}</div>
+      <div *ngIf="patientsFacade.loadingPatient()" class="state-card">{{ 'Loading patient profile...' | t }}</div>
+      <div *ngIf="patientsFacade.detailError()" class="state-card state-error">{{ patientsFacade.detailError() | t }}</div>
 
       <article *ngIf="patientsFacade.currentPatient() as patient" class="profile-card">
         <div class="identity-bar">
           <div>
             <h3>{{ patient.fullName }}</h3>
-            <p>{{ patient.dateOfBirth | date: 'longDate' }}</p>
+            <p>{{ patient.dateOfBirth | bsDate: 'longDate' }}</p>
           </div>
           <div class="pill-stack">
             <span class="status-pill" [class.status-inactive]="!patient.isActive">
-              {{ patient.isActive ? 'Active' : 'Inactive' }}
+              {{ (patient.isActive ? 'Active' : 'Inactive') | t }}
             </span>
-            <span *ngIf="patient.hasClinicalAlerts" class="alert-pill">Clinical alerts</span>
+            <span *ngIf="patient.hasClinicalAlerts" class="alert-pill">{{ 'Clinical alerts' | t }}</span>
           </div>
         </div>
 
         <section class="detail-grid">
           <div>
-            <dt>Phone</dt>
-            <dd>{{ patient.primaryPhone || 'Not provided' }}</dd>
+            <dt>{{ 'Phone' | t }}</dt>
+            <dd>{{ patient.primaryPhone || ('Not provided' | t) }}</dd>
           </div>
           <div>
-            <dt>Email</dt>
-            <dd>{{ patient.email || 'Not provided' }}</dd>
+            <dt>{{ 'Email' | t }}</dt>
+            <dd>{{ patient.email || ('Not provided' | t) }}</dd>
           </div>
           <div>
-            <dt>Created</dt>
-            <dd>{{ patient.createdAt | date: 'medium' }}</dd>
+            <dt>{{ 'Created' | t }}</dt>
+            <dd>{{ patient.createdAt | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Updated</dt>
-            <dd>{{ patient.updatedAt ? (patient.updatedAt | date: 'medium') : 'No updates yet' }}</dd>
+            <dt>{{ 'Updated' | t }}</dt>
+            <dd>{{ patient.updatedAt ? (patient.updatedAt | bsDate: 'medium') : ('No updates yet' | t) }}</dd>
           </div>
         </section>
 
         <section class="clinical-alerts">
-          <h4>Clinical alerts</h4>
+          <h4>{{ 'Clinical alerts' | t }}</h4>
           <div class="detail-grid">
             <div>
-              <dt>Alerts on file</dt>
-              <dd>{{ patient.hasClinicalAlerts ? 'Yes' : 'No' }}</dd>
+              <dt>{{ 'Alerts on file' | t }}</dt>
+              <dd>{{ (patient.hasClinicalAlerts ? 'Yes' : 'No') | t }}</dd>
             </div>
             <div>
-              <dt>Summary</dt>
+              <dt>{{ 'Summary' | t }}</dt>
               <dd>
                 {{ patient.hasClinicalAlerts
-                  ? (patient.clinicalAlertsSummary || 'No summary provided')
-                  : 'No clinical alerts registered for this patient.' }}
+                  ? (patient.clinicalAlertsSummary || ('No summary provided' | t))
+                  : ('No clinical alerts registered for this patient.' | t) }}
               </dd>
             </div>
           </div>
         </section>
 
         <section class="responsible-party">
-          <h4>Responsible party</h4>
+          <h4>{{ 'Responsible party' | t }}</h4>
           <div *ngIf="patient.responsibleParty; else noResponsibleParty" class="detail-grid">
             <div>
-              <dt>Name</dt>
+              <dt>{{ 'Name' | t }}</dt>
               <dd>{{ patient.responsibleParty.name }}</dd>
             </div>
             <div>
-              <dt>Relationship</dt>
-              <dd>{{ patient.responsibleParty.relationship || 'Not provided' }}</dd>
+              <dt>{{ 'Relationship' | t }}</dt>
+              <dd>{{ patient.responsibleParty.relationship || ('Not provided' | t) }}</dd>
             </div>
             <div>
-              <dt>Phone</dt>
-              <dd>{{ patient.responsibleParty.phone || 'Not provided' }}</dd>
+              <dt>{{ 'Phone' | t }}</dt>
+              <dd>{{ patient.responsibleParty.phone || ('Not provided' | t) }}</dd>
             </div>
           </div>
           <ng-template #noResponsibleParty>
-            <p class="muted">No responsible-party information is registered for this patient.</p>
+            <p class="muted">{{ 'No responsible-party information is registered for this patient.' | t }}</p>
           </ng-template>
         </section>
       </article>

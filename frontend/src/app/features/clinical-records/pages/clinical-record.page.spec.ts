@@ -17,6 +17,7 @@ describe('ClinicalRecordPageComponent', () => {
   let resolveDiagnosisCalls: any[];
 
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
     createCalls = [];
     updateCalls = [];
     addNoteCalls = [];

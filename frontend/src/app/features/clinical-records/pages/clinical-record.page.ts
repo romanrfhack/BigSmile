@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { ClinicalBackgroundFormComponent } from '../components/clinical-background-form.component';
 import { ClinicalDiagnosisCreateFormComponent } from '../components/clinical-diagnosis-create-form.component';
@@ -31,34 +33,36 @@ import {
     ClinicalNoteCreateFormComponent,
     ClinicalNotesListComponent,
     ClinicalSnapshotHistoryListComponent,
-    ClinicalTimelineListComponent
+    ClinicalTimelineListComponent,
+    LocalizedDatePipe,
+    TranslatePipe
   ],
   template: `
     <section class="clinical-record-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 3.4 / Clinical Snapshot Change History</p>
-          <h2>Clinical record</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 3.4 / {{ 'Clinical Snapshot Change History' | t }}</p>
+          <h2>{{ 'Clinical record' | t }}</h2>
           <p class="subtitle">
-            Minimal clinical foundation for {{ patientDisplayName }} with explicit creation, base snapshot history, current allergies, basic diagnoses, append-only notes, and a separate clinical timeline.
+            {{ 'Minimal clinical foundation for {patientDisplayName} with explicit creation, base snapshot history, current allergies, basic diagnoses, append-only notes, and a separate clinical timeline.' | t:{ patientDisplayName } }}
           </p>
         </div>
 
         <div class="head-actions">
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">{{ 'Back to patient' | t }}</a>
         </div>
       </header>
 
       <div *ngIf="patientsFacade.loadingPatient() || clinicalRecordsFacade.loadingRecord()" class="state-card">
-        Loading clinical record...
+        {{ 'Loading clinical record...' | t }}
       </div>
 
       <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
-        {{ patientsFacade.detailError() }}
+        {{ patientsFacade.detailError() | t }}
       </div>
 
       <div *ngIf="clinicalRecordsFacade.recordError()" class="state-card state-error">
-        {{ clinicalRecordsFacade.recordError() }}
+        {{ clinicalRecordsFacade.recordError() | t }}
       </div>
 
       <app-clinical-record-empty-state
@@ -79,19 +83,19 @@ import {
       <article *ngIf="clinicalRecordsFacade.currentRecord() as record" class="record-shell">
         <section class="record-meta">
           <div>
-            <dt>Created</dt>
-            <dd>{{ record.createdAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Created' | t }}</dt>
+            <dd>{{ record.createdAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Created by</dt>
+            <dt>{{ 'Created by' | t }}</dt>
             <dd>{{ record.createdByUserId }}</dd>
           </div>
           <div>
-            <dt>Last updated</dt>
-            <dd>{{ record.lastUpdatedAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Last updated' | t }}</dt>
+            <dd>{{ record.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Updated by</dt>
+            <dt>{{ 'Updated by' | t }}</dt>
             <dd>{{ record.lastUpdatedByUserId }}</dd>
           </div>
         </section>
@@ -107,9 +111,9 @@ import {
         <section class="snapshot-history-shell">
           <div class="notes-head">
             <div>
-              <p class="eyebrow">Snapshot history</p>
-              <h3>Base snapshot changes only</h3>
-              <p class="section-copy">Snapshot history and the Release 3.3 clinical timeline stay as separate sections in this slice.</p>
+              <p class="eyebrow">{{ 'Snapshot history' | t }}</p>
+              <h3>{{ 'Base snapshot changes only' | t }}</h3>
+              <p class="section-copy">{{ 'Snapshot history and the Release 3.3 clinical timeline stay as separate sections in this slice.' | t }}</p>
             </div>
           </div>
 
@@ -119,9 +123,9 @@ import {
         <section class="timeline-shell">
           <div class="notes-head">
             <div>
-              <p class="eyebrow">Clinical timeline</p>
-              <h3>Newest clinical events first</h3>
-              <p class="section-copy">Only note created, diagnosis created, and diagnosis resolved events are included in this slice.</p>
+              <p class="eyebrow">{{ 'Clinical timeline' | t }}</p>
+              <h3>{{ 'Newest clinical events first' | t }}</h3>
+              <p class="section-copy">{{ 'Only note created, diagnosis created, and diagnosis resolved events are included in this slice.' | t }}</p>
             </div>
           </div>
 
@@ -131,9 +135,9 @@ import {
         <section class="diagnoses-shell">
           <div class="notes-head">
             <div>
-              <p class="eyebrow">Diagnoses</p>
-              <h3>Basic diagnoses only</h3>
-              <p class="section-copy">No coded catalogs or treatment linkage in this slice.</p>
+              <p class="eyebrow">{{ 'Diagnoses' | t }}</p>
+              <h3>{{ 'Basic diagnoses only' | t }}</h3>
+              <p class="section-copy">{{ 'No coded catalogs or treatment linkage in this slice.' | t }}</p>
             </div>
           </div>
 
@@ -156,8 +160,8 @@ import {
         <section class="notes-shell">
           <div class="notes-head">
             <div>
-              <p class="eyebrow">Clinical notes</p>
-              <h3>Notes newest first</h3>
+              <p class="eyebrow">{{ 'Clinical notes' | t }}</p>
+              <h3>{{ 'Notes newest first' | t }}</h3>
             </div>
           </div>
 
@@ -306,6 +310,7 @@ import {
 export class ClinicalRecordPageComponent implements OnInit {
   readonly clinicalRecordsFacade = inject(ClinicalRecordsFacade);
   readonly patientsFacade = inject(PatientsFacade);
+  private readonly i18n = inject(I18nService);
 
   readonly canWrite = inject(AuthService).hasPermissions(['clinical.write']);
 
@@ -324,7 +329,7 @@ export class ClinicalRecordPageComponent implements OnInit {
   resolvingDiagnosisId: string | null = null;
 
   get patientDisplayName(): string {
-    return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
+    return this.patientsFacade.currentPatient()?.fullName ?? this.i18n.translate('this patient');
   }
 
   ngOnInit(): void {

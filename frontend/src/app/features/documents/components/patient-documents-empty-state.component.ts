@@ -1,21 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-patient-documents-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="empty-state">
-      <h3>No active documents yet</h3>
+      <h3>{{ 'No active documents yet' | t }}</h3>
       <p>
-        Documents are never auto-created in this slice. Upload a PDF, JPG, or PNG explicitly to keep a private patient document record.
+        {{ 'Documents are never auto-created in this slice. Upload a PDF, JPG, or PNG explicitly to keep a private patient document record.' | t }}
       </p>
       <p class="footnote" *ngIf="!canWrite">
-        Your current session can read this patient context, but only roles with document write permission can upload or retire documents.
+        {{ 'Your current session can read this patient context, but only roles with document write permission can upload or retire documents.' | t }}
       </p>
       <p class="footnote" *ngIf="canWrite">
-        Active documents only. OCR, rich preview, versioning, and dashboard flows remain outside Release 7.1.
+        {{ 'Active documents only. OCR, rich preview, versioning, and dashboard flows remain outside Release 7.1.' | t }}
       </p>
     </section>
   `,

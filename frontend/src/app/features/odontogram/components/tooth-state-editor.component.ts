@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
   ODONTOGRAM_SURFACE_CODES,
   ODONTOGRAM_SURFACE_FINDING_TYPES,
@@ -19,34 +21,34 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
 @Component({
   selector: 'app-tooth-state-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, SurfaceFindingHistoryListComponent],
+  imports: [CommonModule, FormsModule, SurfaceFindingHistoryListComponent, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="editor-card">
       <ng-container *ngIf="tooth; else noSelection">
-        <p class="eyebrow">Selected tooth</p>
-        <h3>Tooth {{ tooth.toothCode }}</h3>
-        <p class="copy">Minimal tooth state, surface state, and basic surface findings with bounded add/remove history only. No restore, full odontogram versioning, treatment linkage, or advanced charting in Release 4.4.</p>
+        <p class="eyebrow">{{ 'Selected tooth' | t }}</p>
+        <h3>{{ 'Tooth' | t }} {{ tooth.toothCode }}</h3>
+        <p class="copy">{{ 'Minimal tooth state, surface state, and basic surface findings with bounded add/remove history only. No restore, full odontogram versioning, treatment linkage, or advanced charting in Release 4.4.' | t }}</p>
 
         <div class="meta-grid">
           <div>
-            <dt>Current status</dt>
-            <dd>{{ tooth.status }}</dd>
+            <dt>{{ 'Current status' | t }}</dt>
+            <dd>{{ getStatusLabel(tooth.status) }}</dd>
           </div>
           <div>
-            <dt>Last updated</dt>
-            <dd>{{ tooth.updatedAtUtc | date: 'medium' }}</dd>
+            <dt>{{ 'Last updated' | t }}</dt>
+            <dd>{{ tooth.updatedAtUtc | bsDate: 'medium' }}</dd>
           </div>
           <div>
-            <dt>Updated by</dt>
+            <dt>{{ 'Updated by' | t }}</dt>
             <dd>{{ tooth.updatedByUserId }}</dd>
           </div>
         </div>
 
         <div *ngIf="canWrite" class="editor-actions">
           <label class="field">
-            <span>New status</span>
+            <span>{{ 'New status' | t }}</span>
             <select [(ngModel)]="selectedStatus">
-              <option *ngFor="let status of statuses" [ngValue]="status">{{ status }}</option>
+              <option *ngFor="let status of statuses" [ngValue]="status">{{ getStatusLabel(status) }}</option>
             </select>
           </label>
 
@@ -55,15 +57,15 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
             class="primary-action"
             [disabled]="savingTooth || selectedStatus === tooth.status"
             (click)="updateRequested.emit(selectedStatus)">
-            {{ savingTooth ? 'Saving...' : 'Update tooth state' }}
+            {{ (savingTooth ? 'Saving...' : 'Update tooth state') | t }}
           </button>
         </div>
 
         <section class="surface-section" *ngIf="tooth.surfaces.length > 0">
           <div class="surface-head">
             <div>
-              <p class="eyebrow">Surfaces</p>
-              <h4>Current detail for tooth {{ tooth.toothCode }}</h4>
+              <p class="eyebrow">{{ 'Surfaces' | t }}</p>
+              <h4>{{ 'Current detail for tooth {toothCode}' | t:{ toothCode: tooth.toothCode } }}</h4>
             </div>
           </div>
 
@@ -78,43 +80,43 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
               [class.status-caries]="surface.status === 'Caries'"
               (click)="selectSurface(surface.surfaceCode)">
               <span class="surface-code">{{ surface.surfaceCode }}</span>
-              <span class="surface-status">{{ surface.status }}</span>
+              <span class="surface-status">{{ getStatusLabel(surface.status) }}</span>
             </button>
           </div>
 
           <ng-container *ngIf="selectedSurface as surface">
             <div class="meta-grid">
               <div>
-                <dt>Selected surface</dt>
+                <dt>{{ 'Selected surface' | t }}</dt>
                 <dd>{{ surface.surfaceCode }}</dd>
               </div>
               <div>
-                <dt>Current surface status</dt>
-                <dd>{{ surface.status }}</dd>
+                <dt>{{ 'Current surface status' | t }}</dt>
+                <dd>{{ getStatusLabel(surface.status) }}</dd>
               </div>
               <div>
-                <dt>Last updated</dt>
-                <dd>{{ surface.updatedAtUtc | date: 'medium' }}</dd>
+                <dt>{{ 'Last updated' | t }}</dt>
+                <dd>{{ surface.updatedAtUtc | bsDate: 'medium' }}</dd>
               </div>
               <div>
-                <dt>Updated by</dt>
+                <dt>{{ 'Updated by' | t }}</dt>
                 <dd>{{ surface.updatedByUserId }}</dd>
               </div>
             </div>
 
             <div *ngIf="canWrite" class="editor-actions">
               <label class="field">
-                <span>Surface</span>
+                  <span>{{ 'Surface' | t }}</span>
                 <select [(ngModel)]="selectedSurfaceCode" (ngModelChange)="onSurfaceSelectionChange($event)">
                   <option *ngFor="let surfaceCode of surfaceCodes" [ngValue]="surfaceCode">{{ surfaceCode }}</option>
                 </select>
               </label>
 
               <label class="field">
-                <span>New surface status</span>
-                <select [(ngModel)]="selectedSurfaceStatus">
-                  <option *ngFor="let status of surfaceStatuses" [ngValue]="status">{{ status }}</option>
-                </select>
+                  <span>{{ 'New surface status' | t }}</span>
+                  <select [(ngModel)]="selectedSurfaceStatus">
+                    <option *ngFor="let status of surfaceStatuses" [ngValue]="status">{{ getStatusLabel(status) }}</option>
+                  </select>
               </label>
 
               <button
@@ -122,22 +124,22 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
                 class="primary-action"
                 [disabled]="savingSurface || !selectedSurfaceCode || selectedSurfaceStatus === surface.status"
                 (click)="emitSurfaceUpdate()">
-                {{ savingSurface ? 'Saving...' : 'Update surface state' }}
+                {{ (savingSurface ? 'Saving...' : 'Update surface state') | t }}
               </button>
             </div>
 
             <section class="finding-section">
               <div>
-                <p class="eyebrow">Basic findings</p>
-                <h4>Current findings for surface {{ surface.surfaceCode }}</h4>
-                <p class="copy">Findings coexist with the operational surface status. They do not auto-recalculate the surface or tooth state in this slice.</p>
+                <p class="eyebrow">{{ 'Basic findings' | t }}</p>
+                <h4>{{ 'Current findings for surface {surfaceCode}' | t:{ surfaceCode: surface.surfaceCode } }}</h4>
+                <p class="copy">{{ 'Findings coexist with the operational surface status. They do not auto-recalculate the surface or tooth state in this slice.' | t }}</p>
               </div>
 
               <div *ngIf="surface.findings.length > 0; else noFindings" class="finding-list">
                 <article *ngFor="let finding of surface.findings" class="finding-card">
                   <div class="finding-meta">
-                    <strong>{{ finding.findingType }}</strong>
-                    <span>{{ finding.createdAtUtc | date: 'medium' }}</span>
+                    <strong>{{ getFindingTypeLabel(finding.findingType) }}</strong>
+                    <span>{{ finding.createdAtUtc | bsDate: 'medium' }}</span>
                     <span>{{ finding.createdByUserId }}</span>
                   </div>
 
@@ -147,20 +149,20 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
                     class="secondary-action danger-action"
                     [disabled]="savingFinding"
                     (click)="emitFindingRemove(finding.findingId)">
-                    {{ removingFindingId === finding.findingId ? 'Removing...' : 'Remove finding' }}
+                    {{ (removingFindingId === finding.findingId ? 'Removing...' : 'Remove finding') | t }}
                   </button>
                 </article>
               </div>
 
               <ng-template #noFindings>
-                <p class="muted">No basic findings registered for this surface yet.</p>
+                <p class="muted">{{ 'No basic findings registered for this surface yet.' | t }}</p>
               </ng-template>
 
               <div *ngIf="canWrite" class="editor-actions">
                 <label class="field">
-                  <span>New finding type</span>
+                  <span>{{ 'New finding type' | t }}</span>
                   <select [(ngModel)]="selectedFindingType">
-                    <option *ngFor="let findingType of findingTypes" [ngValue]="findingType">{{ findingType }}</option>
+                    <option *ngFor="let findingType of findingTypes" [ngValue]="findingType">{{ getFindingTypeLabel(findingType) }}</option>
                   </select>
                 </label>
 
@@ -169,16 +171,16 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
                   class="primary-action"
                   [disabled]="savingFinding || !selectedSurfaceCode || surfaceHasFinding(selectedFindingType)"
                   (click)="emitFindingAdd()">
-                  {{ savingFinding ? 'Saving...' : 'Add finding' }}
+                  {{ (savingFinding ? 'Saving...' : 'Add finding') | t }}
                 </button>
               </div>
             </section>
 
             <section class="finding-section">
               <div>
-                <p class="eyebrow">Findings history</p>
-                <h4>Current history for surface {{ surface.surfaceCode }}</h4>
-                <p class="copy">This bounded history stays separate from current findings and from any future dental timeline. Release 4.4 tracks only add/remove events for the basic finding catalog.</p>
+                <p class="eyebrow">{{ 'Findings history' | t }}</p>
+                <h4>{{ 'Current history for surface {surfaceCode}' | t:{ surfaceCode: surface.surfaceCode } }}</h4>
+                <p class="copy">{{ 'This bounded history stays separate from current findings and from any future dental timeline. Release 4.4 tracks only add/remove events for the basic finding catalog.' | t }}</p>
               </div>
 
               <app-surface-finding-history-list
@@ -190,11 +192,11 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
           </ng-container>
         </section>
 
-        <p *ngIf="error" class="error-copy">{{ error }}</p>
+        <p *ngIf="error" class="error-copy">{{ error | t }}</p>
       </ng-container>
 
       <ng-template #noSelection>
-        <p class="muted">Select a tooth to inspect or update its current state.</p>
+        <p class="muted">{{ 'Select a tooth to inspect or update its current state.' | t }}</p>
       </ng-template>
     </section>
   `,
@@ -414,6 +416,8 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
   `]
 })
 export class ToothStateEditorComponent implements OnChanges {
+  private readonly i18n = inject(I18nService);
+
   @Input() tooth: OdontogramToothState | null = null;
   @Input() canWrite = false;
   @Input() savingTooth = false;
@@ -498,5 +502,13 @@ export class ToothStateEditorComponent implements OnChanges {
       surfaceCode: this.selectedSurfaceCode,
       findingId
     });
+  }
+
+  getStatusLabel(status: OdontogramToothStatus | OdontogramSurfaceStatus): string {
+    return this.i18n.translate(status);
+  }
+
+  getFindingTypeLabel(findingType: OdontogramSurfaceFindingType): string {
+    return this.i18n.translate(findingType);
   }
 }

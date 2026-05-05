@@ -1,19 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-patient-document-upload-form',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="upload-card">
       <div>
-        <h3>Upload document</h3>
-        <p>Allowed types: PDF, JPG, PNG. Maximum size: 10 MB. Files stay private and are only available through authorized API download.</p>
+        <h3>{{ 'Upload document' | t }}</h3>
+        <p>{{ 'Allowed types: PDF, JPG, PNG. Maximum size: 10 MB. Files stay private and are only available through authorized API download.' | t }}</p>
       </div>
 
       <label class="file-picker">
-        <span>Select file</span>
+        <span>{{ 'Select file' | t }}</span>
         <input
           #fileInput
           type="file"
@@ -26,10 +27,10 @@ import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleCh
         <span>{{ formatSize(selectedFile.size) }}</span>
       </div>
 
-      <p *ngIf="error" class="error">{{ error }}</p>
+      <p *ngIf="error" class="error">{{ error | t }}</p>
 
       <button type="button" (click)="submit()" [disabled]="!selectedFile || saving">
-        {{ saving ? 'Uploading...' : 'Upload document' }}
+        {{ (saving ? 'Uploading...' : 'Upload document') | t }}
       </button>
     </section>
   `,

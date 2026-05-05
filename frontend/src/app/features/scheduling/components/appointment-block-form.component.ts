@@ -1,62 +1,63 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import { AppointmentBlockFormValue } from '../models/scheduling.models';
 
 @Component({
   selector: 'app-appointment-block-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="block-form" [formGroup]="form" (ngSubmit)="submit()">
       <header class="form-head">
         <div>
-          <p class="eyebrow">Release 2 / Scheduling</p>
-          <h3>Block time slot</h3>
+          <p class="eyebrow">{{ 'Release' | t }} 2 / {{ 'Scheduling' | t }}</p>
+          <h3>{{ 'Block time slot' | t }}</h3>
           <p class="subtitle">
-            Reserve operational time in the selected branch without creating a patient appointment.
+            {{ 'Reserve operational time in the selected branch without creating a patient appointment.' | t }}
           </p>
         </div>
-        <button type="button" class="text-button" (click)="cancelled.emit()">Reset</button>
+        <button type="button" class="text-button" (click)="cancelled.emit()">{{ 'Reset' | t }}</button>
       </header>
 
       <div class="branch-banner">
-        <span>Branch</span>
-        <strong>{{ selectedBranchName || 'No branch selected' }}</strong>
+        <span>{{ 'Branch' | t }}</span>
+        <strong>{{ selectedBranchName || ('No branch selected' | t) }}</strong>
       </div>
 
       <div class="time-grid">
         <label class="field">
-          <span>Start</span>
+          <span>{{ 'Start' | t }}</span>
           <input type="datetime-local" formControlName="startsAt" />
         </label>
 
         <label class="field">
-          <span>End</span>
+          <span>{{ 'End' | t }}</span>
           <input type="datetime-local" formControlName="endsAt" />
         </label>
       </div>
 
       <label class="field">
-        <span>Label</span>
+        <span>{{ 'Label' | t }}</span>
         <input
           type="text"
           formControlName="label"
           maxlength="200"
-          placeholder="Lunch break, maintenance, team meeting..." />
+          [placeholder]="'Lunch break, maintenance, team meeting...' | t" />
       </label>
 
-      <div *ngIf="error" class="form-error">{{ error }}</div>
+      <div *ngIf="error" class="form-error">{{ error | t }}</div>
       <div *ngIf="form.errors?.['timeRangeInvalid']" class="form-error">
-        End time must be after the start time.
+        {{ 'End time must be after the start time.' | t }}
       </div>
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving">
-          {{ saving ? 'Saving...' : 'Create blocked slot' }}
+          {{ (saving ? 'Saving...' : 'Create blocked slot') | t }}
         </button>
         <button type="button" class="btn btn-secondary" (click)="cancelled.emit()" [disabled]="saving">
-          Cancel
+          {{ 'Cancel' | t }}
         </button>
       </div>
     </form>

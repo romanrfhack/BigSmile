@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
   AppointmentManualReminderFormValue,
   AppointmentReminderChannel,
@@ -11,14 +13,14 @@ import {
 @Component({
   selector: 'app-appointment-manual-reminder',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="manual-reminder-panel">
       <header class="manual-reminder-head">
         <div>
-          <p class="section-label">Manual reminder</p>
-          <h3>Reminder preparation</h3>
-          <p class="manual-note">Manual scheduling only. No WhatsApp, email, or SMS is sent from BigSmile.</p>
+          <p class="section-label">{{ 'Manual reminder' | t }}</p>
+          <h3>{{ 'Reminder preparation' | t }}</h3>
+          <p class="manual-note">{{ 'Manual scheduling only. No WhatsApp, email, or SMS is sent from BigSmile.' | t }}</p>
         </div>
         <span class="state-pill" [class.state-due]="reminderState === 'Due'" [class.state-completed]="reminderState === 'Completed'">
           {{ getStateLabel(reminderState) }}
@@ -27,39 +29,39 @@ import {
 
       <dl class="reminder-details" *ngIf="appointment?.reminderRequired">
         <div>
-          <dt>Channel</dt>
-          <dd>{{ appointment?.reminderChannel || 'Not set' }}</dd>
+          <dt>{{ 'Channel' | t }}</dt>
+          <dd>{{ getChannelLabel(appointment?.reminderChannel) }}</dd>
         </div>
         <div>
-          <dt>Due</dt>
-          <dd>{{ appointment?.reminderDueAtUtc ? (appointment?.reminderDueAtUtc | date: 'short') : 'Not set' }}</dd>
+          <dt>{{ 'Due' | t }}</dt>
+          <dd>{{ appointment?.reminderDueAtUtc ? (appointment?.reminderDueAtUtc | bsDate: 'short') : ('Not set' | t) }}</dd>
         </div>
         <div *ngIf="appointment?.reminderCompletedAtUtc">
-          <dt>Completed</dt>
-          <dd>{{ appointment?.reminderCompletedAtUtc | date: 'short' }}</dd>
+          <dt>{{ 'Completed' | t }}</dt>
+          <dd>{{ appointment?.reminderCompletedAtUtc | bsDate: 'short' }}</dd>
         </div>
       </dl>
 
       <form *ngIf="canWrite && appointment?.status === 'Scheduled'" class="reminder-form" (ngSubmit)="submit()">
         <label class="control">
-          <span>Preferred channel</span>
+          <span>{{ 'Preferred channel' | t }}</span>
           <select name="channel" [(ngModel)]="channel" [disabled]="saving">
             <option *ngFor="let option of channelOptions" [ngValue]="option">
-              {{ option }}
+              {{ getChannelLabel(option) }}
             </option>
           </select>
         </label>
 
         <label class="control">
-          <span>Due date/time</span>
+          <span>{{ 'Due date/time' | t }}</span>
           <input type="datetime-local" name="dueAt" [(ngModel)]="dueAt" [disabled]="saving" />
         </label>
 
-        <div *ngIf="formError || error" class="form-error">{{ formError || error }}</div>
+        <div *ngIf="formError || error" class="form-error">{{ (formError || error) | t }}</div>
 
         <div class="actions">
           <button type="submit" class="btn btn-primary" [disabled]="saving">
-            Set reminder
+            {{ 'Set reminder' | t }}
           </button>
           <button
             *ngIf="appointment?.reminderRequired"
@@ -67,7 +69,7 @@ import {
             class="btn btn-secondary"
             [disabled]="saving"
             (click)="cleared.emit()">
-            Clear reminder
+            {{ 'Clear reminder' | t }}
           </button>
           <button
             *ngIf="appointment?.reminderRequired && !appointment?.reminderCompletedAtUtc"
@@ -75,14 +77,14 @@ import {
             class="btn btn-success"
             [disabled]="saving"
             (click)="completed.emit()">
-            Mark reminder completed
+            {{ 'Mark reminder completed' | t }}
           </button>
         </div>
       </form>
 
       <div *ngIf="canWrite && appointment?.status !== 'Scheduled' && appointment?.reminderRequired" class="actions terminal-actions">
         <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="cleared.emit()">
-          Clear reminder
+          {{ 'Clear reminder' | t }}
         </button>
         <button
           *ngIf="!appointment?.reminderCompletedAtUtc"
@@ -90,12 +92,12 @@ import {
           class="btn btn-success"
           [disabled]="saving"
           (click)="completed.emit()">
-          Mark reminder completed
+          {{ 'Mark reminder completed' | t }}
         </button>
       </div>
 
       <div *ngIf="canWrite && appointment?.status !== 'Scheduled' && !appointment?.reminderRequired" class="state-card">
-        Terminal appointments cannot receive new manual reminder work.
+        {{ 'Terminal appointments cannot receive new manual reminder work.' | t }}
       </div>
     </section>
   `,
@@ -267,6 +269,8 @@ import {
   `]
 })
 export class AppointmentManualReminderComponent implements OnChanges {
+  private readonly i18n = inject(I18nService);
+
   @Input() appointment: AppointmentSummary | null = null;
   @Input() canWrite = false;
   @Input() saving = false;
@@ -329,10 +333,14 @@ export class AppointmentManualReminderComponent implements OnChanges {
   getStateLabel(state: AppointmentReminderState): string {
     switch (state) {
       case 'NotRequired':
-        return 'Not required';
+        return this.i18n.translate('Not required');
       default:
-        return state;
+        return this.i18n.translate(state);
     }
+  }
+
+  getChannelLabel(channel: AppointmentReminderChannel | null | undefined): string {
+    return channel ? this.i18n.translate(channel) : this.i18n.translate('Not set');
   }
 }
 

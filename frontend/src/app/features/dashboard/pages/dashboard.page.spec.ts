@@ -14,6 +14,7 @@ describe('DashboardPageComponent', () => {
   let loadCount: number;
 
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
     loadCount = 0;
     dashboardFacade = {
       summary: signal<DashboardSummary | null>(null),

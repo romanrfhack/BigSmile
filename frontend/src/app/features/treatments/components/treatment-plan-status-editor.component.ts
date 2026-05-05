@@ -1,36 +1,37 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '../../../shared/i18n';
 import { TreatmentPlanStatus } from '../models/treatment-plan.models';
 
 @Component({
   selector: 'app-treatment-plan-status-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="status-shell" [formGroup]="form" (ngSubmit)="submit()">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Plan status</p>
-          <h3>Minimal lifecycle</h3>
-          <p class="copy">Draft, Proposed, and Accepted only in this slice.</p>
+          <p class="eyebrow">{{ 'Plan status' | t }}</p>
+          <h3>{{ 'Minimal lifecycle' | t }}</h3>
+          <p class="copy">{{ 'Draft, Proposed, and Accepted only in this slice.' | t }}</p>
         </div>
       </div>
 
       <label>
-        <span>Status</span>
+        <span>{{ 'Status' | t }}</span>
         <select formControlName="status">
-          <option *ngFor="let status of availableStatuses" [value]="status">{{ status }}</option>
+          <option *ngFor="let status of availableStatuses" [value]="status">{{ status | t }}</option>
         </select>
       </label>
 
       <p *ngIf="currentStatus === 'Accepted'" class="muted">
-        Accepted plans are read-only in this slice. Pricing, quotes, and billing stay outside Release 5.1.
+        {{ 'Accepted plans are read-only in this slice. Pricing, quotes, and billing stay outside Release 5.1.' | t }}
       </p>
 
       <div class="actions">
         <button type="submit" class="btn btn-primary" [disabled]="saving || !canWrite || !canChange">
-          {{ saving ? 'Saving...' : 'Update status' }}
+          {{ (saving ? 'Saving...' : 'Update status') | t }}
         </button>
       </div>
     </form>

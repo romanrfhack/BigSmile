@@ -3,6 +3,8 @@ import { AppointmentCalendarComponent } from './appointment-calendar.component';
 
 describe('AppointmentCalendarComponent', () => {
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [AppointmentCalendarComponent]
     }).compileComponents();

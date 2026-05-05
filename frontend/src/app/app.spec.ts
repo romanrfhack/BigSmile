@@ -7,6 +7,7 @@ describe('App', () => {
   let grantedPermissions: string[];
 
   beforeEach(async () => {
+    window.localStorage.clear();
     grantedPermissions = ['dashboard.read'];
 
     await TestBed.configureTestingModule({
@@ -22,6 +23,10 @@ describe('App', () => {
         }
       ]
     }).compileComponents();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
   });
 
   it('should create the app', () => {
@@ -43,7 +48,8 @@ describe('App', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Dashboard');
+    expect(compiled.textContent).toContain('Panel');
+    expect(compiled.textContent).toContain('Idioma');
   });
 
   it('does not render dashboard navigation when dashboard.read is missing', async () => {
@@ -54,6 +60,6 @@ describe('App', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).not.toContain('Dashboard');
+    expect(compiled.textContent).not.toContain('Panel');
   });
 });

@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-clinical-record-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="empty-state">
-      <p class="eyebrow">Release 3.1 / Clinical Record Foundation</p>
-      <h3>No clinical record yet</h3>
+      <p class="eyebrow">{{ 'Release' | t }} 3.1 / {{ 'Clinical Record Foundation' | t }}</p>
+      <h3>{{ 'No clinical record yet' | t }}</h3>
       <p>
-        This patient does not have a clinical record yet. Creation is explicit in this slice and must be started manually.
+        {{ 'This patient does not have a clinical record yet. Creation is explicit in this slice and must be started manually.' | t }}
       </p>
 
       <button
@@ -18,11 +19,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         type="button"
         class="btn btn-primary"
         (click)="createRequested.emit()">
-        Create clinical record
+        {{ 'Create clinical record' | t }}
       </button>
 
       <p *ngIf="!canWrite" class="muted">
-        Your current session can read clinical data but cannot create or update the record.
+        {{ 'Your current session can read clinical data but cannot create or update the record.' | t }}
       </p>
     </section>
   `,

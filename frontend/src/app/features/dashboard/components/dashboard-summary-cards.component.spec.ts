@@ -3,6 +3,8 @@ import { DashboardSummaryCardsComponent } from './dashboard-summary-cards.compon
 
 describe('DashboardSummaryCardsComponent', () => {
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [DashboardSummaryCardsComponent]
     }).compileComponents();

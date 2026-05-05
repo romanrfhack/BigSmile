@@ -7,6 +7,8 @@ describe('ReminderTemplateManagerComponent', () => {
   let component: ReminderTemplateManagerComponent;
 
   beforeEach(async () => {
+    window.localStorage.setItem('bigsmile.ui.language', 'en-US');
+
     await TestBed.configureTestingModule({
       imports: [ReminderTemplateManagerComponent]
     }).compileComponents();

@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { I18nService } from '../../../core/i18n';
+import { TranslatePipe } from '../../../shared/i18n';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { PatientDocumentUploadFormComponent } from '../components/patient-document-upload-form.component';
 import { PatientDocumentsEmptyStateComponent } from '../components/patient-documents-empty-state.component';
@@ -17,38 +19,39 @@ import { PatientDocument } from '../models/patient-document.models';
     RouterLink,
     PatientDocumentUploadFormComponent,
     PatientDocumentsEmptyStateComponent,
-    PatientDocumentsListComponent
+    PatientDocumentsListComponent,
+    TranslatePipe
   ],
   template: `
     <section class="patient-documents-page">
       <header class="page-head">
         <div>
-          <p class="eyebrow">Release 7.1 / Documents Foundation</p>
-          <h2>Documents</h2>
+          <p class="eyebrow">{{ 'Release' | t }} 7.1 / {{ 'Documents Foundation' | t }}</p>
+          <h2>{{ 'Documents' | t }}</h2>
           <p class="subtitle">
-            Minimal patient-scoped document registry for {{ patientDisplayName }} with explicit upload, active list, authorized download, logical retire, and private storage. No OCR, rich preview, versioning, or dashboard behavior in this slice.
+            {{ 'Minimal patient-scoped document registry for {patientDisplayName} with explicit upload, active list, authorized download, logical retire, and private storage. No OCR, rich preview, versioning, or dashboard behavior in this slice.' | t:{ patientDisplayName } }}
           </p>
         </div>
 
         <div class="head-actions">
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">Back to patient</a>
+          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">{{ 'Back to patient' | t }}</a>
         </div>
       </header>
 
       <div *ngIf="patientsFacade.loadingPatient() || patientDocumentsFacade.loadingDocuments()" class="state-card">
-        Loading patient documents...
+        {{ 'Loading patient documents...' | t }}
       </div>
 
       <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
-        {{ patientsFacade.detailError() }}
+        {{ patientsFacade.detailError() | t }}
       </div>
 
       <div *ngIf="patientDocumentsFacade.documentsError()" class="state-card state-error">
-        {{ patientDocumentsFacade.documentsError() }}
+        {{ patientDocumentsFacade.documentsError() | t }}
       </div>
 
       <div *ngIf="actionError" class="state-card state-error">
-        {{ actionError }}
+        {{ actionError | t }}
       </div>
 
       <app-patient-document-upload-form
@@ -155,6 +158,7 @@ export class PatientDocumentsPageComponent implements OnInit {
   readonly patientsFacade = inject(PatientsFacade);
   readonly patientDocumentsFacade = inject(PatientDocumentsFacade);
   readonly canWrite = this.authService.hasPermissions(['document.write']);
+  private readonly i18n = inject(I18nService);
 
   patientId: string | null = null;
   uploadingDocument = false;
@@ -165,7 +169,7 @@ export class PatientDocumentsPageComponent implements OnInit {
   actionError: string | null = null;
 
   get patientDisplayName(): string {
-    return this.patientsFacade.currentPatient()?.fullName ?? 'this patient';
+    return this.patientsFacade.currentPatient()?.fullName ?? this.i18n.translate('this patient');
   }
 
   ngOnInit(): void {

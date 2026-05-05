@@ -335,6 +335,7 @@ Owns:
 * tenant context
 * global error handling
 * app-level services
+* frontend localization state and dictionaries
 
 Must not contain:
 
@@ -360,6 +361,7 @@ Owns:
 * reusable UI components
 * directives
 * pipes
+* app-wide translation/date pipes and language selector components
 * generic helpers
 * shared form utilities
 

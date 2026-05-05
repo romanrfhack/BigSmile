@@ -1,29 +1,31 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../models/scheduling.models';
 
 @Component({
   selector: 'app-appointment-calendar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="calendar-shell">
-      <div *ngIf="loading" class="state-card">Loading schedule...</div>
-      <div *ngIf="!loading && error" class="state-card state-error">{{ error }}</div>
+      <div *ngIf="loading" class="state-card">{{ 'Loading schedule...' | t }}</div>
+      <div *ngIf="!loading && error" class="state-card state-error">{{ error | t }}</div>
 
       <div *ngIf="!loading && !error && calendar as currentCalendar" class="calendar-grid" [class.calendar-day]="currentCalendar.days === 1">
         <article *ngFor="let day of currentCalendar.calendarDays" class="day-column">
           <header class="day-head">
-            <h3>{{ day.date | date: 'fullDate' }}</h3>
+            <h3>{{ day.date | bsDate: 'fullDate' }}</h3>
             <p>
-              {{ day.appointments.length }} appointment{{ day.appointments.length === 1 ? '' : 's' }}
-              ·
-              {{ day.blockedSlots.length }} blocked slot{{ day.blockedSlots.length === 1 ? '' : 's' }}
+              {{ day.appointments.length }} {{ (day.appointments.length === 1 ? 'appointment' : 'appointments') | t }}
+              /
+              {{ day.blockedSlots.length }} {{ (day.blockedSlots.length === 1 ? 'blocked slot' : 'blocked slots') | t }}
             </p>
           </header>
 
           <div *ngIf="!day.appointments.length && !day.blockedSlots.length" class="empty-state">
-            No scheduling activity for this branch and date.
+            {{ 'No scheduling activity for this branch and date.' | t }}
           </div>
 
           <button
@@ -32,10 +34,10 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
             class="appointment-card block-card"
             [class.block-active]="blockedSlot.id === activeBlockId"
             (click)="blockedSlotSelected.emit(blockedSlot)">
-            <span class="time-range">{{ blockedSlot.startsAt | date: 'shortTime' }} - {{ blockedSlot.endsAt | date: 'shortTime' }}</span>
-            <strong>{{ blockedSlot.label || 'Blocked slot' }}</strong>
-            <p>Appointments are not allowed in this branch range.</p>
-            <span class="status-pill block-pill">Blocked</span>
+            <span class="time-range">{{ blockedSlot.startsAt | bsDate: 'shortTime' }} - {{ blockedSlot.endsAt | bsDate: 'shortTime' }}</span>
+            <strong>{{ blockedSlot.label || ('Blocked slot' | t) }}</strong>
+            <p>{{ 'Appointments are not allowed in this branch range.' | t }}</p>
+            <span class="status-pill block-pill">{{ 'Blocked' | t }}</span>
           </button>
 
           <button
@@ -47,9 +49,9 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
             [class.appointment-attended]="appointment.status === 'Attended'"
             [class.appointment-no-show]="appointment.status === 'NoShow'"
             (click)="appointmentSelected.emit(appointment)">
-            <span class="time-range">{{ appointment.startsAt | date: 'shortTime' }} - {{ appointment.endsAt | date: 'shortTime' }}</span>
+            <span class="time-range">{{ appointment.startsAt | bsDate: 'shortTime' }} - {{ appointment.endsAt | bsDate: 'shortTime' }}</span>
             <strong>{{ appointment.patientFullName }}</strong>
-            <p>{{ appointment.notes || 'No operational note.' }}</p>
+            <p>{{ appointment.notes || ('No operational note.' | t) }}</p>
             <span class="badge-row">
               <span class="status-pill">{{ getStatusLabel(appointment.status) }}</span>
               <span
@@ -63,7 +65,7 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       </div>
 
       <div *ngIf="!loading && !error && !calendar" class="state-card">
-        Select a branch to load the scheduling calendar.
+        {{ 'Select a branch to load the scheduling calendar.' | t }}
       </div>
     </section>
   `,
@@ -232,6 +234,8 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
   `]
 })
 export class AppointmentCalendarComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input() calendar: CalendarView | null = null;
   @Input() loading = false;
   @Input() error: string | null = null;
@@ -242,10 +246,10 @@ export class AppointmentCalendarComponent {
   @Output() blockedSlotSelected = new EventEmitter<AppointmentBlockSummary>();
 
   getStatusLabel(status: AppointmentSummary['status']): string {
-    return status === 'NoShow' ? 'No-show' : status;
+    return this.i18n.translate(status === 'NoShow' ? 'No-show' : status);
   }
 
   getConfirmationLabel(status: AppointmentSummary['confirmationStatus']): string {
-    return status === 'Confirmed' ? 'Confirmed' : 'Pending confirmation';
+    return this.i18n.translate(status === 'Confirmed' ? 'Confirmed' : 'Pending confirmation');
   }
 }

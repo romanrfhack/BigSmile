@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, LoginRequest } from '../../../core/auth/auth.service';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
     <div class="login-container">
-      <h2>Sign in to Bigsmile</h2>
+      <h2>{{ 'Sign in to Bigsmile' | t }}</h2>
       <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="email">{{ 'Email' | t }}</label>
           <input
             type="email"
             id="email"
@@ -26,13 +27,13 @@ import { Router } from '@angular/router';
             placeholder="admin@bigsmile.local"
           />
           <div *ngIf="email.invalid && (email.dirty || email.touched)" class="error">
-            <div *ngIf="email.errors?.['required']">Email is required.</div>
-            <div *ngIf="email.errors?.['email']">Must be a valid email address.</div>
+            <div *ngIf="email.errors?.['required']">{{ 'Email is required.' | t }}</div>
+            <div *ngIf="email.errors?.['email']">{{ 'Must be a valid email address.' | t }}</div>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="password">Password</label>
+          <label for="password">{{ 'Password' | t }}</label>
           <input
             type="password"
             id="password"
@@ -45,16 +46,16 @@ import { Router } from '@angular/router';
             placeholder="••••••"
           />
           <div *ngIf="password.invalid && (password.dirty || password.touched)" class="error">
-            <div *ngIf="password.errors?.['required']">Password is required.</div>
-            <div *ngIf="password.errors?.['minlength']">Password must be at least 6 characters.</div>
+            <div *ngIf="password.errors?.['required']">{{ 'Password is required.' | t }}</div>
+            <div *ngIf="password.errors?.['minlength']">{{ 'Password must be at least 6 characters.' | t }}</div>
           </div>
         </div>
 
         <button type="submit" [disabled]="loginForm.invalid || loading" class="btn btn-primary">
-          {{ loading ? 'Signing in...' : 'Sign in' }}
+          {{ (loading ? 'Signing in...' : 'Sign in') | t }}
         </button>
 
-        <div *ngIf="error" class="error-message">{{ error }}</div>
+        <div *ngIf="error" class="error-message">{{ error | t }}</div>
       </form>
     </div>
   `,

@@ -1,15 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
+import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clinical-record.models';
 
 @Component({
   selector: 'app-clinical-timeline-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
   template: `
     <section class="timeline-list">
       <div *ngIf="!sortedTimeline.length" class="empty-copy">
-        No clinical timeline events are available yet.
+        {{ 'No clinical timeline events are available yet.' | t }}
       </div>
 
       <article *ngFor="let entry of sortedTimeline" class="timeline-card" [attr.data-event-type]="entry.eventType">
@@ -26,8 +28,8 @@ import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clin
           </div>
 
           <div class="timeline-meta">
-            <span>{{ entry.occurredAtUtc | date: 'medium' }}</span>
-            <span>User {{ entry.actorUserId }}</span>
+            <span>{{ entry.occurredAtUtc | bsDate: 'medium' }}</span>
+            <span>{{ 'User' | t }} {{ entry.actorUserId }}</span>
           </div>
         </header>
 
@@ -128,6 +130,8 @@ import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clin
   `]
 })
 export class ClinicalTimelineListComponent {
+  private readonly i18n = inject(I18nService);
+
   @Input() timeline: ClinicalTimelineEntry[] = [];
 
   get sortedTimeline(): ClinicalTimelineEntry[] {
@@ -149,11 +153,11 @@ export class ClinicalTimelineListComponent {
   getEventLabel(eventType: ClinicalTimelineEventType): string {
     switch (eventType) {
       case 'ClinicalNoteCreated':
-        return 'Note created';
+        return this.i18n.translate('Note created');
       case 'ClinicalDiagnosisCreated':
-        return 'Diagnosis created';
+        return this.i18n.translate('Diagnosis created');
       case 'ClinicalDiagnosisResolved':
-        return 'Diagnosis resolved';
+        return this.i18n.translate('Diagnosis resolved');
     }
   }
 }

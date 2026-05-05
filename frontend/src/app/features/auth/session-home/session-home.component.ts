@@ -2,66 +2,67 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService, CurrentUserResponse } from '../../../core/auth/auth.service';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-session-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   template: `
     <section class="session-card">
       <header class="session-header">
         <div>
-          <h2>Current Access Context</h2>
-          <p>Tenant-aware authorization is active for the current in-memory session.</p>
+          <h2>{{ 'Current Access Context' | t }}</h2>
+          <p>{{ 'Tenant-aware authorization is active for the current in-memory session.' | t }}</p>
         </div>
         <div class="session-actions">
           <button type="button" class="btn btn-secondary" (click)="refresh()" [disabled]="loading">
-            {{ loading ? 'Refreshing...' : 'Refresh context' }}
+            {{ (loading ? 'Refreshing...' : 'Refresh context') | t }}
           </button>
-          <button type="button" class="btn btn-primary" (click)="logout()">Sign out</button>
+          <button type="button" class="btn btn-primary" (click)="logout()">{{ 'Sign out' | t }}</button>
         </div>
       </header>
 
-      <div *ngIf="error" class="error-message">{{ error }}</div>
+      <div *ngIf="error" class="error-message">{{ error | t }}</div>
 
       <ng-container *ngIf="current as session; else missingSession">
         <dl class="session-grid">
           <div>
-            <dt>User</dt>
+            <dt>{{ 'User' | t }}</dt>
             <dd>{{ session.user.displayName || session.user.email }}</dd>
           </div>
           <div>
-            <dt>Email</dt>
+            <dt>{{ 'Email' | t }}</dt>
             <dd>{{ session.user.email }}</dd>
           </div>
           <div>
-            <dt>Role</dt>
+            <dt>{{ 'Role' | t }}</dt>
             <dd>{{ session.role }}</dd>
           </div>
           <div>
-            <dt>Scope</dt>
+            <dt>{{ 'Scope' | t }}</dt>
             <dd>{{ session.scope }}</dd>
           </div>
           <div>
-            <dt>Tenant</dt>
-            <dd>{{ session.tenant?.name || 'Platform scope' }}</dd>
+            <dt>{{ 'Tenant' | t }}</dt>
+            <dd>{{ session.tenant?.name || ('Platform scope' | t) }}</dd>
           </div>
           <div>
-            <dt>Current branch</dt>
-            <dd>{{ session.currentBranch?.name || 'No branch selected' }}</dd>
+            <dt>{{ 'Current branch' | t }}</dt>
+            <dd>{{ session.currentBranch?.name || ('No branch selected' | t) }}</dd>
           </div>
         </dl>
 
         <section class="list-section">
-          <h3>Allowed branches</h3>
-          <p *ngIf="!session.branches.length" class="muted">No branch-restricted assignments are active for this session.</p>
+          <h3>{{ 'Allowed branches' | t }}</h3>
+          <p *ngIf="!session.branches.length" class="muted">{{ 'No branch-restricted assignments are active for this session.' | t }}</p>
           <ul *ngIf="session.branches.length" class="tag-list">
             <li *ngFor="let branch of session.branches">{{ branch.name }}</li>
           </ul>
         </section>
 
         <section class="list-section">
-          <h3>Granted permissions</h3>
+          <h3>{{ 'Granted permissions' | t }}</h3>
           <ul class="tag-list">
             <li *ngFor="let permission of session.permissions">{{ permission }}</li>
           </ul>
@@ -69,7 +70,7 @@ import { AuthService, CurrentUserResponse } from '../../../core/auth/auth.servic
       </ng-container>
 
       <ng-template #missingSession>
-        <p class="muted">No current session is loaded.</p>
+        <p class="muted">{{ 'No current session is loaded.' | t }}</p>
       </ng-template>
     </section>
   `,
