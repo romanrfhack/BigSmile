@@ -1,25 +1,29 @@
-<div class="app-container">
-  <header class="app-header">
-    <div>
-      <h1>Bigsmile</h1>
-      <p>{{ 'Dental Clinic Management Platform' | t }}</p>
-    </div>
+<div class="app-container" [class.app-container-login]="isLoginRoute()">
+  @if (!isLoginRoute()) {
+    <header class="app-header">
+      <div>
+        <h1>Bigsmile</h1>
+        <p>{{ 'Dental Clinic Management Platform' | t }}</p>
+      </div>
 
-    <nav class="app-nav" [attr.aria-label]="'Primary' | t">
-      @if (canAccessDashboard()) {
-        <a routerLink="/dashboard" routerLinkActive="is-active">{{ 'Dashboard' | t }}</a>
-      }
-      <a routerLink="/patients" routerLinkActive="is-active">{{ 'Patients' | t }}</a>
-      <a routerLink="/scheduling" routerLinkActive="is-active">{{ 'Scheduling' | t }}</a>
-      <a routerLink="/app" routerLinkActive="is-active">{{ 'Access Context' | t }}</a>
-    </nav>
+      <nav class="app-nav" [attr.aria-label]="'Primary' | t">
+        @if (canAccessDashboard()) {
+          <a routerLink="/dashboard" routerLinkActive="is-active">{{ 'Dashboard' | t }}</a>
+        }
+        <a routerLink="/patients" routerLinkActive="is-active">{{ 'Patients' | t }}</a>
+        <a routerLink="/scheduling" routerLinkActive="is-active">{{ 'Scheduling' | t }}</a>
+        <a routerLink="/app" routerLinkActive="is-active">{{ 'Access Context' | t }}</a>
+      </nav>
 
-    <app-language-selector />
-  </header>
-  <main class="app-content">
+      <app-language-selector />
+    </header>
+  }
+  <main class="app-content" [class.app-content-login]="isLoginRoute()">
     <router-outlet />
   </main>
-  <footer class="app-footer">
-    <p>© 2026 Bigsmile - {{ 'Multi-tenant SaaS Foundation' | t }}</p>
-  </footer>
+  @if (!isLoginRoute()) {
+    <footer class="app-footer">
+      <p>© 2026 Bigsmile - {{ 'Multi-tenant SaaS Foundation' | t }}</p>
+    </footer>
+  }
 </div>
