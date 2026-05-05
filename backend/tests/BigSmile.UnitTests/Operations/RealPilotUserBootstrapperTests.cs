@@ -67,7 +67,9 @@ namespace BigSmile.UnitTests.Operations
             Assert.Equal(4, fixture.Users.Users.Count);
             Assert.Equal(4, fixture.Memberships.Memberships.Count);
             Assert.Single(fixture.Branches.Branches);
+            Assert.Single(fixture.BranchAssignments.Assignments);
             Assert.Equal("Sucursal Principal", fixture.Branches.Branches.Single().Name);
+            Assert.Equal(0, fixture.Memberships.UpdateCalls);
 
             AssertMembership(
                 fixture,
@@ -107,6 +109,64 @@ namespace BigSmile.UnitTests.Operations
             Assert.False(result.BranchCreated);
             Assert.Single(fixture.Branches.Branches);
             Assert.Equal(existingBranch.Id, assignment.BranchId);
+        }
+
+        [Fact]
+        public async Task BootstrapAsync_ExistingActiveBranchAssignmentDoesNotUpdateMembership()
+        {
+            var fixture = BootstrapFixture.CreateWithExistingTenantUserAssignment(activeAssignment: true);
+
+            var result = await fixture.Bootstrapper.BootstrapAsync(CreateEnabledOptions());
+
+            Assert.Equal(1, result.BranchAssignmentsExisting);
+            Assert.Equal(0, result.BranchAssignmentsCreated);
+            Assert.Equal(0, result.BranchAssignmentsReactivated);
+            Assert.Equal(0, fixture.Memberships.UpdateCalls);
+            Assert.Equal(0, fixture.BranchAssignments.AddCalls);
+            Assert.Equal(0, fixture.BranchAssignments.SaveChangesCalls);
+        }
+
+        [Fact]
+        public async Task BootstrapAsync_ExistingInactiveBranchAssignmentIsReactivatedWithoutUpdatingMembership()
+        {
+            var fixture = BootstrapFixture.CreateWithExistingTenantUserAssignment(activeAssignment: false);
+            var assignment = fixture.BranchAssignments.Assignments.Single();
+            Assert.False(assignment.IsActive);
+            Assert.NotNull(assignment.UnassignedAt);
+
+            var result = await fixture.Bootstrapper.BootstrapAsync(CreateEnabledOptions());
+
+            Assert.Equal(0, result.BranchAssignmentsExisting);
+            Assert.Equal(0, result.BranchAssignmentsCreated);
+            Assert.Equal(1, result.BranchAssignmentsReactivated);
+            Assert.True(assignment.IsActive);
+            Assert.Null(assignment.UnassignedAt);
+            Assert.Equal(0, fixture.Memberships.UpdateCalls);
+            Assert.Equal(0, fixture.BranchAssignments.AddCalls);
+            Assert.Equal(1, fixture.BranchAssignments.SaveChangesCalls);
+        }
+
+        [Fact]
+        public async Task BootstrapAsync_MissingBranchAssignmentIsCreatedWithoutUpdatingMembership()
+        {
+            var fixture = BootstrapFixture.CreateWithExistingTenantUserWithoutAssignment();
+
+            var result = await fixture.Bootstrapper.BootstrapAsync(CreateEnabledOptions());
+
+            var assignment = Assert.Single(fixture.BranchAssignments.Assignments);
+            var tenantUserMembership = fixture.Memberships.Memberships.Single(
+                membership => membership.User.Email == "usuarioSucursal@bigsmile.com.mx");
+
+            Assert.Equal(1, result.BranchAssignmentsCreated);
+            Assert.Equal(0, result.BranchAssignmentsExisting);
+            Assert.Equal(0, result.BranchAssignmentsReactivated);
+            Assert.Equal(tenantUserMembership.Id, assignment.MembershipId);
+            Assert.Equal(fixture.Branches.Branches.Single().Id, assignment.BranchId);
+            Assert.True(assignment.IsActive);
+            Assert.Null(assignment.UnassignedAt);
+            Assert.True(assignment.AssignedAt <= DateTime.UtcNow);
+            Assert.Equal(0, fixture.Memberships.UpdateCalls);
+            Assert.Equal(1, fixture.BranchAssignments.AddCalls);
         }
 
         [Fact]
@@ -170,6 +230,7 @@ namespace BigSmile.UnitTests.Operations
                 InMemoryBranchRepository branches,
                 InMemoryUserRepository users,
                 InMemoryMembershipRepository memberships,
+                InMemoryBranchAssignmentStore branchAssignments,
                 InMemoryRoleRepository roles,
                 RecordingPasswordHasher passwordHasher,
                 RealPilotUserBootstrapper bootstrapper)
@@ -179,6 +240,7 @@ namespace BigSmile.UnitTests.Operations
                 Branches = branches;
                 Users = users;
                 Memberships = memberships;
+                BranchAssignments = branchAssignments;
                 Roles = roles;
                 PasswordHasher = passwordHasher;
                 Bootstrapper = bootstrapper;
@@ -189,6 +251,7 @@ namespace BigSmile.UnitTests.Operations
             public InMemoryBranchRepository Branches { get; }
             public InMemoryUserRepository Users { get; }
             public InMemoryMembershipRepository Memberships { get; }
+            public InMemoryBranchAssignmentStore BranchAssignments { get; }
             public InMemoryRoleRepository Roles { get; }
             public RecordingPasswordHasher PasswordHasher { get; }
             public RealPilotUserBootstrapper Bootstrapper { get; }
@@ -200,6 +263,7 @@ namespace BigSmile.UnitTests.Operations
                 var branches = new InMemoryBranchRepository();
                 var users = new InMemoryUserRepository();
                 var memberships = new InMemoryMembershipRepository();
+                var branchAssignments = new InMemoryBranchAssignmentStore();
                 var roles = new InMemoryRoleRepository(
                     new Role(SystemRoles.PlatformAdmin, isSystem: true),
                     new Role(SystemRoles.TenantAdmin, isSystem: true),
@@ -210,6 +274,7 @@ namespace BigSmile.UnitTests.Operations
                     branches,
                     users,
                     memberships,
+                    branchAssignments,
                     roles,
                     passwordHasher,
                     NullLogger<RealPilotUserBootstrapper>.Instance);
@@ -220,9 +285,40 @@ namespace BigSmile.UnitTests.Operations
                     branches,
                     users,
                     memberships,
+                    branchAssignments,
                     roles,
                     passwordHasher,
                     bootstrapper);
+            }
+
+            public static BootstrapFixture CreateWithExistingTenantUserWithoutAssignment()
+            {
+                var fixture = Create();
+                var branch = fixture.DefaultTenant.AddBranch("Centro");
+                fixture.Branches.Branches.Add(branch);
+                var tenantUser = new User("usuarioSucursal@bigsmile.com.mx", "existing-hash", "Usuario Sucursal");
+                fixture.Users.Users.Add(tenantUser);
+                fixture.Memberships.Memberships.Add(
+                    tenantUser.AddTenantMembership(fixture.DefaultTenant, fixture.Roles.GetRequired(SystemRoles.TenantUser)));
+
+                return fixture;
+            }
+
+            public static BootstrapFixture CreateWithExistingTenantUserAssignment(bool activeAssignment)
+            {
+                var fixture = CreateWithExistingTenantUserWithoutAssignment();
+                var branch = fixture.Branches.Branches.Single();
+                var membership = fixture.Memberships.Memberships.Single(
+                    candidate => candidate.User.Email == "usuarioSucursal@bigsmile.com.mx");
+                var assignment = membership.AssignToBranch(branch);
+
+                if (!activeAssignment)
+                {
+                    assignment.Deactivate();
+                }
+
+                fixture.BranchAssignments.Assignments.Add(assignment);
+                return fixture;
             }
         }
 
@@ -337,6 +433,7 @@ namespace BigSmile.UnitTests.Operations
         private sealed class InMemoryMembershipRepository : IUserTenantMembershipRepository
         {
             public List<UserTenantMembership> Memberships { get; } = new();
+            public int UpdateCalls { get; private set; }
 
             public Task<UserTenantMembership?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
             {
@@ -374,6 +471,40 @@ namespace BigSmile.UnitTests.Operations
 
             public Task UpdateAsync(UserTenantMembership membership, CancellationToken cancellationToken = default)
             {
+                UpdateCalls++;
+                return Task.CompletedTask;
+            }
+        }
+
+        private sealed class InMemoryBranchAssignmentStore : IUserBranchAssignmentStore
+        {
+            public List<UserBranchAssignment> Assignments { get; } = new();
+            public int AddCalls { get; private set; }
+            public int SaveChangesCalls { get; private set; }
+
+            public Task<UserBranchAssignment?> GetByMembershipAndBranchAsync(
+                Guid membershipId,
+                Guid branchId,
+                CancellationToken cancellationToken = default)
+            {
+                return Task.FromResult(Assignments.FirstOrDefault(assignment =>
+                    assignment.MembershipId == membershipId && assignment.BranchId == branchId));
+            }
+
+            public Task AddAsync(UserBranchAssignment assignment, CancellationToken cancellationToken = default)
+            {
+                AddCalls++;
+                if (Assignments.All(existing => existing.Id != assignment.Id))
+                {
+                    Assignments.Add(assignment);
+                }
+
+                return Task.CompletedTask;
+            }
+
+            public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+            {
+                SaveChangesCalls++;
                 return Task.CompletedTask;
             }
         }

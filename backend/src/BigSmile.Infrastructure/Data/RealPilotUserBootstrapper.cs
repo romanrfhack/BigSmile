@@ -44,6 +44,7 @@ namespace BigSmile.Infrastructure.Data
         private readonly IBranchRepository _branchRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserTenantMembershipRepository _membershipRepository;
+        private readonly IUserBranchAssignmentStore _branchAssignmentStore;
         private readonly IRoleRepository _roleRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly ILogger<RealPilotUserBootstrapper> _logger;
@@ -53,6 +54,7 @@ namespace BigSmile.Infrastructure.Data
             IBranchRepository branchRepository,
             IUserRepository userRepository,
             IUserTenantMembershipRepository membershipRepository,
+            IUserBranchAssignmentStore branchAssignmentStore,
             IRoleRepository roleRepository,
             IPasswordHasher passwordHasher,
             ILogger<RealPilotUserBootstrapper> logger)
@@ -61,6 +63,7 @@ namespace BigSmile.Infrastructure.Data
             _branchRepository = branchRepository;
             _userRepository = userRepository;
             _membershipRepository = membershipRepository;
+            _branchAssignmentStore = branchAssignmentStore;
             _roleRepository = roleRepository;
             _passwordHasher = passwordHasher;
             _logger = logger;
@@ -315,13 +318,15 @@ namespace BigSmile.Infrastructure.Data
             RealPilotUserBootstrapResult result,
             CancellationToken cancellationToken)
         {
-            var existingAssignment = membership.BranchAssignments
-                .FirstOrDefault(assignment => assignment.BranchId == branch.Id);
+            var existingAssignment = await _branchAssignmentStore.GetByMembershipAndBranchAsync(
+                membership.Id,
+                branch.Id,
+                cancellationToken);
 
             if (existingAssignment == null)
             {
-                membership.AssignToBranch(branch);
-                await _membershipRepository.UpdateAsync(membership, cancellationToken);
+                var assignment = membership.AssignToBranch(branch);
+                await _branchAssignmentStore.AddAsync(assignment, cancellationToken);
                 result.BranchAssignmentsCreated++;
 
                 _logger.LogInformation(
@@ -335,7 +340,7 @@ namespace BigSmile.Infrastructure.Data
             if (!existingAssignment.IsActive)
             {
                 existingAssignment.Activate();
-                await _membershipRepository.UpdateAsync(membership, cancellationToken);
+                await _branchAssignmentStore.SaveChangesAsync(cancellationToken);
                 result.BranchAssignmentsReactivated++;
 
                 _logger.LogInformation(
