@@ -117,6 +117,22 @@ describe('OdontogramGridComponent', () => {
     expect(summaryText).toContain('1');
   });
 
+  it('places the selected-tooth summary in the side inspector outside the arch chart', () => {
+    component.teeth = buildAdultTeeth();
+    component.selectedToothCode = '16';
+    fixture.detectChanges();
+
+    const archContent = fixture.nativeElement.querySelector('.arch-content') as HTMLElement | null;
+    const inspector = fixture.nativeElement.querySelector('.selected-tooth-inspector') as HTMLElement | null;
+    const chartInspector = fixture.nativeElement.querySelector('.arch-chart .selected-tooth-inspector');
+
+    expect(archContent).not.toBeNull();
+    expect(inspector).not.toBeNull();
+    expect(chartInspector).toBeNull();
+    expect(archContent?.firstElementChild).toBe(inspector);
+    expect(archContent?.classList.contains('has-inspector')).toBe(true);
+  });
+
   it('updates the selected-tooth summary when another tooth is selected', () => {
     component.teeth = buildAdultTeeth();
     component.selectedToothCode = '11';
@@ -175,7 +191,7 @@ describe('OdontogramGridComponent', () => {
   }
 
   function readSummaryText(): string {
-    const summary = fixture.nativeElement.querySelector('.selected-summary') as HTMLElement | null;
+    const summary = fixture.nativeElement.querySelector('.selected-tooth-inspector') as HTMLElement | null;
 
     if (!summary) {
       throw new Error('Selected-tooth summary was not rendered.');
