@@ -1,0 +1,166 @@
+name: Deploy Frontend to VPS
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: bigsmile-frontend-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-frontend:
+    name: Build and deploy frontend
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Test frontend
+        working-directory: frontend
+        run: npm test -- --watch=false
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build -- --configuration production
+
+      - name: Package frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p .deploy/packages
+
+          FRONT_DIST="$(find frontend/dist -type f -name index.html -printf '%h\n' | head -n 1)"
+
+          if [ -z "$FRONT_DIST" ]; then
+            echo "ERROR: index.html not found under frontend/dist"
+            exit 1
+          fi
+
+          echo "Frontend dist: $FRONT_DIST"
+
+          tar -czf .deploy/packages/bigsmile-frontend.tgz -C "$FRONT_DIST" .
+
+          test -f .deploy/packages/bigsmile-frontend.tgz
+          tar -tzf .deploy/packages/bigsmile-frontend.tgz | grep -E '(^|/)index.html$'
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/bigsmile_deploy_key
+          chmod 600 ~/.ssh/bigsmile_deploy_key
+
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/bigsmile_deploy_key \
+            -p "$VPS_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'hostname && whoami && test -d /var/www/bigsmile && test -f /etc/nginx/sites-available/bigsmile'
+
+      - name: Upload frontend package
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          set -euo pipefail
+
+          REMOTE_PACKAGE="/tmp/bigsmile-frontend-${GITHUB_SHA}.tgz"
+
+          cat .deploy/packages/bigsmile-frontend.tgz \
+            | ssh -i ~/.ssh/bigsmile_deploy_key \
+                -p "$VPS_PORT" \
+                -o BatchMode=yes \
+                "$VPS_USER@$VPS_HOST" \
+                "cat > '$REMOTE_PACKAGE' && ls -lh '$REMOTE_PACKAGE'"
+
+      - name: Activate frontend release
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          set -euo pipefail
+
+          REMOTE_PACKAGE="/tmp/bigsmile-frontend-${GITHUB_SHA}.tgz"
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          ssh -i ~/.ssh/bigsmile_deploy_key \
+            -p "$VPS_PORT" \
+            -o BatchMode=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "REMOTE_PACKAGE='$REMOTE_PACKAGE' SHORT_SHA='$SHORT_SHA' bash -s" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          test -f "$REMOTE_PACKAGE"
+
+          PREV_RELEASE="$(readlink -f /var/www/bigsmile/current)"
+          RELEASE_ID="$(date +%Y%m%d%H%M%S)-$SHORT_SHA"
+          NEW_RELEASE="/var/www/bigsmile/releases/$RELEASE_ID"
+
+          echo "Previous release: $PREV_RELEASE"
+          echo "New release:      $NEW_RELEASE"
+
+          install -d -o www-data -g www-data "$NEW_RELEASE/backend"
+          install -d -o www-data -g www-data "$NEW_RELEASE/frontend"
+
+          cp -a "$PREV_RELEASE/backend/." "$NEW_RELEASE/backend/"
+
+          tar -xzf "$REMOTE_PACKAGE" -C "$NEW_RELEASE/frontend"
+
+          chown -R www-data:www-data "$NEW_RELEASE"
+
+          ln -sfn /var/www/bigsmile/shared/appsettings.Production.json \
+            "$NEW_RELEASE/backend/appsettings.Production.json"
+
+          echo "$PREV_RELEASE" > /var/www/bigsmile/releases/.previous
+          echo "$RELEASE_ID" > /var/www/bigsmile/releases/.latest
+
+          ln -sfn "$NEW_RELEASE" /var/www/bigsmile/current
+
+          test -f /var/www/bigsmile/current/frontend/index.html
+          test -f /var/www/bigsmile/current/backend/BigSmile.Api.dll
+          test -L /var/www/bigsmile/current/backend/appsettings.Production.json
+
+          nginx -t
+          systemctl reload nginx
+
+          curl -fsSI http://127.0.0.1 -H "Host: bigsmile.com.mx" | grep -E 'HTTP/.* 301|HTTP/.* 401|HTTP/.* 200'
+
+          curl -k -fsSI \
+            --resolve bigsmile.com.mx:443:127.0.0.1 \
+            https://bigsmile.com.mx \
+            | grep -E 'HTTP/.* 401|www-authenticate: Basic|WWW-Authenticate: Basic' || true
+
+          echo "Frontend deploy completed: $RELEASE_ID"
+          REMOTE_SCRIPT
