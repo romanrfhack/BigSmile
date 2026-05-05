@@ -78,11 +78,11 @@ import { TranslatePipe } from '../../../shared/i18n';
     .session-card {
       display: grid;
       gap: 1.5rem;
-      border: 1px solid #d7deea;
-      border-radius: 16px;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-lg);
       padding: 1.5rem;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f8fc 100%);
-      box-shadow: 0 18px 40px rgba(31, 55, 86, 0.08);
+      background: var(--bsm-gradient-surface);
+      box-shadow: var(--bsm-shadow-md);
     }
 
     .session-header {
@@ -94,12 +94,12 @@ import { TranslatePipe } from '../../../shared/i18n';
 
     .session-header h2 {
       margin: 0 0 0.25rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .session-header p {
       margin: 0;
-      color: #4b5d72;
+      color: var(--bsm-color-text-muted);
     }
 
     .session-actions {
@@ -117,9 +117,9 @@ import { TranslatePipe } from '../../../shared/i18n';
 
     .session-grid div {
       padding: 1rem;
-      border-radius: 12px;
-      background: #ffffff;
-      border: 1px solid #e0e8f2;
+      border-radius: var(--bsm-radius-md);
+      background: var(--bsm-color-bg);
+      border: 1px solid var(--bsm-color-border);
     }
 
     dt {
@@ -127,18 +127,18 @@ import { TranslatePipe } from '../../../shared/i18n';
       font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #6b7f96;
+      color: var(--bsm-color-text-muted);
     }
 
     dd {
       margin: 0;
-      color: #18324a;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
     }
 
     .list-section h3 {
       margin: 0 0 0.75rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .tag-list {
@@ -152,29 +152,29 @@ import { TranslatePipe } from '../../../shared/i18n';
 
     .tag-list li {
       padding: 0.5rem 0.75rem;
-      border-radius: 999px;
-      background: #e7f0fb;
-      color: #214c7b;
+      border-radius: var(--bsm-radius-pill);
+      background: var(--bsm-color-accent-soft);
+      color: var(--bsm-color-accent-dark);
       font-size: 0.9rem;
       font-weight: 600;
     }
 
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.7rem 1rem;
       font-weight: 600;
       cursor: pointer;
     }
 
     .btn-primary {
-      background: #1d6ed8;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
 
     .btn-secondary {
-      background: #e9eef5;
-      color: #16324f;
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-primary-dark);
     }
 
     .btn:disabled {
@@ -183,7 +183,7 @@ import { TranslatePipe } from '../../../shared/i18n';
     }
 
     .muted {
-      color: #62758a;
+      color: var(--bsm-color-text-muted);
       margin: 0;
     }
 

@@ -63,7 +63,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
       display: grid;
       gap: 0.75rem;
       border-radius: 16px;
-      border: 1px solid #d7dfe8;
+      border: 1px solid var(--bsm-color-border);
       background: #ffffff;
       padding: 1rem;
     }
@@ -76,7 +76,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
     }
 
     strong {
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: 1rem;
     }
 
@@ -114,7 +114,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
       border: none;
       border-radius: 999px;
       padding: 0.65rem 0.95rem;
-      background: #16324f;
+      background: var(--bsm-color-text-brand);
       color: #ffffff;
       font: inherit;
       font-weight: 700;

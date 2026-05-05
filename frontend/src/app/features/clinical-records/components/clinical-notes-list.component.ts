@@ -40,7 +40,7 @@ import { ClinicalNote } from '../models/clinical-record.models';
       display: grid;
       gap: 0.55rem;
       border-radius: 16px;
-      border: 1px solid #d7dfe8;
+      border: 1px solid var(--bsm-color-border);
       background: #ffffff;
       padding: 1rem;
     }
@@ -50,7 +50,7 @@ import { ClinicalNote } from '../models/clinical-record.models';
       justify-content: space-between;
       gap: 1rem;
       flex-wrap: wrap;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     header span {

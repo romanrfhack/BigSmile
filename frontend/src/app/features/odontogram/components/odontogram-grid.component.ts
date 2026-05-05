@@ -153,7 +153,7 @@ interface SelectedToothSummary {
       display: flex;
       gap: 1rem;
       flex-wrap: wrap;
-      color: #52677f;
+      color: var(--bsm-color-text-muted);
       font-size: 0.85rem;
       font-weight: 700;
     }
@@ -173,30 +173,33 @@ interface SelectedToothSummary {
 
     .surface-dot,
     .surface-signal {
-      background: #0f766e;
+      background: var(--bsm-color-accent-accessible);
     }
 
     .finding-dot,
     .finding-signal {
-      background: #b45309;
+      background: var(--bsm-color-primary);
     }
 
     .chart-scroll {
+      box-sizing: border-box;
       min-width: 0;
-      overflow-x: auto;
-      padding: 0.25rem 0.1rem 0.65rem;
+      overflow-x: hidden;
+      padding: 0.25rem 0 0.65rem;
     }
 
     .arch-chart {
+      box-sizing: border-box;
       position: relative;
       min-width: 0;
       width: 100%;
+      max-width: 100%;
       height: 660px;
-      border-radius: 22px;
-      border: 1px solid #cfdae6;
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
       background:
         radial-gradient(ellipse at 50% 50%, rgba(255, 235, 229, 0.74) 0 25%, transparent 26%),
-        linear-gradient(180deg, #fbfdff 0%, #eef5f8 50%, #fbfdff 100%);
+        linear-gradient(180deg, #ffffff 0%, var(--bsm-color-accent-soft) 50%, #ffffff 100%);
       overflow: hidden;
     }
 
@@ -205,7 +208,7 @@ interface SelectedToothSummary {
       left: 50%;
       top: 4.5rem;
       bottom: 4.5rem;
-      border-left: 1px dashed rgba(86, 112, 141, 0.32);
+      border-left: 1px dashed rgba(100, 42, 143, 0.24);
       z-index: 1;
     }
 
@@ -221,7 +224,7 @@ interface SelectedToothSummary {
       left: 6.5%;
       right: 6.5%;
       height: 40%;
-      border: 2px solid rgba(84, 113, 142, 0.2);
+      border: 2px solid rgba(100, 42, 143, 0.16);
       z-index: 1;
     }
 
@@ -241,7 +244,7 @@ interface SelectedToothSummary {
       position: absolute;
       left: 1rem;
       margin: 0;
-      color: #52677f;
+      color: var(--bsm-color-text-muted);
       font-size: 0.8rem;
       font-weight: 800;
       text-transform: uppercase;
@@ -261,9 +264,9 @@ interface SelectedToothSummary {
       position: absolute;
       width: 2.65rem;
       min-height: 3.45rem;
-      border: 1px solid #cbd8e5;
+      border: 1px solid var(--bsm-color-border);
       border-radius: 0.82rem 0.82rem 1rem 1rem;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
       padding: 0.35rem 0.22rem 0.3rem;
       display: grid;
       justify-items: center;
@@ -278,28 +281,28 @@ interface SelectedToothSummary {
 
     .tooth-button:hover,
     .tooth-button:focus-visible {
-      border-color: #7aa8d9;
+      border-color: var(--bsm-color-accent-accessible);
       transform: translate(-50%, -50%) rotate(var(--tooth-rotation)) translateY(-2px);
-      box-shadow: 0 10px 20px rgba(20, 48, 79, 0.08);
+      box-shadow: var(--bsm-shadow-sm);
       outline: none;
     }
 
     .tooth-button.is-selected {
-      border-color: #0a5bb5;
-      box-shadow: 0 0 0 3px rgba(10, 91, 181, 0.18), 0 10px 20px rgba(20, 48, 79, 0.1);
+      border-color: var(--bsm-color-primary);
+      box-shadow: 0 0 0 3px rgba(100, 42, 143, 0.18), var(--bsm-shadow-sm);
       z-index: 4;
     }
 
     .tooth-button.has-surface-signal {
-      border-bottom-color: #0f766e;
+      border-bottom-color: var(--bsm-color-accent-accessible);
     }
 
     .tooth-button.has-finding-signal {
-      border-top-color: #b45309;
+      border-top-color: var(--bsm-color-primary);
     }
 
     .tooth-number {
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: 0.86rem;
       font-weight: 800;
       line-height: 1;
@@ -308,10 +311,10 @@ interface SelectedToothSummary {
     .tooth-crown {
       width: 1.48rem;
       height: 1.08rem;
-      border: 1px solid rgba(74, 99, 126, 0.28);
+      border: 1px solid rgba(100, 42, 143, 0.16);
       border-radius: 0.62rem 0.62rem 0.78rem 0.78rem;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(238, 244, 250, 0.88));
-      box-shadow: inset 0 -5px 8px rgba(102, 126, 152, 0.08);
+      box-shadow: inset 0 -5px 8px rgba(100, 42, 143, 0.07);
     }
 
     .tooth-signals {
@@ -353,17 +356,17 @@ interface SelectedToothSummary {
       left: 1.25rem;
       top: 9.5rem;
       width: 11.25rem;
-      border-left: 3px solid rgba(10, 91, 181, 0.35);
+      border-left: 3px solid rgba(100, 42, 143, 0.35);
       padding-inline-start: 0.75rem;
       background: transparent;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       pointer-events: none;
       z-index: 3;
     }
 
     .summary-eyebrow {
       margin: 0 0 0.55rem;
-      color: #52677f;
+      color: var(--bsm-color-text-muted);
       font-size: 0.76rem;
       font-weight: 800;
       text-transform: uppercase;
@@ -382,7 +385,7 @@ interface SelectedToothSummary {
 
     .summary-grid dt {
       margin: 0 0 0.14rem;
-      color: #718298;
+      color: var(--bsm-color-text-muted);
       font-size: 0.64rem;
       font-weight: 800;
       text-transform: uppercase;
@@ -390,21 +393,20 @@ interface SelectedToothSummary {
 
     .summary-grid dd {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: 0.84rem;
       font-weight: 700;
       line-height: 1.2;
     }
 
     @media (max-width: 860px) {
+      .chart-scroll {
+        overflow-x: auto;
+      }
+
       .arch-chart {
         width: 860px;
-      }
-    }
-
-    @media (max-width: 980px) {
-      .chart-scroll {
-        margin-inline: -0.2rem;
+        max-width: none;
       }
     }
   `]

@@ -153,8 +153,8 @@ import {
     .state-card,
     .quote-meta {
       border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border: 1px solid var(--bsm-color-border);
+      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
       padding: 1.4rem 1.5rem;
       box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
     }
@@ -175,19 +175,19 @@ import {
       margin: 0 0 0.4rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
     h2 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .subtitle {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 62ch;
     }
 
@@ -205,12 +205,12 @@ import {
 
     .action-link {
       text-decoration: none;
-      color: #0a5bb5;
+      color: var(--bsm-color-primary);
       font-weight: 700;
     }
 
     .action-secondary {
-      color: #4d6278;
+      color: var(--bsm-color-text-muted);
     }
 
     .state-error {
@@ -224,12 +224,12 @@ import {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #718298;
+      color: var(--bsm-color-text-muted);
     }
 
     dd {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
       word-break: break-word;
     }

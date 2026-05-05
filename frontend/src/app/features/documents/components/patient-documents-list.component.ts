@@ -65,8 +65,8 @@ import { PatientDocument } from '../models/patient-document.models';
   styles: [`
     .documents-card {
       border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border: 1px solid var(--bsm-color-border);
+      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
       padding: 1.4rem 1.5rem;
       box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
       display: grid;
@@ -83,12 +83,12 @@ import { PatientDocument } from '../models/patient-document.models';
     h3,
     h4 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     p {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 62ch;
     }
 
@@ -110,7 +110,7 @@ import { PatientDocument } from '../models/patient-document.models';
     }
 
     .document-row {
-      border: 1px solid #d7dfe8;
+      border: 1px solid var(--bsm-color-border);
       border-radius: 18px;
       padding: 1rem;
       display: flex;
@@ -132,12 +132,12 @@ import { PatientDocument } from '../models/patient-document.models';
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #718298;
+      color: var(--bsm-color-text-muted);
     }
 
     dd {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
       word-break: break-word;
     }
@@ -157,7 +157,7 @@ import { PatientDocument } from '../models/patient-document.models';
     }
 
     .primary-action {
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
 

@@ -79,34 +79,34 @@ import { AppointmentBlockFormValue } from '../models/scheduling.models';
       margin: 0 0 0.35rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.78rem;
       font-weight: 700;
     }
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .subtitle {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 44ch;
     }
 
     .text-button {
       border: none;
       background: transparent;
-      color: #0a5bb5;
+      color: var(--bsm-color-accent-accessible);
       cursor: pointer;
       font-weight: 700;
     }
 
     .branch-banner {
-      border-radius: 14px;
-      border: 1px solid #d7dfe8;
-      background: #f5f9fc;
+      border-radius: var(--bsm-radius-md);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-color-surface);
       padding: 0.9rem 1rem;
     }
 
@@ -115,27 +115,37 @@ import { AppointmentBlockFormValue } from '../models/scheduling.models';
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #718298;
+      color: var(--bsm-color-text-muted);
       margin-bottom: 0.25rem;
     }
 
     .branch-banner strong {
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .field {
       display: grid;
       gap: 0.45rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
     }
 
     .field input {
-      border: 1px solid #c8d4df;
-      border-radius: 14px;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-md);
       padding: 0.85rem 0.95rem;
       font: inherit;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     .time-grid {
@@ -160,7 +170,7 @@ import { AppointmentBlockFormValue } from '../models/scheduling.models';
 
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.85rem 1.1rem;
       font: inherit;
       font-weight: 700;
@@ -168,13 +178,13 @@ import { AppointmentBlockFormValue } from '../models/scheduling.models';
     }
 
     .btn-primary {
-      background: #8b4f0f;
+      background: var(--bsm-color-accent-dark);
       color: #ffffff;
     }
 
     .btn-secondary {
-      background: #e5edf5;
-      color: #17304d;
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-primary-dark);
     }
 
     @media (max-width: 768px) {

@@ -1,1 +1,73 @@
-/* You can add global styles to this file, and also import other style files */
+@use './styles/brand-tokens';
+
+html {
+  background: var(--bsm-color-bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bsm-color-bg);
+  color: var(--bsm-color-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--bsm-color-accent-accessible);
+  transition:
+    color var(--bsm-motion-fast) var(--bsm-ease-standard),
+    background-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+    border-color var(--bsm-motion-fast) var(--bsm-ease-standard);
+}
+
+a:hover {
+  color: var(--bsm-color-accent-dark);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+input,
+select,
+textarea,
+a {
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--bsm-shadow-focus);
+  }
+}
+
+button {
+  transition:
+    background-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+    border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+    box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+    color var(--bsm-motion-fast) var(--bsm-ease-standard),
+    transform var(--bsm-motion-fast) var(--bsm-ease-standard);
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

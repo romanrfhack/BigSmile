@@ -1,0 +1,38 @@
+:root {
+  --bsm-color-primary: #642A8F;
+  --bsm-color-primary-dark: #4B1F70;
+  --bsm-color-primary-soft: #F1E8F7;
+
+  --bsm-color-accent: #00BAF0;
+  --bsm-color-accent-accessible: #007EA3;
+  --bsm-color-accent-dark: #006F95;
+  --bsm-color-accent-soft: #E6F8FE;
+
+  --bsm-color-sky: #67CCE5;
+  --bsm-color-lavender: #8E70A5;
+
+  --bsm-color-bg: #FFFFFF;
+  --bsm-color-surface: #F8FBFD;
+  --bsm-color-border: #DCEEF5;
+
+  --bsm-color-text: #202124;
+  --bsm-color-text-brand: #2B1B3A;
+  --bsm-color-text-muted: #64748B;
+
+  --bsm-gradient-brand: linear-gradient(135deg, #642A8F 0%, #00BAF0 100%);
+  --bsm-gradient-surface: linear-gradient(180deg, #FFFFFF 0%, #F8FBFD 100%);
+
+  --bsm-shadow-sm: 0 2px 8px rgba(100, 42, 143, 0.08);
+  --bsm-shadow-md: 0 12px 30px rgba(0, 186, 240, 0.14);
+  --bsm-shadow-focus: 0 0 0 3px rgba(0, 186, 240, 0.24);
+
+  --bsm-radius-sm: 8px;
+  --bsm-radius-md: 12px;
+  --bsm-radius-lg: 18px;
+  --bsm-radius-pill: 999px;
+
+  --bsm-motion-fast: 120ms;
+  --bsm-motion-normal: 180ms;
+  --bsm-motion-slow: 260ms;
+  --bsm-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

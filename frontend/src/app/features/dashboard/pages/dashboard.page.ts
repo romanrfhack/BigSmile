@@ -49,11 +49,11 @@ import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 
     .dashboard-head,
     .state-card {
-      border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-gradient-surface);
       padding: 1.4rem 1.5rem;
-      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+      box-shadow: var(--bsm-shadow-md);
     }
 
     .dashboard-head {
@@ -67,25 +67,25 @@ import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
       margin: 0 0 0.4rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
     h2 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .subtitle {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 62ch;
     }
 
     .generated-at {
       margin: 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       font-weight: 700;
       white-space: nowrap;
     }

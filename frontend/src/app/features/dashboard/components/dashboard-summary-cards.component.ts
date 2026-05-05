@@ -31,16 +31,26 @@ type DashboardCard = {
     }
 
     .summary-card {
-      border: 1px solid #d7dfe8;
-      border-radius: 20px;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-lg);
       padding: 1.2rem;
-      background: linear-gradient(180deg, #ffffff 0%, #f4f8fb 100%);
-      box-shadow: 0 18px 34px rgba(20, 48, 79, 0.08);
+      background: var(--bsm-gradient-surface);
+      box-shadow: var(--bsm-shadow-sm);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    .summary-card:hover {
+      border-color: rgba(0, 126, 163, 0.28);
+      box-shadow: var(--bsm-shadow-md);
+      transform: translateY(-1px);
     }
 
     .summary-card p {
       margin: 0;
-      color: #58708a;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.78rem;
       font-weight: 800;
       letter-spacing: 0.08em;
@@ -50,13 +60,13 @@ type DashboardCard = {
     .summary-card strong {
       display: block;
       margin: 0.55rem 0 0.35rem;
-      color: #14324d;
+      color: var(--bsm-color-primary);
       font-size: clamp(2rem, 5vw, 3.2rem);
       line-height: 1;
     }
 
     .summary-card span {
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       font-size: 0.92rem;
     }
   `]

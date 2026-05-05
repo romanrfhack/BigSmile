@@ -202,9 +202,9 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
   `,
   styles: [`
     .editor-card {
-      border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-gradient-surface);
       padding: 1.4rem 1.5rem;
       display: grid;
       gap: 1rem;
@@ -214,20 +214,20 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .copy,
     .muted {
       margin: 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
     }
 
     .meta-grid {
@@ -241,12 +241,12 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #718298;
+      color: var(--bsm-color-text-muted);
     }
 
     dd {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
       word-break: break-word;
     }
@@ -262,23 +262,33 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
       display: grid;
       gap: 0.35rem;
       min-width: 220px;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
     }
 
     select {
-      border-radius: 12px;
-      border: 1px solid #c7d3e0;
+      border-radius: var(--bsm-radius-md);
+      border: 1px solid var(--bsm-color-border);
       padding: 0.75rem 0.85rem;
       font: inherit;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     .primary-action {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.85rem 1.2rem;
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
       font-weight: 700;
       cursor: pointer;
@@ -292,7 +302,7 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
     .surface-section {
       display: grid;
       gap: 1rem;
-      border-top: 1px solid #d7dfe8;
+      border-top: 1px solid var(--bsm-color-border);
       padding-top: 1rem;
     }
 
@@ -305,7 +315,7 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
 
     h4 {
       margin: 0.25rem 0 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .surface-grid {
@@ -315,9 +325,9 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
     }
 
     .surface-card {
-      border-radius: 16px;
-      border: 1px solid #d6dfeb;
-      background: #ffffff;
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-color-bg);
       padding: 0.8rem;
       display: grid;
       gap: 0.35rem;
@@ -326,18 +336,18 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
     }
 
     .surface-card.is-selected {
-      border-color: #0a5bb5;
-      box-shadow: 0 0 0 2px rgba(10, 91, 181, 0.12);
+      border-color: var(--bsm-color-primary);
+      box-shadow: 0 0 0 2px rgba(100, 42, 143, 0.14);
     }
 
     .surface-code {
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: 0.95rem;
       font-weight: 800;
     }
 
     .surface-status {
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       font-size: 0.85rem;
       font-weight: 600;
     }
@@ -363,7 +373,7 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
     .finding-section {
       display: grid;
       gap: 0.9rem;
-      border-top: 1px solid #e1e8ef;
+      border-top: 1px solid var(--bsm-color-border);
       padding-top: 1rem;
     }
 
@@ -373,9 +383,9 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
     }
 
     .finding-card {
-      border-radius: 16px;
-      border: 1px solid #d6dfeb;
-      background: #ffffff;
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-color-bg);
       padding: 0.85rem;
       display: flex;
       justify-content: space-between;
@@ -387,18 +397,18 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
     .finding-meta {
       display: grid;
       gap: 0.2rem;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
     }
 
     .finding-meta strong {
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .secondary-action {
-      border-radius: 999px;
-      border: 1px solid #d6dfeb;
-      background: #ffffff;
-      color: #16324f;
+      border-radius: var(--bsm-radius-pill);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text-brand);
       padding: 0.75rem 1rem;
       font-weight: 700;
       cursor: pointer;

@@ -32,8 +32,8 @@ import { TranslatePipe } from '../../../shared/i18n';
       display: grid;
       gap: 0.85rem;
       border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border: 1px solid var(--bsm-color-border);
+      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
       padding: 1.5rem;
       box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
     }
@@ -42,19 +42,19 @@ import { TranslatePipe } from '../../../shared/i18n';
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     p {
       margin: 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 58ch;
     }
 
@@ -73,7 +73,7 @@ import { TranslatePipe } from '../../../shared/i18n';
     }
 
     .btn-primary {
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
   `]

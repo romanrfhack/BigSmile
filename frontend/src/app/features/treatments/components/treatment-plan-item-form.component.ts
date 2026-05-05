@@ -80,8 +80,8 @@ import {
       display: grid;
       gap: 1rem;
       border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f4f8fb 100%);
+      border: 1px solid var(--bsm-color-border);
+      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
       padding: 1.4rem 1.5rem;
       box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
     }
@@ -97,19 +97,19 @@ import {
       margin: 0 0 0.4rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .copy {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 62ch;
     }
 
@@ -126,18 +126,18 @@ import {
     label {
       display: grid;
       gap: 0.45rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
     }
 
     input,
     select,
     textarea {
-      border: 1px solid #c8d4df;
+      border: 1px solid var(--bsm-color-border);
       border-radius: 12px;
       padding: 0.8rem 0.9rem;
       font: inherit;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       background: #ffffff;
     }
 
@@ -169,7 +169,7 @@ import {
     }
 
     .btn-primary {
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
 

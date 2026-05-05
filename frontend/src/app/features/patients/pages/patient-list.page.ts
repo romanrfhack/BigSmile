@@ -62,11 +62,11 @@ import { PatientsFacade } from '../facades/patients.facade';
 
     .page-head,
     .search-panel {
-      border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-gradient-surface);
       padding: 1.4rem 1.5rem;
-      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+      box-shadow: var(--bsm-shadow-md);
     }
 
     .page-head {
@@ -80,20 +80,20 @@ import { PatientsFacade } from '../facades/patients.facade';
       margin: 0 0 0.4rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
     h2 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: clamp(1.8rem, 2vw, 2.4rem);
     }
 
     .subtitle {
       margin: 0.5rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 60ch;
     }
 
@@ -108,7 +108,7 @@ import { PatientsFacade } from '../facades/patients.facade';
     .toggle-field {
       display: grid;
       gap: 0.45rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
     }
 
@@ -121,17 +121,27 @@ import { PatientsFacade } from '../facades/patients.facade';
     }
 
     input[type='search'] {
-      border: 1px solid #c8d4df;
-      border-radius: 14px;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-md);
       padding: 0.9rem 1rem;
       font: inherit;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    input[type='search']:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     .btn {
       text-decoration: none;
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.85rem 1.1rem;
       font: inherit;
       font-weight: 700;
@@ -139,13 +149,18 @@ import { PatientsFacade } from '../facades/patients.facade';
     }
 
     .btn-primary {
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
 
     .btn-secondary {
-      background: #e5edf5;
-      color: #17304d;
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-primary-dark);
+    }
+
+    .btn-primary:not(:disabled):hover,
+    .btn-secondary:not(:disabled):hover {
+      box-shadow: var(--bsm-shadow-sm);
     }
 
     @media (max-width: 900px) {

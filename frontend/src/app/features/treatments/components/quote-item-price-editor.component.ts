@@ -30,16 +30,16 @@ import { TranslatePipe } from '../../../shared/i18n';
     label {
       display: grid;
       gap: 0.45rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
     }
 
     input {
-      border: 1px solid #c8d4df;
+      border: 1px solid var(--bsm-color-border);
       border-radius: 12px;
       padding: 0.8rem 0.9rem;
       font: inherit;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       background: #ffffff;
     }
 
@@ -54,7 +54,7 @@ import { TranslatePipe } from '../../../shared/i18n';
     }
 
     .btn-primary {
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
 

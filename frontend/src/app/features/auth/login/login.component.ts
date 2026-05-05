@@ -64,9 +64,14 @@ import { TranslatePipe } from '../../../shared/i18n';
       max-width: 400px;
       margin: 2rem auto;
       padding: 2rem;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fff;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-lg);
+      background: var(--bsm-gradient-surface);
+      box-shadow: var(--bsm-shadow-md);
+    }
+    h2 {
+      color: var(--bsm-color-text-brand);
+      margin-top: 0;
     }
     .form-group {
       margin-bottom: 1rem;
@@ -75,13 +80,24 @@ import { TranslatePipe } from '../../../shared/i18n';
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
+      color: var(--bsm-color-text-brand);
     }
     .form-control {
       width: 100%;
       padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-sm);
       box-sizing: border-box;
+      color: var(--bsm-color-text);
+      background: var(--bsm-color-bg);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
     .error {
       color: #dc3545;
@@ -93,24 +109,29 @@ import { TranslatePipe } from '../../../shared/i18n';
       padding: 0.75rem;
       background-color: #f8d7da;
       border: 1px solid #f5c6cb;
-      border-radius: 4px;
+      border-radius: var(--bsm-radius-sm);
       color: #721c24;
     }
     .btn {
       width: 100%;
       padding: 0.75rem;
       border: none;
-      border-radius: 4px;
+      border-radius: var(--bsm-radius-pill);
       font-size: 1rem;
       cursor: pointer;
       margin-top: 1rem;
+      font-weight: 700;
     }
     .btn-primary {
-      background-color: #007bff;
+      background-color: var(--bsm-color-primary);
       color: white;
     }
+    .btn-primary:not(:disabled):hover {
+      background-color: var(--bsm-color-primary-dark);
+      box-shadow: var(--bsm-shadow-sm);
+    }
     .btn-primary:disabled {
-      background-color: #6c757d;
+      background-color: var(--bsm-color-text-muted);
       cursor: not-allowed;
     }
   `]

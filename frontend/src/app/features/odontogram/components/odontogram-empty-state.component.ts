@@ -28,9 +28,9 @@ import { TranslatePipe } from '../../../shared/i18n';
   `,
   styles: [`
     .empty-card {
-      border-radius: 20px;
-      border: 1px dashed #b4c4d4;
-      background: linear-gradient(180deg, #fbfdff 0%, #eef5fb 100%);
+      border-radius: var(--bsm-radius-lg);
+      border: 1px dashed var(--bsm-color-border);
+      background: var(--bsm-gradient-surface);
       padding: 1.5rem;
       display: grid;
       gap: 0.8rem;
@@ -40,29 +40,29 @@ import { TranslatePipe } from '../../../shared/i18n';
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .copy,
     .muted {
       margin: 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 60ch;
     }
 
     .primary-action {
       width: fit-content;
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.8rem 1.2rem;
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
       font-weight: 700;
       cursor: pointer;

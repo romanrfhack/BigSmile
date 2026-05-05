@@ -30,12 +30,12 @@ import { TranslatePipe } from '../../../shared/i18n';
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     p {
       margin: 0.75rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 60ch;
     }
 

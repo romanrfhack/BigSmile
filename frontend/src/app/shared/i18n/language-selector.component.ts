@@ -26,24 +26,33 @@ import { TranslatePipe } from './translate.pipe';
     .language-selector {
       display: grid;
       gap: 0.3rem;
-      color: #4d6278;
+      color: var(--bsm-color-text-muted);
       font-weight: 700;
       font-size: 0.86rem;
     }
 
     .language-selector span {
-      color: #607387;
+      color: var(--bsm-color-text-muted);
       font-size: 0.75rem;
       text-transform: uppercase;
     }
 
     .language-selector select {
-      border: 1px solid #c8d4df;
-      border-radius: 12px;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-md);
       padding: 0.55rem 0.7rem;
-      background: #ffffff;
-      color: #17304d;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text-brand);
       font: inherit;
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    .language-selector select:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
   `]
 })

@@ -60,7 +60,7 @@ import {
       display: grid;
       gap: 0.8rem;
       border-radius: 16px;
-      border: 1px solid #d7dfe8;
+      border: 1px solid var(--bsm-color-border);
       background: #ffffff;
       padding: 1rem;
     }
@@ -121,7 +121,7 @@ import {
     }
 
     strong {
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: 1rem;
     }
 

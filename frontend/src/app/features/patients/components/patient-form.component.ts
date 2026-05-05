@@ -158,10 +158,10 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
       display: grid;
       gap: 1.25rem;
       padding: 1.5rem;
-      border-radius: 20px;
-      background: linear-gradient(180deg, #ffffff 0%, #f4f8fb 100%);
-      border: 1px solid #d6dfe8;
-      box-shadow: 0 22px 38px rgba(19, 44, 69, 0.08);
+      border-radius: var(--bsm-radius-lg);
+      background: var(--bsm-gradient-surface);
+      border: 1px solid var(--bsm-color-border);
+      box-shadow: var(--bsm-shadow-md);
     }
 
     .section-head {
@@ -174,19 +174,19 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
     .section-head h2,
     .form-section h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .section-head p {
       margin: 0.35rem 0 0;
-      color: #5d6d82;
+      color: var(--bsm-color-text-muted);
     }
 
     .status-indicator {
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.5rem 0.8rem;
-      background: #e7f2fb;
-      color: #1d4f87;
+      background: var(--bsm-color-accent-soft);
+      color: var(--bsm-color-accent-dark);
       font-weight: 700;
       white-space: nowrap;
     }
@@ -205,18 +205,21 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
     label {
       display: grid;
       gap: 0.45rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
     }
 
     input,
     textarea {
-      border: 1px solid #c8d4df;
-      border-radius: 12px;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-md);
       padding: 0.8rem 0.9rem;
       font: inherit;
-      color: #16324f;
-      background: #ffffff;
+      color: var(--bsm-color-text);
+      background: var(--bsm-color-bg);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
     textarea {
@@ -226,13 +229,14 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
 
     input:focus,
     textarea:focus {
-      outline: 2px solid #b8d5f4;
-      border-color: #7aa8da;
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     textarea:disabled {
-      background: #f2f5f8;
-      color: #7c8da0;
+      background: var(--bsm-color-surface);
+      color: var(--bsm-color-text-muted);
     }
 
     .checkbox-field {
@@ -275,7 +279,7 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
 
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.8rem 1.1rem;
       font: inherit;
       font-weight: 700;
@@ -283,13 +287,13 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
     }
 
     .btn-primary {
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
 
     .btn-secondary {
-      background: #e8eef4;
-      color: #17304d;
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-primary-dark);
     }
 
     .btn:disabled {

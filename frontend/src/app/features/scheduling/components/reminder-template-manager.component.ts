@@ -110,7 +110,7 @@ import {
   styles: [`
     .template-panel {
       border-radius: 20px;
-      border: 1px solid #d7dfe8;
+      border: 1px solid var(--bsm-color-border);
       background: #ffffff;
       padding: 1.25rem;
       box-shadow: 0 18px 30px rgba(20, 48, 79, 0.08);
@@ -127,20 +127,20 @@ import {
       margin: 0 0 0.35rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.78rem;
       font-weight: 700;
     }
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: 1.2rem;
     }
 
     .manual-note {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       font-weight: 700;
     }
 
@@ -149,14 +149,14 @@ import {
       gap: 0.85rem;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       margin-top: 1rem;
-      border-top: 1px solid #dce6ef;
+      border-top: 1px solid var(--bsm-color-border);
       padding-top: 1rem;
     }
 
     .control {
       display: grid;
       gap: 0.4rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 700;
     }
 
@@ -169,7 +169,7 @@ import {
     input,
     textarea {
       width: 100%;
-      border: 1px solid #c8d4df;
+      border: 1px solid var(--bsm-color-border);
       border-radius: 14px;
       padding: 0.8rem 0.9rem;
       font: inherit;
@@ -203,13 +203,13 @@ import {
     }
 
     .btn-primary {
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
     }
 
     .btn-secondary {
-      background: #e5edf5;
-      color: #17304d;
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-text-brand);
     }
 
     .btn-danger {
@@ -225,8 +225,8 @@ import {
     .state-card {
       margin-top: 1rem;
       border-radius: 14px;
-      background: #f5f9fc;
-      color: #5b6e84;
+      background: var(--bsm-color-surface);
+      color: var(--bsm-color-text-muted);
       padding: 0.9rem 1rem;
     }
 
@@ -250,10 +250,10 @@ import {
     }
 
     .template-item {
-      border: 1px solid #dce6ef;
+      border: 1px solid var(--bsm-color-border);
       border-radius: 14px;
       padding: 0.9rem 1rem;
-      background: #f8fbfd;
+      background: var(--bsm-color-surface);
     }
 
     .template-item div:first-child {
@@ -264,7 +264,7 @@ import {
     }
 
     .template-item strong {
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .template-item span {

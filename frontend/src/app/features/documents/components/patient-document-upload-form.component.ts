@@ -37,8 +37,8 @@ import { TranslatePipe } from '../../../shared/i18n';
   styles: [`
     .upload-card {
       border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border: 1px solid var(--bsm-color-border);
+      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
       padding: 1.4rem 1.5rem;
       box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
       display: grid;
@@ -47,12 +47,12 @@ import { TranslatePipe } from '../../../shared/i18n';
 
     h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     p {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       max-width: 62ch;
     }
 
@@ -60,7 +60,7 @@ import { TranslatePipe } from '../../../shared/i18n';
       display: inline-flex;
       align-items: center;
       gap: 0.85rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 700;
       cursor: pointer;
     }
@@ -73,11 +73,11 @@ import { TranslatePipe } from '../../../shared/i18n';
       display: flex;
       gap: 0.75rem;
       flex-wrap: wrap;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .selected-file span {
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
       font-weight: 600;
     }
 
@@ -91,7 +91,7 @@ import { TranslatePipe } from '../../../shared/i18n';
       border: 0;
       border-radius: 999px;
       padding: 0.8rem 1.25rem;
-      background: #0a5bb5;
+      background: var(--bsm-color-primary);
       color: #ffffff;
       font-weight: 700;
       cursor: pointer;

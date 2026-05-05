@@ -58,11 +58,21 @@ import { PatientSummary } from '../models/patient.models';
 
     .result-card,
     .state-card {
-      border-radius: 16px;
-      border: 1px solid #d8e1ea;
-      background: #ffffff;
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-color-bg);
       padding: 1rem 1.1rem;
-      box-shadow: 0 18px 34px rgba(20, 49, 79, 0.08);
+      box-shadow: var(--bsm-shadow-sm);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    .result-card:hover {
+      border-color: rgba(0, 126, 163, 0.24);
+      box-shadow: var(--bsm-shadow-md);
+      transform: translateY(-1px);
     }
 
     .state-error {
@@ -87,12 +97,12 @@ import { PatientSummary } from '../models/patient.models';
 
     h3 {
       margin: 0 0 0.25rem;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .card-head p {
       margin: 0;
-      color: #5b6d82;
+      color: var(--bsm-color-text-muted);
     }
 
     .status-pill {
@@ -132,12 +142,12 @@ import { PatientSummary } from '../models/patient.models';
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #718298;
+      color: var(--bsm-color-text-muted);
     }
 
     dd {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
       word-break: break-word;
     }
@@ -151,12 +161,12 @@ import { PatientSummary } from '../models/patient.models';
 
     .action-link {
       text-decoration: none;
-      color: #0a5bb5;
+      color: var(--bsm-color-accent-accessible);
       font-weight: 700;
     }
 
     .action-secondary {
-      color: #4e6178;
+      color: var(--bsm-color-primary);
     }
 
     @media (max-width: 640px) {

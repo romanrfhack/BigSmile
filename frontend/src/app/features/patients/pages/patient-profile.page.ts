@@ -147,11 +147,11 @@ import { PatientsFacade } from '../facades/patients.facade';
     .profile-head,
     .profile-card,
     .state-card {
-      border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-gradient-surface);
       padding: 1.4rem 1.5rem;
-      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+      box-shadow: var(--bsm-shadow-md);
     }
 
     .profile-head {
@@ -165,7 +165,7 @@ import { PatientsFacade } from '../facades/patients.facade';
       margin: 0 0 0.4rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #56708d;
+      color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
@@ -174,14 +174,14 @@ import { PatientsFacade } from '../facades/patients.facade';
     h3,
     h4 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
     }
 
     .subtitle,
     .identity-bar p,
     .muted {
       margin: 0.45rem 0 0;
-      color: #5b6e84;
+      color: var(--bsm-color-text-muted);
     }
 
     .head-actions {
@@ -198,12 +198,12 @@ import { PatientsFacade } from '../facades/patients.facade';
 
     .action-link {
       text-decoration: none;
-      color: #0a5bb5;
+      color: var(--bsm-color-accent-accessible);
       font-weight: 700;
     }
 
     .action-secondary {
-      color: #4d6278;
+      color: var(--bsm-color-primary);
     }
 
     .state-error {
@@ -220,7 +220,7 @@ import { PatientsFacade } from '../facades/patients.facade';
     }
 
     .status-pill {
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.5rem 0.75rem;
       background: #e8f4ec;
       color: #1d6a3a;
@@ -234,7 +234,7 @@ import { PatientsFacade } from '../facades/patients.facade';
     }
 
     .alert-pill {
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.5rem 0.75rem;
       background: #fff1dd;
       color: #8f5a00;
@@ -254,12 +254,12 @@ import { PatientsFacade } from '../facades/patients.facade';
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #718298;
+      color: var(--bsm-color-text-muted);
     }
 
     dd {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-weight: 600;
       word-break: break-word;
     }

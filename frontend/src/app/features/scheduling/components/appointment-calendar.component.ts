@@ -86,28 +86,28 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
 
     .day-column,
     .state-card {
-      border-radius: 20px;
-      border: 1px solid #d7dfe8;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f9fc 100%);
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-gradient-surface);
       padding: 1rem;
-      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+      box-shadow: var(--bsm-shadow-sm);
     }
 
     .day-head h3 {
       margin: 0;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font-size: 1rem;
     }
 
     .day-head p {
       margin: 0.25rem 0 0;
-      color: #62758a;
+      color: var(--bsm-color-text-muted);
       font-size: 0.9rem;
     }
 
     .empty-state {
       margin-top: 1rem;
-      color: #62758a;
+      color: var(--bsm-color-text-muted);
       font-size: 0.95rem;
     }
 
@@ -117,18 +117,22 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       width: 100%;
       margin-top: 0.9rem;
       text-align: left;
-      border-radius: 16px;
-      border: 1px solid #d6e4ef;
-      background: #ffffff;
+      border-radius: var(--bsm-radius-lg);
+      border: 1px solid var(--bsm-color-border);
+      background: var(--bsm-color-bg);
       padding: 0.95rem 1rem;
       cursor: pointer;
-      color: #16324f;
+      color: var(--bsm-color-text-brand);
       font: inherit;
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
     .appointment-active {
-      border-color: #0a5bb5;
-      box-shadow: inset 0 0 0 1px #0a5bb5;
+      border-color: var(--bsm-color-primary);
+      box-shadow: inset 0 0 0 1px var(--bsm-color-primary), var(--bsm-shadow-sm);
     }
 
     .block-card {
@@ -160,13 +164,13 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       font-size: 0.82rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #62758a;
+      color: var(--bsm-color-text-muted);
       font-weight: 700;
     }
 
     .appointment-card p {
       margin: 0;
-      color: #62758a;
+      color: var(--bsm-color-text-muted);
       font-size: 0.92rem;
     }
 
@@ -174,7 +178,7 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       justify-self: start;
       margin-top: 0.2rem;
       padding: 0.35rem 0.65rem;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       background: #e8f4ec;
       color: #1d6a3a;
       font-size: 0.82rem;
@@ -194,7 +198,7 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
 
     .confirmation-pill {
       padding: 0.35rem 0.65rem;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       background: #fbe6bf;
       color: #8b4f0f;
       font-size: 0.82rem;
