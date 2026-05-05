@@ -42,8 +42,11 @@ interface SelectedToothSummary {
         </span>
       </div>
 
-      <div class="arch-content" [class.has-inspector]="selectedToothSummary !== null">
-        <article *ngIf="selectedToothSummary as summary" class="selected-tooth-inspector" aria-live="polite">
+      <div class="chart-scroll">
+        <div class="arch-chart">
+          <span class="mouth-axis" aria-hidden="true"></span>
+
+          <article *ngIf="selectedToothSummary as summary" class="selected-tooth-inspector" aria-live="polite">
             <p class="summary-eyebrow">{{ 'Selected tooth' | t }}</p>
             <dl class="summary-grid">
               <div>
@@ -75,72 +78,67 @@ interface SelectedToothSummary {
                 <dd>{{ summary.findingCount }}</dd>
               </div>
             </dl>
-        </article>
+          </article>
 
-        <div class="chart-scroll">
-          <div class="arch-chart">
-            <span class="mouth-axis" aria-hidden="true"></span>
+          <section class="arch-panel upper-panel" [attr.aria-label]="'Upper arch' | t">
+            <p class="arch-label">{{ 'Upper arch' | t }}</p>
 
-            <section class="arch-panel upper-panel" [attr.aria-label]="'Upper arch' | t">
-              <p class="arch-label">{{ 'Upper arch' | t }}</p>
+            <button
+              *ngFor="let item of upperTeeth; trackBy: trackByToothCode"
+              type="button"
+              class="tooth-button"
+              [class.is-selected]="item.tooth.toothCode === selectedToothCode"
+              [class.status-healthy]="item.tooth.status === 'Healthy'"
+              [class.status-missing]="item.tooth.status === 'Missing'"
+              [class.status-restored]="item.tooth.status === 'Restored'"
+              [class.status-caries]="item.tooth.status === 'Caries'"
+              [class.has-surface-signal]="hasSurfaceSignal(item.tooth)"
+              [class.has-finding-signal]="hasFindings(item.tooth)"
+              [style.left.%]="item.layout.x"
+              [style.top.%]="item.layout.y"
+              [style.--tooth-rotation]="item.layout.rotation + 'deg'"
+              [attr.aria-pressed]="item.tooth.toothCode === selectedToothCode"
+              [attr.aria-label]="getToothAriaLabel(item.tooth)"
+              [attr.title]="getToothAriaLabel(item.tooth)"
+              (click)="toothSelected.emit(item.tooth.toothCode)">
+              <span class="tooth-number">{{ item.tooth.toothCode }}</span>
+              <span class="tooth-crown" aria-hidden="true"></span>
+              <span class="tooth-signals" aria-hidden="true">
+                <span *ngIf="hasSurfaceSignal(item.tooth)" class="signal surface-signal">S</span>
+                <span *ngIf="hasFindings(item.tooth)" class="signal finding-signal">H</span>
+              </span>
+            </button>
+          </section>
 
-              <button
-                *ngFor="let item of upperTeeth; trackBy: trackByToothCode"
-                type="button"
-                class="tooth-button"
-                [class.is-selected]="item.tooth.toothCode === selectedToothCode"
-                [class.status-healthy]="item.tooth.status === 'Healthy'"
-                [class.status-missing]="item.tooth.status === 'Missing'"
-                [class.status-restored]="item.tooth.status === 'Restored'"
-                [class.status-caries]="item.tooth.status === 'Caries'"
-                [class.has-surface-signal]="hasSurfaceSignal(item.tooth)"
-                [class.has-finding-signal]="hasFindings(item.tooth)"
-                [style.left.%]="item.layout.x"
-                [style.top.%]="item.layout.y"
-                [style.--tooth-rotation]="item.layout.rotation + 'deg'"
-                [attr.aria-pressed]="item.tooth.toothCode === selectedToothCode"
-                [attr.aria-label]="getToothAriaLabel(item.tooth)"
-                [attr.title]="getToothAriaLabel(item.tooth)"
-                (click)="toothSelected.emit(item.tooth.toothCode)">
-                <span class="tooth-number">{{ item.tooth.toothCode }}</span>
-                <span class="tooth-crown" aria-hidden="true"></span>
-                <span class="tooth-signals" aria-hidden="true">
-                  <span *ngIf="hasSurfaceSignal(item.tooth)" class="signal surface-signal">S</span>
-                  <span *ngIf="hasFindings(item.tooth)" class="signal finding-signal">H</span>
-                </span>
-              </button>
-            </section>
+          <section class="arch-panel lower-panel" [attr.aria-label]="'Lower arch' | t">
+            <p class="arch-label">{{ 'Lower arch' | t }}</p>
 
-            <section class="arch-panel lower-panel" [attr.aria-label]="'Lower arch' | t">
-              <p class="arch-label">{{ 'Lower arch' | t }}</p>
-
-              <button
-                *ngFor="let item of lowerTeeth; trackBy: trackByToothCode"
-                type="button"
-                class="tooth-button"
-                [class.is-selected]="item.tooth.toothCode === selectedToothCode"
-                [class.status-healthy]="item.tooth.status === 'Healthy'"
-                [class.status-missing]="item.tooth.status === 'Missing'"
-                [class.status-restored]="item.tooth.status === 'Restored'"
-                [class.status-caries]="item.tooth.status === 'Caries'"
-                [class.has-surface-signal]="hasSurfaceSignal(item.tooth)"
-                [class.has-finding-signal]="hasFindings(item.tooth)"
-                [style.left.%]="item.layout.x"
-                [style.top.%]="item.layout.y"
-                [style.--tooth-rotation]="item.layout.rotation + 'deg'"
-                [attr.aria-pressed]="item.tooth.toothCode === selectedToothCode"
-                [attr.aria-label]="getToothAriaLabel(item.tooth)"
-                [attr.title]="getToothAriaLabel(item.tooth)"
-                (click)="toothSelected.emit(item.tooth.toothCode)">
-                <span class="tooth-number">{{ item.tooth.toothCode }}</span>
-                <span class="tooth-crown" aria-hidden="true"></span>
-                <span class="tooth-signals" aria-hidden="true">
-                  <span *ngIf="hasSurfaceSignal(item.tooth)" class="signal surface-signal">S</span>
-                  <span *ngIf="hasFindings(item.tooth)" class="signal finding-signal">H</span>
-                </span>
-              </button>
-            </section>
-          </div>
+            <button
+              *ngFor="let item of lowerTeeth; trackBy: trackByToothCode"
+              type="button"
+              class="tooth-button"
+              [class.is-selected]="item.tooth.toothCode === selectedToothCode"
+              [class.status-healthy]="item.tooth.status === 'Healthy'"
+              [class.status-missing]="item.tooth.status === 'Missing'"
+              [class.status-restored]="item.tooth.status === 'Restored'"
+              [class.status-caries]="item.tooth.status === 'Caries'"
+              [class.has-surface-signal]="hasSurfaceSignal(item.tooth)"
+              [class.has-finding-signal]="hasFindings(item.tooth)"
+              [style.left.%]="item.layout.x"
+              [style.top.%]="item.layout.y"
+              [style.--tooth-rotation]="item.layout.rotation + 'deg'"
+              [attr.aria-pressed]="item.tooth.toothCode === selectedToothCode"
+              [attr.aria-label]="getToothAriaLabel(item.tooth)"
+              [attr.title]="getToothAriaLabel(item.tooth)"
+              (click)="toothSelected.emit(item.tooth.toothCode)">
+              <span class="tooth-number">{{ item.tooth.toothCode }}</span>
+              <span class="tooth-crown" aria-hidden="true"></span>
+              <span class="tooth-signals" aria-hidden="true">
+                <span *ngIf="hasSurfaceSignal(item.tooth)" class="signal surface-signal">S</span>
+                <span *ngIf="hasFindings(item.tooth)" class="signal finding-signal">H</span>
+              </span>
+            </button>
+          </section>
         </div>
       </div>
     </section>
@@ -183,17 +181,6 @@ interface SelectedToothSummary {
       background: #b45309;
     }
 
-    .arch-content {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1rem;
-      align-items: stretch;
-    }
-
-    .arch-content.has-inspector {
-      grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
-    }
-
     .chart-scroll {
       min-width: 0;
       overflow-x: auto;
@@ -202,7 +189,8 @@ interface SelectedToothSummary {
 
     .arch-chart {
       position: relative;
-      min-width: 1040px;
+      min-width: 0;
+      width: 100%;
       height: 660px;
       border-radius: 22px;
       border: 1px solid #cfdae6;
@@ -361,10 +349,16 @@ interface SelectedToothSummary {
     }
 
     .selected-tooth-inspector {
-      align-self: center;
+      position: absolute;
+      left: 1.25rem;
+      top: 9.5rem;
+      width: 11.25rem;
       border-left: 3px solid rgba(10, 91, 181, 0.35);
-      padding-inline-start: 0.85rem;
+      padding-inline-start: 0.75rem;
+      background: transparent;
       color: #16324f;
+      pointer-events: none;
+      z-index: 3;
     }
 
     .summary-eyebrow {
@@ -402,13 +396,9 @@ interface SelectedToothSummary {
       line-height: 1.2;
     }
 
-    @media (max-width: 900px) {
-      .arch-content.has-inspector {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .selected-tooth-inspector {
-        align-self: stretch;
+    @media (max-width: 860px) {
+      .arch-chart {
+        width: 860px;
       }
     }
 

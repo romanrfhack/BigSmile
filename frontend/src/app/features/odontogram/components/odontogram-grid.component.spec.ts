@@ -117,20 +117,19 @@ describe('OdontogramGridComponent', () => {
     expect(summaryText).toContain('1');
   });
 
-  it('places the selected-tooth summary in the side inspector outside the arch chart', () => {
+  it('places the selected-tooth summary inside the arch chart', () => {
     component.teeth = buildAdultTeeth();
     component.selectedToothCode = '16';
     fixture.detectChanges();
 
-    const archContent = fixture.nativeElement.querySelector('.arch-content') as HTMLElement | null;
+    const chart = fixture.nativeElement.querySelector('.arch-chart') as HTMLElement | null;
     const inspector = fixture.nativeElement.querySelector('.selected-tooth-inspector') as HTMLElement | null;
-    const chartInspector = fixture.nativeElement.querySelector('.arch-chart .selected-tooth-inspector');
+    const externalColumn = fixture.nativeElement.querySelector('.arch-content');
 
-    expect(archContent).not.toBeNull();
+    expect(chart).not.toBeNull();
     expect(inspector).not.toBeNull();
-    expect(chartInspector).toBeNull();
-    expect(archContent?.firstElementChild).toBe(inspector);
-    expect(archContent?.classList.contains('has-inspector')).toBe(true);
+    expect(externalColumn).toBeNull();
+    expect(inspector?.parentElement).toBe(chart);
   });
 
   it('updates the selected-tooth summary when another tooth is selected', () => {
