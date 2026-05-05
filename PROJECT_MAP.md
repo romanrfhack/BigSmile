@@ -872,3 +872,26 @@ When in doubt, follow this order:
 For any new file, feature, or change, ask:
 
 **Does this belong in the right place and preserve Bigsmile as a secure, maintainable, multi-tenant SaaS product?**
+
+---
+
+## Manual VPS Deployment Note
+
+BigSmile has a first accepted manual VPS deployment foundation.
+
+Operational deployment baseline:
+
+- domain: https://bigsmile.com.mx
+- API local binding: 127.0.0.1:5010
+- systemd service: bigsmile-api.service
+- release root: /var/www/bigsmile
+- active symlink: /var/www/bigsmile/current
+- private environment file: /etc/bigsmile/bigsmile-api.env
+- private appsettings file: /var/www/bigsmile/shared/appsettings.Production.json
+- SQL Server target: 127.0.0.1,14330
+- database: BigSmile
+- pilot protection: Nginx Basic Auth
+
+This is documented in docs/decisions/004-manual-vps-deployment-foundation.md.
+
+GitHub Actions deployment should automate the same release/rollback flow and must not introduce a different deployment model without a new decision.
