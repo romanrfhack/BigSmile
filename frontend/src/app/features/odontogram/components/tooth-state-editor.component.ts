@@ -27,7 +27,7 @@ import { SurfaceFindingHistoryListComponent } from './surface-finding-history-li
       <ng-container *ngIf="tooth; else noSelection">
         <p class="eyebrow">{{ 'Selected tooth' | t }}</p>
         <h3>{{ 'Tooth' | t }} {{ tooth.toothCode }}</h3>
-        <p class="copy">{{ 'Minimal tooth state, surface state, and basic surface findings with bounded add/remove history only. No restore, full odontogram versioning, treatment linkage, or advanced charting in Release 4.4.' | t }}</p>
+        <p class="copy">{{ 'Minimal tooth state, surface state, and basic surface findings with bounded add/remove history only. No restore, full odontogram versioning, treatment linkage, or document linkage in Release 4.4.' | t }}</p>
 
         <div class="meta-grid">
           <div>

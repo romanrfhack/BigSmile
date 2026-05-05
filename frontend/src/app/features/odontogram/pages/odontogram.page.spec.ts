@@ -288,6 +288,7 @@ describe('OdontogramPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Healthy');
     expect(fixture.nativeElement.textContent).toContain('Restored');
     expect(fixture.nativeElement.textContent).toContain('findings history stays separate from any future dental timeline');
+    expect(fixture.nativeElement.textContent).toContain('document linkage in Release 4.4');
   });
 
   it('updates the selected tooth state through the facade', () => {

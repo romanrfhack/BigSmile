@@ -92,7 +92,7 @@ import {
             <div>
               <p class="eyebrow">{{ 'Tooth and surface states' | t }}</p>
               <h3>{{ '32 permanent adult teeth' | t }}</h3>
-              <p class="section-copy">{{ 'Surface detail uses the minimal O/M/D/B/L set. Basic findings stay separate from tooth and surface status, and findings history stays separate from any future dental timeline. No restore, full odontogram versioning, treatment linkage, documents, or advanced charting in Release 4.4.' | t }}</p>
+              <p class="section-copy">{{ 'Surface detail uses the minimal O/M/D/B/L set. Basic findings stay separate from tooth and surface status, and findings history stays separate from any future dental timeline. No restore, full odontogram versioning, treatment linkage, or document linkage in Release 4.4.' | t }}</p>
             </div>
           </div>
 
