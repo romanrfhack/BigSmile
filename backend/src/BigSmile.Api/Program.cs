@@ -67,6 +67,8 @@ if (app.Environment.IsDevelopment())
     }
 }
 
+await BigSmile.Infrastructure.Data.RealPilotUserBootstrapper.BootstrapIfRequestedAsync(app.Services);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

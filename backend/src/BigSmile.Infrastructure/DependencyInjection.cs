@@ -48,6 +48,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IUserRepository, EfUserRepository>();
             services.AddScoped<IRoleRepository, EfRoleRepository>();
             services.AddScoped<IUserTenantMembershipRepository, EfUserTenantMembershipRepository>();
+            services.AddScoped<RealPilotUserBootstrapper>();
 
             // Register context as scoped (per request)
             services.AddScoped<TenantContext>();

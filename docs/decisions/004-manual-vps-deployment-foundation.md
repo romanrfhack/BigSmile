@@ -105,6 +105,41 @@ The reserved API port for BigSmile is:
 
 ---
 
+## Temporary Real Pilot User Bootstrap
+
+A temporary startup-gated backend bootstrap exists for creating the first real pilot users.
+
+It runs only when this environment variable is explicitly enabled:
+
+    BIGSMILE_BOOTSTRAP_REAL_USERS=true
+
+Passwords are read only from VPS/runtime environment variables:
+
+    BIGSMILE_BOOTSTRAP_ROMAN_PASSWORD
+    BIGSMILE_BOOTSTRAP_VIRIDIANA_PASSWORD
+    BIGSMILE_BOOTSTRAP_JORGE_PASSWORD
+    BIGSMILE_BOOTSTRAP_USUARIO_SUCURSAL_PASSWORD
+
+The bootstrap must not be used to store passwords in repository files, deployment scripts, documentation, logs, or committed configuration.
+
+Behavior:
+
+- Uses the existing default tenant with subdomain `default`, or exactly one active tenant if no active `default` tenant exists.
+- Creates users only when missing.
+- Creates or reactivates the required tenant memberships with existing role names.
+- Fails clearly if an existing pilot membership has a different role than expected.
+- Uses the existing `PasswordHasher`.
+- Does not change login, JWT, session, authorization, permissions, DTOs, routes, or migrations.
+- Does not expose a public endpoint.
+- For the branch-scoped pilot `TenantUser`, uses an existing active branch when present. If no active branch exists, it creates or reactivates a tenant-owned branch named `Sucursal Principal`.
+- Is idempotent; rerunning it does not duplicate users, memberships, or branch assignments.
+
+After a successful one-time run, remove the bootstrap environment variables and restart the API service so normal Production startup resumes.
+
+Do not disable `admin@bigsmile.local` or remove Basic Auth until `roman@bigsmile.com.mx` has been validated as a working `PlatformAdmin`.
+
+---
+
 ## Deployment Strategy
 
 The current safe manual deployment flow is:
