@@ -143,6 +143,7 @@ Expected layout:
 * `docs/architecture.md`
 * `docs/tenant-model.md`
 * `docs/product-roadmap.md`
+* `docs/frontend-ux-guidelines.md`
 * `docs/contributing.md`
 * `docs/decisions/*.md`
 
