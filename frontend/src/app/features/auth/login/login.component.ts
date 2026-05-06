@@ -10,7 +10,7 @@ import { TranslatePipe } from '../../../shared/i18n';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe],
   template: `
-    <section class="login-page" aria-labelledby="login-title">
+    <section class="login-page" aria-labelledby="login-title" style="--login-background-image: url('brand/fondo.webp')">
       <div class="login-container">
         <header class="brand-panel">
           <img src="brand/logoBS.webp" alt="BigSmile" class="brand-logo" width="260" height="91" />
@@ -68,12 +68,17 @@ import { TranslatePipe } from '../../../shared/i18n';
   styles: [`
     .login-page {
       min-height: 100vh;
+      min-height: 100dvh;
       display: grid;
       place-items: center;
       padding: clamp(1.25rem, 4vw, 3rem);
-      background:
-        radial-gradient(circle at 50% 8%, rgba(230, 248, 254, 0.86), transparent 32rem),
-        var(--bsm-color-bg);
+      background-color: var(--bsm-color-surface);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(230, 248, 254, 0.62) 48%, rgba(241, 232, 247, 0.56)),
+        var(--login-background-image);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
 
     .login-container {
