@@ -19,6 +19,17 @@
   --bsm-color-text-brand: #2B1B3A;
   --bsm-color-text-muted: #64748B;
 
+  --bsm-color-success: #18794E;
+  --bsm-color-success-soft: #E8F7EF;
+  --bsm-color-warning: #8A5A00;
+  --bsm-color-warning-soft: #FFF4D6;
+  --bsm-color-danger: #B42318;
+  --bsm-color-danger-soft: #FDECEC;
+  --bsm-color-neutral-soft: #F4F7FA;
+
+  --bsm-color-skeleton-base: #EAF3F7;
+  --bsm-color-skeleton-highlight: #F8FBFD;
+
   --bsm-gradient-brand: linear-gradient(135deg, #642A8F 0%, #00BAF0 100%);
   --bsm-gradient-surface: linear-gradient(180deg, #FFFFFF 0%, #F8FBFD 100%);
 
@@ -34,5 +45,6 @@
   --bsm-motion-fast: 120ms;
   --bsm-motion-normal: 180ms;
   --bsm-motion-slow: 260ms;
+  --bsm-motion-skeleton: 1200ms;
   --bsm-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
