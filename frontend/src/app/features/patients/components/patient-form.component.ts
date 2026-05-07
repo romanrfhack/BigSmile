@@ -3,6 +3,7 @@ import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleCh
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/i18n';
+import { SectionCardComponent, StatusBadgeComponent, StickyActionBarComponent } from '../../../shared/ui';
 import { PatientDetail, SavePatientRequest } from '../models/patient.models';
 
 function getTodayIsoDate(): string {
@@ -40,191 +41,274 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
 @Component({
   selector: 'app-patient-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    SectionCardComponent,
+    StatusBadgeComponent,
+    StickyActionBarComponent,
+    TranslatePipe
+  ],
   template: `
-    <form class="patient-form" [formGroup]="form" (ngSubmit)="submit()">
-      <div class="section-head">
-        <div>
-          <h2>{{ (mode === 'edit' ? 'Update patient' : 'Register patient') | t }}</h2>
-          <p>{{ 'Keep the workflow short: core identity first, then optional responsible-party data.' | t }}</p>
-        </div>
-        <span class="status-indicator">
-          {{ (form.controls.isActive.value ? 'Active record' : 'Inactive record') | t }}
-        </span>
+    <form id="patient-form" class="patient-form" [formGroup]="form" [attr.aria-busy]="saving" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <app-section-card
+          class="form-card form-card--wide"
+          [title]="'Patient identity' | t"
+          [subtitle]="'Keep the workflow short: core identity first, then optional responsible-party data.' | t"
+          variant="elevated">
+          <app-status-badge
+            section-card-actions
+            [tone]="form.controls.isActive.value ? 'success' : 'neutral'"
+            [label]="(form.controls.isActive.value ? 'Active record' : 'Inactive record') | t">
+          </app-status-badge>
+
+          <div class="field-grid">
+            <label class="form-field" for="patient-first-name">
+              <span>{{ 'First name' | t }}</span>
+              <input
+                id="patient-first-name"
+                type="text"
+                formControlName="firstName"
+                [attr.aria-invalid]="showAnyError('firstName') ? 'true' : 'false'"
+                [attr.aria-describedby]="showError('firstName', 'required') ? 'patient-first-name-error' : null"
+              />
+              <small
+                *ngIf="showError('firstName', 'required')"
+                id="patient-first-name-error"
+                class="field-error"
+                role="alert">
+                {{ 'First name is required.' | t }}
+              </small>
+            </label>
+
+            <label class="form-field" for="patient-last-name">
+              <span>{{ 'Last name' | t }}</span>
+              <input
+                id="patient-last-name"
+                type="text"
+                formControlName="lastName"
+                [attr.aria-invalid]="showAnyError('lastName') ? 'true' : 'false'"
+                [attr.aria-describedby]="showError('lastName', 'required') ? 'patient-last-name-error' : null"
+              />
+              <small
+                *ngIf="showError('lastName', 'required')"
+                id="patient-last-name-error"
+                class="field-error"
+                role="alert">
+                {{ 'Last name is required.' | t }}
+              </small>
+            </label>
+
+            <label class="form-field" for="patient-date-of-birth">
+              <span>{{ 'Date of birth' | t }}</span>
+              <input
+                id="patient-date-of-birth"
+                type="date"
+                formControlName="dateOfBirth"
+                [attr.aria-invalid]="showAnyError('dateOfBirth') ? 'true' : 'false'"
+                [attr.aria-describedby]="dateOfBirthDescribedBy"
+              />
+              <small
+                *ngIf="showError('dateOfBirth', 'required')"
+                id="patient-date-of-birth-required-error"
+                class="field-error"
+                role="alert">
+                {{ 'Date of birth is required.' | t }}
+              </small>
+              <small
+                *ngIf="showError('dateOfBirth', 'futureDateOfBirth')"
+                id="patient-date-of-birth-future-error"
+                class="field-error"
+                role="alert">
+                {{ 'Date of birth cannot be in the future.' | t }}
+              </small>
+            </label>
+
+            <label class="checkbox-field">
+              <input type="checkbox" formControlName="isActive" />
+              <span>{{ 'Patient is active' | t }}</span>
+            </label>
+          </div>
+        </app-section-card>
+
+        <app-section-card class="form-card" [title]="'Contact' | t" variant="default">
+          <div class="field-grid field-grid--single">
+            <label class="form-field" for="patient-primary-phone">
+              <span>{{ 'Primary phone' | t }}</span>
+              <input id="patient-primary-phone" type="text" inputmode="tel" formControlName="primaryPhone" />
+            </label>
+
+            <label class="form-field" for="patient-email">
+              <span>{{ 'Email' | t }}</span>
+              <input
+                id="patient-email"
+                type="email"
+                formControlName="email"
+                [attr.aria-invalid]="showAnyError('email') ? 'true' : 'false'"
+                [attr.aria-describedby]="showError('email', 'email') ? 'patient-email-error' : null"
+              />
+              <small *ngIf="showError('email', 'email')" id="patient-email-error" class="field-error" role="alert">
+                {{ 'Enter a valid email address.' | t }}
+              </small>
+            </label>
+          </div>
+        </app-section-card>
+
+        <app-section-card class="form-card" [title]="'Responsible party' | t" variant="default">
+          <div class="field-grid field-grid--single">
+            <label class="form-field" for="patient-responsible-party-name">
+              <span>{{ 'Name' | t }}</span>
+              <input
+                id="patient-responsible-party-name"
+                type="text"
+                formControlName="responsiblePartyName"
+                [attr.aria-invalid]="(showAnyError('responsiblePartyName') || form.errors?.['responsiblePartyNameRequired']) ? 'true' : 'false'"
+                [attr.aria-describedby]="form.errors?.['responsiblePartyNameRequired'] ? 'patient-responsible-party-error' : null"
+              />
+            </label>
+
+            <label class="form-field" for="patient-responsible-party-relationship">
+              <span>{{ 'Relationship' | t }}</span>
+              <input
+                id="patient-responsible-party-relationship"
+                type="text"
+                formControlName="responsiblePartyRelationship"
+              />
+            </label>
+
+            <label class="form-field" for="patient-responsible-party-phone">
+              <span>{{ 'Phone' | t }}</span>
+              <input
+                id="patient-responsible-party-phone"
+                type="text"
+                inputmode="tel"
+                formControlName="responsiblePartyPhone"
+              />
+            </label>
+          </div>
+
+          <p
+            *ngIf="form.errors?.['responsiblePartyNameRequired']"
+            id="patient-responsible-party-error"
+            class="field-error field-error--group"
+            role="alert">
+            {{ 'Responsible party name is required when relationship or phone is provided.' | t }}
+          </p>
+        </app-section-card>
+
+        <app-section-card
+          class="form-card form-card--wide"
+          [title]="'Clinical alerts' | t"
+          [variant]="form.controls.hasClinicalAlerts.value ? 'accent' : 'compact'">
+          <app-status-badge
+            section-card-actions
+            [tone]="form.controls.hasClinicalAlerts.value ? 'warning' : 'neutral'"
+            [label]="(form.controls.hasClinicalAlerts.value ? 'Clinical alerts' : 'No') | t">
+          </app-status-badge>
+
+          <div class="field-grid">
+            <label class="checkbox-field">
+              <input type="checkbox" formControlName="hasClinicalAlerts" />
+              <span>{{ 'Patient has basic clinical alerts' | t }}</span>
+            </label>
+
+            <label class="form-field field-wide" for="patient-clinical-alerts-summary">
+              <span>{{ 'Alert summary' | t }}</span>
+              <textarea
+                id="patient-clinical-alerts-summary"
+                rows="3"
+                formControlName="clinicalAlertsSummary"
+                [placeholder]="'Short alert for immediate patient handling' | t"
+                [attr.aria-invalid]="showAnyError('clinicalAlertsSummary') ? 'true' : 'false'"
+                [attr.aria-describedby]="showError('clinicalAlertsSummary', 'maxlength') ? 'patient-clinical-alerts-summary-error' : null"
+              ></textarea>
+              <small
+                *ngIf="showError('clinicalAlertsSummary', 'maxlength')"
+                id="patient-clinical-alerts-summary-error"
+                class="field-error"
+                role="alert">
+                {{ 'Alert summary must be 500 characters or fewer.' | t }}
+              </small>
+            </label>
+          </div>
+        </app-section-card>
       </div>
 
-      <section class="form-section">
-        <h3>{{ 'Patient identity' | t }}</h3>
-        <div class="field-grid">
-          <label>
-            <span>{{ 'First name' | t }}</span>
-            <input type="text" formControlName="firstName" />
-            <small *ngIf="showError('firstName', 'required')">{{ 'First name is required.' | t }}</small>
-          </label>
+      <div *ngIf="error" class="error-banner" role="alert" aria-live="assertive">{{ error | t }}</div>
 
-          <label>
-            <span>{{ 'Last name' | t }}</span>
-            <input type="text" formControlName="lastName" />
-            <small *ngIf="showError('lastName', 'required')">{{ 'Last name is required.' | t }}</small>
-          </label>
-
-          <label>
-            <span>{{ 'Date of birth' | t }}</span>
-            <input type="date" formControlName="dateOfBirth" />
-            <small *ngIf="showError('dateOfBirth', 'required')">{{ 'Date of birth is required.' | t }}</small>
-            <small *ngIf="showError('dateOfBirth', 'futureDateOfBirth')">{{ 'Date of birth cannot be in the future.' | t }}</small>
-          </label>
-
-          <label class="checkbox-field">
-            <input type="checkbox" formControlName="isActive" />
-            <span>{{ 'Patient is active' | t }}</span>
-          </label>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <h3>{{ 'Contact' | t }}</h3>
-        <div class="field-grid">
-          <label>
-            <span>{{ 'Primary phone' | t }}</span>
-            <input type="text" formControlName="primaryPhone" />
-          </label>
-
-          <label>
-            <span>{{ 'Email' | t }}</span>
-            <input type="email" formControlName="email" />
-            <small *ngIf="showError('email', 'email')">{{ 'Enter a valid email address.' | t }}</small>
-          </label>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <h3>{{ 'Clinical alerts' | t }}</h3>
-        <div class="field-grid">
-          <label class="checkbox-field">
-            <input type="checkbox" formControlName="hasClinicalAlerts" />
-            <span>{{ 'Patient has basic clinical alerts' | t }}</span>
-          </label>
-
-          <label class="field-wide">
-            <span>{{ 'Alert summary' | t }}</span>
-            <textarea
-              rows="3"
-              formControlName="clinicalAlertsSummary"
-              [placeholder]="'Short alert for immediate patient handling' | t"
-            ></textarea>
-            <small *ngIf="showError('clinicalAlertsSummary', 'maxlength')">
-              {{ 'Alert summary must be 500 characters or fewer.' | t }}
-            </small>
-          </label>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <h3>{{ 'Responsible party' | t }}</h3>
-        <div class="field-grid">
-          <label>
-            <span>{{ 'Name' | t }}</span>
-            <input type="text" formControlName="responsiblePartyName" />
-          </label>
-
-          <label>
-            <span>{{ 'Relationship' | t }}</span>
-            <input type="text" formControlName="responsiblePartyRelationship" />
-          </label>
-
-          <label>
-            <span>{{ 'Phone' | t }}</span>
-            <input type="text" formControlName="responsiblePartyPhone" />
-          </label>
-        </div>
-        <small *ngIf="form.errors?.['responsiblePartyNameRequired']">
-          {{ 'Responsible party name is required when relationship or phone is provided.' | t }}
-        </small>
-      </section>
-
-      <div *ngIf="error" class="error-banner">{{ error | t }}</div>
-
-      <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancelled.emit()" [disabled]="saving">{{ 'Cancel' | t }}</button>
-        <button type="submit" class="btn btn-primary" [disabled]="saving">
+      <app-sticky-action-bar [ariaLabel]="(mode === 'edit' ? 'Save changes' : 'Create patient') | t">
+        <button type="button" class="form-action form-action--secondary" (click)="cancelled.emit()" [disabled]="saving">
+          {{ 'Cancel' | t }}
+        </button>
+        <button type="submit" class="form-action form-action--primary" [disabled]="saving">
           {{ (saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create patient') | t }}
         </button>
-      </div>
+      </app-sticky-action-bar>
     </form>
   `,
   styles: [`
+    :host {
+      display: block;
+    }
+
     .patient-form {
       display: grid;
-      gap: 1.25rem;
-      padding: 1.5rem;
-      border-radius: var(--bsm-radius-lg);
-      background: var(--bsm-gradient-surface);
-      border: 1px solid var(--bsm-color-border);
-      box-shadow: var(--bsm-shadow-md);
-    }
-
-    .section-head {
-      display: flex;
-      justify-content: space-between;
       gap: 1rem;
-      align-items: flex-start;
     }
 
-    .section-head h2,
-    .form-section h3 {
-      margin: 0;
-      color: var(--bsm-color-text-brand);
-    }
-
-    .section-head p {
-      margin: 0.35rem 0 0;
-      color: var(--bsm-color-text-muted);
-    }
-
-    .status-indicator {
-      border-radius: var(--bsm-radius-pill);
-      padding: 0.5rem 0.8rem;
-      background: var(--bsm-color-accent-soft);
-      color: var(--bsm-color-accent-dark);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .form-section {
+    .form-grid {
       display: grid;
-      gap: 0.85rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .form-card--wide {
+      grid-column: 1 / -1;
     }
 
     .field-grid {
       display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.9rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    label {
+    .field-grid--single {
+      grid-template-columns: 1fr;
+    }
+
+    .form-field {
       display: grid;
       gap: 0.45rem;
+      min-width: 0;
       color: var(--bsm-color-text-brand);
-      font-weight: 600;
+      font-weight: 700;
+    }
+
+    .form-field span,
+    .checkbox-field span {
+      line-height: 1.3;
     }
 
     input,
     textarea {
+      width: 100%;
       border: 1px solid var(--bsm-color-border);
       border-radius: var(--bsm-radius-md);
-      padding: 0.8rem 0.9rem;
+      padding: 0.82rem 0.92rem;
       font: inherit;
       color: var(--bsm-color-text);
       background: var(--bsm-color-bg);
       transition:
         border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
-        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        background-color var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
     textarea {
+      min-height: 7rem;
       resize: vertical;
-      min-height: 96px;
     }
 
     input:focus,
@@ -232,6 +316,11 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
       outline: none;
       border-color: var(--bsm-color-accent-accessible);
       box-shadow: var(--bsm-shadow-focus);
+    }
+
+    input[aria-invalid='true'],
+    textarea[aria-invalid='true'] {
+      border-color: var(--bsm-color-danger);
     }
 
     textarea:disabled {
@@ -243,70 +332,108 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      font-weight: 600;
       min-height: 100%;
+      color: var(--bsm-color-text-brand);
+      font-weight: 700;
+    }
+
+    .checkbox-field input {
+      width: 1.05rem;
+      height: 1.05rem;
+      flex: 0 0 auto;
+      padding: 0;
+      accent-color: var(--bsm-color-primary);
     }
 
     .field-wide {
       grid-column: 1 / -1;
     }
 
-    .checkbox-field input {
-      width: 18px;
-      height: 18px;
-      padding: 0;
+    .field-error {
+      color: var(--bsm-color-danger);
+      font-weight: 700;
+      line-height: 1.35;
     }
 
-    small {
-      color: #9b2d30;
-      font-weight: 600;
+    .field-error--group {
+      margin: 0.85rem 0 0;
     }
 
     .error-banner {
       padding: 0.85rem 1rem;
-      border-radius: 12px;
-      border: 1px solid #f2c4c4;
-      background: #fff4f4;
-      color: #8d292d;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border: none;
-      border-radius: var(--bsm-radius-pill);
-      padding: 0.8rem 1.1rem;
-      font: inherit;
+      border: 1px solid var(--bsm-color-danger-soft);
+      border-radius: var(--bsm-radius-sm);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
       font-weight: 700;
+      box-shadow: var(--bsm-shadow-sm);
+    }
+
+    .form-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid transparent;
+      border-radius: var(--bsm-radius-pill);
+      padding: 0.78rem 1.08rem;
+      font: inherit;
+      font-weight: 800;
+      line-height: 1.2;
       cursor: pointer;
+      text-decoration: none;
+      transition:
+        background-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
-    .btn-primary {
+    .form-action--primary {
+      border-color: var(--bsm-color-primary);
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
-    .btn-secondary {
+    .form-action--secondary {
+      border-color: var(--bsm-color-primary-soft);
       background: var(--bsm-color-primary-soft);
       color: var(--bsm-color-primary-dark);
     }
 
-    .btn:disabled {
-      opacity: 0.7;
+    .form-action:not(:disabled):hover {
+      box-shadow: var(--bsm-shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .form-action:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    .form-action:disabled {
+      opacity: 0.72;
       cursor: not-allowed;
     }
 
-    @media (max-width: 768px) {
-      .section-head {
-        flex-direction: column;
+    @media (prefers-reduced-motion: reduce) {
+      .form-action:not(:disabled):hover {
+        transform: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .form-grid,
+      .field-grid {
+        grid-template-columns: 1fr;
       }
 
-      .form-actions .btn {
+      .form-card--wide,
+      .field-wide {
+        grid-column: auto;
+      }
+
+      .form-action {
         width: 100%;
       }
     }
@@ -337,6 +464,18 @@ export class PatientFormComponent implements OnChanges {
     responsiblePartyRelationship: ['', [Validators.maxLength(100)]],
     responsiblePartyPhone: ['', [Validators.maxLength(40)]]
   }, { validators: responsiblePartyValidator });
+
+  get dateOfBirthDescribedBy(): string | null {
+    if (this.showError('dateOfBirth', 'required')) {
+      return 'patient-date-of-birth-required-error';
+    }
+
+    if (this.showError('dateOfBirth', 'futureDateOfBirth')) {
+      return 'patient-date-of-birth-future-error';
+    }
+
+    return null;
+  }
 
   constructor() {
     this.form.controls.hasClinicalAlerts.valueChanges
@@ -420,6 +559,11 @@ export class PatientFormComponent implements OnChanges {
       responsiblePartyRelationship: this.normalizeOptional(raw.responsiblePartyRelationship),
       responsiblePartyPhone: this.normalizeOptional(raw.responsiblePartyPhone)
     });
+  }
+
+  showAnyError(controlName: string): boolean {
+    const control = this.form.get(controlName);
+    return !!control && control.invalid && (control.dirty || control.touched);
   }
 
   showError(controlName: string, errorName: string): boolean {

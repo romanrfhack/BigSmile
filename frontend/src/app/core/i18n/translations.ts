@@ -513,6 +513,7 @@ export const ES_MX_TRANSLATIONS: Record<string, string> = {
   'Only note created, diagnosis created, and diagnosis resolved events are included in this slice.': 'En esta etapa solo se incluyen eventos de nota creada, diagnóstico creado y diagnóstico resuelto.',
   'Only roles with billing write permission can issue this billing document.': 'Solo los roles con permiso de escritura de cobranza pueden emitir este documento.',
   'Operational patient attachments only. Retired documents are hidden from this list and cannot be downloaded through the normal flow.': 'Solo adjuntos operativos del paciente. Los documentos retirados se ocultan de esta lista y no pueden descargarse por el flujo normal.',
+  'Patient could not be saved.': 'No se pudo guardar el paciente.',
   'Patient documents not retired.': 'Documentos del paciente sin retirar.',
   'Patient-scoped odontogram for {patientDisplayName} using FDI adult permanent tooth numbering, the minimal O/M/D/B/L surface set, the basic finding catalog, and bounded surface finding add/remove history.': 'Odontograma con alcance de paciente para {patientDisplayName}, usando numeración FDI de dientes permanentes adultos, el conjunto mínimo de superficies O/M/D/B/L, el catálogo básico de hallazgos e historial acotado de agregado/eliminado de hallazgos de superficie.',
   'Platform scope': 'Alcance de plataforma',
