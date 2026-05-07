@@ -2,32 +2,63 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
+import {
+  EmptyStateComponent,
+  LoadingSkeletonComponent,
+  StatusBadgeComponent
+} from '../../../shared/ui';
 import { PatientSummary } from '../models/patient.models';
 
 @Component({
   selector: 'app-patient-search-results',
   standalone: true,
-  imports: [CommonModule, RouterLink, LocalizedDatePipe, TranslatePipe],
+  imports: [
+    CommonModule,
+    RouterLink,
+    EmptyStateComponent,
+    LoadingSkeletonComponent,
+    LocalizedDatePipe,
+    StatusBadgeComponent,
+    TranslatePipe
+  ],
   template: `
-    <div *ngIf="error" class="state-card state-error">{{ error | t }}</div>
-    <div *ngIf="loading" class="state-card">{{ 'Loading patients...' | t }}</div>
+    <div *ngIf="error" class="patients-error" role="alert">{{ error | t }}</div>
 
-    <div *ngIf="!loading && !error && !patients.length" class="state-card">
-      {{ emptyMessage }}
+    <div *ngIf="loading" class="patients-loading" [attr.aria-label]="'Loading patients...' | t">
+      <app-loading-skeleton
+        *ngFor="let item of loadingCards"
+        variant="card"
+        [ariaLabel]="'Loading patients...' | t">
+      </app-loading-skeleton>
     </div>
 
-    <div *ngIf="patients.length" class="results-grid">
-      <article *ngFor="let patient of patients" class="result-card">
+    <app-empty-state
+      *ngIf="!loading && !error && !patients.length"
+      icon="P"
+      [title]="emptyMessage"
+      [description]="'Name, phone, or email' | t">
+    </app-empty-state>
+
+    <div *ngIf="patients.length" class="results-grid" [attr.aria-label]="'Patients' | t">
+      <article
+        *ngFor="let patient of patients"
+        class="result-card"
+        [attr.aria-labelledby]="'patient-result-' + patient.id">
         <div class="card-head">
           <div>
-            <h3>{{ patient.fullName }}</h3>
+            <h3 [id]="'patient-result-' + patient.id">{{ patient.fullName }}</h3>
             <p>{{ patient.dateOfBirth | bsDate: 'longDate' }}</p>
           </div>
           <div class="pill-stack">
-            <span class="status-pill" [class.status-inactive]="!patient.isActive">
-              {{ (patient.isActive ? 'Active' : 'Inactive') | t }}
-            </span>
-            <span *ngIf="patient.hasClinicalAlerts" class="alert-pill">{{ 'Alerts' | t }}</span>
+            <app-status-badge
+              [tone]="patient.isActive ? 'success' : 'neutral'"
+              [label]="(patient.isActive ? 'Active' : 'Inactive') | t">
+            </app-status-badge>
+            <app-status-badge
+              *ngIf="patient.hasClinicalAlerts"
+              tone="warning"
+              [label]="'Alerts' | t">
+            </app-status-badge>
           </div>
         </div>
 
@@ -50,6 +81,11 @@ import { PatientSummary } from '../models/patient.models';
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+    }
+
+    .patients-loading,
     .results-grid {
       display: grid;
       gap: 1rem;
@@ -57,8 +93,8 @@ import { PatientSummary } from '../models/patient.models';
     }
 
     .result-card,
-    .state-card {
-      border-radius: var(--bsm-radius-lg);
+    .patients-error {
+      border-radius: var(--bsm-radius-sm);
       border: 1px solid var(--bsm-color-border);
       background: var(--bsm-color-bg);
       padding: 1rem 1.1rem;
@@ -70,15 +106,21 @@ import { PatientSummary } from '../models/patient.models';
     }
 
     .result-card:hover {
-      border-color: rgba(0, 126, 163, 0.24);
+      border-color: var(--bsm-color-accent-accessible);
       box-shadow: var(--bsm-shadow-md);
       transform: translateY(-1px);
     }
 
-    .state-error {
-      border-color: #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+    .result-card:focus-within {
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    .patients-error {
+      border-color: var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
+      font-weight: 700;
     }
 
     .card-head {
@@ -105,43 +147,18 @@ import { PatientSummary } from '../models/patient.models';
       color: var(--bsm-color-text-muted);
     }
 
-    .status-pill {
-      border-radius: 999px;
-      padding: 0.4rem 0.7rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      background: #e8f4ec;
-      color: #1d6a3a;
-      white-space: nowrap;
-    }
-
-    .status-inactive {
-      background: #fce8e8;
-      color: #9b2d30;
-    }
-
-    .alert-pill {
-      border-radius: 999px;
-      padding: 0.4rem 0.7rem;
-      font-size: 0.85rem;
-      font-weight: 700;
-      background: #fff1dd;
-      color: #8f5a00;
-      white-space: nowrap;
-    }
-
     .meta-grid {
       margin: 1rem 0 0;
       display: grid;
       gap: 0.8rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(7.5rem, 0.8fr) minmax(10rem, 1.2fr);
     }
 
     dt {
       margin-bottom: 0.25rem;
       font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-text-muted);
     }
 
@@ -160,18 +177,56 @@ import { PatientSummary } from '../models/patient.models';
     }
 
     .action-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
+      border: 1px solid var(--bsm-color-accent-soft);
+      border-radius: var(--bsm-radius-pill);
+      padding: 0.55rem 0.8rem;
+      background: var(--bsm-color-accent-soft);
       color: var(--bsm-color-accent-accessible);
       font-weight: 700;
+      line-height: 1.2;
     }
 
     .action-secondary {
+      border-color: var(--bsm-color-primary-soft);
+      background: var(--bsm-color-primary-soft);
       color: var(--bsm-color-primary);
     }
 
+    .action-link:hover {
+      box-shadow: var(--bsm-shadow-sm);
+    }
+
+    .action-link:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .result-card:hover {
+        transform: none;
+      }
+    }
+
     @media (max-width: 640px) {
+      .card-head {
+        flex-direction: column;
+      }
+
+      .pill-stack {
+        justify-content: flex-start;
+      }
+
       .meta-grid {
         grid-template-columns: 1fr;
+      }
+
+      .card-actions,
+      .action-link {
+        width: 100%;
       }
     }
   `]
@@ -181,4 +236,6 @@ export class PatientSearchResultsComponent {
   @Input() loading = false;
   @Input() error: string | null = null;
   @Input() emptyMessage = 'No patients match the current search.';
+
+  readonly loadingCards = [0, 1, 2, 3];
 }

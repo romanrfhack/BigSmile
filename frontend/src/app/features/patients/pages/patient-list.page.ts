@@ -5,28 +5,38 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n';
 import { TranslatePipe } from '../../../shared/i18n';
+import { PageHeaderComponent, SectionCardComponent } from '../../../shared/ui';
 import { PatientSearchResultsComponent } from '../components/patient-search-results.component';
 import { PatientsFacade } from '../facades/patients.facade';
 
 @Component({
   selector: 'app-patient-list-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PatientSearchResultsComponent, TranslatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PageHeaderComponent,
+    PatientSearchResultsComponent,
+    RouterLink,
+    SectionCardComponent,
+    TranslatePipe
+  ],
   template: `
     <section class="patients-page">
-      <header class="page-head">
-        <div>
-          <p class="eyebrow">{{ 'Release' | t }} 1 / {{ 'Patients' | t }}</p>
-          <h2>{{ 'Patient search' | t }}</h2>
-          <p class="subtitle">
-            {{ 'Search and maintain patient records for {tenantName} without leaving tenant scope.' | t:{ tenantName } }}
-          </p>
-        </div>
-        <a routerLink="/patients/new" class="btn btn-primary">{{ 'Register patient' | t }}</a>
-      </header>
+      <app-page-header
+        [eyebrow]="('Release' | t) + ' 1 / ' + ('Patients' | t)"
+        [title]="'Patient search' | t"
+        [subtitle]="'Search and maintain patient records for {tenantName} without leaving tenant scope.' | t:{ tenantName }">
+        <a page-header-actions routerLink="/patients/new" class="patients-action patients-action--primary">
+          {{ 'Register patient' | t }}
+        </a>
+      </app-page-header>
 
-      <section class="search-panel">
-        <form class="search-form" (ngSubmit)="applySearch()">
+      <app-section-card
+        [title]="'Search patients' | t"
+        [subtitle]="'Name, phone, or email' | t"
+        variant="elevated">
+        <form class="search-form" role="search" (ngSubmit)="applySearch()">
           <label class="search-field">
             <span>{{ 'Search patients' | t }}</span>
             <input
@@ -42,9 +52,9 @@ import { PatientsFacade } from '../facades/patients.facade';
             <span>{{ 'Include inactive patients' | t }}</span>
           </label>
 
-          <button type="submit" class="btn btn-secondary">{{ 'Run search' | t }}</button>
+          <button type="submit" class="patients-action patients-action--secondary">{{ 'Run search' | t }}</button>
         </form>
-      </section>
+      </app-section-card>
 
       <app-patient-search-results
         [patients]="patientsFacade.patients()"
@@ -57,44 +67,7 @@ import { PatientsFacade } from '../facades/patients.facade';
   styles: [`
     .patients-page {
       display: grid;
-      gap: 1.5rem;
-    }
-
-    .page-head,
-    .search-panel {
-      border-radius: var(--bsm-radius-lg);
-      border: 1px solid var(--bsm-color-border);
-      background: var(--bsm-gradient-surface);
-      padding: 1.4rem 1.5rem;
-      box-shadow: var(--bsm-shadow-md);
-    }
-
-    .page-head {
-      display: flex;
-      justify-content: space-between;
       gap: 1rem;
-      align-items: flex-start;
-    }
-
-    .eyebrow {
-      margin: 0 0 0.4rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--bsm-color-accent-accessible);
-      font-size: 0.8rem;
-      font-weight: 700;
-    }
-
-    h2 {
-      margin: 0;
-      color: var(--bsm-color-text-brand);
-      font-size: clamp(1.8rem, 2vw, 2.4rem);
-    }
-
-    .subtitle {
-      margin: 0.5rem 0 0;
-      color: var(--bsm-color-text-muted);
-      max-width: 60ch;
     }
 
     .search-form {
@@ -112,12 +85,23 @@ import { PatientsFacade } from '../facades/patients.facade';
       font-weight: 600;
     }
 
+    .search-field span,
+    .toggle-field span {
+      line-height: 1.3;
+    }
+
     .toggle-field {
       display: flex;
       align-items: center;
       gap: 0.65rem;
       align-self: center;
       margin-top: 1.55rem;
+    }
+
+    .toggle-field input {
+      width: 1.05rem;
+      height: 1.05rem;
+      accent-color: var(--bsm-color-primary);
     }
 
     input[type='search'] {
@@ -138,7 +122,10 @@ import { PatientsFacade } from '../facades/patients.facade';
       box-shadow: var(--bsm-shadow-focus);
     }
 
-    .btn {
+    .patients-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
       border: none;
       border-radius: var(--bsm-radius-pill);
@@ -146,34 +133,47 @@ import { PatientsFacade } from '../facades/patients.facade';
       font: inherit;
       font-weight: 700;
       cursor: pointer;
+      line-height: 1.2;
+      transition:
+        background-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
-    .btn-primary {
+    .patients-action--primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
-    .btn-secondary {
+    .patients-action--secondary {
       background: var(--bsm-color-primary-soft);
       color: var(--bsm-color-primary-dark);
     }
 
-    .btn-primary:not(:disabled):hover,
-    .btn-secondary:not(:disabled):hover {
-      box-shadow: var(--bsm-shadow-sm);
+    .patients-action:not(:disabled):hover {
+      box-shadow: var(--bsm-shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .patients-action:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .patients-action:not(:disabled):hover {
+        transform: none;
+      }
     }
 
     @media (max-width: 900px) {
-      .page-head,
       .search-form {
         grid-template-columns: 1fr;
       }
 
-      .page-head {
-        flex-direction: column;
-      }
-
-      .btn {
+      .patients-action {
         width: 100%;
         text-align: center;
       }
