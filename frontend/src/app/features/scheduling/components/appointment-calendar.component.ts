@@ -2,16 +2,36 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { I18nService } from '../../../core/i18n';
 import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
+import {
+  EmptyStateComponent,
+  LoadingSkeletonComponent,
+  StatusBadgeComponent
+} from '../../../shared/ui';
+import type { StatusBadgeTone } from '../../../shared/ui';
 import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../models/scheduling.models';
 
 @Component({
   selector: 'app-appointment-calendar',
   standalone: true,
-  imports: [CommonModule, LocalizedDatePipe, TranslatePipe],
+  imports: [
+    CommonModule,
+    LocalizedDatePipe,
+    TranslatePipe,
+    EmptyStateComponent,
+    LoadingSkeletonComponent,
+    StatusBadgeComponent
+  ],
   template: `
     <section class="calendar-shell">
-      <div *ngIf="loading" class="state-card">{{ 'Loading schedule...' | t }}</div>
-      <div *ngIf="!loading && error" class="state-card state-error">{{ error | t }}</div>
+      <div *ngIf="loading" class="calendar-loading" [attr.aria-label]="'Loading schedule...' | t">
+        <app-loading-skeleton
+          *ngFor="let item of loadingCards"
+          variant="card"
+          [ariaLabel]="'Loading schedule...' | t">
+        </app-loading-skeleton>
+      </div>
+
+      <div *ngIf="!loading && error" class="state-card state-error" role="alert">{{ error | t }}</div>
 
       <div *ngIf="!loading && !error && calendar as currentCalendar" class="calendar-grid" [class.calendar-day]="currentCalendar.days === 1">
         <article *ngFor="let day of currentCalendar.calendarDays" class="day-column">
@@ -37,7 +57,7 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
             <span class="time-range">{{ blockedSlot.startsAt | bsDate: 'shortTime' }} - {{ blockedSlot.endsAt | bsDate: 'shortTime' }}</span>
             <strong>{{ blockedSlot.label || ('Blocked slot' | t) }}</strong>
             <p>{{ 'Appointments are not allowed in this branch range.' | t }}</p>
-            <span class="status-pill block-pill">{{ 'Blocked' | t }}</span>
+            <app-status-badge tone="warning" size="sm" [label]="'Blocked' | t"></app-status-badge>
           </button>
 
           <button
@@ -53,30 +73,39 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
             <strong>{{ appointment.patientFullName }}</strong>
             <p>{{ appointment.notes || ('No operational note.' | t) }}</p>
             <span class="badge-row">
-              <span class="status-pill">{{ getStatusLabel(appointment.status) }}</span>
-              <span
-                class="confirmation-pill"
-                [class.confirmation-confirmed]="appointment.confirmationStatus === 'Confirmed'">
-                {{ getConfirmationLabel(appointment.confirmationStatus) }}
-              </span>
+              <app-status-badge
+                size="sm"
+                [tone]="getStatusTone(appointment.status)"
+                [label]="getStatusLabel(appointment.status)">
+              </app-status-badge>
+              <app-status-badge
+                size="sm"
+                [tone]="getConfirmationTone(appointment.confirmationStatus)"
+                [label]="getConfirmationLabel(appointment.confirmationStatus)">
+              </app-status-badge>
             </span>
           </button>
         </article>
       </div>
 
-      <div *ngIf="!loading && !error && !calendar" class="state-card">
-        {{ 'Select a branch to load the scheduling calendar.' | t }}
-      </div>
+      <app-empty-state
+        *ngIf="!loading && !error && !calendar"
+        icon="S"
+        [title]="'Select a branch to load the scheduling calendar.' | t"
+        [description]="'Branch context is required before loading appointments.' | t">
+      </app-empty-state>
     </section>
   `,
   styles: [`
     .calendar-shell,
-    .calendar-grid {
+    .calendar-grid,
+    .calendar-loading {
       display: grid;
       gap: 1rem;
     }
 
-    .calendar-grid {
+    .calendar-grid,
+    .calendar-loading {
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     }
 
@@ -86,7 +115,7 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
 
     .day-column,
     .state-card {
-      border-radius: var(--bsm-radius-lg);
+      border-radius: var(--bsm-radius-sm);
       border: 1px solid var(--bsm-color-border);
       background: var(--bsm-gradient-surface);
       padding: 1rem;
@@ -130,34 +159,46 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
         transform var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
+    .appointment-card:hover {
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .appointment-card:focus-visible {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
     .appointment-active {
       border-color: var(--bsm-color-primary);
       box-shadow: inset 0 0 0 1px var(--bsm-color-primary), var(--bsm-shadow-sm);
     }
 
     .block-card {
-      background: #fff7eb;
-      border-color: #f0d5ad;
+      background: var(--bsm-color-warning-soft);
+      border-color: var(--bsm-color-warning-soft);
     }
 
     .block-active {
-      border-color: #8b4f0f;
-      box-shadow: inset 0 0 0 1px #8b4f0f;
+      border-color: var(--bsm-color-warning);
+      box-shadow: inset 0 0 0 1px var(--bsm-color-warning);
     }
 
     .appointment-cancelled {
-      background: #fff3f3;
-      border-color: #f2c4c4;
+      background: var(--bsm-color-danger-soft);
+      border-color: var(--bsm-color-danger-soft);
     }
 
     .appointment-attended {
-      background: #eef9f2;
-      border-color: #b9e1c7;
+      background: var(--bsm-color-success-soft);
+      border-color: var(--bsm-color-success-soft);
     }
 
     .appointment-no-show {
-      background: #fff6e5;
-      border-color: #f3d39f;
+      background: var(--bsm-color-warning-soft);
+      border-color: var(--bsm-color-warning-soft);
     }
 
     .time-range {
@@ -174,17 +215,6 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       font-size: 0.92rem;
     }
 
-    .status-pill {
-      justify-self: start;
-      margin-top: 0.2rem;
-      padding: 0.35rem 0.65rem;
-      border-radius: var(--bsm-radius-pill);
-      background: #e8f4ec;
-      color: #1d6a3a;
-      font-size: 0.82rem;
-      font-weight: 700;
-    }
-
     .badge-row {
       display: flex;
       gap: 0.45rem;
@@ -192,48 +222,17 @@ import { AppointmentBlockSummary, AppointmentSummary, CalendarView } from '../mo
       align-items: center;
     }
 
-    .badge-row .status-pill {
-      margin-top: 0;
-    }
-
-    .confirmation-pill {
-      padding: 0.35rem 0.65rem;
-      border-radius: var(--bsm-radius-pill);
-      background: #fbe6bf;
-      color: #8b4f0f;
-      font-size: 0.82rem;
+    .state-error {
+      border-color: var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
       font-weight: 700;
     }
 
-    .confirmation-confirmed {
-      background: #dff2e5;
-      color: #1d6a3a;
-    }
-
-    .appointment-cancelled .status-pill {
-      background: #fde3e3;
-      color: #9b2d30;
-    }
-
-    .appointment-attended .status-pill {
-      background: #dff2e5;
-      color: #1d6a3a;
-    }
-
-    .appointment-no-show .status-pill {
-      background: #fbe6bf;
-      color: #8b4f0f;
-    }
-
-    .block-pill {
-      background: #f8e3c5;
-      color: #8b4f0f;
-    }
-
-    .state-error {
-      border-color: #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+    @media (prefers-reduced-motion: reduce) {
+      .appointment-card:hover {
+        transform: none;
+      }
     }
   `]
 })
@@ -249,11 +248,30 @@ export class AppointmentCalendarComponent {
   @Output() appointmentSelected = new EventEmitter<AppointmentSummary>();
   @Output() blockedSlotSelected = new EventEmitter<AppointmentBlockSummary>();
 
+  readonly loadingCards = [0, 1, 2];
+
   getStatusLabel(status: AppointmentSummary['status']): string {
     return this.i18n.translate(status === 'NoShow' ? 'No-show' : status);
   }
 
   getConfirmationLabel(status: AppointmentSummary['confirmationStatus']): string {
     return this.i18n.translate(status === 'Confirmed' ? 'Confirmed' : 'Pending confirmation');
+  }
+
+  getStatusTone(status: AppointmentSummary['status']): StatusBadgeTone {
+    switch (status) {
+      case 'Attended':
+        return 'success';
+      case 'Cancelled':
+        return 'danger';
+      case 'NoShow':
+        return 'warning';
+      default:
+        return 'primary';
+    }
+  }
+
+  getConfirmationTone(status: AppointmentSummary['confirmationStatus']): StatusBadgeTone {
+    return status === 'Confirmed' ? 'success' : 'warning';
   }
 }

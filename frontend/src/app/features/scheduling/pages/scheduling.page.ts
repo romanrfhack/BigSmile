@@ -4,6 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n';
 import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
+import {
+  EmptyStateComponent,
+  LoadingSkeletonComponent,
+  PageHeaderComponent,
+  SectionCardComponent,
+  StatusBadgeComponent
+} from '../../../shared/ui';
+import type { StatusBadgeTone } from '../../../shared/ui';
 import { AppointmentBlockFormComponent } from '../components/appointment-block-form.component';
 import { AppointmentCalendarComponent } from '../components/appointment-calendar.component';
 import { AppointmentFormComponent } from '../components/appointment-form.component';
@@ -41,20 +49,20 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     AppointmentReminderLogComponent,
     ReminderTemplateManagerComponent,
     LocalizedDatePipe,
-    TranslatePipe
+    TranslatePipe,
+    EmptyStateComponent,
+    LoadingSkeletonComponent,
+    PageHeaderComponent,
+    SectionCardComponent,
+    StatusBadgeComponent
   ],
   template: `
     <section class="scheduling-page">
-      <header class="page-head">
-        <div>
-          <p class="eyebrow">{{ 'Release' | t }} 2 / {{ 'Scheduling' | t }}</p>
-          <h2>{{ 'Scheduling foundation' | t }}</h2>
-          <p class="subtitle">
-            {{ 'Daily and weekly branch-aware scheduling for {tenantName} on top of the completed Patients module.' | t:{ tenantName } }}
-          </p>
-        </div>
-
-        <div class="header-actions" *ngIf="canWrite">
+      <app-page-header
+        [eyebrow]="('Release' | t) + ' 2 / ' + ('Scheduling' | t)"
+        [title]="'Scheduling foundation' | t"
+        [subtitle]="'Branch-aware day and week calendar for {tenantName}.' | t:{ tenantName }">
+        <div page-header-actions class="header-actions" *ngIf="canWrite">
           <button type="button" class="btn btn-primary" (click)="startCreate()">
             {{ 'New appointment' | t }}
           </button>
@@ -62,84 +70,116 @@ type SchedulingEditorSurface = 'appointment' | 'block';
             {{ 'Block time' | t }}
           </button>
         </div>
-      </header>
+      </app-page-header>
 
-      <section class="toolbar">
-        <label class="control">
-          <span>{{ 'Branch' | t }}</span>
-          <select
-            [ngModel]="schedulingFacade.selectedBranchId()"
-            (ngModelChange)="changeBranch($event)"
-            [disabled]="schedulingFacade.loadingBranches()">
-            <option [ngValue]="null">{{ 'Select a branch' | t }}</option>
-            <option *ngFor="let branch of schedulingFacade.branches()" [ngValue]="branch.id">
-              {{ branch.name }}
-            </option>
-          </select>
-        </label>
+      <app-section-card variant="elevated">
+        <section class="toolbar" [attr.aria-label]="'Scheduling controls' | t">
+          <label class="control">
+            <span>{{ 'Branch' | t }}</span>
+            <select
+              [ngModel]="schedulingFacade.selectedBranchId()"
+              (ngModelChange)="changeBranch($event)"
+              [disabled]="schedulingFacade.loadingBranches()">
+              <option [ngValue]="null">{{ 'Select a branch' | t }}</option>
+              <option *ngFor="let branch of schedulingFacade.branches()" [ngValue]="branch.id">
+                {{ branch.name }}
+              </option>
+            </select>
+          </label>
 
-        <label class="control">
-          <span>{{ 'Calendar date' | t }}</span>
-          <input
-            type="date"
-            [ngModel]="schedulingFacade.selectedDate()"
-            (ngModelChange)="changeDate($event)" />
-        </label>
+          <label class="control">
+            <span>{{ 'Calendar date' | t }}</span>
+            <input
+              type="date"
+              [ngModel]="schedulingFacade.selectedDate()"
+              (ngModelChange)="changeDate($event)" />
+          </label>
 
-        <label class="control">
-          <span>{{ 'View' | t }}</span>
-          <select
-            [ngModel]="schedulingFacade.viewMode()"
-            (ngModelChange)="changeViewMode($event)">
-            <option value="day">{{ 'Day' | t }}</option>
-            <option value="week">{{ 'Week' | t }}</option>
-          </select>
-        </label>
-      </section>
+          <label class="control">
+            <span>{{ 'View' | t }}</span>
+            <select
+              [ngModel]="schedulingFacade.viewMode()"
+              (ngModelChange)="changeViewMode($event)">
+              <option value="day">{{ 'Day' | t }}</option>
+              <option value="week">{{ 'Week' | t }}</option>
+            </select>
+          </label>
+        </section>
+      </app-section-card>
 
-      <div *ngIf="schedulingFacade.branchesError()" class="state-card state-error">
+      <app-loading-skeleton
+        *ngIf="schedulingFacade.loadingBranches()"
+        variant="card"
+        [ariaLabel]="'Loading branches...' | t">
+      </app-loading-skeleton>
+
+      <div *ngIf="schedulingFacade.branchesError()" class="state-card state-error" role="alert">
         {{ schedulingFacade.branchesError() | t }}
       </div>
 
-      <div *ngIf="!schedulingFacade.loadingBranches() && !schedulingFacade.branches().length" class="state-card">
-        {{ 'No accessible branches are available for the current scheduling session.' | t }}
+      <app-empty-state
+        *ngIf="!schedulingFacade.loadingBranches() && !schedulingFacade.branches().length"
+        icon="B"
+        [title]="'No accessible branches are available for the current scheduling session.' | t"
+        [description]="'Ask an administrator to review branch access before scheduling.' | t">
+      </app-empty-state>
+
+      <div class="content-grid" *ngIf="schedulingFacade.branches().length">
+        <section class="editor-panel" *ngIf="canWrite" [attr.aria-label]="'Appointment editor' | t">
+          <app-appointment-form
+            *ngIf="editorSurface === 'appointment'"
+            [mode]="editorMode"
+            [selectedBranchName]="selectedBranchName"
+            [draftDate]="schedulingFacade.selectedDate()"
+            [initialAppointment]="editableAppointment"
+            [patientOptions]="schedulingFacade.patientOptions()"
+            [searchingPatients]="schedulingFacade.loadingPatients()"
+            [saving]="saving"
+            [error]="submitError"
+            (patientSearchChanged)="schedulingFacade.searchPatients($event)"
+            (saved)="saveAppointment($event)"
+            (cancelled)="resetEditor()">
+          </app-appointment-form>
+
+          <app-appointment-block-form
+            *ngIf="editorSurface === 'block'"
+            [selectedBranchName]="selectedBranchName"
+            [draftDate]="schedulingFacade.selectedDate()"
+            [revision]="blockEditorRevision"
+            [saving]="saving"
+            [error]="submitError"
+            (saved)="saveBlockedSlot($event)"
+            (cancelled)="resetEditor()">
+          </app-appointment-block-form>
+        </section>
+
+        <section class="calendar-panel" [class.calendar-panel-wide]="!canWrite" [attr.aria-label]="'Scheduling calendar' | t">
+          <app-appointment-calendar
+            [calendar]="schedulingFacade.calendar()"
+            [loading]="schedulingFacade.loadingCalendar()"
+            [error]="schedulingFacade.calendarError()"
+            [activeAppointmentId]="selectedAppointment?.id ?? null"
+            [activeBlockId]="selectedBlockedSlot?.id ?? null"
+            (appointmentSelected)="selectAppointment($event)"
+            (blockedSlotSelected)="selectBlockedSlot($event)">
+          </app-appointment-calendar>
+        </section>
       </div>
-
-      <app-reminder-template-manager
-        [templates]="schedulingFacade.reminderTemplates()"
-        [loading]="schedulingFacade.loadingReminderTemplates()"
-        [error]="schedulingFacade.reminderTemplatesError()"
-        [submitError]="reminderTemplateSubmitError"
-        [canWrite]="canWrite"
-        [saving]="savingReminderTemplate"
-        [previewAppointmentId]="selectedAppointment?.id ?? null"
-        [preview]="schedulingFacade.reminderTemplatePreview()"
-        [previewing]="!!previewingReminderTemplateId"
-        (saved)="saveReminderTemplate($event)"
-        (deactivateRequested)="deactivateReminderTemplate($event)"
-        (previewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
-      </app-reminder-template-manager>
-
-      <app-appointment-reminder-worklist
-        *ngIf="schedulingFacade.selectedBranchId()"
-        [items]="schedulingFacade.manualReminders()"
-        [loading]="schedulingFacade.loadingManualReminders()"
-        [error]="schedulingFacade.manualRemindersError()"
-        [followUpError]="reminderFollowUpError"
-        [canWrite]="canWrite"
-        [savingAppointmentId]="savingReminderFollowUpAppointmentId"
-        [reminderTemplates]="schedulingFacade.reminderTemplates()"
-        [templatePreview]="schedulingFacade.reminderTemplatePreview()"
-        [previewingTemplateId]="previewingReminderTemplateId"
-        [templatePreviewError]="reminderTemplatePreviewError"
-        (followUpSaved)="recordManualReminderFollowUp($event.appointmentId, $event.value)"
-        (templatePreviewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
-      </app-appointment-reminder-worklist>
 
       <div *ngIf="selectedAppointment" class="selection-card">
         <div>
           <p class="selection-label">{{ 'Selected appointment' | t }}</p>
           <strong>{{ selectedAppointment.patientFullName }}</strong>
+          <div class="selection-badges">
+            <app-status-badge
+              [tone]="getAppointmentStatusTone(selectedAppointment.status)"
+              [label]="getAppointmentStatusLabel(selectedAppointment.status)">
+            </app-status-badge>
+            <app-status-badge
+              [tone]="getConfirmationTone(selectedAppointment.confirmationStatus)"
+              [label]="getConfirmationLabel(selectedAppointment.confirmationStatus)">
+            </app-status-badge>
+          </div>
           <p>
             {{ selectedAppointment.startsAt | bsDate: 'medium' }} {{ 'to' | t }} {{ selectedAppointment.endsAt | bsDate: 'shortTime' }}
           </p>
@@ -211,6 +251,9 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         <div>
           <p class="selection-label">{{ 'Selected blocked slot' | t }}</p>
           <strong>{{ selectedBlockedSlot.label || ('Blocked slot' | t) }}</strong>
+          <div class="selection-badges">
+            <app-status-badge tone="warning" [label]="'Blocked' | t"></app-status-badge>
+          </div>
           <p>
             {{ selectedBlockedSlot.startsAt | bsDate: 'medium' }} {{ 'to' | t }} {{ selectedBlockedSlot.endsAt | bsDate: 'shortTime' }}
           </p>
@@ -224,47 +267,36 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         </div>
       </div>
 
-      <div class="content-grid" *ngIf="schedulingFacade.branches().length">
-        <section class="editor-panel" *ngIf="canWrite">
-          <app-appointment-form
-            *ngIf="editorSurface === 'appointment'"
-            [mode]="editorMode"
-            [selectedBranchName]="selectedBranchName"
-            [draftDate]="schedulingFacade.selectedDate()"
-            [initialAppointment]="editableAppointment"
-            [patientOptions]="schedulingFacade.patientOptions()"
-            [searchingPatients]="schedulingFacade.loadingPatients()"
-            [saving]="saving"
-            [error]="submitError"
-            (patientSearchChanged)="schedulingFacade.searchPatients($event)"
-            (saved)="saveAppointment($event)"
-            (cancelled)="resetEditor()">
-          </app-appointment-form>
+      <app-appointment-reminder-worklist
+        *ngIf="schedulingFacade.selectedBranchId()"
+        [items]="schedulingFacade.manualReminders()"
+        [loading]="schedulingFacade.loadingManualReminders()"
+        [error]="schedulingFacade.manualRemindersError()"
+        [followUpError]="reminderFollowUpError"
+        [canWrite]="canWrite"
+        [savingAppointmentId]="savingReminderFollowUpAppointmentId"
+        [reminderTemplates]="schedulingFacade.reminderTemplates()"
+        [templatePreview]="schedulingFacade.reminderTemplatePreview()"
+        [previewingTemplateId]="previewingReminderTemplateId"
+        [templatePreviewError]="reminderTemplatePreviewError"
+        (followUpSaved)="recordManualReminderFollowUp($event.appointmentId, $event.value)"
+        (templatePreviewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
+      </app-appointment-reminder-worklist>
 
-          <app-appointment-block-form
-            *ngIf="editorSurface === 'block'"
-            [selectedBranchName]="selectedBranchName"
-            [draftDate]="schedulingFacade.selectedDate()"
-            [revision]="blockEditorRevision"
-            [saving]="saving"
-            [error]="submitError"
-            (saved)="saveBlockedSlot($event)"
-            (cancelled)="resetEditor()">
-          </app-appointment-block-form>
-        </section>
-
-        <section class="calendar-panel" [class.calendar-panel-wide]="!canWrite">
-          <app-appointment-calendar
-            [calendar]="schedulingFacade.calendar()"
-            [loading]="schedulingFacade.loadingCalendar()"
-            [error]="schedulingFacade.calendarError()"
-            [activeAppointmentId]="selectedAppointment?.id ?? null"
-            [activeBlockId]="selectedBlockedSlot?.id ?? null"
-            (appointmentSelected)="selectAppointment($event)"
-            (blockedSlotSelected)="selectBlockedSlot($event)">
-          </app-appointment-calendar>
-        </section>
-      </div>
+      <app-reminder-template-manager
+        [templates]="schedulingFacade.reminderTemplates()"
+        [loading]="schedulingFacade.loadingReminderTemplates()"
+        [error]="schedulingFacade.reminderTemplatesError()"
+        [submitError]="reminderTemplateSubmitError"
+        [canWrite]="canWrite"
+        [saving]="savingReminderTemplate"
+        [previewAppointmentId]="selectedAppointment?.id ?? null"
+        [preview]="schedulingFacade.reminderTemplatePreview()"
+        [previewing]="!!previewingReminderTemplateId"
+        (saved)="saveReminderTemplate($event)"
+        (deactivateRequested)="deactivateReminderTemplate($event)"
+        (previewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
+      </app-reminder-template-manager>
     </section>
   `,
   styles: [`
@@ -273,20 +305,17 @@ type SchedulingEditorSurface = 'appointment' | 'block';
       gap: 1.25rem;
     }
 
-    .page-head,
-    .toolbar,
     .selection-card,
     .state-card,
     .editor-panel,
     .calendar-panel {
-      border-radius: var(--bsm-radius-lg);
+      border-radius: var(--bsm-radius-sm);
       border: 1px solid var(--bsm-color-border);
-      background: var(--bsm-gradient-surface);
-      padding: 1.4rem 1.5rem;
-      box-shadow: var(--bsm-shadow-md);
+      background: var(--bsm-color-bg);
+      padding: 1rem;
+      box-shadow: var(--bsm-shadow-sm);
     }
 
-    .page-head,
     .selection-card {
       display: flex;
       justify-content: space-between;
@@ -295,27 +324,19 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     }
 
     .selection-card-block {
-      border-color: #f0d5ad;
-      background: linear-gradient(180deg, #fffaf2 0%, #fff5e7 100%);
+      border-color: var(--bsm-color-warning-soft);
+      background: var(--bsm-color-warning-soft);
     }
 
-    .eyebrow,
     .selection-label {
       margin: 0 0 0.4rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
-    h2 {
-      margin: 0;
-      color: var(--bsm-color-text-brand);
-      font-size: clamp(1.8rem, 2vw, 2.4rem);
-    }
-
-    .subtitle,
     .selection-card p {
       margin: 0.5rem 0 0;
       color: var(--bsm-color-text-muted);
@@ -331,7 +352,7 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     .toolbar {
       display: grid;
       gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 0.8fr) minmax(160px, 0.7fr);
     }
 
     .control {
@@ -339,6 +360,12 @@ type SchedulingEditorSurface = 'appointment' | 'block';
       gap: 0.45rem;
       color: var(--bsm-color-text-brand);
       font-weight: 600;
+      min-width: 0;
+    }
+
+    .control span {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .control select,
@@ -365,6 +392,7 @@ type SchedulingEditorSurface = 'appointment' | 'block';
       display: grid;
       gap: 1.25rem;
       grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+      align-items: start;
     }
 
     .calendar-panel-wide {
@@ -377,32 +405,39 @@ type SchedulingEditorSurface = 'appointment' | 'block';
       flex-wrap: wrap;
     }
 
+    .selection-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.65rem;
+    }
+
     .cancelled-note {
-      color: #9b2d30;
+      color: var(--bsm-color-danger);
       font-weight: 600;
     }
 
     .blocked-note {
-      color: #8b4f0f;
+      color: var(--bsm-color-warning);
       font-weight: 600;
     }
 
     .attended-note {
-      color: #1d6a3a;
+      color: var(--bsm-color-success);
       font-weight: 600;
     }
 
     .no-show-note {
-      color: #8b4f0f;
+      color: var(--bsm-color-warning);
       font-weight: 600;
     }
 
     .confirmation-note strong {
-      color: #8b4f0f;
+      color: var(--bsm-color-warning);
     }
 
     .confirmation-note .confirmed-text {
-      color: #1d6a3a;
+      color: var(--bsm-color-success);
     }
 
     .btn {
@@ -412,11 +447,15 @@ type SchedulingEditorSurface = 'appointment' | 'block';
       font: inherit;
       font-weight: 700;
       cursor: pointer;
+      transition:
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard),
+        opacity var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
     .btn-secondary {
@@ -425,39 +464,73 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     }
 
     .btn-danger {
-      background: #fde3e3;
-      color: #9b2d30;
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
     }
 
     .btn-success {
-      background: #dff2e5;
-      color: #1d6a3a;
+      background: var(--bsm-color-success-soft);
+      color: var(--bsm-color-success);
     }
 
     .btn-warning {
-      background: #fbe6bf;
-      color: #8b4f0f;
+      background: var(--bsm-color-warning-soft);
+      color: var(--bsm-color-warning);
     }
 
     .btn-block {
-      background: #8b4f0f;
-      color: #ffffff;
+      background: var(--bsm-color-warning);
+      color: var(--bsm-color-bg);
+    }
+
+    .btn:hover {
+      box-shadow: var(--bsm-shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.65;
+      transform: none;
     }
 
     .state-error {
-      border-color: #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+      border-color: var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
+      font-weight: 700;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn:hover {
+        transform: none;
+      }
     }
 
     @media (max-width: 1080px) {
       .content-grid {
         grid-template-columns: 1fr;
       }
+
+      .calendar-panel {
+        order: 1;
+      }
+
+      .editor-panel {
+        order: 2;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 768px) {
-      .page-head,
       .selection-card {
         flex-direction: column;
       }
@@ -467,10 +540,15 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         width: 100%;
       }
 
-      .btn {
+      .header-actions .btn {
+        flex: 1 1 8.5rem;
+      }
+
+      .selection-actions .btn {
         width: 100%;
       }
     }
+
   `]
 })
 export class SchedulingPageComponent implements OnInit {
@@ -1109,6 +1187,31 @@ export class SchedulingPageComponent implements OnInit {
 
   isScheduledAppointment(appointment: AppointmentSummary | null): appointment is AppointmentSummary & { status: 'Scheduled' } {
     return appointment?.status === 'Scheduled';
+  }
+
+  getAppointmentStatusLabel(status: AppointmentSummary['status']): string {
+    return this.i18n.translate(status === 'NoShow' ? 'No-show' : status);
+  }
+
+  getAppointmentStatusTone(status: AppointmentSummary['status']): StatusBadgeTone {
+    switch (status) {
+      case 'Attended':
+        return 'success';
+      case 'Cancelled':
+        return 'danger';
+      case 'NoShow':
+        return 'warning';
+      default:
+        return 'primary';
+    }
+  }
+
+  getConfirmationLabel(status: AppointmentSummary['confirmationStatus']): string {
+    return this.i18n.translate(status === 'Confirmed' ? 'Confirmed' : 'Pending confirmation');
+  }
+
+  getConfirmationTone(status: AppointmentSummary['confirmationStatus']): StatusBadgeTone {
+    return status === 'Confirmed' ? 'success' : 'warning';
   }
 
   private getErrorMessage(error: unknown, controllerName: string, fallback: string): string {
