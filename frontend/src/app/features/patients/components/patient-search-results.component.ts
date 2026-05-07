@@ -35,7 +35,7 @@ import { PatientSummary } from '../models/patient.models';
     <app-empty-state
       *ngIf="!loading && !error && !patients.length"
       icon="P"
-      [title]="emptyMessage"
+      [title]="emptyMessage | t"
       [description]="'Name, phone, or email' | t">
     </app-empty-state>
 
