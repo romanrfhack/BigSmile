@@ -229,10 +229,10 @@ import {
     }
 
     .form-error {
-      border-radius: 14px;
-      border: 1px solid #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+      border-radius: var(--bsm-radius-sm);
+      border: 1px solid var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
       padding: 0.85rem 0.95rem;
     }
 
@@ -253,7 +253,7 @@ import {
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
     .btn-secondary {

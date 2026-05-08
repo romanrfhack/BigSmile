@@ -316,7 +316,7 @@ describe('SchedulingPageComponent', () => {
           templateId,
           appointmentId,
           renderedBody: 'Hola Ana Lopez.',
-          unknownPlaceholders: ['doctorName']
+          unknownPlaceholders: ['customPlaceholder']
         };
         facade.reminderTemplatePreview.set(preview);
         return of(preview);

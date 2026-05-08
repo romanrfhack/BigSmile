@@ -180,13 +180,13 @@ describe('AppointmentReminderWorklistComponent', () => {
       templateId: 'template-1',
       appointmentId: 'appointment-1',
       renderedBody: 'Hola Ana Lopez, le recordamos su cita.',
-      unknownPlaceholders: ['doctorName']
+      unknownPlaceholders: ['customPlaceholder']
     };
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Rendered preview');
-    expect(text).toContain('Unknown placeholders: doctorName');
+    expect(text).toContain('Unknown placeholders: customPlaceholder');
     expect(text).not.toContain('Send');
 
     component.usePreviewAsNote();

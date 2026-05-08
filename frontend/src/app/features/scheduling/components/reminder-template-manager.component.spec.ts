@@ -105,7 +105,7 @@ describe('ReminderTemplateManagerComponent', () => {
       templateId: 'template-1',
       appointmentId: 'appointment-1',
       renderedBody: 'Hola Ana Lopez.',
-      unknownPlaceholders: ['doctorName']
+      unknownPlaceholders: ['customPlaceholder']
     };
 
     fixture.detectChanges();
@@ -113,6 +113,6 @@ describe('ReminderTemplateManagerComponent', () => {
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Preview');
     expect(text).toContain('Hola Ana Lopez.');
-    expect(text).toContain('Unknown placeholders: doctorName');
+    expect(text).toContain('Unknown placeholders: customPlaceholder');
   });
 });

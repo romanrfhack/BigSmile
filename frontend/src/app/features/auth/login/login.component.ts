@@ -30,7 +30,7 @@ import { TranslatePipe } from '../../../shared/i18n';
               email
               #email="ngModel"
               class="form-control"
-              placeholder="usuario@clinica.com.mx"
+              [placeholder]="'user@clinic.com.mx' | t"
             />
             <div *ngIf="email.invalid && (email.dirty || email.touched)" class="error">
               <div *ngIf="email.errors?.['required']">{{ 'Email is required.' | t }}</div>
@@ -74,7 +74,12 @@ import { TranslatePipe } from '../../../shared/i18n';
       padding: clamp(1.25rem, 4vw, 3rem);
       background-color: var(--bsm-color-surface);
       background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(230, 248, 254, 0.62) 48%, rgba(241, 232, 247, 0.56)),
+        linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--bsm-color-bg) 72%, transparent),
+          color-mix(in srgb, var(--bsm-color-accent-soft) 62%, transparent) 48%,
+          color-mix(in srgb, var(--bsm-color-primary-soft) 56%, transparent)
+        ),
         var(--login-background-image);
       background-size: cover;
       background-position: center;
@@ -161,7 +166,7 @@ import { TranslatePipe } from '../../../shared/i18n';
     }
 
     .error {
-      color: #dc3545;
+      color: var(--bsm-color-danger);
       font-size: 0.875rem;
       margin-top: 0.25rem;
     }
@@ -169,10 +174,10 @@ import { TranslatePipe } from '../../../shared/i18n';
     .error-message {
       margin-top: 1rem;
       padding: 0.75rem;
-      background-color: #f8d7da;
-      border: 1px solid #f5c6cb;
+      background-color: var(--bsm-color-danger-soft);
+      border: 1px solid var(--bsm-color-danger-soft);
       border-radius: var(--bsm-radius-sm);
-      color: #721c24;
+      color: var(--bsm-color-danger);
     }
 
     .btn {
@@ -188,7 +193,7 @@ import { TranslatePipe } from '../../../shared/i18n';
 
     .btn-primary {
       background-color: var(--bsm-color-primary);
-      color: white;
+      color: var(--bsm-color-bg);
     }
 
     .btn-primary:not(:disabled):hover {

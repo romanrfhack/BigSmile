@@ -353,7 +353,7 @@ describe('SchedulingFacade', () => {
           templateId,
           appointmentId: (payload as any).appointmentId,
           renderedBody: 'Hola Ana Lopez.',
-          unknownPlaceholders: ['doctorName']
+          unknownPlaceholders: ['customPlaceholder']
         });
       },
       createAppointmentBlock: () => of({
@@ -567,6 +567,6 @@ describe('SchedulingFacade', () => {
       }
     ]);
     expect(facade.reminderTemplatePreview()?.renderedBody).toBe('Hola Ana Lopez.');
-    expect(facade.reminderTemplatePreview()?.unknownPlaceholders).toEqual(['doctorName']);
+    expect(facade.reminderTemplatePreview()?.unknownPlaceholders).toEqual(['customPlaceholder']);
   });
 });

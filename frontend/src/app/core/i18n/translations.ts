@@ -487,6 +487,7 @@ export const ES_MX_TRANSLATIONS: Record<string, string> = {
   'View profile': 'Ver perfil',
   'Week': 'Semana',
   'Yes': 'Sí',
+  'user@clinic.com.mx': 'usuario@clinica.com.mx',
   '32 permanent adult teeth': '32 dientes adultos permanentes',
   'Active documents only. OCR, rich preview, versioning, and dashboard flows remain outside Release 7.1.': 'Solo documentos activos. OCR, vista previa enriquecida, versionado y flujos de panel quedan fuera de Versión 7.1.',
   'Background, current medications, and current allergies only.': 'Antecedentes, medicamentos actuales y alergias actuales únicamente.',

@@ -18,7 +18,7 @@ describe('AppointmentManualReminderComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('renders the manual reminder section without send or provider actions', () => {
+  it('renders the manual reminder section without send or external delivery actions', () => {
     component.appointment = buildAppointment();
     component.canWrite = true;
 
@@ -29,7 +29,7 @@ describe('AppointmentManualReminderComponent', () => {
     expect(text).toContain('Manual scheduling only');
     expect(text).toContain('Set reminder');
     expect(text).not.toContain('Send');
-    expect(text).not.toContain('Provider');
+    expect(text).not.toContain('External delivery');
   });
 
   it('emits a manual reminder value with a UTC due date', () => {

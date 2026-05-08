@@ -124,8 +124,76 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         [description]="'Ask an administrator to review branch access before scheduling.' | t">
       </app-empty-state>
 
+      <ng-template #selectedAppointmentCard let-appointment>
+        <div class="selection-card">
+          <div>
+            <p class="selection-label">{{ 'Selected appointment' | t }}</p>
+            <strong>{{ appointment.patientFullName }}</strong>
+            <div class="selection-badges">
+              <app-status-badge
+                [tone]="getAppointmentStatusTone(appointment.status)"
+                [label]="getAppointmentStatusLabel(appointment.status)">
+              </app-status-badge>
+              <app-status-badge
+                [tone]="getConfirmationTone(appointment.confirmationStatus)"
+                [label]="getConfirmationLabel(appointment.confirmationStatus)">
+              </app-status-badge>
+            </div>
+            <p>
+              {{ appointment.startsAt | bsDate: 'medium' }} {{ 'to' | t }} {{ appointment.endsAt | bsDate: 'shortTime' }}
+            </p>
+            <p class="confirmation-note">
+              {{ 'Confirmation' | t }}:
+              <strong [class.confirmed-text]="appointment.confirmationStatus === 'Confirmed'">
+                {{ appointment.confirmationStatus | t }}
+              </strong>
+              <span *ngIf="appointment.confirmedAtUtc">
+                / {{ appointment.confirmedAtUtc | bsDate: 'short' }}
+              </span>
+            </p>
+            <p *ngIf="appointment.status === 'Cancelled'" class="cancelled-note">
+              {{ 'This appointment is cancelled and remains visible only for calendar traceability.' | t }}
+            </p>
+            <p *ngIf="appointment.status === 'Attended'" class="attended-note">
+              {{ 'This appointment was marked as attended and is now read-only in the calendar.' | t }}
+            </p>
+            <p *ngIf="appointment.status === 'NoShow'" class="no-show-note">
+              {{ 'This appointment was marked as no-show and remains visible for operational follow-up.' | t }}
+            </p>
+          </div>
+
+          <div class="selection-actions" *ngIf="canWrite && isScheduledAppointment(appointment)">
+            <button
+              *ngIf="appointment.confirmationStatus === 'Pending'"
+              type="button"
+              class="btn btn-success"
+              (click)="confirmSelectedAppointment()">
+              {{ 'Confirm appointment' | t }}
+            </button>
+            <button
+              *ngIf="appointment.confirmationStatus === 'Confirmed'"
+              type="button"
+              class="btn btn-warning"
+              (click)="markSelectedConfirmationPending()">
+              {{ 'Mark as pending' | t }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="startEdit(appointment)">{{ 'Edit' | t }}</button>
+            <button type="button" class="btn btn-secondary" (click)="startReschedule(appointment)">{{ 'Reschedule' | t }}</button>
+            <button type="button" class="btn btn-success" (click)="markSelectedAttended()">{{ 'Mark attended' | t }}</button>
+            <button type="button" class="btn btn-warning" (click)="markSelectedNoShow()">{{ 'Mark no-show' | t }}</button>
+            <button type="button" class="btn btn-danger" (click)="cancelSelected()">{{ 'Cancel appointment' | t }}</button>
+          </div>
+        </div>
+      </ng-template>
+
       <div class="content-grid" *ngIf="schedulingFacade.branches().length">
         <section class="editor-panel" *ngIf="canWrite" [attr.aria-label]="'Appointment editor' | t">
+          <ng-container *ngIf="selectedAppointment as appointment">
+            <ng-container
+              *ngTemplateOutlet="selectedAppointmentCard; context: { $implicit: appointment }">
+            </ng-container>
+          </ng-container>
+
           <app-appointment-form
             *ngIf="editorSurface === 'appointment'"
             [mode]="editorMode"
@@ -166,86 +234,34 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         </section>
       </div>
 
-      <div *ngIf="selectedAppointment" class="selection-card">
-        <div>
-          <p class="selection-label">{{ 'Selected appointment' | t }}</p>
-          <strong>{{ selectedAppointment.patientFullName }}</strong>
-          <div class="selection-badges">
-            <app-status-badge
-              [tone]="getAppointmentStatusTone(selectedAppointment.status)"
-              [label]="getAppointmentStatusLabel(selectedAppointment.status)">
-            </app-status-badge>
-            <app-status-badge
-              [tone]="getConfirmationTone(selectedAppointment.confirmationStatus)"
-              [label]="getConfirmationLabel(selectedAppointment.confirmationStatus)">
-            </app-status-badge>
-          </div>
-          <p>
-            {{ selectedAppointment.startsAt | bsDate: 'medium' }} {{ 'to' | t }} {{ selectedAppointment.endsAt | bsDate: 'shortTime' }}
-          </p>
-          <p class="confirmation-note">
-            {{ 'Confirmation' | t }}:
-            <strong [class.confirmed-text]="selectedAppointment.confirmationStatus === 'Confirmed'">
-              {{ selectedAppointment.confirmationStatus | t }}
-            </strong>
-            <span *ngIf="selectedAppointment.confirmedAtUtc">
-              / {{ selectedAppointment.confirmedAtUtc | bsDate: 'short' }}
-            </span>
-          </p>
-          <p *ngIf="selectedAppointment.status === 'Cancelled'" class="cancelled-note">
-            {{ 'This appointment is cancelled and remains visible only for calendar traceability.' | t }}
-          </p>
-          <p *ngIf="selectedAppointment.status === 'Attended'" class="attended-note">
-            {{ 'This appointment was marked as attended and is now read-only in the calendar.' | t }}
-          </p>
-          <p *ngIf="selectedAppointment.status === 'NoShow'" class="no-show-note">
-            {{ 'This appointment was marked as no-show and remains visible for operational follow-up.' | t }}
-          </p>
+      <ng-container *ngIf="selectedAppointment && !canWrite">
+        <ng-container
+          *ngTemplateOutlet="selectedAppointmentCard; context: { $implicit: selectedAppointment }">
+        </ng-container>
+      </ng-container>
+
+      <div *ngIf="selectedAppointment" class="appointment-secondary-grid">
+        <div class="appointment-detail-stack">
+          <app-appointment-manual-reminder
+            [appointment]="selectedAppointment"
+            [canWrite]="canWrite"
+            [saving]="savingManualReminder"
+            [error]="manualReminderError"
+            (saved)="setManualReminder($event)"
+            (cleared)="clearManualReminder()"
+            (completed)="completeManualReminder()">
+          </app-appointment-manual-reminder>
         </div>
 
-        <div class="selection-actions" *ngIf="canWrite && isScheduledAppointment(selectedAppointment)">
-          <button
-            *ngIf="selectedAppointment.confirmationStatus === 'Pending'"
-            type="button"
-            class="btn btn-success"
-            (click)="confirmSelectedAppointment()">
-            {{ 'Confirm appointment' | t }}
-          </button>
-          <button
-            *ngIf="selectedAppointment.confirmationStatus === 'Confirmed'"
-            type="button"
-            class="btn btn-warning"
-            (click)="markSelectedConfirmationPending()">
-            {{ 'Mark as pending' | t }}
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="startEdit(selectedAppointment)">{{ 'Edit' | t }}</button>
-          <button type="button" class="btn btn-secondary" (click)="startReschedule(selectedAppointment)">{{ 'Reschedule' | t }}</button>
-          <button type="button" class="btn btn-success" (click)="markSelectedAttended()">{{ 'Mark attended' | t }}</button>
-          <button type="button" class="btn btn-warning" (click)="markSelectedNoShow()">{{ 'Mark no-show' | t }}</button>
-          <button type="button" class="btn btn-danger" (click)="cancelSelected()">{{ 'Cancel appointment' | t }}</button>
-        </div>
+        <app-appointment-reminder-log
+          [entries]="schedulingFacade.reminderLog()"
+          [loading]="schedulingFacade.loadingReminderLog()"
+          [error]="reminderLogSubmitError || schedulingFacade.reminderLogError()"
+          [canWrite]="canWrite"
+          [saving]="savingReminderLog"
+          (saved)="addReminderLogEntry($event)">
+        </app-appointment-reminder-log>
       </div>
-
-      <app-appointment-manual-reminder
-        *ngIf="selectedAppointment"
-        [appointment]="selectedAppointment"
-        [canWrite]="canWrite"
-        [saving]="savingManualReminder"
-        [error]="manualReminderError"
-        (saved)="setManualReminder($event)"
-        (cleared)="clearManualReminder()"
-        (completed)="completeManualReminder()">
-      </app-appointment-manual-reminder>
-
-      <app-appointment-reminder-log
-        *ngIf="selectedAppointment"
-        [entries]="schedulingFacade.reminderLog()"
-        [loading]="schedulingFacade.loadingReminderLog()"
-        [error]="reminderLogSubmitError || schedulingFacade.reminderLogError()"
-        [canWrite]="canWrite"
-        [saving]="savingReminderLog"
-        (saved)="addReminderLogEntry($event)">
-      </app-appointment-reminder-log>
 
       <div *ngIf="selectedBlockedSlot" class="selection-card selection-card-block">
         <div>
@@ -267,36 +283,38 @@ type SchedulingEditorSurface = 'appointment' | 'block';
         </div>
       </div>
 
-      <app-appointment-reminder-worklist
-        *ngIf="schedulingFacade.selectedBranchId()"
-        [items]="schedulingFacade.manualReminders()"
-        [loading]="schedulingFacade.loadingManualReminders()"
-        [error]="schedulingFacade.manualRemindersError()"
-        [followUpError]="reminderFollowUpError"
-        [canWrite]="canWrite"
-        [savingAppointmentId]="savingReminderFollowUpAppointmentId"
-        [reminderTemplates]="schedulingFacade.reminderTemplates()"
-        [templatePreview]="schedulingFacade.reminderTemplatePreview()"
-        [previewingTemplateId]="previewingReminderTemplateId"
-        [templatePreviewError]="reminderTemplatePreviewError"
-        (followUpSaved)="recordManualReminderFollowUp($event.appointmentId, $event.value)"
-        (templatePreviewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
-      </app-appointment-reminder-worklist>
+      <div class="reminder-operations-grid" [class.reminder-operations-grid-single]="!schedulingFacade.selectedBranchId()">
+        <app-appointment-reminder-worklist
+          *ngIf="schedulingFacade.selectedBranchId()"
+          [items]="schedulingFacade.manualReminders()"
+          [loading]="schedulingFacade.loadingManualReminders()"
+          [error]="schedulingFacade.manualRemindersError()"
+          [followUpError]="reminderFollowUpError"
+          [canWrite]="canWrite"
+          [savingAppointmentId]="savingReminderFollowUpAppointmentId"
+          [reminderTemplates]="schedulingFacade.reminderTemplates()"
+          [templatePreview]="schedulingFacade.reminderTemplatePreview()"
+          [previewingTemplateId]="previewingReminderTemplateId"
+          [templatePreviewError]="reminderTemplatePreviewError"
+          (followUpSaved)="recordManualReminderFollowUp($event.appointmentId, $event.value)"
+          (templatePreviewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
+        </app-appointment-reminder-worklist>
 
-      <app-reminder-template-manager
-        [templates]="schedulingFacade.reminderTemplates()"
-        [loading]="schedulingFacade.loadingReminderTemplates()"
-        [error]="schedulingFacade.reminderTemplatesError()"
-        [submitError]="reminderTemplateSubmitError"
-        [canWrite]="canWrite"
-        [saving]="savingReminderTemplate"
-        [previewAppointmentId]="selectedAppointment?.id ?? null"
-        [preview]="schedulingFacade.reminderTemplatePreview()"
-        [previewing]="!!previewingReminderTemplateId"
-        (saved)="saveReminderTemplate($event)"
-        (deactivateRequested)="deactivateReminderTemplate($event)"
-        (previewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
-      </app-reminder-template-manager>
+        <app-reminder-template-manager
+          [templates]="schedulingFacade.reminderTemplates()"
+          [loading]="schedulingFacade.loadingReminderTemplates()"
+          [error]="schedulingFacade.reminderTemplatesError()"
+          [submitError]="reminderTemplateSubmitError"
+          [canWrite]="canWrite"
+          [saving]="savingReminderTemplate"
+          [previewAppointmentId]="selectedAppointment?.id ?? null"
+          [preview]="schedulingFacade.reminderTemplatePreview()"
+          [previewing]="!!previewingReminderTemplateId"
+          (saved)="saveReminderTemplate($event)"
+          (deactivateRequested)="deactivateReminderTemplate($event)"
+          (previewRequested)="previewReminderTemplate($event.templateId, $event.appointmentId)">
+        </app-reminder-template-manager>
+      </div>
     </section>
   `,
   styles: [`
@@ -316,11 +334,33 @@ type SchedulingEditorSurface = 'appointment' | 'block';
       box-shadow: var(--bsm-shadow-sm);
     }
 
+    .editor-panel {
+      display: grid;
+      gap: 1rem;
+    }
+
     .selection-card {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
       align-items: flex-start;
+    }
+
+    .appointment-secondary-grid,
+    .reminder-operations-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.85fr);
+      align-items: start;
+    }
+
+    .appointment-detail-stack {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .reminder-operations-grid-single {
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .selection-card-block {
@@ -514,6 +554,11 @@ type SchedulingEditorSurface = 'appointment' | 'block';
 
     @media (max-width: 1080px) {
       .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .appointment-secondary-grid,
+      .reminder-operations-grid {
         grid-template-columns: 1fr;
       }
 
