@@ -421,6 +421,7 @@ export const ES_MX_TRANSLATIONS: Record<string, string> = {
   'The reminder template could not be deactivated.': 'No se pudo desactivar la plantilla de recordatorio.',
   'The reminder template could not be previewed for this appointment.': 'No se pudo previsualizar la plantilla de recordatorio para esta cita.',
   'The reminder template could not be saved.': 'No se pudo guardar la plantilla de recordatorio.',
+  'The reminder log could not be loaded.': 'No se pudo cargar la bitácora de recordatorios.',
   'The scheduling calendar could not be loaded.': 'No se pudo cargar el calendario de agenda.',
   'The surface finding could not be added.': 'No se pudo agregar el hallazgo de superficie.',
   'The surface finding could not be removed.': 'No se pudo eliminar el hallazgo de superficie.',

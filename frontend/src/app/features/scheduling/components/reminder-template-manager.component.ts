@@ -3,6 +3,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/i18n';
 import {
+  EmptyStateComponent,
+  LoadingSkeletonComponent,
+  SectionCardComponent,
+  StatusBadgeComponent
+} from '../../../shared/ui';
+import {
   ReminderTemplate,
   ReminderTemplateFormValue,
   ReminderTemplatePreview
@@ -11,22 +17,34 @@ import {
 @Component({
   selector: 'app-reminder-template-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslatePipe,
+    EmptyStateComponent,
+    LoadingSkeletonComponent,
+    SectionCardComponent,
+    StatusBadgeComponent
+  ],
   template: `
-    <section class="template-panel">
-      <header class="template-head">
-        <div>
-          <p class="section-label">{{ 'Reminder templates' | t }}</p>
-          <h3>{{ 'Reminder templates' | t }}</h3>
-          <p class="manual-note">{{ 'Templates are internal drafts only. BigSmile does not send messages.' | t }}</p>
-        </div>
-      </header>
+    <app-section-card
+      class="template-panel"
+      [title]="'Reminder templates' | t"
+      [subtitle]="'Templates are internal drafts only. BigSmile does not send messages.' | t">
+      <span section-card-actions class="section-label">{{ 'Reminder templates' | t }}</span>
 
-      <div *ngIf="loading" class="state-card">
-        {{ 'Loading reminder templates.' | t }}
+      <div *ngIf="loading" class="loading-stack">
+        <app-loading-skeleton
+          variant="card"
+          [ariaLabel]="'Loading reminder templates.' | t">
+        </app-loading-skeleton>
+        <app-loading-skeleton
+          variant="card"
+          [ariaLabel]="'Loading reminder templates.' | t">
+        </app-loading-skeleton>
       </div>
 
-      <div *ngIf="!loading && error" class="state-card state-error">
+      <div *ngIf="!loading && error" class="state-card state-error" role="alert">
         {{ error | t }}
       </div>
 
@@ -50,8 +68,8 @@ import {
             [disabled]="saving"></textarea>
         </label>
 
-        <div *ngIf="formError" class="form-error">{{ formError | t }}</div>
-        <div *ngIf="submitError" class="form-error">{{ submitError | t }}</div>
+        <div *ngIf="formError" class="form-error" role="alert">{{ formError | t }}</div>
+        <div *ngIf="submitError" class="form-error" role="alert">{{ submitError | t }}</div>
 
         <div class="template-actions">
           <button type="submit" class="btn btn-primary" [disabled]="saving">
@@ -68,15 +86,23 @@ import {
         </div>
       </form>
 
-      <div *ngIf="!loading && !error && !templates.length" class="state-card">
-        {{ 'No active reminder templates have been created.' | t }}
-      </div>
+      <app-empty-state
+        *ngIf="!loading && !error && !templates.length"
+        icon="T"
+        [title]="'No active reminder templates have been created.' | t"
+        [description]="'Templates are internal drafts only. BigSmile does not send messages.' | t">
+      </app-empty-state>
 
       <ol *ngIf="!loading && !error && templates.length" class="template-list">
         <li *ngFor="let template of templates" class="template-item">
-          <div>
+          <div class="template-item-head">
             <strong>{{ template.name }}</strong>
-            <span *ngIf="!template.isActive">{{ 'Inactive' | t }}</span>
+            <app-status-badge
+              *ngIf="!template.isActive"
+              size="sm"
+              tone="warning"
+              [label]="'Inactive' | t">
+            </app-status-badge>
           </div>
           <p>{{ template.body }}</p>
 
@@ -105,43 +131,17 @@ import {
           </div>
         </li>
       </ol>
-    </section>
+    </app-section-card>
   `,
   styles: [`
-    .template-panel {
-      border-radius: 20px;
-      border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
-      padding: 1.25rem;
-      box-shadow: 0 18px 30px rgba(20, 48, 79, 0.08);
-    }
-
-    .template-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: flex-start;
-    }
-
     .section-label {
-      margin: 0 0 0.35rem;
+      display: inline-flex;
+      margin: 0;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-accent-accessible);
       font-size: 0.78rem;
-      font-weight: 700;
-    }
-
-    h3 {
-      margin: 0;
-      color: var(--bsm-color-text-brand);
-      font-size: 1.2rem;
-    }
-
-    .manual-note {
-      margin: 0.45rem 0 0;
-      color: var(--bsm-color-text-muted);
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .template-form {
@@ -151,6 +151,11 @@ import {
       margin-top: 1rem;
       border-top: 1px solid var(--bsm-color-border);
       padding-top: 1rem;
+    }
+
+    app-empty-state {
+      display: block;
+      margin-top: 1rem;
     }
 
     .control {
@@ -170,11 +175,22 @@ import {
     textarea {
       width: 100%;
       border: 1px solid var(--bsm-color-border);
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-md);
       padding: 0.8rem 0.9rem;
       font: inherit;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text);
       box-sizing: border-box;
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     textarea {
@@ -195,16 +211,20 @@ import {
 
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.75rem 1rem;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
+      transition:
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard),
+        opacity var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
     .btn-secondary {
@@ -213,31 +233,53 @@ import {
     }
 
     .btn-danger {
-      background: #fde3e3;
-      color: #9b2d30;
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
     }
 
     .btn:disabled {
       cursor: not-allowed;
       opacity: 0.65;
+      transform: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      box-shadow: var(--bsm-shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    .loading-stack,
+    .state-card {
+      margin-top: 1rem;
+    }
+
+    .loading-stack {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .state-card {
-      margin-top: 1rem;
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       background: var(--bsm-color-surface);
       color: var(--bsm-color-text-muted);
       padding: 0.9rem 1rem;
     }
 
     .state-error {
-      border: 1px solid #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+      border: 1px solid var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
+      font-weight: 700;
     }
 
     .form-error {
-      color: #8c2525;
+      color: var(--bsm-color-danger);
       font-weight: 700;
     }
 
@@ -251,12 +293,20 @@ import {
 
     .template-item {
       border: 1px solid var(--bsm-color-border);
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       padding: 0.9rem 1rem;
       background: var(--bsm-color-surface);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
-    .template-item div:first-child {
+    .template-item:hover {
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-sm);
+    }
+
+    .template-item-head {
       display: flex;
       justify-content: space-between;
       gap: 0.75rem;
@@ -267,34 +317,36 @@ import {
       color: var(--bsm-color-text-brand);
     }
 
-    .template-item span {
-      color: #8b4f0f;
-      font-weight: 800;
-    }
-
     .template-item p {
       margin: 0.5rem 0 0;
-      color: #42546a;
+      color: var(--bsm-color-text);
       white-space: pre-wrap;
       word-break: break-word;
     }
 
     .preview-card {
       margin-top: 0.9rem;
-      border-radius: 14px;
-      border: 1px solid #c9dfd2;
-      background: #f2fbf5;
+      border-radius: var(--bsm-radius-sm);
+      border: 1px solid var(--bsm-color-success-soft);
+      background: var(--bsm-color-success-soft);
       padding: 0.85rem;
     }
 
     .preview-card small {
       display: block;
       margin-top: 0.5rem;
-      color: #8b4f0f;
+      color: var(--bsm-color-warning);
       font-weight: 700;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .btn:hover:not(:disabled) {
+        transform: none;
+      }
+    }
+
     @media (max-width: 720px) {
+      .loading-stack,
       .template-form {
         grid-template-columns: 1fr;
       }

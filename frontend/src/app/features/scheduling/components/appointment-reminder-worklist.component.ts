@@ -4,6 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../../core/i18n';
 import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
+  EmptyStateComponent,
+  LoadingSkeletonComponent,
+  SectionCardComponent,
+  StatusBadgeComponent
+} from '../../../shared/ui';
+import type { StatusBadgeTone } from '../../../shared/ui';
+import {
   AppointmentReminderChannel,
   AppointmentReminderFollowUpFormValue,
   AppointmentReminderOutcome,
@@ -16,36 +23,55 @@ import {
 @Component({
   selector: 'app-appointment-reminder-worklist',
   standalone: true,
-  imports: [CommonModule, FormsModule, LocalizedDatePipe, TranslatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LocalizedDatePipe,
+    TranslatePipe,
+    EmptyStateComponent,
+    LoadingSkeletonComponent,
+    SectionCardComponent,
+    StatusBadgeComponent
+  ],
   template: `
-    <section class="worklist-panel">
-      <header class="worklist-head">
-        <div>
-          <p class="section-label">{{ 'Pending reminders' | t }}</p>
-          <h3>{{ 'Manual reminder work' | t }}</h3>
-          <p class="manual-note">{{ 'Manual preparation only. No providers, jobs, queues, external delivery templates, scheduler, or retry automation.' | t }}</p>
-        </div>
-      </header>
+    <app-section-card
+      class="worklist-panel"
+      variant="elevated"
+      [title]="'Manual reminder work' | t"
+      [subtitle]="'Manual record only. BigSmile does not send messages.' | t">
+      <span section-card-actions class="section-label">{{ 'Pending reminders' | t }}</span>
 
-      <div *ngIf="loading" class="state-card">
-        {{ 'Loading manual reminders.' | t }}
+      <div *ngIf="loading" class="loading-stack">
+        <app-loading-skeleton
+          variant="card"
+          [ariaLabel]="'Loading manual reminders.' | t">
+        </app-loading-skeleton>
+        <app-loading-skeleton
+          variant="card"
+          [ariaLabel]="'Loading manual reminders.' | t">
+        </app-loading-skeleton>
       </div>
 
-      <div *ngIf="!loading && error" class="state-card state-error">
+      <div *ngIf="!loading && error" class="state-card state-error" role="alert">
         {{ error | t }}
       </div>
 
-      <div *ngIf="!loading && !error && !items.length" class="state-card">
-        {{ 'No pending or due manual reminders for this branch.' | t }}
-      </div>
+      <app-empty-state
+        *ngIf="!loading && !error && !items.length"
+        icon="R"
+        [title]="'No pending or due manual reminders for this branch.' | t"
+        [description]="'Manual record only. BigSmile does not send messages.' | t">
+      </app-empty-state>
 
       <ol *ngIf="!loading && !error && items.length" class="worklist">
         <li *ngFor="let item of items" class="work-item">
-          <div>
+          <div class="work-item-head">
             <strong>{{ item.patientFullName }}</strong>
-            <span class="state-pill" [class.state-due]="item.reminderState === 'Due'">
-              {{ getStateLabel(item.reminderState) }}
-            </span>
+            <app-status-badge
+              size="sm"
+              [tone]="getStateTone(item.reminderState)"
+              [label]="getStateLabel(item.reminderState)">
+            </app-status-badge>
           </div>
           <p>
             {{ item.reminderDueAtUtc | bsDate: 'short' }}
@@ -144,7 +170,7 @@ import {
                 </button>
               </div>
 
-              <div *ngIf="templatePreviewError" class="form-error">{{ templatePreviewError }}</div>
+              <div *ngIf="templatePreviewError" class="form-error" role="alert">{{ templatePreviewError | t }}</div>
             </div>
 
             <label class="checkbox-control">
@@ -165,8 +191,8 @@ import {
               <span>{{ 'Confirm appointment' | t }}</span>
             </label>
 
-            <div *ngIf="formError" class="form-error">{{ formError | t }}</div>
-            <div *ngIf="followUpError && activeAppointmentId === item.appointmentId" class="form-error">{{ followUpError | t }}</div>
+            <div *ngIf="formError" class="form-error" role="alert">{{ formError | t }}</div>
+            <div *ngIf="followUpError && activeAppointmentId === item.appointmentId" class="form-error" role="alert">{{ followUpError | t }}</div>
 
             <div class="follow-up-actions">
               <button type="submit" class="btn btn-primary" [disabled]="savingAppointmentId === item.appointmentId">
@@ -183,56 +209,42 @@ import {
           </form>
         </li>
       </ol>
-    </section>
+    </app-section-card>
   `,
   styles: [`
-    .worklist-panel {
-      border-radius: 20px;
-      border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
-      padding: 1.25rem;
-      box-shadow: 0 18px 30px rgba(20, 48, 79, 0.08);
-    }
-
-    .worklist-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: flex-start;
-    }
-
     .section-label {
-      margin: 0 0 0.35rem;
+      display: inline-flex;
+      margin: 0;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-accent-accessible);
       font-size: 0.78rem;
-      font-weight: 700;
+      font-weight: 800;
     }
 
-    h3 {
-      margin: 0;
-      color: var(--bsm-color-text-brand);
-      font-size: 1.2rem;
+    .loading-stack,
+    .state-card {
+      margin-top: 1rem;
     }
 
-    .manual-note {
-      margin: 0.45rem 0 0;
-      color: var(--bsm-color-text-muted);
+    .loading-stack {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .state-card {
-      margin-top: 1rem;
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       background: var(--bsm-color-surface);
       color: var(--bsm-color-text-muted);
       padding: 0.9rem 1rem;
     }
 
     .state-error {
-      border: 1px solid #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+      border: 1px solid var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
+      font-weight: 700;
     }
 
     .worklist {
@@ -245,12 +257,12 @@ import {
 
     .work-item {
       border: 1px solid var(--bsm-color-border);
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       padding: 0.9rem 1rem;
       background: var(--bsm-color-surface);
     }
 
-    .work-item div {
+    .work-item-head {
       display: flex;
       gap: 0.5rem;
       align-items: center;
@@ -263,20 +275,20 @@ import {
 
     .work-item p {
       margin: 0.45rem 0 0;
-      color: #42546a;
+      color: var(--bsm-color-text);
       font-weight: 700;
     }
 
     .work-item small {
       display: block;
       margin-top: 0.45rem;
-      color: #6a7f96;
+      color: var(--bsm-color-text-muted);
       word-break: break-word;
     }
 
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.75rem 1rem;
       font: inherit;
       font-weight: 700;
@@ -285,7 +297,7 @@ import {
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
     .btn-secondary {
@@ -297,6 +309,11 @@ import {
     .btn:disabled {
       cursor: not-allowed;
       opacity: 0.65;
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     .follow-up-form {
@@ -333,11 +350,19 @@ import {
     textarea {
       width: 100%;
       border: 1px solid var(--bsm-color-border);
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-md);
       padding: 0.75rem 0.85rem;
       font: inherit;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text);
       box-sizing: border-box;
+    }
+
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     textarea {
@@ -356,17 +381,18 @@ import {
     .checkbox-control input {
       width: 1rem;
       height: 1rem;
+      accent-color: var(--bsm-color-primary);
     }
 
     .form-error {
-      color: #8c2525;
+      color: var(--bsm-color-danger);
       font-weight: 700;
     }
 
     .template-helper {
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
       padding: 0.85rem;
     }
 
@@ -378,7 +404,7 @@ import {
 
     .template-empty {
       margin-top: 0.6rem;
-      color: #6a7f96;
+      color: var(--bsm-color-text-muted);
     }
 
     .template-controls {
@@ -395,9 +421,9 @@ import {
 
     .template-preview {
       margin-top: 0.75rem;
-      border-radius: 14px;
-      border: 1px solid #c9dfd2;
-      background: #f2fbf5;
+      border-radius: var(--bsm-radius-sm);
+      border: 1px solid var(--bsm-color-success-soft);
+      background: var(--bsm-color-success-soft);
       padding: 0.75rem;
     }
 
@@ -407,7 +433,7 @@ import {
 
     .template-preview p {
       margin: 0.5rem 0 0;
-      color: #42546a;
+      color: var(--bsm-color-text);
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -415,7 +441,7 @@ import {
     .template-preview small {
       display: block;
       margin-top: 0.5rem;
-      color: #8b4f0f;
+      color: var(--bsm-color-warning);
       font-weight: 700;
     }
 
@@ -433,21 +459,8 @@ import {
       margin-top: 0;
     }
 
-    .state-pill {
-      border-radius: 999px;
-      background: var(--bsm-color-primary-soft);
-      color: var(--bsm-color-text-brand);
-      font-weight: 800;
-      padding: 0.35rem 0.6rem;
-      white-space: nowrap;
-    }
-
-    .state-due {
-      background: #fbe6bf;
-      color: #8b4f0f;
-    }
-
     @media (max-width: 720px) {
+      .loading-stack,
       .follow-up-form {
         grid-template-columns: 1fr;
       }
@@ -496,6 +509,10 @@ export class AppointmentReminderWorklistComponent {
 
   getStateLabel(state: AppointmentReminderState): string {
     return this.i18n.translate(state === 'Due' ? 'Due' : 'Pending');
+  }
+
+  getStateTone(state: AppointmentReminderState): StatusBadgeTone {
+    return state === 'Due' ? 'warning' : 'primary';
   }
 
   startFollowUp(item: AppointmentReminderWorkItem): void {

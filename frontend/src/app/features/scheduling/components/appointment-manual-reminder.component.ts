@@ -3,6 +3,8 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, injec
 import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../../core/i18n';
 import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
+import { SectionCardComponent, StatusBadgeComponent } from '../../../shared/ui';
+import type { StatusBadgeTone } from '../../../shared/ui';
 import {
   AppointmentManualReminderFormValue,
   AppointmentReminderChannel,
@@ -13,19 +15,25 @@ import {
 @Component({
   selector: 'app-appointment-manual-reminder',
   standalone: true,
-  imports: [CommonModule, FormsModule, LocalizedDatePipe, TranslatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LocalizedDatePipe,
+    TranslatePipe,
+    SectionCardComponent,
+    StatusBadgeComponent
+  ],
   template: `
-    <section class="manual-reminder-panel">
-      <header class="manual-reminder-head">
-        <div>
-          <p class="section-label">{{ 'Manual reminder' | t }}</p>
-          <h3>{{ 'Reminder preparation' | t }}</h3>
-          <p class="manual-note">{{ 'Manual scheduling only. No WhatsApp, email, or SMS is sent from BigSmile.' | t }}</p>
-        </div>
-        <span class="state-pill" [class.state-due]="reminderState === 'Due'" [class.state-completed]="reminderState === 'Completed'">
-          {{ getStateLabel(reminderState) }}
-        </span>
-      </header>
+    <app-section-card
+      class="manual-reminder-panel"
+      [title]="'Reminder preparation' | t"
+      [subtitle]="'Manual scheduling only. No WhatsApp, email, or SMS is sent from BigSmile.' | t">
+      <span section-card-actions class="section-label">{{ 'Manual reminder' | t }}</span>
+      <app-status-badge
+        section-card-actions
+        [tone]="getStateTone(reminderState)"
+        [label]="getStateLabel(reminderState)">
+      </app-status-badge>
 
       <dl class="reminder-details" *ngIf="appointment?.reminderRequired">
         <div>
@@ -57,7 +65,7 @@ import {
           <input type="datetime-local" name="dueAt" [(ngModel)]="dueAt" [disabled]="saving" />
         </label>
 
-        <div *ngIf="formError || error" class="form-error">{{ (formError || error) | t }}</div>
+        <div *ngIf="formError || error" class="form-error" role="alert">{{ (formError || error) | t }}</div>
 
         <div class="actions">
           <button type="submit" class="btn btn-primary" [disabled]="saving">
@@ -99,61 +107,17 @@ import {
       <div *ngIf="canWrite && appointment?.status !== 'Scheduled' && !appointment?.reminderRequired" class="state-card">
         {{ 'Terminal appointments cannot receive new manual reminder work.' | t }}
       </div>
-    </section>
+    </app-section-card>
   `,
   styles: [`
-    .manual-reminder-panel {
-      border-radius: 20px;
-      border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
-      padding: 1.25rem;
-      box-shadow: 0 18px 30px rgba(20, 48, 79, 0.08);
-    }
-
-    .manual-reminder-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: flex-start;
-    }
-
     .section-label {
-      margin: 0 0 0.35rem;
+      display: inline-flex;
+      margin: 0;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-accent-accessible);
       font-size: 0.78rem;
-      font-weight: 700;
-    }
-
-    h3 {
-      margin: 0;
-      color: var(--bsm-color-text-brand);
-      font-size: 1.2rem;
-    }
-
-    .manual-note {
-      margin: 0.45rem 0 0;
-      color: var(--bsm-color-text-muted);
-    }
-
-    .state-pill {
-      border-radius: 999px;
-      background: var(--bsm-color-primary-soft);
-      color: var(--bsm-color-text-brand);
       font-weight: 800;
-      padding: 0.4rem 0.7rem;
-      white-space: nowrap;
-    }
-
-    .state-due {
-      background: #fbe6bf;
-      color: #8b4f0f;
-    }
-
-    .state-completed {
-      background: #dff2e5;
-      color: #1d6a3a;
     }
 
     .reminder-details,
@@ -165,7 +129,7 @@ import {
     }
 
     .reminder-details {
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       background: var(--bsm-color-surface);
       padding: 0.9rem 1rem;
     }
@@ -195,11 +159,22 @@ import {
     input {
       width: 100%;
       border: 1px solid var(--bsm-color-border);
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-md);
       padding: 0.8rem 0.9rem;
       font: inherit;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text);
       box-sizing: border-box;
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    select:focus,
+    input:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     .actions {
@@ -216,10 +191,10 @@ import {
     .form-error,
     .state-card {
       grid-column: 1 / -1;
-      border-radius: 14px;
-      border: 1px solid #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+      border-radius: var(--bsm-radius-sm);
+      border: 1px solid var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
       padding: 0.85rem 0.95rem;
       font-weight: 700;
     }
@@ -230,16 +205,20 @@ import {
 
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.85rem 1.1rem;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
+      transition:
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard),
+        opacity var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
     .btn-secondary {
@@ -248,20 +227,33 @@ import {
     }
 
     .btn-success {
-      background: #dff2e5;
-      color: #1d6a3a;
+      background: var(--bsm-color-success-soft);
+      color: var(--bsm-color-success);
     }
 
     .btn:disabled {
       cursor: not-allowed;
       opacity: 0.65;
+      transform: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      box-shadow: var(--bsm-shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn:hover:not(:disabled) {
+        transform: none;
+      }
     }
 
     @media (max-width: 720px) {
-      .manual-reminder-head {
-        flex-direction: column;
-      }
-
       .actions .btn {
         width: 100%;
       }
@@ -336,6 +328,19 @@ export class AppointmentManualReminderComponent implements OnChanges {
         return this.i18n.translate('Not required');
       default:
         return this.i18n.translate(state);
+    }
+  }
+
+  getStateTone(state: AppointmentReminderState): StatusBadgeTone {
+    switch (state) {
+      case 'Completed':
+        return 'success';
+      case 'Due':
+        return 'warning';
+      case 'NotRequired':
+        return 'neutral';
+      default:
+        return 'primary';
     }
   }
 

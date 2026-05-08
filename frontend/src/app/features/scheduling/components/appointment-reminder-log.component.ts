@@ -4,6 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../../core/i18n';
 import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
 import {
+  EmptyStateComponent,
+  LoadingSkeletonComponent,
+  SectionCardComponent,
+  StatusBadgeComponent
+} from '../../../shared/ui';
+import type { StatusBadgeTone } from '../../../shared/ui';
+import {
   AppointmentReminderChannel,
   AppointmentReminderLogEntry,
   AppointmentReminderLogFormValue,
@@ -13,34 +20,54 @@ import {
 @Component({
   selector: 'app-appointment-reminder-log',
   standalone: true,
-  imports: [CommonModule, FormsModule, LocalizedDatePipe, TranslatePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LocalizedDatePipe,
+    TranslatePipe,
+    EmptyStateComponent,
+    LoadingSkeletonComponent,
+    SectionCardComponent,
+    StatusBadgeComponent
+  ],
   template: `
-    <section class="reminder-log-panel">
-      <header class="reminder-log-head">
-        <div>
-          <p class="section-label">{{ 'Contact attempts' | t }}</p>
-          <h3>{{ 'Reminder log' | t }}</h3>
-          <p class="manual-note">{{ 'Manual log only. No WhatsApp, email, or SMS is sent from BigSmile.' | t }}</p>
-        </div>
-      </header>
+    <app-section-card
+      class="reminder-log-panel"
+      [title]="'Reminder log' | t"
+      [subtitle]="'Manual log only. No WhatsApp, email, or SMS is sent from BigSmile.' | t">
+      <span section-card-actions class="section-label">{{ 'Contact attempts' | t }}</span>
 
-      <div *ngIf="loading" class="state-card">
-        {{ 'Loading contact attempts.' | t }}
+      <div *ngIf="loading" class="loading-stack">
+        <app-loading-skeleton
+          variant="card"
+          [ariaLabel]="'Loading contact attempts.' | t">
+        </app-loading-skeleton>
+        <app-loading-skeleton
+          variant="card"
+          [ariaLabel]="'Loading contact attempts.' | t">
+        </app-loading-skeleton>
       </div>
 
-      <div *ngIf="!loading && error" class="state-card state-error">
+      <div *ngIf="!loading && error" class="state-card state-error" role="alert">
         {{ error | t }}
       </div>
 
-      <div *ngIf="!loading && !error && !entries.length" class="state-card">
-        {{ 'No contact attempts have been logged for this appointment.' | t }}
-      </div>
+      <app-empty-state
+        *ngIf="!loading && !error && !entries.length"
+        icon="L"
+        [title]="'No contact attempts have been logged for this appointment.' | t"
+        [description]="'Manual log only. No WhatsApp, email, or SMS is sent from BigSmile.' | t">
+      </app-empty-state>
 
       <ol *ngIf="!loading && !error && entries.length" class="log-list">
         <li *ngFor="let entry of entries" class="log-entry">
-          <div>
+          <div class="log-entry-head">
             <strong>{{ getChannelLabel(entry.channel) }}</strong>
-            <span>{{ getOutcomeLabel(entry.outcome) }}</span>
+            <app-status-badge
+              size="sm"
+              [tone]="getOutcomeTone(entry.outcome)"
+              [label]="getOutcomeLabel(entry.outcome)">
+            </app-status-badge>
           </div>
           <p *ngIf="entry.notes">{{ entry.notes }}</p>
           <small *ngIf="entry.reminderTemplateNameSnapshot">{{ 'Template:' | t }} {{ entry.reminderTemplateNameSnapshot }}</small>
@@ -77,61 +104,47 @@ import {
             [disabled]="saving"></textarea>
         </label>
 
-        <div *ngIf="formError" class="form-error">{{ formError | t }}</div>
+        <div *ngIf="formError" class="form-error" role="alert">{{ formError | t }}</div>
         <button type="submit" class="btn btn-primary" [disabled]="saving">
           {{ 'Add log entry' | t }}
         </button>
       </form>
-    </section>
+    </app-section-card>
   `,
   styles: [`
-    .reminder-log-panel {
-      border-radius: 20px;
-      border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
-      padding: 1.25rem;
-      box-shadow: 0 18px 30px rgba(20, 48, 79, 0.08);
-    }
-
-    .reminder-log-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      align-items: flex-start;
-    }
-
     .section-label {
-      margin: 0 0 0.35rem;
+      display: inline-flex;
+      margin: 0;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-accent-accessible);
       font-size: 0.78rem;
-      font-weight: 700;
+      font-weight: 800;
     }
 
-    h3 {
-      margin: 0;
-      color: var(--bsm-color-text-brand);
-      font-size: 1.2rem;
+    .loading-stack,
+    .state-card {
+      margin-top: 1rem;
     }
 
-    .manual-note {
-      margin: 0.45rem 0 0;
-      color: var(--bsm-color-text-muted);
+    .loading-stack {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .state-card {
-      margin-top: 1rem;
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       background: var(--bsm-color-surface);
       color: var(--bsm-color-text-muted);
       padding: 0.9rem 1rem;
     }
 
     .state-error {
-      border: 1px solid #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+      border: 1px solid var(--bsm-color-danger-soft);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
+      font-weight: 700;
     }
 
     .log-list {
@@ -144,36 +157,39 @@ import {
 
     .log-entry {
       border: 1px solid var(--bsm-color-border);
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-sm);
       padding: 0.9rem 1rem;
       background: var(--bsm-color-surface);
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
-    .log-entry div {
+    .log-entry:hover {
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-sm);
+    }
+
+    .log-entry-head {
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
-      align-items: baseline;
+      align-items: center;
     }
 
     .log-entry strong {
       color: var(--bsm-color-text-brand);
     }
 
-    .log-entry span {
-      color: #1d6a3a;
-      font-weight: 700;
-    }
-
     .log-entry p {
       margin: 0.45rem 0 0;
-      color: #42546a;
+      color: var(--bsm-color-text);
     }
 
     .log-entry small {
       display: block;
       margin-top: 0.45rem;
-      color: #6a7f96;
+      color: var(--bsm-color-text-muted);
       word-break: break-word;
     }
 
@@ -201,11 +217,22 @@ import {
     textarea {
       width: 100%;
       border: 1px solid var(--bsm-color-border);
-      border-radius: 14px;
+      border-radius: var(--bsm-radius-md);
       padding: 0.8rem 0.9rem;
       font: inherit;
-      background: #ffffff;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text);
       box-sizing: border-box;
+      transition:
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--bsm-color-accent-accessible);
+      box-shadow: var(--bsm-shadow-focus);
     }
 
     textarea {
@@ -215,30 +242,52 @@ import {
 
     .form-error {
       grid-column: 1 / -1;
-      color: #8c2525;
+      color: var(--bsm-color-danger);
       font-weight: 700;
     }
 
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.85rem 1.1rem;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
+      transition:
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard),
+        opacity var(--bsm-motion-fast) var(--bsm-ease-standard);
     }
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
     .btn:disabled {
       cursor: not-allowed;
       opacity: 0.65;
+      transform: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      box-shadow: var(--bsm-shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn:hover:not(:disabled) {
+        transform: none;
+      }
     }
 
     @media (max-width: 720px) {
+      .loading-stack,
       .log-form {
         grid-template-columns: 1fr;
       }
@@ -296,6 +345,17 @@ export class AppointmentReminderLogComponent {
         return this.i18n.translate('Left message');
       default:
         return this.i18n.translate('Reached');
+    }
+  }
+
+  getOutcomeTone(outcome: AppointmentReminderOutcome): StatusBadgeTone {
+    switch (outcome) {
+      case 'Reached':
+        return 'success';
+      case 'NoAnswer':
+        return 'warning';
+      default:
+        return 'info';
     }
   }
 }
