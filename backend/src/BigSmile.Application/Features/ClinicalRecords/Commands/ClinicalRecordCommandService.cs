@@ -22,6 +22,14 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
         string DiagnosisText,
         string? Notes);
 
+    public sealed record SaveClinicalMedicalAnswerCommand(
+        string QuestionKey,
+        ClinicalMedicalAnswerValue Answer,
+        string? Details);
+
+    public sealed record SaveClinicalMedicalQuestionnaireCommand(
+        IReadOnlyCollection<SaveClinicalMedicalAnswerCommand> Answers);
+
     public interface IClinicalRecordCommandService
     {
         Task<ClinicalRecordDetailDto> CreateAsync(
@@ -47,6 +55,11 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
         Task<ClinicalRecordDetailDto> ResolveDiagnosisAsync(
             Guid patientId,
             Guid diagnosisId,
+            CancellationToken cancellationToken = default);
+
+        Task<ClinicalMedicalQuestionnaireDto> UpdateQuestionnaireAsync(
+            Guid patientId,
+            SaveClinicalMedicalQuestionnaireCommand command,
             CancellationToken cancellationToken = default);
     }
 
@@ -195,6 +208,37 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
             return clinicalRecord.ToDetailDto();
         }
 
+        public async Task<ClinicalMedicalQuestionnaireDto> UpdateQuestionnaireAsync(
+            Guid patientId,
+            SaveClinicalMedicalQuestionnaireCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            var tenantId = GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
+
+            EnsurePatientBelongsToTenant(patient, tenantId);
+
+            var clinicalRecord = await _clinicalRecordRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            if (clinicalRecord is null)
+            {
+                throw new InvalidOperationException("The clinical record must be created explicitly before updating the medical questionnaire.");
+            }
+
+            EnsureClinicalRecordBelongsToTenantAndPatient(clinicalRecord, tenantId, patient.Id);
+
+            var questionnaireChanged = clinicalRecord.UpsertMedicalAnswers(
+                command.Answers.Select(ToDraft),
+                actorUserId);
+
+            if (questionnaireChanged)
+            {
+                await _clinicalRecordRepository.UpdateAsync(clinicalRecord, cancellationToken);
+            }
+
+            return clinicalRecord.ToQuestionnaireDto();
+        }
+
         private async Task<Patient> GetRequiredPatientAsync(Guid patientId, CancellationToken cancellationToken)
         {
             var patient = await _patientRepository.GetByIdAsync(patientId, cancellationToken);
@@ -211,6 +255,22 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
             if (patient.TenantId != tenantId)
             {
                 throw new InvalidOperationException("Clinical records can only reference patients from the current tenant.");
+            }
+        }
+
+        private static void EnsureClinicalRecordBelongsToTenantAndPatient(
+            ClinicalRecord clinicalRecord,
+            Guid tenantId,
+            Guid patientId)
+        {
+            if (clinicalRecord.TenantId != tenantId)
+            {
+                throw new InvalidOperationException("The clinical record is not available in the current tenant scope.");
+            }
+
+            if (clinicalRecord.PatientId != patientId)
+            {
+                throw new InvalidOperationException("The clinical record does not belong to the requested patient.");
             }
         }
 
@@ -239,6 +299,11 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
         private static ClinicalAllergyDraft ToDraft(ClinicalAllergyInput allergy)
         {
             return new ClinicalAllergyDraft(allergy.Substance, allergy.ReactionSummary, allergy.Notes);
+        }
+
+        private static ClinicalMedicalAnswerDraft ToDraft(SaveClinicalMedicalAnswerCommand answer)
+        {
+            return new ClinicalMedicalAnswerDraft(answer.QuestionKey, answer.Answer, answer.Details);
         }
     }
 }

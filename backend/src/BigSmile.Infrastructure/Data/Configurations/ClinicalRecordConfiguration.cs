@@ -60,6 +60,11 @@ namespace BigSmile.Infrastructure.Data.Configurations
                 .WithOne(entry => entry.ClinicalRecord)
                 .HasForeignKey(entry => entry.ClinicalRecordId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(clinicalRecord => clinicalRecord.MedicalAnswers)
+                .WithOne(answer => answer.ClinicalRecord)
+                .HasForeignKey(answer => answer.ClinicalRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

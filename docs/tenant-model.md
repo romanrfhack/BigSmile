@@ -85,6 +85,7 @@ The **Tenant** is the main security and ownership boundary of the platform.
 - patients
 - appointments
 - clinical records
+- clinical medical questionnaire answers
 - odontograms
 - treatment plans
 - charges and payments
@@ -287,6 +288,7 @@ This includes, at minimum:
 - patients
 - appointments
 - clinical records
+- clinical medical questionnaire answers
 - odontograms
 - treatment plans
 - payments

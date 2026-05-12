@@ -148,6 +148,43 @@ namespace BigSmile.UnitTests.Clinical
                 dto.SnapshotHistory.Select(entry => entry.Section).ToArray());
         }
 
+        [Fact]
+        public void ToQuestionnaireDto_ReturnsFixedCatalogWithUnknownDefaults()
+        {
+            var clinicalRecord = new ClinicalRecord(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "Background.",
+                null);
+
+            clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("diabetes", ClinicalMedicalAnswerValue.Yes, "Type 2.")
+                },
+                Guid.NewGuid());
+
+            var dto = clinicalRecord.ToQuestionnaireDto();
+
+            Assert.Equal(ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys.Count, dto.Answers.Count);
+            Assert.Equal(ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys, dto.Answers.Select(answer => answer.QuestionKey).ToArray());
+
+            var diabetes = dto.Answers.Single(answer => answer.QuestionKey == "diabetes");
+            Assert.NotNull(diabetes.Id);
+            Assert.Equal("Yes", diabetes.Answer);
+            Assert.Equal("Type 2.", diabetes.Details);
+            Assert.NotNull(diabetes.UpdatedAtUtc);
+            Assert.NotNull(diabetes.UpdatedByUserId);
+
+            var hypertension = dto.Answers.Single(answer => answer.QuestionKey == "hypertension");
+            Assert.Null(hypertension.Id);
+            Assert.Equal("Unknown", hypertension.Answer);
+            Assert.Null(hypertension.Details);
+            Assert.Null(hypertension.UpdatedAtUtc);
+            Assert.Null(hypertension.UpdatedByUserId);
+        }
+
         private static void SetCreatedAt(ClinicalDiagnosis diagnosis, DateTime value)
         {
             var field = typeof(ClinicalDiagnosis)

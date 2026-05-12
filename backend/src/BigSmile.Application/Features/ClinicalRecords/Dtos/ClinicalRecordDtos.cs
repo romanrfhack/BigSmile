@@ -37,6 +37,19 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         string Section,
         string Summary);
 
+    public sealed record ClinicalMedicalAnswerDto(
+        Guid? Id,
+        string QuestionKey,
+        string Answer,
+        string? Details,
+        DateTime? UpdatedAtUtc,
+        Guid? UpdatedByUserId);
+
+    public sealed record ClinicalMedicalQuestionnaireDto(
+        Guid ClinicalRecordId,
+        Guid PatientId,
+        IReadOnlyList<ClinicalMedicalAnswerDto> Answers);
+
     public sealed record ClinicalRecordDetailDto(
         Guid ClinicalRecordId,
         Guid PatientId,

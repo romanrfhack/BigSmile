@@ -506,6 +506,246 @@ namespace BigSmile.IntegrationTests.Clinical
             Assert.Contains("resolved tenant context", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
+        [Fact]
+        public async Task GetQuestionnaireByPatientIdAsync_ReturnsFixedCatalogWithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext);
+
+            var questionnaire = await queryService.GetQuestionnaireByPatientIdAsync(patient.Id);
+
+            Assert.NotNull(questionnaire);
+            Assert.Equal(patient.Id, questionnaire!.PatientId);
+            Assert.Equal(ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys.Count, questionnaire.Answers.Count);
+            Assert.All(questionnaire.Answers, answer =>
+            {
+                Assert.Contains(answer.QuestionKey, ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys);
+                Assert.Equal("Unknown", answer.Answer);
+                Assert.Null(answer.Id);
+            });
+        }
+
+        [Fact]
+        public async Task UpdateQuestionnaireAsync_UpsertsAnswersWithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var writeContext = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(writeContext, tenantContext);
+
+            var updated = await commandService.UpdateQuestionnaireAsync(
+                patient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("diabetes", ClinicalMedicalAnswerValue.No, null),
+                    new SaveClinicalMedicalAnswerCommand("allergyPenicillin", ClinicalMedicalAnswerValue.Yes, "Rash.")
+                }));
+
+            Assert.Equal(ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys.Count, updated.Answers.Count);
+            Assert.Equal("No", updated.Answers.Single(answer => answer.QuestionKey == "diabetes").Answer);
+            Assert.Equal("Yes", updated.Answers.Single(answer => answer.QuestionKey == "allergyPenicillin").Answer);
+            Assert.Equal("Rash.", updated.Answers.Single(answer => answer.QuestionKey == "allergyPenicillin").Details);
+
+            await using var verifyContext = CreateContext(databaseName, tenantContext);
+            var persistedAnswers = await verifyContext.ClinicalMedicalAnswers
+                .OrderBy(answer => answer.QuestionKey)
+                .ToListAsync();
+
+            Assert.Equal(2, persistedAnswers.Count);
+            Assert.All(persistedAnswers, answer =>
+            {
+                Assert.Equal(tenantA.Id, answer.TenantId);
+                Assert.Equal(patient.Id, answer.PatientId);
+                Assert.Equal(actorUserId, answer.UpdatedByUserId);
+            });
+
+            var penicillinId = persistedAnswers.Single(answer => answer.QuestionKey == "allergyPenicillin").Id;
+
+            await using var updateContext = CreateContext(databaseName, tenantContext);
+            var updateService = CreateCommandService(updateContext, tenantContext);
+            await updateService.UpdateQuestionnaireAsync(
+                patient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("allergyPenicillin", ClinicalMedicalAnswerValue.No, null)
+                }));
+
+            await using var afterUpsertContext = CreateContext(databaseName, tenantContext);
+            var penicillin = await afterUpsertContext.ClinicalMedicalAnswers.SingleAsync(answer => answer.QuestionKey == "allergyPenicillin");
+            Assert.Equal(penicillinId, penicillin.Id);
+            Assert.Equal(ClinicalMedicalAnswerValue.No, penicillin.Answer);
+            Assert.Null(penicillin.Details);
+        }
+
+        [Fact]
+        public async Task GetQuestionnaireByPatientIdAsync_ReturnsNull_ForCrossTenantAccess()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordWithQuestionnaireAsync(databaseName, tenantA.Id, patientA.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantB.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext);
+
+            var questionnaire = await queryService.GetQuestionnaireByPatientIdAsync(patientA.Id);
+
+            Assert.Null(questionnaire);
+        }
+
+        [Fact]
+        public async Task UpdateQuestionnaireAsync_BlocksCrossTenantWrite()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var foreignPatient = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            await SeedClinicalRecordAsync(databaseName, tenantB.Id, foreignPatient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateQuestionnaireAsync(
+                foreignPatient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("diabetes", ClinicalMedicalAnswerValue.No, null)
+                })));
+
+            Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateQuestionnaireAsync_RejectsInvalidQuestionKey()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandService.UpdateQuestionnaireAsync(
+                patient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("unknownQuestion", ClinicalMedicalAnswerValue.Yes, null)
+                })));
+
+            Assert.Contains("question key is not supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateQuestionnaireAsync_RejectsInvalidAnswer()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandService.UpdateQuestionnaireAsync(
+                patient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("diabetes", (ClinicalMedicalAnswerValue)999, null)
+                })));
+
+            Assert.Contains("answer is not supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateQuestionnaireAsync_RejectsDuplicateQuestionKeys()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateQuestionnaireAsync(
+                patient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("diabetes", ClinicalMedicalAnswerValue.Yes, null),
+                    new SaveClinicalMedicalAnswerCommand(" diabetes ", ClinicalMedicalAnswerValue.No, null)
+                })));
+
+            Assert.Contains("duplicate question keys", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateQuestionnaireAsync_RequiresPatientInCurrentTenant()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var foreignPatient = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            await SeedClinicalRecordAsync(databaseName, tenantB.Id, foreignPatient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateQuestionnaireAsync(
+                foreignPatient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("diabetes", ClinicalMedicalAnswerValue.No, null)
+                })));
+
+            Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task UpdateQuestionnaireAsync_RequiresClinicalRecordInCurrentTenant()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantB.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UpdateQuestionnaireAsync(
+                patient.Id,
+                new SaveClinicalMedicalQuestionnaireCommand(new[]
+                {
+                    new SaveClinicalMedicalAnswerCommand("diabetes", ClinicalMedicalAnswerValue.No, null)
+                })));
+
+            Assert.Contains("must be created explicitly", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
         private static ClinicalRecordCommandService CreateCommandService(AppDbContext context, TenantContext tenantContext)
         {
             return new ClinicalRecordCommandService(
@@ -634,6 +874,30 @@ namespace BigSmile.IntegrationTests.Clinical
             SetChangedAt(
                 clinicalRecord.SnapshotHistory.Single(entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.AllergiesUpdated),
                 new DateTime(2026, 4, 20, 12, 0, 0, DateTimeKind.Utc));
+
+            context.ClinicalRecords.Add(clinicalRecord);
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task SeedClinicalRecordWithQuestionnaireAsync(
+            string databaseName,
+            Guid tenantId,
+            Guid patientId,
+            Guid actorUserId)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var clinicalRecord = new ClinicalRecord(
+                tenantId,
+                patientId,
+                actorUserId,
+                "Seeded background.",
+                "Seeded medications.");
+            clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("diabetes", ClinicalMedicalAnswerValue.No, null)
+                },
+                actorUserId);
 
             context.ClinicalRecords.Add(clinicalRecord);
             await context.SaveChangesAsync();

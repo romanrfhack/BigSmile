@@ -209,6 +209,129 @@ namespace BigSmile.UnitTests.Clinical
             Assert.Contains(clinicalRecord.SnapshotHistory, entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.SnapshotInitialized);
         }
 
+        [Fact]
+        public void UpsertMedicalAnswers_AddsQuestionnaireAnswersWithTenantAndPatientOwnership()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+            var actorUserId = Guid.NewGuid();
+
+            var changed = clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("currentMedicalTreatment", ClinicalMedicalAnswerValue.Yes, " Orthodontic follow-up. ")
+                },
+                actorUserId);
+
+            Assert.True(changed);
+            var answer = Assert.Single(clinicalRecord.MedicalAnswers);
+            Assert.Equal(clinicalRecord.TenantId, answer.TenantId);
+            Assert.Equal(clinicalRecord.PatientId, answer.PatientId);
+            Assert.Equal(clinicalRecord.Id, answer.ClinicalRecordId);
+            Assert.Equal("currentMedicalTreatment", answer.QuestionKey);
+            Assert.Equal(ClinicalMedicalAnswerValue.Yes, answer.Answer);
+            Assert.Equal("Orthodontic follow-up.", answer.Details);
+            Assert.Equal(actorUserId, answer.UpdatedByUserId);
+        }
+
+        [Fact]
+        public void UpsertMedicalAnswers_UpdatesExistingQuestionByKey()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+            var createdByUserId = Guid.NewGuid();
+            var updatedByUserId = Guid.NewGuid();
+            clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("regularMedication", ClinicalMedicalAnswerValue.Unknown, null)
+                },
+                createdByUserId);
+            var answerId = clinicalRecord.MedicalAnswers.Single().Id;
+
+            var changed = clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("regularMedication", ClinicalMedicalAnswerValue.No, "None.")
+                },
+                updatedByUserId);
+
+            Assert.True(changed);
+            var answer = Assert.Single(clinicalRecord.MedicalAnswers);
+            Assert.Equal(answerId, answer.Id);
+            Assert.Equal(ClinicalMedicalAnswerValue.No, answer.Answer);
+            Assert.Equal("None.", answer.Details);
+            Assert.Equal(updatedByUserId, answer.UpdatedByUserId);
+        }
+
+        [Fact]
+        public void UpsertMedicalAnswers_RejectsInvalidQuestionKey()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<ArgumentException>(() => clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("unknownQuestion", ClinicalMedicalAnswerValue.Yes, null)
+                },
+                Guid.NewGuid()));
+
+            Assert.Contains("question key is not supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void UpsertMedicalAnswers_RejectsInvalidAnswer()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<ArgumentException>(() => clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("diabetes", (ClinicalMedicalAnswerValue)999, null)
+                },
+                Guid.NewGuid()));
+
+            Assert.Contains("answer is not supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void UpsertMedicalAnswers_RejectsDuplicateQuestionKeys()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<InvalidOperationException>(() => clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("diabetes", ClinicalMedicalAnswerValue.Yes, null),
+                    new ClinicalMedicalAnswerDraft(" diabetes ", ClinicalMedicalAnswerValue.No, null)
+                },
+                Guid.NewGuid()));
+
+            Assert.Contains("duplicate question keys", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void UpsertMedicalAnswers_DoesNotChangeTenantPatientOrClinicalRecordOwnership()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+            var originalTenantId = clinicalRecord.TenantId;
+            var originalPatientId = clinicalRecord.PatientId;
+            var originalClinicalRecordId = clinicalRecord.Id;
+
+            clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("hypertension", ClinicalMedicalAnswerValue.No, null)
+                },
+                Guid.NewGuid());
+
+            var answer = Assert.Single(clinicalRecord.MedicalAnswers);
+            Assert.Equal(originalTenantId, clinicalRecord.TenantId);
+            Assert.Equal(originalPatientId, clinicalRecord.PatientId);
+            Assert.Equal(originalClinicalRecordId, clinicalRecord.Id);
+            Assert.Equal(originalTenantId, answer.TenantId);
+            Assert.Equal(originalPatientId, answer.PatientId);
+            Assert.Equal(originalClinicalRecordId, answer.ClinicalRecordId);
+        }
+
         private static ClinicalRecord CreateClinicalRecord()
         {
             return new ClinicalRecord(

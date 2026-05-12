@@ -434,6 +434,7 @@ Responsible for:
 * background information
 * allergies
 * diagnoses
+* fixed medical questionnaire backend
 
 ### 9.6 Odontogram
 

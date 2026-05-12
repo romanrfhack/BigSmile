@@ -4,7 +4,7 @@
 
 Documentar una auditoria tecnica y un mapeo formal del formato fisico de historia clinica compartido por el cliente contra el estado real del repositorio BigSmile.
 
-Este documento no implementa funcionalidad. Su objetivo es separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y proponer slices futuros pequenos y auditables para incorporar el cuestionario medico y la captura clinica derivada del formato fisico.
+Este documento nacio como mapeo/auditoria. Actualmente tambien registra el cierre backend del slice `Release 3.5 — Medical Questionnaire Backend`. Su objetivo sigue siendo separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y proponer slices futuros pequenos y auditables para incorporar la captura clinica restante derivada del formato fisico.
 
 ## 2. Estado canonico y deriva detectada
 
@@ -13,7 +13,7 @@ Estado confirmado desde `STATE — BigSmile.md`, `README.md`, `PROJECT_MAP.md`, 
 - Release 1 — Patients esta completada.
 - Release 2 — Scheduling esta completada.
 - `doctor-based views` siguen diferidas y no hay provider/doctor assignment en el codigo actual.
-- Release 3 — Clinical Records no es una fase futura virgen: ya esta abierta y preservada por slices aceptados Release 3.1, 3.2, 3.3 y 3.4.
+- Release 3 — Clinical Records no es una fase futura virgen: ya esta abierta y preservada por slices aceptados Release 3.1, 3.2, 3.3, 3.4 y 3.5.
 - La fase activa canonica actual es Phase 2 Expansion — Modern Operations, con slices aceptados hasta Phase 2.6.
 
 Deriva frente al objetivo textual de este slice: la instruccion pide confirmar que Release 3 es la siguiente fase funcional. El estado canonico actual no confirma eso; indica que Release 3 ya existe en codigo y documentacion, y que debe preservarse. Por lo tanto, este documento trata el trabajo como mapeo/auditoria para una expansion futura acotada de Clinical Records, no como reapertura funcional de Release 3 desde cero.
@@ -33,7 +33,7 @@ Existe implementacion real en `frontend/src/app/features/clinical-records`:
 Limitaciones actuales:
 
 - no hay tabs formales en la pagina clinica actual; las secciones aparecen en flujo vertical;
-- no existe cuestionario medico estructurado;
+- no existe UI de cuestionario medico estructurado; el backend fijo ya existe en Release 3.5;
 - no existen signos vitales;
 - no existe `Encounter` como modelo separado;
 - no existe header clinico read-only con summary strip segun la guia UX nueva;
@@ -50,6 +50,8 @@ Existe implementacion real, no solo scaffold:
 - endpoint `POST /api/patients/{patientId}/clinical-record/notes`;
 - endpoint `POST /api/patients/{patientId}/clinical-record/diagnoses`;
 - endpoint `POST /api/patients/{patientId}/clinical-record/diagnoses/{diagnosisId}/resolve`;
+- endpoint `GET /api/patients/{patientId}/clinical-record/questionnaire`;
+- endpoint `PUT /api/patients/{patientId}/clinical-record/questionnaire`;
 - servicios de aplicacion `ClinicalRecordCommandService` y `ClinicalRecordQueryService`;
 - repositorio `IClinicalRecordRepository` / `EfClinicalRecordRepository`;
 - DTOs y mapping de read model.
@@ -61,15 +63,13 @@ Entidades existentes:
 - `ClinicalDiagnosis`: diagnostico basico no codificado, estado `Active` / `Resolved`;
 - `ClinicalAllergyEntry`: alergia actual con sustancia, resumen de reaccion y notas;
 - `ClinicalSnapshotHistoryEntry`: historial acotado del snapshot base.
+- `ClinicalMedicalAnswer`: respuesta tenant-owned, patient-owned y ligada a `ClinicalRecord`, con `QuestionKey`, `Answer`, `Details`, `UpdatedAtUtc` y `UpdatedByUserId`.
 
 No existen todavia:
 
 - `ClinicalMedicalQuestionnaire`;
-- `ClinicalMedicalAnswer`;
 - `ClinicalEncounter`;
 - `ClinicalVitals`;
-- catalogo estructurado de preguntas medicas;
-- endpoint dedicado para cuestionario medico;
 - endpoint dedicado para encounter / vitals.
 
 ### Permisos y autorizacion
@@ -128,10 +128,11 @@ Existen migrations clinicas:
 - `20260420165518_AddClinicalRecordFoundation`;
 - `20260420212406_AddClinicalDiagnosesFoundation`;
 - `20260421003354_AddClinicalSnapshotHistory`.
+- `20260512125248_AddClinicalMedicalQuestionnaire`.
 
-`AppDbContext` declara `DbSet<ClinicalRecord>`, `DbSet<ClinicalDiagnosis>` y `DbSet<ClinicalSnapshotHistoryEntry>`.
+`AppDbContext` declara `DbSet<ClinicalRecord>`, `DbSet<ClinicalDiagnosis>`, `DbSet<ClinicalSnapshotHistoryEntry>` y `DbSet<ClinicalMedicalAnswer>`.
 
-`AppDbContext` aplica query filter tenant-aware sobre `ClinicalRecord` y valida writes tenant-owned en `SaveChanges` mediante `ITenantOwnedEntity`. Los hijos clinicos actuales se alcanzan a traves de `ClinicalRecord`; si se agregan nuevas entidades top-level tenant-owned para cuestionario o encounter, deben incluir `TenantId` y filtro global explicito.
+`AppDbContext` aplica query filter tenant-aware sobre `ClinicalRecord` y `ClinicalMedicalAnswer`, y valida writes tenant-owned en `SaveChanges` mediante `ITenantOwnedEntity`. Los hijos clinicos historicos se alcanzan a traves de `ClinicalRecord`; `ClinicalMedicalAnswer` tambien incluye `TenantId` para enforcement centralizado.
 
 ### Tests clinicos existentes
 
@@ -144,6 +145,7 @@ Hay pruebas unitarias e integracion para:
 - unicidad de expediente por paciente/tenant;
 - orden de notas, diagnosticos, timeline y snapshot history;
 - snapshot history solo en cambios efectivos;
+- cuestionario medico backend tenant-scoped con lectura, upsert, catalogo fijo, validacion de `QuestionKey`, validacion de `Answer`, rechazo de duplicados, rechazo de `TenantId` en request y permisos `clinical.read` / `clinical.write`;
 - permisos clinicos ausentes para `TenantUser`;
 - plataforma sin tenant context bloqueada para acceso clinico.
 
@@ -154,6 +156,8 @@ Leyenda:
 - Existe: `Si`, `Parcial`, `No`.
 - Falta: `No`, `Parcial`, `Si`.
 - El owner recomendado es el modulo o modelo que deberia ser fuente de verdad.
+
+Actualizacion Release 3.5: las filas cuyo owner recomendado es `ClinicalMedicalQuestionnaire` ya cuentan con soporte backend fijo mediante `ClinicalMedicalAnswer`, catalogo permitido de `QuestionKey`, `Answer` `Unknown` / `Yes` / `No`, `Details` opcional acotado y endpoints `GET` / `PUT` de cuestionario. Sigue faltando la UI del cuestionario y no hay form builder, auto-sync de alergias ni timeline enrichment.
 
 | Campo del formato fisico | Owner recomendado | Existe en codigo | Falta | Accion recomendada | Riesgo |
 | --- | --- | --- | --- | --- | --- |
@@ -398,16 +402,16 @@ Validacion recomendada:
 
 ### Slice 2 — Medical questionnaire backend
 
-Agregar cuestionario medico estructurado con catalogo fijo:
+Implementado como `Release 3.5 — Medical Questionnaire Backend` con catalogo fijo:
 
-- entidad tenant-owned o hija de `ClinicalRecord` con tenant safety clara;
+- entidad `ClinicalMedicalAnswer` tenant-owned, patient-owned y ligada a `ClinicalRecord`;
 - `QuestionKey`, `Answer`, `Details`;
-- endpoint de lectura y guardado acotado;
+- endpoint de lectura y guardado acotado: `GET` / `PUT /api/patients/{patientId}/clinical-record/questionnaire`;
 - sin form builder;
-- sin permisos nuevos inicialmente, reutilizar `clinical.read` / `clinical.write`;
-- sin sincronizacion automatica hacia alergias actuales en el primer slice.
+- sin permisos nuevos, reutiliza `clinical.read` / `clinical.write`;
+- sin sincronizacion automatica hacia alergias actuales.
 
-Validacion recomendada:
+Validacion cubierta:
 
 - cross-tenant read/write prohibido;
 - no autocreacion de ClinicalRecord;
@@ -490,6 +494,4 @@ Validacion recomendada:
 
 ## 14. Decision recomendada inmediata
 
-No implementar codigo funcional todavia.
-
-Siguiente paso recomendado: mantener `Patient Demographics` como fuente de verdad para sexo, ocupacion, estado civil y referido por. Despues, abrir `Clinical Medical Questionnaire Backend` con catalogo fijo y tenant isolation probada. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.
+Siguiente paso recomendado: mantener `Patient Demographics` como fuente de verdad para sexo, ocupacion, estado civil y referido por; despues, integrar frontend del cuestionario medico usando el backend fijo de Release 3.5. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.

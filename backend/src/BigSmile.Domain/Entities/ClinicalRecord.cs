@@ -8,6 +8,11 @@ namespace BigSmile.Domain.Entities
         string? ReactionSummary,
         string? Notes);
 
+    public sealed record ClinicalMedicalAnswerDraft(
+        string QuestionKey,
+        ClinicalMedicalAnswerValue Answer,
+        string? Details);
+
     public sealed class ClinicalRecord : Entity<Guid>, ITenantOwnedEntity
     {
         private const int SummaryMaxLength = 2000;
@@ -34,6 +39,7 @@ namespace BigSmile.Domain.Entities
         public ICollection<ClinicalNote> Notes { get; private set; } = new List<ClinicalNote>();
         public ICollection<ClinicalDiagnosis> Diagnoses { get; private set; } = new List<ClinicalDiagnosis>();
         public ICollection<ClinicalSnapshotHistoryEntry> SnapshotHistory { get; private set; } = new List<ClinicalSnapshotHistoryEntry>();
+        public ICollection<ClinicalMedicalAnswer> MedicalAnswers { get; private set; } = new List<ClinicalMedicalAnswer>();
 
         private ClinicalRecord()
         {
@@ -209,6 +215,41 @@ namespace BigSmile.Domain.Entities
             return diagnosis;
         }
 
+        public bool UpsertMedicalAnswers(IEnumerable<ClinicalMedicalAnswerDraft> answers, Guid updatedByUserId)
+        {
+            EnsureActor(updatedByUserId);
+
+            var normalizedAnswers = NormalizeMedicalAnswers(answers);
+            var hasChanges = false;
+
+            foreach (var answer in normalizedAnswers)
+            {
+                var existingAnswer = MedicalAnswers.SingleOrDefault(entry => entry.QuestionKey == answer.QuestionKey);
+                if (existingAnswer is null)
+                {
+                    MedicalAnswers.Add(new ClinicalMedicalAnswer(
+                        TenantId,
+                        Id,
+                        PatientId,
+                        answer.QuestionKey,
+                        answer.Answer,
+                        answer.Details,
+                        updatedByUserId));
+                    hasChanges = true;
+                    continue;
+                }
+
+                hasChanges = existingAnswer.Update(answer.Answer, answer.Details, updatedByUserId) || hasChanges;
+            }
+
+            if (hasChanges)
+            {
+                Touch(updatedByUserId);
+            }
+
+            return hasChanges;
+        }
+
         private void ReplaceAllergiesInternal(IEnumerable<ClinicalAllergyDraft>? allergies)
         {
             Allergies.Clear();
@@ -307,6 +348,33 @@ namespace BigSmile.Domain.Entities
         private static ClinicalAllergyDraft ToDraft(ClinicalAllergyEntry allergy)
         {
             return new ClinicalAllergyDraft(allergy.Substance, allergy.ReactionSummary, allergy.Notes);
+        }
+
+        private static IReadOnlyCollection<ClinicalMedicalAnswerDraft> NormalizeMedicalAnswers(IEnumerable<ClinicalMedicalAnswerDraft>? answers)
+        {
+            var normalizedAnswers = new List<ClinicalMedicalAnswerDraft>();
+            var seenQuestionKeys = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var answer in answers ?? Array.Empty<ClinicalMedicalAnswerDraft>())
+            {
+                var normalizedQuestionKey = ClinicalMedicalQuestionnaireCatalog.NormalizeQuestionKey(answer.QuestionKey);
+                if (!seenQuestionKeys.Add(normalizedQuestionKey))
+                {
+                    throw new InvalidOperationException("Medical questionnaire answers cannot contain duplicate question keys.");
+                }
+
+                if (!Enum.IsDefined(typeof(ClinicalMedicalAnswerValue), answer.Answer))
+                {
+                    throw new ArgumentException("Medical questionnaire answer is not supported.", nameof(answers));
+                }
+
+                normalizedAnswers.Add(new ClinicalMedicalAnswerDraft(
+                    normalizedQuestionKey,
+                    answer.Answer,
+                    NormalizeOptional(answer.Details, nameof(answer.Details), ClinicalMedicalAnswer.DetailsMaxLength)));
+            }
+
+            return normalizedAnswers;
         }
 
         private static string? NormalizeOptional(string? value, string paramName, int maxLength)

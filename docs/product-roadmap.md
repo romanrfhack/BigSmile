@@ -217,9 +217,10 @@ Allow clinicians to maintain a structured patient clinical record.
 - Release 3.2 — Basic Diagnoses Foundation is accepted
 - Release 3.3 — Clinical Timeline Read Model is accepted
 - Release 3.4 — Clinical Snapshot Change History is accepted
+- Release 3.5 — Medical Questionnaire Backend is accepted
 
 ## Scope
-Release 3 is being delivered in bounded slices. The currently accepted slices are Release 3.1, Release 3.2, Release 3.3, and Release 3.4, and they cover:
+Release 3 is being delivered in bounded slices. The currently accepted slices are Release 3.1, Release 3.2, Release 3.3, Release 3.4, and Release 3.5, and they cover:
 
 - explicit clinical record creation
 - medical background summary
@@ -243,9 +244,16 @@ Release 3 is being delivered in bounded slices. The currently accepted slices ar
 - snapshot history entries only for effective changes to medical background summary, current medications summary, and current allergies
 - snapshot history ordering newest-first
 - snapshot history kept separate from the accepted Release 3.3 timeline
+- backend structured medical questionnaire on an existing clinical record
+- fixed `QuestionKey` catalog based on the physical form mapping
+- `ClinicalMedicalAnswer` records owned by tenant, patient, and clinical record
+- `Unknown` / `Yes` / `No` answers with optional bounded details
+- `GET` and `PUT /api/patients/{patientId}/clinical-record/questionnaire`
+- upsert by `QuestionKey` without accepting `TenantId` from the request
+- no questionnaire-driven changes to allergies, timeline, snapshot history, or other modules
 
 ## Expected outcome
-A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking, a bounded clinical timeline read model, and a bounded snapshot history without opening later clinical modules.
+A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking, a bounded clinical timeline read model, bounded snapshot history, and a backend fixed medical questionnaire without opening later clinical modules.
 
 ## Core users
 - Dentist
@@ -271,6 +279,10 @@ A user operating under the current clinical permissions can consult and update t
 - rich snapshot diff
 - coded diagnosis catalogs such as ICD/CIE/SNOMED
 - advanced diagnosis workflows beyond basic add/resolve
+- tenant-configurable form builder
+- automatic allergy synchronization from questionnaire answers
+- questionnaire events in the clinical timeline
+- frontend questionnaire UI
 - odontogram
 - treatments
 - documents

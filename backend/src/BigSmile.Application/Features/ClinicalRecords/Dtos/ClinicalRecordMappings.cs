@@ -63,6 +63,34 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
                 clinicalRecord.LastUpdatedByUserId);
         }
 
+        public static ClinicalMedicalQuestionnaireDto ToQuestionnaireDto(this ClinicalRecord clinicalRecord)
+        {
+            var answersByQuestionKey = clinicalRecord.MedicalAnswers
+                .GroupBy(answer => answer.QuestionKey, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.Single(), StringComparer.Ordinal);
+
+            return new ClinicalMedicalQuestionnaireDto(
+                clinicalRecord.Id,
+                clinicalRecord.PatientId,
+                ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys
+                    .Select(questionKey => answersByQuestionKey.TryGetValue(questionKey, out var answer)
+                        ? new ClinicalMedicalAnswerDto(
+                            answer.Id,
+                            answer.QuestionKey,
+                            answer.Answer.ToString(),
+                            answer.Details,
+                            answer.UpdatedAtUtc,
+                            answer.UpdatedByUserId)
+                        : new ClinicalMedicalAnswerDto(
+                            null,
+                            questionKey,
+                            ClinicalMedicalAnswerValue.Unknown.ToString(),
+                            null,
+                            null,
+                            null))
+                    .ToList());
+        }
+
         private static IReadOnlyList<ClinicalTimelineEntryDto> BuildTimeline(ClinicalRecord clinicalRecord)
         {
             return clinicalRecord.Notes

@@ -280,7 +280,9 @@ Release 3.3 is also accepted and adds only a bounded clinical timeline read mode
 
 Release 3.4 is also accepted and adds only a bounded snapshot change history inside the existing clinical record read contract: an initial history entry when the record is created explicitly, additional entries only for effective changes to medical background, current medications, and current allergies, and a separate `snapshotHistory` section that does not merge with the accepted Release 3.3 timeline. This bounded history does not introduce restore, full record versioning, or rich diffs.
 
-Release 3 remains preserved through the accepted slices above. The full or advanced clinical timeline, any cross-module timeline, restore, and full clinical record versioning remain outside the accepted Release 3 scope.
+Release 3.5 — Medical Questionnaire Backend is also accepted as a backend-only slice. It adds tenant-owned `ClinicalMedicalAnswer` records under an existing clinical record, a fixed `QuestionKey` catalog based on `docs/release-3-clinical-records-form-mapping.md`, `Unknown` / `Yes` / `No` answers, optional bounded details, and `GET` / `PUT` endpoints at `/api/patients/{patientId}/clinical-record/questionnaire`. It reuses `clinical.read` / `clinical.write`, does not accept `TenantId` from the request, and does not create a form builder or sync automatically to allergies, timeline, snapshot history, Billing, Odontogram, Treatments, Documents, Scheduling, or doctor/provider assignment.
+
+Release 3 remains preserved through the accepted slices above. The full or advanced clinical timeline, any cross-module timeline, restore, full clinical record versioning, form builder behavior, automatic allergy synchronization, and frontend questionnaire UI remain outside the accepted Release 3.5 backend scope.
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
@@ -361,7 +363,7 @@ The repository should be treated as having an established technical and architec
 ### Release 3 — Clinical Records
 
 * Release 3 is in progress
-* Accepted slices: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, and Release 3.4 — Clinical Snapshot Change History
+* Accepted slices: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, and Release 3.5 — Medical Questionnaire Backend
 * Explicit clinical record creation with `GET` returning `404` when missing and no autocreation
 * Medical background summary, current medications summary, current allergies, and append-only clinical notes
 * Notes returned newest-first in API/UI
@@ -369,7 +371,8 @@ The repository should be treated as having an established technical and architec
 * Diagnosis reads ordered active-first and newest-first within each status group
 * Clinical timeline read model inside the existing clinical record using only note-created / diagnosis-created / diagnosis-resolved events, newest-first, with no new endpoint and no new timeline table
 * Bounded snapshot history for the base clinical snapshot, returned newest-first and kept separate from the Release 3.3 timeline
-* Full or advanced clinical timeline, any cross-module timeline, restore, full versioning, rich snapshot diff, odontogram, treatments, and documents deferred beyond the accepted slices
+* Backend structured medical questionnaire with fixed question keys, `Unknown` / `Yes` / `No` answers, optional bounded details, and `GET` / `PUT /api/patients/{patientId}/clinical-record/questionnaire`
+* Full or advanced clinical timeline, any cross-module timeline, restore, full versioning, rich snapshot diff, form builder behavior, automatic allergy synchronization, odontogram, treatments, documents, and frontend questionnaire UI deferred beyond the accepted slices
 * `clinical.read` / `clinical.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
 
 ### Release 4 — Odontogram

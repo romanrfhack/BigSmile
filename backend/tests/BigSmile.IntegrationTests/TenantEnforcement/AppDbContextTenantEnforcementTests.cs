@@ -16,8 +16,8 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
             await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
             await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
-            await SeedClinicalRecordAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
-            await SeedClinicalRecordAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
+            await SeedClinicalRecordWithMedicalAnswerAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
+            await SeedClinicalRecordWithMedicalAnswerAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             await SeedOdontogramAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
             await SeedOdontogramAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             await SeedPatientDocumentAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
@@ -37,6 +37,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             var branches = await context.Branches.OrderBy(branch => branch.Name).ToListAsync();
             var patients = await context.Patients.OrderBy(patient => patient.LastName).ToListAsync();
             var clinicalRecords = await context.ClinicalRecords.OrderBy(clinicalRecord => clinicalRecord.PatientId).ToListAsync();
+            var clinicalMedicalAnswers = await context.ClinicalMedicalAnswers.OrderBy(answer => answer.PatientId).ToListAsync();
             var odontograms = await context.Odontograms.OrderBy(odontogram => odontogram.PatientId).ToListAsync();
             var patientDocuments = await context.PatientDocuments.OrderBy(patientDocument => patientDocument.PatientId).ToListAsync();
             var treatmentPlans = await context.TreatmentPlans.OrderBy(treatmentPlan => treatmentPlan.PatientId).ToListAsync();
@@ -47,6 +48,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Single(branches);
             Assert.Single(patients);
             Assert.Single(clinicalRecords);
+            Assert.Single(clinicalMedicalAnswers);
             Assert.Single(odontograms);
             Assert.Single(patientDocuments);
             Assert.Single(treatmentPlans);
@@ -56,6 +58,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Equal(tenantA.Id, branches[0].TenantId);
             Assert.Equal(tenantA.Id, patients[0].TenantId);
             Assert.Equal(tenantA.Id, clinicalRecords[0].TenantId);
+            Assert.Equal(tenantA.Id, clinicalMedicalAnswers[0].TenantId);
             Assert.Equal(tenantA.Id, odontograms[0].TenantId);
             Assert.Equal(tenantA.Id, patientDocuments[0].TenantId);
             Assert.Equal(tenantA.Id, treatmentPlans[0].TenantId);
@@ -77,6 +80,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Empty(await context.Tenants.ToListAsync());
             Assert.Empty(await context.Branches.ToListAsync());
             Assert.Empty(await context.ClinicalRecords.ToListAsync());
+            Assert.Empty(await context.ClinicalMedicalAnswers.ToListAsync());
             Assert.Empty(await context.Odontograms.ToListAsync());
             Assert.Empty(await context.PatientDocuments.ToListAsync());
             Assert.Empty(await context.TreatmentPlans.ToListAsync());
@@ -90,8 +94,8 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
             await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
             await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
-            await SeedClinicalRecordAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
-            await SeedClinicalRecordAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
+            await SeedClinicalRecordWithMedicalAnswerAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
+            await SeedClinicalRecordWithMedicalAnswerAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             await SeedOdontogramAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
             await SeedOdontogramAsync(databaseName, tenantB.Id, await GetSinglePatientIdAsync(databaseName, tenantB.Id));
             await SeedPatientDocumentAsync(databaseName, tenantA.Id, await GetSinglePatientIdAsync(databaseName, tenantA.Id));
@@ -110,6 +114,7 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
             Assert.Equal(2, await context.Branches.CountAsync());
             Assert.Equal(2, await context.Patients.CountAsync());
             Assert.Equal(2, await context.ClinicalRecords.CountAsync());
+            Assert.Equal(2, await context.ClinicalMedicalAnswers.CountAsync());
             Assert.Equal(2, await context.Odontograms.CountAsync());
             Assert.Equal(2, await context.PatientDocuments.CountAsync());
             Assert.Equal(2, await context.TreatmentPlans.CountAsync());
@@ -353,6 +358,25 @@ namespace BigSmile.IntegrationTests.TenantEnforcement
                 Guid.NewGuid(),
                 "Seeded background.",
                 "Seeded medications."));
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task SeedClinicalRecordWithMedicalAnswerAsync(string databaseName, Guid tenantId, Guid patientId)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var clinicalRecord = new ClinicalRecord(
+                tenantId,
+                patientId,
+                Guid.NewGuid(),
+                "Seeded background.",
+                "Seeded medications.");
+            clinicalRecord.UpsertMedicalAnswers(
+                new[]
+                {
+                    new ClinicalMedicalAnswerDraft("diabetes", ClinicalMedicalAnswerValue.No, null)
+                },
+                Guid.NewGuid());
+            context.ClinicalRecords.Add(clinicalRecord);
             await context.SaveChangesAsync();
         }
 
