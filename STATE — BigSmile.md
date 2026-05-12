@@ -144,6 +144,8 @@
 - sin sincronización automática hacia alergias actuales, timeline o snapshot history
 - sin Billing, Odontogram, Treatments, Documents, Scheduling ni doctor/provider assignment
 
+[Hecho] La UI bounded del cuestionario médico estructurado ya existe dentro de la pantalla de expediente clínico existente. Consume únicamente los endpoints aceptados de Release 3.5, usa el catálogo fijo de `QuestionKey`, labels i18n, grupos clínicos, contexto read-only desde Patients, estados loading/empty/error/saving y acciones Guardar/Cancelar; no cambia backend, contratos API, permisos, guards, tenant resolution, alergias actuales, timeline, snapshot history ni módulos posteriores.
+
 [Hecho] En esta fase, `clinical.read` y `clinical.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos clínicos.
 
 [Hecho] Release 4.1 cubre, de forma acotada:

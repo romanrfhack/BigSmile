@@ -15,6 +15,8 @@ describe('ClinicalRecordPageComponent', () => {
   let addNoteCalls: any[];
   let addDiagnosisCalls: any[];
   let resolveDiagnosisCalls: any[];
+  let loadQuestionnaireCalls: string[];
+  let updateQuestionnaireCalls: any[];
 
   beforeEach(async () => {
     window.localStorage.setItem('bigsmile.ui.language', 'en-US');
@@ -23,13 +25,22 @@ describe('ClinicalRecordPageComponent', () => {
     addNoteCalls = [];
     addDiagnosisCalls = [];
     resolveDiagnosisCalls = [];
+    loadQuestionnaireCalls = [];
+    updateQuestionnaireCalls = [];
 
     clinicalRecordsFacade = {
       currentRecord: signal<any | null>(null),
       loadingRecord: signal(false),
       recordMissing: signal(true),
       recordError: signal<string | null>(null),
+      currentQuestionnaire: signal<any | null>(null),
+      loadingQuestionnaire: signal(false),
+      questionnaireMissing: signal(false),
+      questionnaireError: signal<string | null>(null),
       loadRecord: () => undefined,
+      loadQuestionnaire: (patientId: string) => {
+        loadQuestionnaireCalls.push(patientId);
+      },
       clearRecord: () => undefined,
       createRecord: (_patientId: string, payload: any) => {
         createCalls.push(payload);
@@ -158,6 +169,22 @@ describe('ClinicalRecordPageComponent', () => {
           ]
         });
         return of(clinicalRecordsFacade.currentRecord());
+      },
+      updateQuestionnaire: (_patientId: string, payload: any) => {
+        updateQuestionnaireCalls.push(payload);
+        clinicalRecordsFacade.currentQuestionnaire.set({
+          clinicalRecordId: 'record-1',
+          patientId: 'patient-1',
+          answers: payload.answers.map((answer: any) => ({
+            id: null,
+            questionKey: answer.questionKey,
+            answer: answer.answer,
+            details: answer.details,
+            updatedAtUtc: null,
+            updatedByUserId: null
+          }))
+        });
+        return of(clinicalRecordsFacade.currentQuestionnaire());
       }
     };
 
@@ -165,10 +192,16 @@ describe('ClinicalRecordPageComponent', () => {
       currentPatient: signal({
         id: 'patient-1',
         fullName: 'Ana Lopez',
+        dateOfBirth: '1991-02-14',
         sex: 'Female',
         occupation: 'Dentist',
         maritalStatus: 'Single',
-        referredBy: 'Existing patient'
+        referredBy: 'Existing patient',
+        primaryPhone: '555-0101',
+        email: null,
+        isActive: true,
+        hasClinicalAlerts: false,
+        clinicalAlertsSummary: null
       }),
       loadingPatient: signal(false),
       detailError: signal<string | null>(null),
@@ -206,6 +239,13 @@ describe('ClinicalRecordPageComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('No clinical record yet');
+  });
+
+  it('loads the medical questionnaire when the clinical record page opens', () => {
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    fixture.detectChanges();
+
+    expect(loadQuestionnaireCalls).toEqual(['patient-1']);
   });
 
   it('creates the clinical record only after the explicit create flow starts', () => {
@@ -448,5 +488,33 @@ describe('ClinicalRecordPageComponent', () => {
 
     expect(resolveDiagnosisCalls).toEqual(['diagnosis-1']);
     expect(clinicalRecordsFacade.currentRecord()?.diagnoses[0]?.status).toBe('Resolved');
+  });
+
+  it('saves the medical questionnaire through the facade', () => {
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.saveQuestionnaire({
+      answers: [
+        {
+          questionKey: 'diabetes',
+          answer: 'Yes',
+          details: 'Type 2'
+        }
+      ]
+    });
+
+    expect(updateQuestionnaireCalls).toEqual([
+      {
+        answers: [
+          {
+            questionKey: 'diabetes',
+            answer: 'Yes',
+            details: 'Type 2'
+          }
+        ]
+      }
+    ]);
   });
 });

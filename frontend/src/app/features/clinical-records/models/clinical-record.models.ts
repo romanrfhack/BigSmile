@@ -95,3 +95,71 @@ export interface AddClinicalDiagnosisRequest {
   diagnosisText: string;
   notes: string | null;
 }
+
+export type ClinicalMedicalAnswerValue = 'Unknown' | 'Yes' | 'No';
+
+export type ClinicalMedicalQuestionKey =
+  | 'currentMedicalTreatment'
+  | 'regularMedication'
+  | 'priorSurgery'
+  | 'bloodTransfusion'
+  | 'drugUse'
+  | 'allergicReactions'
+  | 'allergyPenicillin'
+  | 'allergyAnesthetics'
+  | 'allergyAspirin'
+  | 'allergySulfas'
+  | 'allergyIodine'
+  | 'allergyOther'
+  | 'hypertension'
+  | 'hypotension'
+  | 'excessiveBleeding'
+  | 'bloodOrCoagulationDisorder'
+  | 'anemiaHemophiliaVitaminKDeficiency'
+  | 'retroviralTreatment'
+  | 'badDentalExperience'
+  | 'covidHistory'
+  | 'sexuallyTransmittedDisease'
+  | 'congenitalOrCurrentHeartDisease'
+  | 'hepatitis'
+  | 'endocarditis'
+  | 'seizures'
+  | 'diabetes'
+  | 'tuberculosis'
+  | 'hyperthyroidism'
+  | 'hypothyroidism'
+  | 'heartAttackOrAngina'
+  | 'openHeartSurgery'
+  | 'recurrentHerpesOrAphthae'
+  | 'bitesNailsOrLips'
+  | 'smokes'
+  | 'acidicFoodConsumption'
+  | 'bruxismAtNight'
+  | 'pregnantLactatingOrSuspected'
+  | 'contraceptiveMedication'
+  | 'anesthesiaComplications';
+
+export interface ClinicalMedicalAnswer {
+  id: string | null;
+  questionKey: ClinicalMedicalQuestionKey;
+  answer: ClinicalMedicalAnswerValue;
+  details: string | null;
+  updatedAtUtc: string | null;
+  updatedByUserId: string | null;
+}
+
+export interface ClinicalMedicalQuestionnaire {
+  clinicalRecordId: string;
+  patientId: string;
+  answers: ClinicalMedicalAnswer[];
+}
+
+export interface SaveClinicalMedicalAnswerRequest {
+  questionKey: ClinicalMedicalQuestionKey;
+  answer: ClinicalMedicalAnswerValue;
+  details: string | null;
+}
+
+export interface SaveClinicalMedicalQuestionnaireRequest {
+  answers: SaveClinicalMedicalAnswerRequest[];
+}

@@ -4,7 +4,7 @@
 
 Documentar una auditoria tecnica y un mapeo formal del formato fisico de historia clinica compartido por el cliente contra el estado real del repositorio BigSmile.
 
-Este documento nacio como mapeo/auditoria. Actualmente tambien registra el cierre backend del slice `Release 3.5 — Medical Questionnaire Backend`. Su objetivo sigue siendo separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y proponer slices futuros pequenos y auditables para incorporar la captura clinica restante derivada del formato fisico.
+Este documento nacio como mapeo/auditoria. Actualmente tambien registra el cierre backend del slice `Release 3.5 — Medical Questionnaire Backend` y la integracion frontend acotada del cuestionario medico estructurado en Clinical Records. Su objetivo sigue siendo separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y proponer slices futuros pequenos y auditables para incorporar la captura clinica restante derivada del formato fisico.
 
 ## 2. Estado canonico y deriva detectada
 
@@ -26,14 +26,16 @@ Existe implementacion real en `frontend/src/app/features/clinical-records`:
 
 - pagina `clinical-record.page.ts` en ruta `/patients/:id/clinical-record`;
 - `ClinicalRecordsApiService` con llamadas reales a `/api/patients/{patientId}/clinical-record`;
-- facade con estado `currentRecord`, `loadingRecord`, `recordMissing` y errores;
+- `ClinicalRecordsApiService` con llamadas reales a `/api/patients/{patientId}/clinical-record/questionnaire`;
+- facade con estado `currentRecord`, `loadingRecord`, `recordMissing`, `currentQuestionnaire`, `loadingQuestionnaire`, `questionnaireMissing` y errores;
 - componentes para empty state, snapshot clinico, alergias actuales, notas, diagnosticos, timeline y snapshot history;
-- modelos TypeScript para `ClinicalRecord`, `ClinicalAllergy`, `ClinicalNote`, `ClinicalDiagnosis`, `ClinicalTimelineEntry` y `ClinicalSnapshotHistoryEntry`.
+- componente de cuestionario medico estructurado con catalogo fijo, secciones, respuestas `Unknown` / `Yes` / `No` y `Details`;
+- modelos TypeScript para `ClinicalRecord`, `ClinicalAllergy`, `ClinicalNote`, `ClinicalDiagnosis`, `ClinicalTimelineEntry`, `ClinicalSnapshotHistoryEntry`, `ClinicalMedicalQuestionnaire` y `ClinicalMedicalAnswer`.
 
 Limitaciones actuales:
 
 - no hay tabs formales en la pagina clinica actual; las secciones aparecen en flujo vertical;
-- no existe UI de cuestionario medico estructurado; el backend fijo ya existe en Release 3.5;
+- la UI del cuestionario medico es acotada al catalogo fijo de Release 3.5 y no introduce form builder, versionado ni sincronizacion automatica;
 - no existen signos vitales;
 - no existe `Encounter` como modelo separado;
 - no existe header clinico read-only con summary strip segun la guia UX nueva;
@@ -146,6 +148,7 @@ Hay pruebas unitarias e integracion para:
 - orden de notas, diagnosticos, timeline y snapshot history;
 - snapshot history solo en cambios efectivos;
 - cuestionario medico backend tenant-scoped con lectura, upsert, catalogo fijo, validacion de `QuestionKey`, validacion de `Answer`, rechazo de duplicados, rechazo de `TenantId` en request y permisos `clinical.read` / `clinical.write`;
+- cuestionario medico frontend con pruebas de render, cambios `Unknown` / `Yes` / `No`, visibilidad de `Details`, payload normalizado y errores de carga/guardado;
 - permisos clinicos ausentes para `TenantUser`;
 - plataforma sin tenant context bloqueada para acceso clinico.
 
@@ -157,7 +160,7 @@ Leyenda:
 - Falta: `No`, `Parcial`, `Si`.
 - El owner recomendado es el modulo o modelo que deberia ser fuente de verdad.
 
-Actualizacion Release 3.5: las filas cuyo owner recomendado es `ClinicalMedicalQuestionnaire` ya cuentan con soporte backend fijo mediante `ClinicalMedicalAnswer`, catalogo permitido de `QuestionKey`, `Answer` `Unknown` / `Yes` / `No`, `Details` opcional acotado y endpoints `GET` / `PUT` de cuestionario. Sigue faltando la UI del cuestionario y no hay form builder, auto-sync de alergias ni timeline enrichment.
+Actualizacion Release 3.5: las filas cuyo owner recomendado es `ClinicalMedicalQuestionnaire` ya cuentan con soporte backend fijo mediante `ClinicalMedicalAnswer`, catalogo permitido de `QuestionKey`, `Answer` `Unknown` / `Yes` / `No`, `Details` opcional acotado y endpoints `GET` / `PUT` de cuestionario. Tambien cuentan con UI frontend acotada dentro de la pantalla de Clinical Record, usando Patients como contexto read-only cuando esta disponible. No hay form builder, auto-sync de alergias, timeline enrichment, versionado del cuestionario ni apertura de Billing, Scheduling, Odontogram, Treatments, Documents o doctor/provider scope.
 
 | Campo del formato fisico | Owner recomendado | Existe en codigo | Falta | Accion recomendada | Riesgo |
 | --- | --- | --- | --- | --- | --- |
@@ -181,45 +184,45 @@ Actualizacion Release 3.5: las filas cuyo owner recomendado es `ClinicalMedicalQ
 | Frecuencia respiratoria | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Falta de contexto temporal/unidades. |
 | Talla | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Unidades ambiguas. |
 | Frecuencia cardiaca | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Falta de contexto temporal/unidades. |
-| Esta actualmente bajo tratamiento medico | ClinicalMedicalQuestionnaire | No | Si | Agregar como pregunta fija con respuesta Unknown/Yes/No y details opcional. | Texto libre imposible de explotar. |
-| Toma habitualmente algun medicamento | ClinicalMedicalQuestionnaire | Parcial | Parcial | `CurrentMedicationsSummary` existe como snapshot libre; agregar respuesta estructurada sin eliminar el summary. | Duplicar medicamentos si no hay regla clara. |
-| Le han practicado intervenciones quirurgicas | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Dato medico sensible sin audit trail. |
-| Ha recibido transfusiones sanguineas | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico no visible. |
-| Consumio o consume drogas | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details; tratar como dato sensible. | Privacidad y autorizacion clinica. |
-| Ha presentado reacciones alergicas | ClinicalMedicalQuestionnaire | Parcial | Parcial | Pregunta fija; relacionar visualmente con alergias actuales, sin auto-sincronizar en primer slice. | Duplicar con `ClinicalAllergyEntry`. |
-| Penicilina | ClinicalMedicalQuestionnaire | Parcial | Parcial | Pregunta fija; si `Yes`, permitir detalle y posible accion explicita para crear alergia actual. | Inconsistencia entre questionnaire y alergias actuales. |
-| Anestesicos | ClinicalMedicalQuestionnaire | Parcial | Parcial | Igual que otras alergias por sustancia. | Riesgo clinico alto si se oculta. |
-| Aspirina | ClinicalMedicalQuestionnaire | Parcial | Parcial | Igual que otras alergias por sustancia. | Duplicacion con alergias actuales. |
-| Sulfas | ClinicalMedicalQuestionnaire | Parcial | Parcial | Igual que otras alergias por sustancia. | Duplicacion con alergias actuales. |
-| Yodo | ClinicalMedicalQuestionnaire | Parcial | Parcial | Igual que otras alergias por sustancia. | Duplicacion con alergias actuales. |
-| Otro alimento, sustancia o medicamento | ClinicalMedicalQuestionnaire | Parcial | Parcial | Pregunta fija con details requerido cuando answer sea `Yes`; posible accion explicita hacia alergias actuales. | Texto libre dificil de normalizar. |
-| Presion arterial alta / Hipertension | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico si no aparece en summary. |
-| Presion arterial baja / Hipotension | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico si no aparece en summary. |
-| Sangrado excesivo ante heridas | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Alteraciones sanguineas o de coagulacion | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Anemia, hemofilia, deficiencia de vitamina K | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija o subpregunta ligada a coagulacion; mantener QuestionKey estable. | Granularidad excesiva si se modela sin catalogo claro. |
-| Toma algun retroviral | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Privacidad alta. |
-| Experiencias desfavorables con el dentista | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details; util para UX clinica. | Dato cualitativo perdido si solo es boolean. |
-| Tuvo COVID | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details opcional. | Puede volverse historico irrelevante sin fecha/details. |
-| Enfermedades de transmision sexual | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details; sensible. | Privacidad y acceso clinico. |
-| Enfermedades del corazon de nacimiento o actualmente | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Hepatitis A, B, C u otra | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details para tipo. | Riesgo clinico y privacidad. |
-| Endocarditis | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Crisis o convulsiones | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Diabetes | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Tuberculosis | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico y privacidad. |
-| Hipertiroidismo | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico medio. |
-| Hipotiroidismo | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico medio. |
-| Infarto o angina de pecho | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Cirugia a corazon abierto | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
-| Herpes o aftas recurrentes | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico medio. |
-| Se muerde las unas o labios | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Dato conductual puede requerir odontogram/treatment linkage futuro; no abrir ahora. |
-| Fuma | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Dato de riesgo clinico no estructurado. |
-| Consumo de alimentos citricos o acidos | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Puede contaminar odontogram si se liga prematuramente. |
-| Apretamiento o rechinido de dientes por las noches | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details; no abrir tratamiento/odontogram linkage. | Puede reabrir tratamientos por accidente. |
-| Lactando, embarazada o sospecha de embarazo | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details; sensible. | Riesgo clinico alto y privacidad. |
-| Toma medicamentos anticonceptivos | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Privacidad. |
-| Complicaciones asociadas a la anestesia | ClinicalMedicalQuestionnaire | No | Si | Pregunta fija con details. | Riesgo clinico alto. |
+| Esta actualmente bajo tratamiento medico | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con respuesta Unknown/Yes/No y details opcional. | Texto libre imposible de explotar si se reabre fuera del catalogo fijo. |
+| Toma habitualmente algun medicamento | ClinicalMedicalQuestionnaire | Si | No | `CurrentMedicationsSummary` sigue como snapshot libre; la respuesta estructurada no lo reemplaza ni lo sincroniza. | Duplicar medicamentos si se interpreta como fuente unica. |
+| Le han practicado intervenciones quirurgicas | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Dato medico sensible sin audit trail si se mueve a texto libre. |
+| Ha recibido transfusiones sanguineas | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico no visible si se oculta en notas. |
+| Consumio o consume drogas | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details; tratar como dato sensible. | Privacidad y autorizacion clinica. |
+| Ha presentado reacciones alergicas | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija; relacionar visualmente con alergias actuales, sin auto-sincronizar. | Duplicar con `ClinicalAllergyEntry`. |
+| Penicilina | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija; details opcional no crea alergia actual. | Inconsistencia entre questionnaire y alergias actuales. |
+| Anestesicos | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija por sustancia. | Riesgo clinico alto si se oculta. |
+| Aspirina | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija por sustancia. | Duplicacion con alergias actuales. |
+| Sulfas | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija por sustancia. | Duplicacion con alergias actuales. |
+| Yodo | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija por sustancia. | Duplicacion con alergias actuales. |
+| Otro alimento, sustancia o medicamento | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details opcional; no crea alergia actual. | Texto libre dificil de normalizar. |
+| Presion arterial alta / Hipertension | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico si no aparece en summary. |
+| Presion arterial baja / Hipotension | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico si no aparece en summary. |
+| Sangrado excesivo ante heridas | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Alteraciones sanguineas o de coagulacion | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Anemia, hemofilia, deficiencia de vitamina K | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija ligada al catalogo estable. | Granularidad excesiva si se remodela sin catalogo claro. |
+| Toma algun retroviral | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Privacidad alta. |
+| Experiencias desfavorables con el dentista | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Dato cualitativo perdido si solo es boolean. |
+| Tuvo COVID | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details opcional. | Puede volverse historico irrelevante sin fecha/details. |
+| Enfermedades de transmision sexual | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details; sensible. | Privacidad y acceso clinico. |
+| Enfermedades del corazon de nacimiento o actualmente | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Hepatitis A, B, C u otra | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details para tipo. | Riesgo clinico y privacidad. |
+| Endocarditis | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Crisis o convulsiones | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Diabetes | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Tuberculosis | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico y privacidad. |
+| Hipertiroidismo | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico medio. |
+| Hipotiroidismo | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico medio. |
+| Infarto o angina de pecho | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Cirugia a corazon abierto | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
+| Herpes o aftas recurrentes | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico medio. |
+| Se muerde las unas o labios | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details; no abre odontogram/treatment linkage. | Dato conductual puede requerir odontogram/treatment linkage futuro; no abrir ahora. |
+| Fuma | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Dato de riesgo clinico no estructurado. |
+| Consumo de alimentos citricos o acidos | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Puede contaminar odontogram si se liga prematuramente. |
+| Apretamiento o rechinido de dientes por las noches | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details; no abre tratamiento/odontogram linkage. | Puede reabrir tratamientos por accidente. |
+| Lactando, embarazada o sospecha de embarazo | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details; sensible. | Riesgo clinico alto y privacidad. |
+| Toma medicamentos anticonceptivos | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Privacidad. |
+| Complicaciones asociadas a la anestesia | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Riesgo clinico alto. |
 | Notas | ClinicalMedicalQuestionnaire / ClinicalNote / Encounter | Parcial | Parcial | Si son notas del cuestionario, guardarlas como details/general notes del cuestionario; si son notas de consulta, usar `ClinicalNote` o future Encounter. | Mezclar notas administrativas, intake y evolucion clinica. |
 
 ## 5. Campos que NO deben duplicarse
@@ -273,7 +276,7 @@ Mantener como aggregate tenant-owned y patient-owned:
 
 ### ClinicalMedicalAnswer
 
-Agregar una coleccion estructurada de respuestas clinicas por expediente o por cuestionario de intake:
+Mantener la coleccion estructurada de respuestas clinicas por expediente:
 
 - `TenantId`;
 - `ClinicalRecordId`;
@@ -283,7 +286,7 @@ Agregar una coleccion estructurada de respuestas clinicas por expediente o por c
 - `UpdatedAtUtc`;
 - `UpdatedByUserId`.
 
-Decision pendiente para el slice de implementacion: si la entidad vive como `ClinicalMedicalAnswer` hija de `ClinicalRecord` o si se introduce `ClinicalMedicalQuestionnaire` como contenedor versionable. Para el primer slice, evitar form builder avanzado y usar catalogo fijo.
+Decision vigente de Release 3.5: la entidad vive como `ClinicalMedicalAnswer` ligada a `ClinicalRecord`, sin introducir un contenedor versionable `ClinicalMedicalQuestionnaire`. El frontend consume y guarda el catalogo fijo; no hay form builder avanzado.
 
 ### ClinicalNote / Encounter
 
@@ -306,7 +309,7 @@ El timeline actual es read model construido desde notas y diagnosticos, sin tabl
 
 Cuando existan questionnaire o encounter events, agregar eventos al timeline solo mediante un slice explicito. No mezclar `snapshotHistory` con timeline y no crear timeline cross-module.
 
-## 9. Catalogo fijo propuesto de preguntas medicas
+## 9. Catalogo fijo implementado de preguntas medicas
 
 Respuesta recomendada para cada pregunta:
 
@@ -315,72 +318,76 @@ Respuesta recomendada para cada pregunta:
 - `No`: respuesta negativa.
 - `Details`: texto opcional para contexto, fecha, tipo, medicamento, reaccion o aclaracion.
 
-QuestionKey debe ser estable y no depender del texto visible. El label debe vivir en i18n del frontend.
+QuestionKey debe ser estable y no depender del texto visible. El label vive en i18n del frontend. Las keys implementadas por backend/frontend son lower camelCase.
 
 | QuestionKey | Label i18n sugerido | Answer | Details |
 | --- | --- | --- | --- |
-| `UnderMedicalTreatment` | Esta actualmente bajo tratamiento medico | Unknown/Yes/No | Opcional |
-| `RegularMedication` | Toma habitualmente algun medicamento | Unknown/Yes/No | Opcional |
-| `SurgeryHistory` | Le han practicado intervenciones quirurgicas | Unknown/Yes/No | Opcional |
-| `BloodTransfusionHistory` | Ha recibido transfusiones sanguineas | Unknown/Yes/No | Opcional |
-| `DrugUseHistory` | Consumio o consume drogas | Unknown/Yes/No | Opcional |
-| `AllergicReactionHistory` | Ha presentado reacciones alergicas | Unknown/Yes/No | Opcional |
-| `AllergyPenicillin` | Penicilina | Unknown/Yes/No | Reaccion opcional |
-| `AllergyAnesthetics` | Anestesicos | Unknown/Yes/No | Reaccion opcional |
-| `AllergyAspirin` | Aspirina | Unknown/Yes/No | Reaccion opcional |
-| `AllergySulfas` | Sulfas | Unknown/Yes/No | Reaccion opcional |
-| `AllergyIodine` | Yodo | Unknown/Yes/No | Reaccion opcional |
-| `AllergyOther` | Otro alimento, sustancia o medicamento | Unknown/Yes/No | Requerir details si `Yes` |
-| `Hypertension` | Presion arterial alta / Hipertension | Unknown/Yes/No | Opcional |
-| `Hypotension` | Presion arterial baja / Hipotension | Unknown/Yes/No | Opcional |
-| `ExcessiveBleeding` | Sangrado excesivo ante heridas | Unknown/Yes/No | Opcional |
-| `CoagulationDisorder` | Alteraciones sanguineas o de coagulacion | Unknown/Yes/No | Opcional |
-| `AnemiaHemophiliaVitaminKDeficiency` | Anemia, hemofilia o deficiencia de vitamina K | Unknown/Yes/No | Opcional |
-| `AntiretroviralMedication` | Toma algun retroviral | Unknown/Yes/No | Opcional |
-| `UnfavorableDentalExperience` | Experiencias desfavorables con el dentista | Unknown/Yes/No | Opcional |
-| `CovidHistory` | Tuvo COVID | Unknown/Yes/No | Opcional |
-| `SexuallyTransmittedDiseaseHistory` | Enfermedades de transmision sexual | Unknown/Yes/No | Opcional |
-| `HeartDiseaseHistory` | Enfermedades del corazon de nacimiento o actualmente | Unknown/Yes/No | Opcional |
-| `HepatitisHistory` | Hepatitis A, B, C u otra | Unknown/Yes/No | Tipo/details |
-| `Endocarditis` | Endocarditis | Unknown/Yes/No | Opcional |
-| `SeizuresOrConvulsions` | Crisis o convulsiones | Unknown/Yes/No | Opcional |
-| `Diabetes` | Diabetes | Unknown/Yes/No | Opcional |
-| `Tuberculosis` | Tuberculosis | Unknown/Yes/No | Opcional |
-| `Hyperthyroidism` | Hipertiroidismo | Unknown/Yes/No | Opcional |
-| `Hypothyroidism` | Hipotiroidismo | Unknown/Yes/No | Opcional |
-| `HeartAttackOrAngina` | Infarto o angina de pecho | Unknown/Yes/No | Opcional |
-| `OpenHeartSurgery` | Cirugia a corazon abierto | Unknown/Yes/No | Opcional |
-| `RecurrentHerpesOrAphthae` | Herpes o aftas recurrentes | Unknown/Yes/No | Opcional |
-| `NailOrLipBiting` | Se muerde las unas o labios | Unknown/Yes/No | Opcional |
-| `Smoking` | Fuma | Unknown/Yes/No | Opcional |
-| `CitrusOrAcidFoodConsumption` | Consumo de alimentos citricos o acidos | Unknown/Yes/No | Opcional |
-| `NightBruxism` | Apretamiento o rechinido de dientes por las noches | Unknown/Yes/No | Opcional |
-| `PregnancyOrLactation` | Lactando, embarazada o sospecha de embarazo | Unknown/Yes/No | Opcional |
-| `ContraceptiveMedication` | Toma medicamentos anticonceptivos | Unknown/Yes/No | Opcional |
-| `AnesthesiaComplications` | Complicaciones asociadas a la anestesia | Unknown/Yes/No | Opcional |
+| `currentMedicalTreatment` | Esta actualmente bajo tratamiento medico | Unknown/Yes/No | Opcional |
+| `regularMedication` | Toma habitualmente algun medicamento | Unknown/Yes/No | Opcional |
+| `priorSurgery` | Le han practicado intervenciones quirurgicas | Unknown/Yes/No | Opcional |
+| `bloodTransfusion` | Ha recibido transfusiones sanguineas | Unknown/Yes/No | Opcional |
+| `drugUse` | Consumio o consume drogas | Unknown/Yes/No | Opcional |
+| `allergicReactions` | Ha presentado reacciones alergicas | Unknown/Yes/No | Opcional |
+| `allergyPenicillin` | Penicilina | Unknown/Yes/No | Reaccion opcional |
+| `allergyAnesthetics` | Anestesicos | Unknown/Yes/No | Reaccion opcional |
+| `allergyAspirin` | Aspirina | Unknown/Yes/No | Reaccion opcional |
+| `allergySulfas` | Sulfas | Unknown/Yes/No | Reaccion opcional |
+| `allergyIodine` | Yodo | Unknown/Yes/No | Reaccion opcional |
+| `allergyOther` | Otro alimento, sustancia o medicamento | Unknown/Yes/No | Opcional |
+| `hypertension` | Presion arterial alta / Hipertension | Unknown/Yes/No | Opcional |
+| `hypotension` | Presion arterial baja / Hipotension | Unknown/Yes/No | Opcional |
+| `excessiveBleeding` | Sangrado excesivo ante heridas | Unknown/Yes/No | Opcional |
+| `bloodOrCoagulationDisorder` | Alteraciones sanguineas o de coagulacion | Unknown/Yes/No | Opcional |
+| `anemiaHemophiliaVitaminKDeficiency` | Anemia, hemofilia o deficiencia de vitamina K | Unknown/Yes/No | Opcional |
+| `retroviralTreatment` | Toma algun retroviral | Unknown/Yes/No | Opcional |
+| `badDentalExperience` | Experiencias desfavorables con el dentista | Unknown/Yes/No | Opcional |
+| `covidHistory` | Tuvo COVID | Unknown/Yes/No | Opcional |
+| `sexuallyTransmittedDisease` | Enfermedades de transmision sexual | Unknown/Yes/No | Opcional |
+| `congenitalOrCurrentHeartDisease` | Enfermedades del corazon de nacimiento o actualmente | Unknown/Yes/No | Opcional |
+| `hepatitis` | Hepatitis A, B, C u otra | Unknown/Yes/No | Tipo/details |
+| `endocarditis` | Endocarditis | Unknown/Yes/No | Opcional |
+| `seizures` | Crisis o convulsiones | Unknown/Yes/No | Opcional |
+| `diabetes` | Diabetes | Unknown/Yes/No | Opcional |
+| `tuberculosis` | Tuberculosis | Unknown/Yes/No | Opcional |
+| `hyperthyroidism` | Hipertiroidismo | Unknown/Yes/No | Opcional |
+| `hypothyroidism` | Hipotiroidismo | Unknown/Yes/No | Opcional |
+| `heartAttackOrAngina` | Infarto o angina de pecho | Unknown/Yes/No | Opcional |
+| `openHeartSurgery` | Cirugia a corazon abierto | Unknown/Yes/No | Opcional |
+| `recurrentHerpesOrAphthae` | Herpes o aftas recurrentes | Unknown/Yes/No | Opcional |
+| `bitesNailsOrLips` | Se muerde las unas o labios | Unknown/Yes/No | Opcional |
+| `smokes` | Fuma | Unknown/Yes/No | Opcional |
+| `acidicFoodConsumption` | Consumo de alimentos citricos o acidos | Unknown/Yes/No | Opcional |
+| `bruxismAtNight` | Apretamiento o rechinido de dientes por las noches | Unknown/Yes/No | Opcional |
+| `pregnantLactatingOrSuspected` | Lactando, embarazada o sospecha de embarazo | Unknown/Yes/No | Opcional |
+| `contraceptiveMedication` | Toma medicamentos anticonceptivos | Unknown/Yes/No | Opcional |
+| `anesthesiaComplications` | Complicaciones asociadas a la anestesia | Unknown/Yes/No | Opcional |
 
-Notas generales del cuestionario: usar un campo acotado del cuestionario o una nota clinica append-only segun el flujo UX final. No crear preguntas dinamicas ni form builder avanzado en este alcance.
+Notas generales del cuestionario: no existe campo general independiente en el contrato actual; el frontend solo guarda `Details` por pregunta. Para notas de consulta, seguir usando `ClinicalNote` o un futuro `ClinicalEncounter`. No crear preguntas dinamicas ni form builder avanzado en este alcance.
 
-## 10. Propuesta UX
+## 10. UX implementada y evolucion futura
 
 Seguir `docs/frontend-ux-guidelines.md` y ADR 005.
 
-Propuesta:
+Implementado en el slice de UI acotado:
 
-- Header de paciente read-only: nombre, edad derivada, fecha de nacimiento, telefono principal, estado activo/inactivo, alertas clinicas.
+- Header de paciente read-only usando Patients: nombre, edad derivada, fecha de nacimiento, telefono principal, estado activo/inactivo, demografia disponible y alertas clinicas.
+- Seccion `Antecedentes medicos` dentro del flujo vertical existente de Clinical Record; no se introdujo un sistema de tabs nuevo.
+- Catalogo fijo por grupos, respuesta Unknown/Yes/No, details visible cuando la respuesta es `Yes` o ya existe contenido.
+- Sticky action bar para guardar/cancelar el formulario largo.
+- Loading, empty, error y saving states dentro del area clinica.
+- Uso de shared UI foundation y tokens `--bsm-*`.
+- Sin sincronizacion automatica hacia alergias actuales, snapshot history o timeline.
+
+Pendiente para slices futuros, solo si se abre alcance:
+
 - Summary strip: alergias actuales, medicamentos actuales, alertas, ultima actualizacion, diagnosticos activos.
 - Tabs:
   - Resumen.
   - Antecedentes medicos.
   - Consulta / notas.
   - Timeline.
-- `Antecedentes medicos`: catalogo fijo por grupos, respuesta Unknown/Yes/No, details inline, sin form builder.
 - `Consulta / notas`: motivo de consulta, signos vitales y nota solo cuando exista `ClinicalEncounter`; hasta entonces mantener `ClinicalNote` append-only.
-- Sticky action bar para formularios largos de antecedentes medicos y encounter/vitals.
-- Loading state dentro del area clinica, no full-page blocker si el paciente ya cargo.
-- Empty state que preserve creacion explicita y no sugiera autocreacion.
 - Error states diferenciados: falta expediente, sin permiso, error de carga, error de validacion.
-- Usar shared UI foundation y tokens `--bsm-*`; evitar nuevos estilos aislados.
 
 ## 11. Propuesta de implementacion por slices
 
@@ -439,30 +446,29 @@ Validacion recomendada:
 
 ### Slice 4 — Frontend integration
 
-Actualizar `features/clinical-records`:
+Implementado de forma acotada en `features/clinical-records`:
 
 - header de paciente read-only usando Patients;
-- summary strip;
-- tabs;
+- sin summary strip avanzado ni tabs nuevos;
 - formulario de antecedentes medicos con catalogo fijo;
 - estados loading/empty/error;
 - sticky action bar;
 - mantener HTTP en data-access y orquestacion en facade.
 
-Validacion recomendada:
+Validacion cubierta/recomendada:
 
-- frontend unit tests para facade/data-access;
+- frontend unit/component tests para render, cambios de answer, details, payload normalizado y errores;
 - component tests para estados y permisos;
 - route guard sigue usando `clinical.read`;
 - no mostrar Billing/Scheduling/doctor scope como implementado.
 
 ### Slice 5 — UX/QA closure docs
 
-Cerrar el flujo con evidencia:
+Cerrar y mantener el flujo con evidencia:
 
 - revisar consistencia visual con `docs/frontend-ux-guidelines.md`;
 - actualizar docs de Release 3 solo si el slice queda implementado y probado;
-- no actualizar `STATE — BigSmile.md` hasta que el slice funcional este completo y validado.
+- mantener `STATE — BigSmile.md` alineado con el estado real validado.
 
 Validacion recomendada:
 
@@ -494,4 +500,4 @@ Validacion recomendada:
 
 ## 14. Decision recomendada inmediata
 
-Siguiente paso recomendado: mantener `Patient Demographics` como fuente de verdad para sexo, ocupacion, estado civil y referido por; despues, integrar frontend del cuestionario medico usando el backend fijo de Release 3.5. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.
+Estado inmediato: `Patient Demographics` se mantiene como fuente de verdad para sexo, ocupacion, estado civil y referido por; Clinical Records ya consume esos datos como contexto read-only cuando estan disponibles. La UI del cuestionario medico fijo de Release 3.5 ya esta integrada contra los endpoints backend existentes. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.

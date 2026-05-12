@@ -4,10 +4,17 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n';
 import { LocalizedDatePipe, TranslatePipe } from '../../../shared/i18n';
+import {
+  LoadingSkeletonComponent,
+  PageHeaderComponent,
+  SectionCardComponent,
+  StatusBadgeComponent
+} from '../../../shared/ui';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { ClinicalBackgroundFormComponent } from '../components/clinical-background-form.component';
 import { ClinicalDiagnosisCreateFormComponent } from '../components/clinical-diagnosis-create-form.component';
 import { ClinicalDiagnosesListComponent } from '../components/clinical-diagnoses-list.component';
+import { ClinicalMedicalQuestionnaireFormComponent } from '../components/clinical-medical-questionnaire-form.component';
 import { ClinicalNoteCreateFormComponent } from '../components/clinical-note-create-form.component';
 import { ClinicalNotesListComponent } from '../components/clinical-notes-list.component';
 import { ClinicalRecordEmptyStateComponent } from '../components/clinical-record-empty-state.component';
@@ -17,6 +24,7 @@ import { ClinicalRecordsFacade } from '../facades/clinical-records.facade';
 import {
   AddClinicalDiagnosisRequest,
   AddClinicalNoteRequest,
+  SaveClinicalMedicalQuestionnaireRequest,
   SaveClinicalRecordSnapshotRequest
 } from '../models/clinical-record.models';
 
@@ -30,38 +38,47 @@ import {
     ClinicalBackgroundFormComponent,
     ClinicalDiagnosisCreateFormComponent,
     ClinicalDiagnosesListComponent,
+    ClinicalMedicalQuestionnaireFormComponent,
     ClinicalNoteCreateFormComponent,
     ClinicalNotesListComponent,
     ClinicalSnapshotHistoryListComponent,
     ClinicalTimelineListComponent,
+    LoadingSkeletonComponent,
     LocalizedDatePipe,
+    PageHeaderComponent,
+    SectionCardComponent,
+    StatusBadgeComponent,
     TranslatePipe
   ],
   template: `
     <section class="clinical-record-page">
-      <header class="page-head">
-        <div>
-          <p class="eyebrow">{{ 'Release' | t }} 3.4 / {{ 'Clinical Snapshot Change History' | t }}</p>
-          <h2>{{ 'Clinical record' | t }}</h2>
-          <p class="subtitle">
-            {{ 'Minimal clinical foundation for {patientDisplayName} with explicit creation, base snapshot history, current allergies, basic diagnoses, append-only notes, and a separate clinical timeline.' | t:{ patientDisplayName } }}
-          </p>
+      <app-page-header
+        [eyebrow]="('Release' | t) + ' 3.5 / ' + ('Clinical record' | t)"
+        [title]="'Clinical record' | t"
+        [subtitle]="'Structured clinical record for {patientDisplayName} with explicit creation, base snapshot, fixed medical questionnaire, current allergies, diagnoses, append-only notes, and separated history sections.' | t:{ patientDisplayName }">
+        <a *ngIf="patientId" page-header-actions [routerLink]="['/patients', patientId]" class="clinical-action clinical-action--secondary">
+          {{ 'Back to patient' | t }}
+        </a>
+      </app-page-header>
+
+      <app-section-card
+        *ngIf="patientsFacade.loadingPatient() || clinicalRecordsFacade.loadingRecord()"
+        [title]="'Loading clinical record...' | t"
+        variant="elevated">
+        <div class="loading-grid">
+          <app-loading-skeleton
+            *ngFor="let item of loadingCards"
+            variant="card"
+            [ariaLabel]="'Loading clinical record...' | t">
+          </app-loading-skeleton>
         </div>
+      </app-section-card>
 
-        <div class="head-actions">
-          <a *ngIf="patientId" [routerLink]="['/patients', patientId]" class="action-link action-secondary">{{ 'Back to patient' | t }}</a>
-        </div>
-      </header>
-
-      <div *ngIf="patientsFacade.loadingPatient() || clinicalRecordsFacade.loadingRecord()" class="state-card">
-        {{ 'Loading clinical record...' | t }}
-      </div>
-
-      <div *ngIf="patientsFacade.detailError()" class="state-card state-error">
+      <div *ngIf="patientsFacade.detailError()" class="clinical-error" role="alert">
         {{ patientsFacade.detailError() | t }}
       </div>
 
-      <div *ngIf="clinicalRecordsFacade.recordError()" class="state-card state-error">
+      <div *ngIf="clinicalRecordsFacade.recordError()" class="clinical-error" role="alert">
         {{ clinicalRecordsFacade.recordError() | t }}
       </div>
 
@@ -69,6 +86,14 @@ import {
         *ngIf="patientsFacade.currentPatient() as patient"
         class="patient-context-strip"
         [attr.aria-label]="'Patient demographics' | t">
+        <article class="patient-context-item patient-context-item--wide">
+          <span>{{ 'Name' | t }}</span>
+          <strong>{{ patient.fullName }}</strong>
+        </article>
+        <article class="patient-context-item">
+          <span>{{ 'Date of birth' | t }}</span>
+          <strong>{{ patient.dateOfBirth | bsDate: 'longDate' }}</strong>
+        </article>
         <article class="patient-context-item">
           <span>{{ 'Sex' | t }}</span>
           <strong>{{ (patient.sex || 'Unspecified') | t }}</strong>
@@ -84,6 +109,24 @@ import {
         <article class="patient-context-item">
           <span>{{ 'Referred by' | t }}</span>
           <strong>{{ patient.referredBy || ('Not provided' | t) }}</strong>
+        </article>
+        <article class="patient-context-item">
+          <span>{{ 'Contact' | t }}</span>
+          <strong>{{ patient.primaryPhone || patient.email || ('No contact data' | t) }}</strong>
+        </article>
+        <article class="patient-context-item">
+          <span>{{ 'Current status' | t }}</span>
+          <app-status-badge
+            [tone]="patient.isActive ? 'success' : 'neutral'"
+            [label]="(patient.isActive ? 'Active' : 'Inactive') | t">
+          </app-status-badge>
+        </article>
+        <article class="patient-context-item">
+          <span>{{ 'Clinical alerts' | t }}</span>
+          <app-status-badge
+            [tone]="patient.hasClinicalAlerts ? 'warning' : 'neutral'"
+            [label]="(patient.hasClinicalAlerts ? 'Clinical alerts' : 'No') | t">
+          </app-status-badge>
         </article>
       </section>
 
@@ -103,24 +146,38 @@ import {
       </app-clinical-background-form>
 
       <article *ngIf="clinicalRecordsFacade.currentRecord() as record" class="record-shell">
-        <section class="record-meta">
-          <div>
-            <dt>{{ 'Created' | t }}</dt>
-            <dd>{{ record.createdAtUtc | bsDate: 'medium' }}</dd>
-          </div>
-          <div>
-            <dt>{{ 'Created by' | t }}</dt>
-            <dd>{{ record.createdByUserId }}</dd>
-          </div>
-          <div>
-            <dt>{{ 'Last updated' | t }}</dt>
-            <dd>{{ record.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
-          </div>
-          <div>
-            <dt>{{ 'Updated by' | t }}</dt>
-            <dd>{{ record.lastUpdatedByUserId }}</dd>
-          </div>
-        </section>
+        <app-section-card [title]="'Clinical record audit' | t" variant="compact">
+          <dl class="record-meta">
+            <div>
+              <dt>{{ 'Created' | t }}</dt>
+              <dd>{{ record.createdAtUtc | bsDate: 'medium' }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'Created by' | t }}</dt>
+              <dd>{{ record.createdByUserId }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'Last updated' | t }}</dt>
+              <dd>{{ record.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'Updated by' | t }}</dt>
+              <dd>{{ record.lastUpdatedByUserId }}</dd>
+            </div>
+          </dl>
+        </app-section-card>
+
+        <app-clinical-medical-questionnaire-form
+          [questionnaire]="clinicalRecordsFacade.currentQuestionnaire()"
+          [loading]="clinicalRecordsFacade.loadingQuestionnaire()"
+          [missing]="clinicalRecordsFacade.questionnaireMissing()"
+          [error]="clinicalRecordsFacade.questionnaireError()"
+          [saveError]="questionnaireSaveError"
+          [saving]="savingQuestionnaire"
+          [canWrite]="canWrite"
+          (saved)="saveQuestionnaire($event)"
+          (retryRequested)="reloadQuestionnaire()">
+        </app-clinical-medical-questionnaire-form>
 
         <app-clinical-background-form
           [mode]="'edit'"
@@ -206,46 +263,31 @@ import {
       gap: 1.25rem;
     }
 
-    .page-head,
-    .state-card,
-    .record-meta,
     .snapshot-history-shell,
     .timeline-shell,
     .diagnoses-shell,
     .notes-shell {
-      border-radius: 20px;
-      border: 1px solid var(--bsm-color-border);
-      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
-      padding: 1.4rem 1.5rem;
-      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
-    }
-
-    .page-head {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
       gap: 1rem;
-      align-items: flex-start;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-sm);
+      background: var(--bsm-color-bg);
+      padding: 1rem;
+      box-shadow: var(--bsm-shadow-sm);
     }
 
     .eyebrow {
       margin: 0 0 0.4rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-accent-accessible);
       font-size: 0.8rem;
       font-weight: 700;
     }
 
-    h2,
     h3 {
       margin: 0;
       color: var(--bsm-color-text-brand);
-    }
-
-    .subtitle {
-      margin: 0.45rem 0 0;
-      color: var(--bsm-color-text-muted);
-      max-width: 62ch;
     }
 
     .record-shell {
@@ -253,9 +295,15 @@ import {
       gap: 1.25rem;
     }
 
+    .loading-grid {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .patient-context-strip {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 0.75rem;
       padding: 0.85rem;
       border: 1px solid var(--bsm-color-border);
@@ -272,6 +320,10 @@ import {
       border: 1px solid var(--bsm-color-border);
       border-radius: var(--bsm-radius-sm);
       background: var(--bsm-color-bg);
+    }
+
+    .patient-context-item--wide {
+      grid-column: span 2;
     }
 
     .patient-context-item span {
@@ -294,13 +346,14 @@ import {
       display: grid;
       gap: 1rem;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin: 0;
     }
 
     dt {
       margin-bottom: 0.25rem;
       font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
       color: var(--bsm-color-text-muted);
     }
 
@@ -311,61 +364,72 @@ import {
       word-break: break-word;
     }
 
-    .notes-shell {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .timeline-shell {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .snapshot-history-shell {
-      display: grid;
-      gap: 1rem;
-    }
-
-    .diagnoses-shell {
-      display: grid;
-      gap: 1rem;
-    }
-
     .section-copy {
       margin: 0.35rem 0 0;
       color: var(--bsm-color-text-muted);
       max-width: 60ch;
     }
 
-    .head-actions {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .action-link {
+    .clinical-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      border: 1px solid var(--bsm-color-primary-soft);
+      border-radius: var(--bsm-radius-pill);
+      padding: 0.72rem 1rem;
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-primary-dark);
       text-decoration: none;
-      color: var(--bsm-color-primary);
+      font-weight: 800;
+      line-height: 1.2;
+      text-align: center;
+      transition:
+        background-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    .clinical-action:hover {
+      box-shadow: var(--bsm-shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .clinical-action:focus-visible {
+      outline: none;
+      box-shadow: var(--bsm-shadow-focus);
+    }
+
+    .clinical-error {
+      border: 1px solid var(--bsm-color-danger-soft);
+      border-radius: var(--bsm-radius-sm);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger);
+      padding: 1rem;
       font-weight: 700;
+      box-shadow: var(--bsm-shadow-sm);
     }
 
-    .action-secondary {
-      color: var(--bsm-color-text-muted);
-    }
-
-    .state-error {
-      border-color: #f2c4c4;
-      background: #fff3f3;
-      color: #8c2525;
+    @media (prefers-reduced-motion: reduce) {
+      .clinical-action:hover {
+        transform: none;
+      }
     }
 
     @media (max-width: 768px) {
-      .page-head {
-        flex-direction: column;
-      }
-
+      .loading-grid,
       .patient-context-strip {
         grid-template-columns: 1fr;
+      }
+
+      .patient-context-item--wide {
+        grid-column: span 1;
+      }
+
+      .clinical-action {
+        width: 100%;
       }
     }
   `]
@@ -376,6 +440,7 @@ export class ClinicalRecordPageComponent implements OnInit {
   private readonly i18n = inject(I18nService);
 
   readonly canWrite = inject(AuthService).hasPermissions(['clinical.write']);
+  readonly loadingCards = [0, 1, 2];
 
   private readonly route = inject(ActivatedRoute);
 
@@ -384,9 +449,11 @@ export class ClinicalRecordPageComponent implements OnInit {
   savingSnapshot = false;
   savingNote = false;
   savingDiagnosis = false;
+  savingQuestionnaire = false;
   snapshotError: string | null = null;
   noteError: string | null = null;
   diagnosisError: string | null = null;
+  questionnaireSaveError: string | null = null;
   noteFormRevision = 0;
   diagnosisFormRevision = 0;
   resolvingDiagnosisId: string | null = null;
@@ -407,6 +474,7 @@ export class ClinicalRecordPageComponent implements OnInit {
     this.patientsFacade.loadPatient(this.patientId);
     this.clinicalRecordsFacade.clearRecord();
     this.clinicalRecordsFacade.loadRecord(this.patientId);
+    this.clinicalRecordsFacade.loadQuestionnaire(this.patientId);
   }
 
   startCreate(): void {
@@ -435,6 +503,7 @@ export class ClinicalRecordPageComponent implements OnInit {
       next: () => {
         this.savingSnapshot = false;
         this.creatingRecord = false;
+        this.reloadQuestionnaire();
       },
       error: () => {
         this.savingSnapshot = false;
@@ -443,6 +512,36 @@ export class ClinicalRecordPageComponent implements OnInit {
           : 'The clinical record could not be created.';
       }
     });
+  }
+
+  reloadQuestionnaire(): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.questionnaireSaveError = null;
+    this.clinicalRecordsFacade.loadQuestionnaire(this.patientId);
+  }
+
+  saveQuestionnaire(payload: SaveClinicalMedicalQuestionnaireRequest): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.savingQuestionnaire = true;
+    this.questionnaireSaveError = null;
+
+    this.clinicalRecordsFacade.updateQuestionnaire(this.patientId, payload)
+      .subscribe({
+        next: () => {
+          this.savingQuestionnaire = false;
+          this.questionnaireSaveError = null;
+        },
+        error: () => {
+          this.savingQuestionnaire = false;
+          this.questionnaireSaveError = 'The medical questionnaire could not be saved.';
+        }
+      });
   }
 
   addNote(payload: AddClinicalNoteRequest): void {
