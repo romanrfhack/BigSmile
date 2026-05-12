@@ -746,6 +746,251 @@ namespace BigSmile.IntegrationTests.Clinical
             Assert.Contains("must be created explicitly", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
+        [Fact]
+        public async Task CreateEncounterAsync_SucceedsWithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var clinicalRecord = await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+            var occurredAtUtc = new DateTime(2026, 5, 12, 15, 0, 0, DateTimeKind.Utc);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var encounter = await commandService.CreateEncounterAsync(
+                patient.Id,
+                new CreateClinicalEncounterCommand(
+                    occurredAtUtc,
+                    "Tooth sensitivity.",
+                    ClinicalEncounterConsultationType.Treatment,
+                    36.7m,
+                    120,
+                    80,
+                    72.5m,
+                    168.0m,
+                    16,
+                    78,
+                    "Encounter note."));
+
+            Assert.Equal(clinicalRecord.Id, encounter.ClinicalRecordId);
+            Assert.Equal(patient.Id, encounter.PatientId);
+            Assert.Equal(occurredAtUtc, encounter.OccurredAtUtc);
+            Assert.Equal("Tooth sensitivity.", encounter.ChiefComplaint);
+            Assert.Equal("Treatment", encounter.ConsultationType);
+            Assert.Equal(36.7m, encounter.TemperatureC);
+            Assert.Equal(120, encounter.BloodPressureSystolic);
+            Assert.Equal(80, encounter.BloodPressureDiastolic);
+            Assert.NotNull(encounter.ClinicalNoteId);
+            Assert.Equal("Encounter note.", encounter.NoteText);
+            Assert.Equal(actorUserId, encounter.CreatedByUserId);
+
+            await using var verifyContext = CreateContext(databaseName, tenantContext);
+            var persisted = await verifyContext.ClinicalEncounters
+                .Include(entry => entry.ClinicalNote)
+                .SingleAsync();
+
+            Assert.Equal(tenantA.Id, persisted.TenantId);
+            Assert.Equal(patient.Id, persisted.PatientId);
+            Assert.Equal(clinicalRecord.Id, persisted.ClinicalRecordId);
+            Assert.Equal("Encounter note.", persisted.ClinicalNote!.NoteText);
+        }
+
+        [Fact]
+        public async Task GetEncountersByPatientIdAsync_ReturnsEncountersNewestFirstWithinTenantScope()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var writeContext = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(writeContext, tenantContext);
+            await commandService.CreateEncounterAsync(
+                patient.Id,
+                new CreateClinicalEncounterCommand(
+                    new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Utc),
+                    "Routine control.",
+                    ClinicalEncounterConsultationType.Treatment,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null));
+            await commandService.CreateEncounterAsync(
+                patient.Id,
+                new CreateClinicalEncounterCommand(
+                    new DateTime(2026, 5, 12, 11, 0, 0, DateTimeKind.Utc),
+                    "Urgent pain.",
+                    ClinicalEncounterConsultationType.Urgency,
+                    null,
+                    130,
+                    85,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null));
+
+            await using var queryContext = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(queryContext, tenantContext);
+
+            var encounters = await queryService.GetEncountersByPatientIdAsync(patient.Id);
+
+            Assert.NotNull(encounters);
+            Assert.Equal(new[] { "Urgent pain.", "Routine control." }, encounters!.Select(encounter => encounter.ChiefComplaint).ToArray());
+            Assert.Equal(new[] { "Urgency", "Treatment" }, encounters.Select(encounter => encounter.ConsultationType).ToArray());
+        }
+
+        [Fact]
+        public async Task CreateEncounterAsync_BlocksPatientFromAnotherTenant()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var foreignPatient = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+            await SeedClinicalRecordAsync(databaseName, tenantB.Id, foreignPatient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.CreateEncounterAsync(
+                foreignPatient.Id,
+                new CreateClinicalEncounterCommand(
+                    DateTime.UtcNow,
+                    "Urgent pain.",
+                    ClinicalEncounterConsultationType.Urgency,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null)));
+
+            Assert.Contains("patient is not available", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task GetEncountersByPatientIdAsync_ReturnsNull_ForCrossTenantAccess()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordWithEncounterAsync(databaseName, tenantA.Id, patientA.Id, actorUserId);
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantB.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext);
+
+            var encounters = await queryService.GetEncountersByPatientIdAsync(patientA.Id);
+
+            Assert.Null(encounters);
+        }
+
+        [Fact]
+        public async Task CreateEncounterAsync_RequiresClinicalRecordInCurrentTenant()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantB.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.CreateEncounterAsync(
+                patient.Id,
+                new CreateClinicalEncounterCommand(
+                    DateTime.UtcNow,
+                    "Routine control.",
+                    ClinicalEncounterConsultationType.Treatment,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null)));
+
+            Assert.Contains("must be created explicitly", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task CreateEncounterAsync_RejectsInvalidVitals()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => commandService.CreateEncounterAsync(
+                patient.Id,
+                new CreateClinicalEncounterCommand(
+                    DateTime.UtcNow,
+                    "Routine control.",
+                    ClinicalEncounterConsultationType.Treatment,
+                    52.0m,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null)));
+
+            Assert.Contains("temperatureC", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task CreateEncounterAsync_RejectsInvalidConsultationType()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            await SeedClinicalRecordAsync(databaseName, tenantA.Id, patient.Id, actorUserId);
+            var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = CreateCommandService(context, tenantContext);
+
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandService.CreateEncounterAsync(
+                patient.Id,
+                new CreateClinicalEncounterCommand(
+                    DateTime.UtcNow,
+                    "Routine control.",
+                    (ClinicalEncounterConsultationType)999,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null)));
+
+            Assert.Contains("consultation type is not supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
         private static ClinicalRecordCommandService CreateCommandService(AppDbContext context, TenantContext tenantContext)
         {
             return new ClinicalRecordCommandService(
@@ -897,6 +1142,37 @@ namespace BigSmile.IntegrationTests.Clinical
                 {
                     new ClinicalMedicalAnswerDraft("diabetes", ClinicalMedicalAnswerValue.No, null)
                 },
+                actorUserId);
+
+            context.ClinicalRecords.Add(clinicalRecord);
+            await context.SaveChangesAsync();
+        }
+
+        private static async Task SeedClinicalRecordWithEncounterAsync(
+            string databaseName,
+            Guid tenantId,
+            Guid patientId,
+            Guid actorUserId)
+        {
+            await using var context = CreateContext(databaseName, new TenantContext());
+            var clinicalRecord = new ClinicalRecord(
+                tenantId,
+                patientId,
+                actorUserId,
+                "Seeded background.",
+                "Seeded medications.");
+            clinicalRecord.AddEncounter(
+                new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Utc),
+                "Routine control.",
+                ClinicalEncounterConsultationType.Treatment,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 actorUserId);
 
             context.ClinicalRecords.Add(clinicalRecord);

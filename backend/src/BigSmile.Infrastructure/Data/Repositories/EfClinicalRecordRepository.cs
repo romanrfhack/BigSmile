@@ -22,6 +22,8 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .Include(clinicalRecord => clinicalRecord.Diagnoses)
                 .Include(clinicalRecord => clinicalRecord.SnapshotHistory)
                 .Include(clinicalRecord => clinicalRecord.MedicalAnswers)
+                .Include(clinicalRecord => clinicalRecord.Encounters)
+                    .ThenInclude(encounter => encounter.ClinicalNote)
                 .SingleOrDefaultAsync(clinicalRecord => clinicalRecord.PatientId == patientId, cancellationToken);
         }
 
@@ -69,11 +71,18 @@ namespace BigSmile.Infrastructure.Data.Repositories
                 .Select(answer => answer.Id)
                 .ToListAsync(cancellationToken);
 
+            var persistedEncounterIds = await _dbContext.ClinicalEncounters
+                .AsNoTracking()
+                .Where(encounter => encounter.ClinicalRecordId == clinicalRecord.Id)
+                .Select(encounter => encounter.Id)
+                .ToListAsync(cancellationToken);
+
             MarkNewChildrenAsAdded(clinicalRecord.Diagnoses, persistedDiagnosisIds);
             MarkNewChildrenAsAdded(clinicalRecord.Allergies, persistedAllergyIds);
             MarkNewChildrenAsAdded(clinicalRecord.Notes, persistedNoteIds);
             MarkNewChildrenAsAdded(clinicalRecord.SnapshotHistory, persistedSnapshotHistoryIds);
             MarkNewChildrenAsAdded(clinicalRecord.MedicalAnswers, persistedMedicalAnswerIds);
+            MarkNewChildrenAsAdded(clinicalRecord.Encounters, persistedEncounterIds);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
         }

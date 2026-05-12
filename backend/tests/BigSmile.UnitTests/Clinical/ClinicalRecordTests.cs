@@ -163,6 +163,136 @@ namespace BigSmile.UnitTests.Clinical
         }
 
         [Fact]
+        public void AddEncounter_AddsTenantAndPatientOwnedEncounterWithLinkedAppendOnlyNote()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+            var actorUserId = Guid.NewGuid();
+            var occurredAtUtc = new DateTime(2026, 5, 12, 15, 30, 0, DateTimeKind.Utc);
+
+            var encounter = clinicalRecord.AddEncounter(
+                occurredAtUtc,
+                "Tooth sensitivity.",
+                ClinicalEncounterConsultationType.Treatment,
+                36.7m,
+                120,
+                80,
+                72.5m,
+                168.0m,
+                16,
+                78,
+                "Clinical encounter note.",
+                actorUserId);
+
+            Assert.Equal(clinicalRecord.TenantId, encounter.TenantId);
+            Assert.Equal(clinicalRecord.PatientId, encounter.PatientId);
+            Assert.Equal(clinicalRecord.Id, encounter.ClinicalRecordId);
+            Assert.Equal(occurredAtUtc, encounter.OccurredAtUtc);
+            Assert.Equal("Tooth sensitivity.", encounter.ChiefComplaint);
+            Assert.Equal(ClinicalEncounterConsultationType.Treatment, encounter.ConsultationType);
+            Assert.Equal(36.7m, encounter.TemperatureC);
+            Assert.Equal(120, encounter.BloodPressureSystolic);
+            Assert.Equal(80, encounter.BloodPressureDiastolic);
+            Assert.Equal(72.5m, encounter.WeightKg);
+            Assert.Equal(168.0m, encounter.HeightCm);
+            Assert.Equal(16, encounter.RespiratoryRatePerMinute);
+            Assert.Equal(78, encounter.HeartRateBpm);
+            Assert.Equal(actorUserId, encounter.CreatedByUserId);
+            var note = Assert.Single(clinicalRecord.Notes);
+            Assert.Equal(note.Id, encounter.ClinicalNoteId);
+            Assert.Same(note, encounter.ClinicalNote);
+            Assert.Equal("Clinical encounter note.", note.NoteText);
+        }
+
+        [Fact]
+        public void AddEncounter_RejectsInvalidConsultationType()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<ArgumentException>(() => clinicalRecord.AddEncounter(
+                DateTime.UtcNow,
+                "Pain.",
+                (ClinicalEncounterConsultationType)999,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Guid.NewGuid()));
+
+            Assert.Contains("consultation type is not supported", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void AddEncounter_RejectsInvalidVitals()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => clinicalRecord.AddEncounter(
+                DateTime.UtcNow,
+                "Pain.",
+                ClinicalEncounterConsultationType.Urgency,
+                52.0m,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Guid.NewGuid()));
+
+            Assert.Contains("temperatureC", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void AddEncounter_DoesNotAddLinkedNoteWhenEncounterValidationFails()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => clinicalRecord.AddEncounter(
+                DateTime.UtcNow,
+                "Pain.",
+                ClinicalEncounterConsultationType.Urgency,
+                52.0m,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "Should not be added.",
+                Guid.NewGuid()));
+
+            Assert.Empty(clinicalRecord.Notes);
+            Assert.Empty(clinicalRecord.Encounters);
+        }
+
+        [Fact]
+        public void AddEncounter_RejectsIncompleteBloodPressure()
+        {
+            var clinicalRecord = CreateClinicalRecord();
+
+            var exception = Assert.Throws<ArgumentException>(() => clinicalRecord.AddEncounter(
+                DateTime.UtcNow,
+                "Pain.",
+                ClinicalEncounterConsultationType.Urgency,
+                null,
+                120,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Guid.NewGuid()));
+
+            Assert.Contains("requires both systolic and diastolic", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void ResolveDiagnosis_RejectsResolvingTwice()
         {
             var clinicalRecord = CreateClinicalRecord();
@@ -198,6 +328,19 @@ namespace BigSmile.UnitTests.Clinical
                 actorUserId);
             clinicalRecord.AddClinicalNote("Initial clinical intake completed.", actorUserId);
             clinicalRecord.AddDiagnosis("Occlusal caries", null, actorUserId);
+            clinicalRecord.AddEncounter(
+                DateTime.UtcNow,
+                "Routine consultation.",
+                ClinicalEncounterConsultationType.Treatment,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                actorUserId);
 
             Assert.Equal(originalTenantId, clinicalRecord.TenantId);
             Assert.Equal(originalPatientId, clinicalRecord.PatientId);
@@ -206,6 +349,7 @@ namespace BigSmile.UnitTests.Clinical
             Assert.Single(clinicalRecord.Allergies);
             Assert.Equal("Latex", clinicalRecord.Allergies.First().Substance);
             Assert.Single(clinicalRecord.Diagnoses);
+            Assert.Single(clinicalRecord.Encounters);
             Assert.Contains(clinicalRecord.SnapshotHistory, entry => entry.EntryType == ClinicalSnapshotHistoryEntryType.SnapshotInitialized);
         }
 

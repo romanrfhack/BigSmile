@@ -284,7 +284,9 @@ Release 3.5 — Medical Questionnaire Backend is also accepted as a backend slic
 
 The current frontend now includes a bounded UI integration for the fixed medical questionnaire inside the existing clinical record screen. It consumes only the accepted Release 3.5 endpoints, keeps Patient demographics read-only from Patients, groups the fixed questions with i18n labels, and does not change backend contracts, permissions, allergy synchronization, timeline, snapshot history, or later modules.
 
-Release 3 remains preserved through the accepted slices above. The full or advanced clinical timeline, any cross-module timeline, restore, full clinical record versioning, form builder behavior, automatic allergy synchronization, configurable intake forms, and questionnaire-driven cross-module behavior remain outside the accepted Release 3.5 scope.
+Release 3.6 — Clinical Encounter / Vitals Backend is also accepted as a backend-only slice. It adds tenant-owned and patient-owned `ClinicalEncounter` records under an existing clinical record, `GET` / `POST` endpoints at `/api/patients/{patientId}/clinical-record/encounters`, bounded consultation type values (`Treatment`, `Urgency`, `Other`), optional bounded vitals, server-derived `TenantId` and `CreatedByUserId`, and optional append-only linked `ClinicalNote` creation from encounter `noteText`. It reuses `clinical.read` / `clinical.write`, does not add PUT/DELETE, does not introduce new timeline events, and does not touch frontend, Patient demographics, Billing, Scheduling, Odontogram, Treatments, Documents, or doctor/provider assignment.
+
+Release 3 remains preserved through the accepted slices above. The full or advanced clinical timeline, any cross-module timeline, restore, full clinical record versioning, form builder behavior, automatic allergy synchronization, configurable intake forms, questionnaire-driven cross-module behavior, encounter editing/deletion, and frontend encounter/vitals UI remain outside the accepted Release 3.6 scope.
 
 Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
 
@@ -365,7 +367,7 @@ The repository should be treated as having an established technical and architec
 ### Release 3 — Clinical Records
 
 * Release 3 is in progress
-* Accepted slices: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, and Release 3.5 — Medical Questionnaire Backend
+* Accepted slices: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 3.5 — Medical Questionnaire Backend, and Release 3.6 — Clinical Encounter / Vitals Backend
 * Explicit clinical record creation with `GET` returning `404` when missing and no autocreation
 * Medical background summary, current medications summary, current allergies, and append-only clinical notes
 * Notes returned newest-first in API/UI
@@ -375,7 +377,8 @@ The repository should be treated as having an established technical and architec
 * Bounded snapshot history for the base clinical snapshot, returned newest-first and kept separate from the Release 3.3 timeline
 * Backend structured medical questionnaire with fixed question keys, `Unknown` / `Yes` / `No` answers, optional bounded details, and `GET` / `PUT /api/patients/{patientId}/clinical-record/questionnaire`
 * Bounded frontend integration for the fixed medical questionnaire inside the existing clinical record screen, with no backend/API/permission changes and no automatic allergy synchronization
-* Full or advanced clinical timeline, any cross-module timeline, restore, full versioning, rich snapshot diff, form builder behavior, automatic allergy synchronization, configurable intake forms, odontogram, treatments, and documents deferred beyond the accepted slices
+* Backend clinical encounters/vitals on an existing clinical record through `GET` / `POST /api/patients/{patientId}/clinical-record/encounters`, with bounded consultation type, optional bounded vitals, optional linked append-only clinical note, and no frontend in this slice
+* Full or advanced clinical timeline, any cross-module timeline, restore, full versioning, rich snapshot diff, form builder behavior, automatic allergy synchronization, configurable intake forms, encounter editing/deletion, frontend encounter/vitals UI, odontogram, treatments, and documents deferred beyond the accepted slices
 * `clinical.read` / `clinical.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
 
 ### Release 4 — Odontogram

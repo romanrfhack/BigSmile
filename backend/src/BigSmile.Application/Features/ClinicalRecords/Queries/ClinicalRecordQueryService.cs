@@ -8,6 +8,7 @@ namespace BigSmile.Application.Features.ClinicalRecords.Queries
     {
         Task<ClinicalRecordDetailDto?> GetByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
         Task<ClinicalMedicalQuestionnaireDto?> GetQuestionnaireByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<ClinicalEncounterDto>?> GetEncountersByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
     }
 
     public sealed class ClinicalRecordQueryService : IClinicalRecordQueryService
@@ -54,6 +55,22 @@ namespace BigSmile.Application.Features.ClinicalRecords.Queries
 
             var clinicalRecord = await _clinicalRecordRepository.GetByPatientIdAsync(patientId, cancellationToken);
             return clinicalRecord?.ToQuestionnaireDto();
+        }
+
+        public async Task<IReadOnlyList<ClinicalEncounterDto>?> GetEncountersByPatientIdAsync(
+            Guid patientId,
+            CancellationToken cancellationToken = default)
+        {
+            EnsureTenantContext();
+
+            var patient = await _patientRepository.GetByIdAsync(patientId, cancellationToken);
+            if (patient is null)
+            {
+                return null;
+            }
+
+            var clinicalRecord = await _clinicalRecordRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            return clinicalRecord?.ToEncounterDtos();
         }
 
         private void EnsureTenantContext()

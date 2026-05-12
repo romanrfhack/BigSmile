@@ -4,7 +4,7 @@
 
 Documentar una auditoria tecnica y un mapeo formal del formato fisico de historia clinica compartido por el cliente contra el estado real del repositorio BigSmile.
 
-Este documento nacio como mapeo/auditoria. Actualmente tambien registra el cierre backend del slice `Release 3.5 — Medical Questionnaire Backend` y la integracion frontend acotada del cuestionario medico estructurado en Clinical Records. Su objetivo sigue siendo separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y proponer slices futuros pequenos y auditables para incorporar la captura clinica restante derivada del formato fisico.
+Este documento nacio como mapeo/auditoria. Actualmente tambien registra el cierre backend del slice `Release 3.5 — Medical Questionnaire Backend`, la integracion frontend acotada del cuestionario medico estructurado en Clinical Records, y el cierre backend del slice `Release 3.6 — Clinical Encounter / Vitals Backend`. Su objetivo sigue siendo separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y proponer slices futuros pequenos y auditables para incorporar la captura clinica restante derivada del formato fisico.
 
 ## 2. Estado canonico y deriva detectada
 
@@ -13,7 +13,7 @@ Estado confirmado desde `STATE — BigSmile.md`, `README.md`, `PROJECT_MAP.md`, 
 - Release 1 — Patients esta completada.
 - Release 2 — Scheduling esta completada.
 - `doctor-based views` siguen diferidas y no hay provider/doctor assignment en el codigo actual.
-- Release 3 — Clinical Records no es una fase futura virgen: ya esta abierta y preservada por slices aceptados Release 3.1, 3.2, 3.3, 3.4 y 3.5.
+- Release 3 — Clinical Records no es una fase futura virgen: ya esta abierta y preservada por slices aceptados Release 3.1, 3.2, 3.3, 3.4, 3.5 y 3.6.
 - La fase activa canonica actual es Phase 2 Expansion — Modern Operations, con slices aceptados hasta Phase 2.6.
 
 Deriva frente al objetivo textual de este slice: la instruccion pide confirmar que Release 3 es la siguiente fase funcional. El estado canonico actual no confirma eso; indica que Release 3 ya existe en codigo y documentacion, y que debe preservarse. Por lo tanto, este documento trata el trabajo como mapeo/auditoria para una expansion futura acotada de Clinical Records, no como reapertura funcional de Release 3 desde cero.
@@ -27,6 +27,7 @@ Existe implementacion real en `frontend/src/app/features/clinical-records`:
 - pagina `clinical-record.page.ts` en ruta `/patients/:id/clinical-record`;
 - `ClinicalRecordsApiService` con llamadas reales a `/api/patients/{patientId}/clinical-record`;
 - `ClinicalRecordsApiService` con llamadas reales a `/api/patients/{patientId}/clinical-record/questionnaire`;
+- no hay llamadas frontend todavia a `/api/patients/{patientId}/clinical-record/encounters`;
 - facade con estado `currentRecord`, `loadingRecord`, `recordMissing`, `currentQuestionnaire`, `loadingQuestionnaire`, `questionnaireMissing` y errores;
 - componentes para empty state, snapshot clinico, alergias actuales, notas, diagnosticos, timeline y snapshot history;
 - componente de cuestionario medico estructurado con catalogo fijo, secciones, respuestas `Unknown` / `Yes` / `No` y `Details`;
@@ -36,8 +37,8 @@ Limitaciones actuales:
 
 - no hay tabs formales en la pagina clinica actual; las secciones aparecen en flujo vertical;
 - la UI del cuestionario medico es acotada al catalogo fijo de Release 3.5 y no introduce form builder, versionado ni sincronizacion automatica;
-- no existen signos vitales;
-- no existe `Encounter` como modelo separado;
+- no existe UI de signos vitales/encounters todavia;
+- no existe `Encounter` como modelo frontend separado todavia;
 - no existe header clinico read-only con summary strip segun la guia UX nueva;
 - el paciente se consulta via `PatientsFacade`, lo cual es correcto para evitar duplicar identidad del paciente en Clinical.
 
@@ -54,6 +55,8 @@ Existe implementacion real, no solo scaffold:
 - endpoint `POST /api/patients/{patientId}/clinical-record/diagnoses/{diagnosisId}/resolve`;
 - endpoint `GET /api/patients/{patientId}/clinical-record/questionnaire`;
 - endpoint `PUT /api/patients/{patientId}/clinical-record/questionnaire`;
+- endpoint `GET /api/patients/{patientId}/clinical-record/encounters`;
+- endpoint `POST /api/patients/{patientId}/clinical-record/encounters`;
 - servicios de aplicacion `ClinicalRecordCommandService` y `ClinicalRecordQueryService`;
 - repositorio `IClinicalRecordRepository` / `EfClinicalRecordRepository`;
 - DTOs y mapping de read model.
@@ -66,13 +69,12 @@ Entidades existentes:
 - `ClinicalAllergyEntry`: alergia actual con sustancia, resumen de reaccion y notas;
 - `ClinicalSnapshotHistoryEntry`: historial acotado del snapshot base.
 - `ClinicalMedicalAnswer`: respuesta tenant-owned, patient-owned y ligada a `ClinicalRecord`, con `QuestionKey`, `Answer`, `Details`, `UpdatedAtUtc` y `UpdatedByUserId`.
+- `ClinicalEncounter`: consulta clinica tenant-owned, patient-owned y ligada a `ClinicalRecord`, con `OccurredAtUtc`, `ChiefComplaint`, `ConsultationType`, signos vitales opcionales, `ClinicalNoteId` opcional, `CreatedAtUtc` y `CreatedByUserId`.
 
 No existen todavia:
 
 - `ClinicalMedicalQuestionnaire`;
-- `ClinicalEncounter`;
-- `ClinicalVitals`;
-- endpoint dedicado para encounter / vitals.
+- `ClinicalVitals` como entidad separada; los signos vitales aceptados viven dentro de `ClinicalEncounter`.
 
 ### Permisos y autorizacion
 
@@ -131,10 +133,11 @@ Existen migrations clinicas:
 - `20260420212406_AddClinicalDiagnosesFoundation`;
 - `20260421003354_AddClinicalSnapshotHistory`.
 - `20260512125248_AddClinicalMedicalQuestionnaire`.
+- `20260512180403_AddClinicalEncounterVitals`.
 
-`AppDbContext` declara `DbSet<ClinicalRecord>`, `DbSet<ClinicalDiagnosis>`, `DbSet<ClinicalSnapshotHistoryEntry>` y `DbSet<ClinicalMedicalAnswer>`.
+`AppDbContext` declara `DbSet<ClinicalRecord>`, `DbSet<ClinicalDiagnosis>`, `DbSet<ClinicalSnapshotHistoryEntry>`, `DbSet<ClinicalMedicalAnswer>` y `DbSet<ClinicalEncounter>`.
 
-`AppDbContext` aplica query filter tenant-aware sobre `ClinicalRecord` y `ClinicalMedicalAnswer`, y valida writes tenant-owned en `SaveChanges` mediante `ITenantOwnedEntity`. Los hijos clinicos historicos se alcanzan a traves de `ClinicalRecord`; `ClinicalMedicalAnswer` tambien incluye `TenantId` para enforcement centralizado.
+`AppDbContext` aplica query filter tenant-aware sobre `ClinicalRecord`, `ClinicalMedicalAnswer` y `ClinicalEncounter`, y valida writes tenant-owned en `SaveChanges` mediante `ITenantOwnedEntity`. Los hijos clinicos historicos se alcanzan a traves de `ClinicalRecord`; `ClinicalMedicalAnswer` y `ClinicalEncounter` tambien incluyen `TenantId` para enforcement centralizado.
 
 ### Tests clinicos existentes
 
@@ -148,6 +151,7 @@ Hay pruebas unitarias e integracion para:
 - orden de notas, diagnosticos, timeline y snapshot history;
 - snapshot history solo en cambios efectivos;
 - cuestionario medico backend tenant-scoped con lectura, upsert, catalogo fijo, validacion de `QuestionKey`, validacion de `Answer`, rechazo de duplicados, rechazo de `TenantId` en request y permisos `clinical.read` / `clinical.write`;
+- encounters/vitals backend tenant-scoped con creacion, listado, validacion de vitals, validacion de `ConsultationType`, rechazo de `TenantId`/`CreatedByUserId` en request, paciente y expediente dentro del tenant actual, y permisos `clinical.read` / `clinical.write`;
 - cuestionario medico frontend con pruebas de render, cambios `Unknown` / `Yes` / `No`, visibilidad de `Details`, payload normalizado y errores de carga/guardado;
 - permisos clinicos ausentes para `TenantUser`;
 - plataforma sin tenant context bloqueada para acceso clinico.
@@ -162,9 +166,11 @@ Leyenda:
 
 Actualizacion Release 3.5: las filas cuyo owner recomendado es `ClinicalMedicalQuestionnaire` ya cuentan con soporte backend fijo mediante `ClinicalMedicalAnswer`, catalogo permitido de `QuestionKey`, `Answer` `Unknown` / `Yes` / `No`, `Details` opcional acotado y endpoints `GET` / `PUT` de cuestionario. Tambien cuentan con UI frontend acotada dentro de la pantalla de Clinical Record, usando Patients como contexto read-only cuando esta disponible. No hay form builder, auto-sync de alergias, timeline enrichment, versionado del cuestionario ni apertura de Billing, Scheduling, Odontogram, Treatments, Documents o doctor/provider scope.
 
+Actualizacion Release 3.6: las filas cuyo owner recomendado es `ClinicalNote / Encounter` para consulta/signos vitales ya cuentan con soporte backend mediante `ClinicalEncounter`, endpoints `GET` / `POST /api/patients/{patientId}/clinical-record/encounters`, `TenantId` y `CreatedByUserId` derivados de contexto, `ConsultationType` controlado, vitals acotados y `ClinicalNote` append-only opcional cuando se envia `noteText`. No hay frontend todavia, no hay PUT/DELETE de encounters, no hay nuevo modelo de eventos de timeline y no se abre Billing, Scheduling, Odontogram, Treatments, Documents ni doctor/provider scope.
+
 | Campo del formato fisico | Owner recomendado | Existe en codigo | Falta | Accion recomendada | Riesgo |
 | --- | --- | --- | --- | --- | --- |
-| Fecha | Derived / Read-only | Parcial | Parcial | Mostrar `ClinicalRecord.CreatedAtUtc` para fecha de creacion; cuando exista encounter, usar fecha del encounter. No guardar una fecha duplicada sin significado clinico claro. | Duplicar metadata o confundir fecha de expediente con fecha de consulta. |
+| Fecha | Derived / Read-only / Encounter | Parcial | Parcial | Mostrar `ClinicalRecord.CreatedAtUtc` para fecha de creacion; para consulta clinica usar `ClinicalEncounter.OccurredAtUtc`. No guardar una fecha duplicada sin significado clinico claro. | Duplicar metadata o confundir fecha de expediente con fecha de consulta. |
 | Nombre | Patient | Si | No | Leer desde `Patient.FullName`. No copiar a ClinicalRecord. | Duplicacion y desalineacion de identidad. |
 | Edad | Derived / Read-only | Parcial | Parcial | Calcular desde `Patient.DateOfBirth` en UI/read model. No persistir edad. | Edad persistida queda obsoleta. |
 | Fecha de nacimiento | Patient | Si | No | Leer desde `Patient.DateOfBirth`. | Duplicacion de datos personales. |
@@ -174,16 +180,16 @@ Actualizacion Release 3.5: las filas cuyo owner recomendado es `ClinicalMedicalQ
 | Telefono casa/oficina | Patient | Parcial | Parcial | `PrimaryPhone` existe, pero no hay telefono por tipo. Decidir si Patients necesita phone slots separados antes de modelarlo. | Duplicar contacto o perder semantica del telefono. |
 | Telefono celular | Patient | Parcial | Parcial | `PrimaryPhone` existe. Si el cliente necesita celular separado, abrir mini-slice Patient Contact Details. | Datos de contacto inconsistentes. |
 | Referido por | Patient | Si | No | Leer desde `Patient.ReferredBy`; no abrir CRM/marketing avanzado. | Meter datos comerciales/marketing en Clinical. |
-| Motivo de consulta | ClinicalNote / Encounter | No | Si | Modelar como chief complaint del primer encounter o nota de consulta, no como campo demografico. | Perder historia por sobrescritura si se guarda como snapshot unico. |
+| Motivo de consulta | ClinicalEncounter | Si backend | Frontend | Implementado como `ClinicalEncounter.ChiefComplaint` en POST/listado de encounters. No copiar a Patient ni guardarlo como snapshot unico. | Perder historia por sobrescritura si se guarda como snapshot unico. |
 | Requiere factura | Billing | No | Si | Fuera de Release 3 salvo decision explicita de Billing. | Contaminar Clinical con datos fiscales. |
 | Datos de facturacion | Billing | No | Si | Fuera de Release 3. Debe vivir en Billing/fiscal profile futuro. | Datos fiscales sensibles en modulo incorrecto. |
-| Tipo de consulta: Tratamiento / Urgencias | ClinicalNote / Encounter | No | Si | Capturarlo como tipo de encounter clinico si se abre esa entidad; no reabrir Scheduling ni Treatments por este campo. | Abrir scope de scheduling/treatment sin modelo. |
-| Temperatura | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter, con fecha y autor. | Signos vitales sin contexto temporal. |
-| Tension arterial | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Valores clinicos sensibles sin estructura. |
-| Peso | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Dato clinico cambiante si se guarda como snapshot permanente. |
-| Frecuencia respiratoria | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Falta de contexto temporal/unidades. |
-| Talla | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Unidades ambiguas. |
-| Frecuencia cardiaca | ClinicalNote / Encounter | No | Si | Capturar como vitals dentro de encounter. | Falta de contexto temporal/unidades. |
+| Tipo de consulta: Tratamiento / Urgencias | ClinicalEncounter | Si backend | Frontend | Implementado como `ConsultationType` controlado `Treatment` / `Urgency` / `Other`. No reabre Scheduling ni Treatments. | Abrir scope de scheduling/treatment sin modelo. |
+| Temperatura | ClinicalEncounter | Si backend | Frontend | Implementado como `TemperatureC` opcional con rango acotado dentro de encounter, con fecha y autor. | Signos vitales sin contexto temporal si se extraen del encounter. |
+| Tension arterial | ClinicalEncounter | Si backend | Frontend | Implementado como `BloodPressureSystolic` / `BloodPressureDiastolic` opcionales y validados como par dentro de encounter. | Valores clinicos sensibles sin estructura si se guardan como nota libre. |
+| Peso | ClinicalEncounter | Si backend | Frontend | Implementado como `WeightKg` opcional y acotado dentro de encounter. | Dato clinico cambiante si se guarda como snapshot permanente. |
+| Frecuencia respiratoria | ClinicalEncounter | Si backend | Frontend | Implementado como `RespiratoryRatePerMinute` opcional y acotado dentro de encounter. | Falta de contexto temporal/unidades si se separa del encounter. |
+| Talla | ClinicalEncounter | Si backend | Frontend | Implementado como `HeightCm` opcional y acotado dentro de encounter. | Unidades ambiguas si no se mantiene el contrato en cm. |
+| Frecuencia cardiaca | ClinicalEncounter | Si backend | Frontend | Implementado como `HeartRateBpm` opcional y acotado dentro de encounter. | Falta de contexto temporal/unidades si se separa del encounter. |
 | Esta actualmente bajo tratamiento medico | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con respuesta Unknown/Yes/No y details opcional. | Texto libre imposible de explotar si se reabre fuera del catalogo fijo. |
 | Toma habitualmente algun medicamento | ClinicalMedicalQuestionnaire | Si | No | `CurrentMedicationsSummary` sigue como snapshot libre; la respuesta estructurada no lo reemplaza ni lo sincroniza. | Duplicar medicamentos si se interpreta como fuente unica. |
 | Le han practicado intervenciones quirurgicas | ClinicalMedicalQuestionnaire | Si | No | Cubierto por pregunta fija con details. | Dato medico sensible sin audit trail si se mueve a texto libre. |
@@ -292,16 +298,16 @@ Decision vigente de Release 3.5: la entidad vive como `ClinicalMedicalAnswer` li
 
 `ClinicalNote` ya existe y debe seguir append-only para notas generales.
 
-Para signos vitales, motivo de consulta y tipo de consulta, conviene abrir un `ClinicalEncounter` acotado antes de meter esos campos en `ClinicalNote`, porque esos datos tienen fecha, autor y contexto de consulta:
+Decision vigente de Release 3.6: signos vitales, motivo de consulta y tipo de consulta viven en un `ClinicalEncounter` acotado, porque esos datos tienen fecha, autor y contexto de consulta:
 
 - `ClinicalEncounter`;
 - `ChiefComplaint`;
-- `ConsultationType`;
-- `Vitals`;
-- nota clinica opcional;
-- `OccurredAtUtc` / `CreatedByUserId`.
+- `ConsultationType` (`Treatment`, `Urgency`, `Other`);
+- vitals opcionales con unidades explicitas;
+- `ClinicalNote` append-only opcional cuando `noteText` se envia al crear el encounter;
+- `OccurredAtUtc`, `CreatedAtUtc` y `CreatedByUserId`.
 
-No abrir doctor/provider assignment en este modelo.
+No hay PUT/DELETE de encounters, no hay UI todavia y no se abre doctor/provider assignment en este modelo.
 
 ### ClinicalTimeline
 
@@ -362,7 +368,7 @@ QuestionKey debe ser estable y no depender del texto visible. El label vive en i
 | `contraceptiveMedication` | Toma medicamentos anticonceptivos | Unknown/Yes/No | Opcional |
 | `anesthesiaComplications` | Complicaciones asociadas a la anestesia | Unknown/Yes/No | Opcional |
 
-Notas generales del cuestionario: no existe campo general independiente en el contrato actual; el frontend solo guarda `Details` por pregunta. Para notas de consulta, seguir usando `ClinicalNote` o un futuro `ClinicalEncounter`. No crear preguntas dinamicas ni form builder avanzado en este alcance.
+Notas generales del cuestionario: no existe campo general independiente en el contrato actual; el frontend solo guarda `Details` por pregunta. Para notas de consulta, seguir usando `ClinicalNote` o el backend `ClinicalEncounter` aceptado en Release 3.6. No crear preguntas dinamicas ni form builder avanzado en este alcance.
 
 ## 10. UX implementada y evolucion futura
 
@@ -386,7 +392,7 @@ Pendiente para slices futuros, solo si se abre alcance:
   - Antecedentes medicos.
   - Consulta / notas.
   - Timeline.
-- `Consulta / notas`: motivo de consulta, signos vitales y nota solo cuando exista `ClinicalEncounter`; hasta entonces mantener `ClinicalNote` append-only.
+- `Consulta / notas`: motivo de consulta, signos vitales y nota usando el backend `ClinicalEncounter`; la UI queda pendiente para un slice futuro.
 - Error states diferenciados: falta expediente, sin permiso, error de carga, error de validacion.
 
 ## 11. Propuesta de implementacion por slices
@@ -427,20 +433,25 @@ Validacion cubierta:
 - details length validado;
 - TenantUser sigue sin permisos clinicos.
 
-### Slice 3 — Clinical notes/vitals/timeline backend
+### Slice 3 — Clinical encounter/vitals backend
 
-Agregar `ClinicalEncounter` acotado si se decide capturar motivo de consulta, tipo de consulta y signos vitales:
+Implementado como `Release 3.6 — Clinical Encounter / Vitals Backend`:
 
-- patient-owned y tenant-owned via ClinicalRecord;
-- vitals con unidades/formatos claros;
-- notas append-only o referencia a ClinicalNote;
-- timeline read model enriquecido solo por decision explicita;
+- `ClinicalEncounter` tenant-owned, patient-owned y ligado a un `ClinicalRecord` existente;
+- `GET` / `POST /api/patients/{patientId}/clinical-record/encounters`;
+- vitals con unidades/formatos claros y rangos basicos;
+- nota append-only vinculada a `ClinicalNote` cuando `noteText` viene informado;
+- sin PUT/DELETE;
+- sin frontend;
+- sin nuevo modelo de eventos de timeline;
 - sin doctor/provider assignment.
 
-Validacion recomendada:
+Validacion cubierta:
 
 - vitals con rangos/formato basico;
-- tenant isolation;
+- tenant isolation y bloqueo cross-tenant;
+- rechazo de `TenantId` y `CreatedByUserId` desde request;
+- permisos `clinical.read` / `clinical.write`;
 - no cross-module timeline;
 - no cambios a Scheduling, Treatments ni Billing.
 
@@ -500,4 +511,4 @@ Validacion recomendada:
 
 ## 14. Decision recomendada inmediata
 
-Estado inmediato: `Patient Demographics` se mantiene como fuente de verdad para sexo, ocupacion, estado civil y referido por; Clinical Records ya consume esos datos como contexto read-only cuando estan disponibles. La UI del cuestionario medico fijo de Release 3.5 ya esta integrada contra los endpoints backend existentes. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.
+Estado inmediato: `Patient Demographics` se mantiene como fuente de verdad para sexo, ocupacion, estado civil y referido por; Clinical Records ya consume esos datos como contexto read-only cuando estan disponibles. La UI del cuestionario medico fijo de Release 3.5 ya esta integrada contra los endpoints backend existentes. El backend de encounters/vitals de Release 3.6 ya existe, pero su UI queda pendiente. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.

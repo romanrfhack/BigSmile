@@ -50,6 +50,25 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
         Guid PatientId,
         IReadOnlyList<ClinicalMedicalAnswerDto> Answers);
 
+    public sealed record ClinicalEncounterDto(
+        Guid Id,
+        Guid ClinicalRecordId,
+        Guid PatientId,
+        DateTime OccurredAtUtc,
+        string ChiefComplaint,
+        string ConsultationType,
+        decimal? TemperatureC,
+        int? BloodPressureSystolic,
+        int? BloodPressureDiastolic,
+        decimal? WeightKg,
+        decimal? HeightCm,
+        int? RespiratoryRatePerMinute,
+        int? HeartRateBpm,
+        Guid? ClinicalNoteId,
+        string? NoteText,
+        DateTime CreatedAtUtc,
+        Guid CreatedByUserId);
+
     public sealed record ClinicalRecordDetailDto(
         Guid ClinicalRecordId,
         Guid PatientId,

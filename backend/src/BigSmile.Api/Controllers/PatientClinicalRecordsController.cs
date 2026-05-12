@@ -69,6 +69,28 @@ namespace BigSmile.Api.Controllers
             }
         }
 
+        [HttpGet("encounters")]
+        [Authorize(Policy = AuthorizationPolicies.ClinicalRead)]
+        public async Task<ActionResult<IReadOnlyList<ClinicalEncounterDto>>> GetEncounters(
+            Guid patientId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var encounters = await _clinicalRecordQueryService.GetEncountersByPatientIdAsync(patientId, cancellationToken);
+                if (encounters is null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(encounters);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
         [HttpPost]
         [Authorize(Policy = AuthorizationPolicies.ClinicalWrite)]
         public async Task<ActionResult<ClinicalRecordDetailDto>> Create(
@@ -133,6 +155,32 @@ namespace BigSmile.Api.Controllers
                     cancellationToken);
 
                 return Ok(questionnaire);
+            }
+            catch (ArgumentException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BuildValidationProblem(exception.Message);
+            }
+        }
+
+        [HttpPost("encounters")]
+        [Authorize(Policy = AuthorizationPolicies.ClinicalWrite)]
+        public async Task<ActionResult<ClinicalEncounterDto>> CreateEncounter(
+            Guid patientId,
+            [FromBody] CreateClinicalEncounterRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var encounter = await _clinicalRecordCommandService.CreateEncounterAsync(
+                    patientId,
+                    request.ToCommand(),
+                    cancellationToken);
+
+                return CreatedAtAction(nameof(GetEncounters), new { patientId }, encounter);
             }
             catch (ArgumentException exception)
             {
@@ -297,6 +345,143 @@ namespace BigSmile.Api.Controllers
         }
 
         [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+        public sealed class CreateClinicalEncounterRequest : IValidatableObject
+        {
+            public DateTime OccurredAtUtc { get; set; }
+
+            [Required]
+            [MaxLength(ClinicalEncounter.ChiefComplaintMaxLength)]
+            public string ChiefComplaint { get; set; } = string.Empty;
+
+            [Required]
+            [MaxLength(32)]
+            public string ConsultationType { get; set; } = string.Empty;
+
+            public decimal? TemperatureC { get; set; }
+
+            public int? BloodPressureSystolic { get; set; }
+
+            public int? BloodPressureDiastolic { get; set; }
+
+            public decimal? WeightKg { get; set; }
+
+            public decimal? HeightCm { get; set; }
+
+            public int? RespiratoryRatePerMinute { get; set; }
+
+            public int? HeartRateBpm { get; set; }
+
+            [MaxLength(2000)]
+            public string? NoteText { get; set; }
+
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+            {
+                if (OccurredAtUtc == default)
+                {
+                    yield return new ValidationResult(
+                        "Clinical encounter occurrence date/time is required.",
+                        new[] { nameof(OccurredAtUtc) });
+                }
+
+                if (string.IsNullOrWhiteSpace(ChiefComplaint))
+                {
+                    yield return new ValidationResult(
+                        "Clinical encounter chief complaint is required.",
+                        new[] { nameof(ChiefComplaint) });
+                }
+
+                if (!TryParseEnumName<ClinicalEncounterConsultationType>(ConsultationType, out _))
+                {
+                    yield return new ValidationResult(
+                        "Clinical encounter consultation type must be one of: Treatment, Urgency, Other.",
+                        new[] { nameof(ConsultationType) });
+                }
+
+                if (!IsInRange(TemperatureC, 30.0m, 45.0m))
+                {
+                    yield return new ValidationResult(
+                        "Temperature must be between 30.0 and 45.0 Celsius.",
+                        new[] { nameof(TemperatureC) });
+                }
+
+                if (!IsInRange(BloodPressureSystolic, 50, 260))
+                {
+                    yield return new ValidationResult(
+                        "Blood pressure systolic value must be between 50 and 260.",
+                        new[] { nameof(BloodPressureSystolic) });
+                }
+
+                if (!IsInRange(BloodPressureDiastolic, 30, 180))
+                {
+                    yield return new ValidationResult(
+                        "Blood pressure diastolic value must be between 30 and 180.",
+                        new[] { nameof(BloodPressureDiastolic) });
+                }
+
+                if (BloodPressureSystolic.HasValue != BloodPressureDiastolic.HasValue)
+                {
+                    yield return new ValidationResult(
+                        "Blood pressure requires both systolic and diastolic values.",
+                        new[] { nameof(BloodPressureSystolic), nameof(BloodPressureDiastolic) });
+                }
+                else if (BloodPressureSystolic.HasValue
+                    && BloodPressureDiastolic.HasValue
+                    && BloodPressureDiastolic.Value >= BloodPressureSystolic.Value)
+                {
+                    yield return new ValidationResult(
+                        "Blood pressure diastolic value must be lower than systolic value.",
+                        new[] { nameof(BloodPressureDiastolic) });
+                }
+
+                if (!IsInRange(WeightKg, 0.5m, 500.0m))
+                {
+                    yield return new ValidationResult(
+                        "Weight must be between 0.5 and 500.0 kilograms.",
+                        new[] { nameof(WeightKg) });
+                }
+
+                if (!IsInRange(HeightCm, 30.0m, 250.0m))
+                {
+                    yield return new ValidationResult(
+                        "Height must be between 30.0 and 250.0 centimeters.",
+                        new[] { nameof(HeightCm) });
+                }
+
+                if (!IsInRange(RespiratoryRatePerMinute, 5, 80))
+                {
+                    yield return new ValidationResult(
+                        "Respiratory rate must be between 5 and 80 per minute.",
+                        new[] { nameof(RespiratoryRatePerMinute) });
+                }
+
+                if (!IsInRange(HeartRateBpm, 20, 240))
+                {
+                    yield return new ValidationResult(
+                        "Heart rate must be between 20 and 240 BPM.",
+                        new[] { nameof(HeartRateBpm) });
+                }
+            }
+
+            public CreateClinicalEncounterCommand ToCommand()
+            {
+                return new CreateClinicalEncounterCommand(
+                    OccurredAtUtc,
+                    ChiefComplaint,
+                    ParseEnumName<ClinicalEncounterConsultationType>(
+                        ConsultationType,
+                        nameof(ConsultationType)),
+                    TemperatureC,
+                    BloodPressureSystolic,
+                    BloodPressureDiastolic,
+                    WeightKg,
+                    HeightCm,
+                    RespiratoryRatePerMinute,
+                    HeartRateBpm,
+                    NoteText);
+            }
+        }
+
+        [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
         public sealed class SaveClinicalMedicalQuestionnaireRequest : IValidatableObject
         {
             [Required]
@@ -420,6 +605,16 @@ namespace BigSmile.Api.Controllers
 
             parsed = default;
             return false;
+        }
+
+        private static bool IsInRange(decimal? value, decimal minimum, decimal maximum)
+        {
+            return !value.HasValue || (value.Value >= minimum && value.Value <= maximum);
+        }
+
+        private static bool IsInRange(int? value, int minimum, int maximum)
+        {
+            return !value.HasValue || (value.Value >= minimum && value.Value <= maximum);
         }
     }
 }

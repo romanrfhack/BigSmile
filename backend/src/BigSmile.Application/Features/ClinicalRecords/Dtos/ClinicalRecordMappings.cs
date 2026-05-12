@@ -91,6 +91,37 @@ namespace BigSmile.Application.Features.ClinicalRecords.Dtos
                     .ToList());
         }
 
+        public static IReadOnlyList<ClinicalEncounterDto> ToEncounterDtos(this ClinicalRecord clinicalRecord)
+        {
+            return clinicalRecord.Encounters
+                .OrderByDescending(encounter => encounter.OccurredAtUtc)
+                .ThenByDescending(encounter => encounter.Id)
+                .Select(ToDto)
+                .ToList();
+        }
+
+        public static ClinicalEncounterDto ToDto(this ClinicalEncounter encounter)
+        {
+            return new ClinicalEncounterDto(
+                encounter.Id,
+                encounter.ClinicalRecordId,
+                encounter.PatientId,
+                encounter.OccurredAtUtc,
+                encounter.ChiefComplaint,
+                encounter.ConsultationType.ToString(),
+                encounter.TemperatureC,
+                encounter.BloodPressureSystolic,
+                encounter.BloodPressureDiastolic,
+                encounter.WeightKg,
+                encounter.HeightCm,
+                encounter.RespiratoryRatePerMinute,
+                encounter.HeartRateBpm,
+                encounter.ClinicalNoteId,
+                encounter.ClinicalNote?.NoteText,
+                encounter.CreatedAtUtc,
+                encounter.CreatedByUserId);
+        }
+
         private static IReadOnlyList<ClinicalTimelineEntryDto> BuildTimeline(ClinicalRecord clinicalRecord)
         {
             return clinicalRecord.Notes

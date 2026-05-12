@@ -185,6 +185,79 @@ namespace BigSmile.UnitTests.Clinical
             Assert.Null(hypertension.UpdatedByUserId);
         }
 
+        [Fact]
+        public void ToEncounterDtos_OrdersEncountersNewestFirst()
+        {
+            var clinicalRecord = new ClinicalRecord(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "Background.",
+                null);
+
+            var olderEncounter = clinicalRecord.AddEncounter(
+                new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Utc),
+                "Older visit.",
+                ClinicalEncounterConsultationType.Treatment,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Guid.NewGuid());
+            var newerEncounter = clinicalRecord.AddEncounter(
+                new DateTime(2026, 5, 12, 11, 0, 0, DateTimeKind.Utc),
+                "Newer visit.",
+                ClinicalEncounterConsultationType.Urgency,
+                null,
+                130,
+                85,
+                null,
+                null,
+                null,
+                null,
+                "Encounter note.",
+                Guid.NewGuid());
+
+            var dto = clinicalRecord.ToEncounterDtos();
+
+            Assert.Equal(new[] { newerEncounter.Id, olderEncounter.Id }, dto.Select(encounter => encounter.Id).ToArray());
+            Assert.Equal("Encounter note.", dto[0].NoteText);
+            Assert.Equal("Urgency", dto[0].ConsultationType);
+        }
+
+        [Fact]
+        public void ToDetailDto_DoesNotAddEncounterEventsToClinicalTimeline()
+        {
+            var clinicalRecord = new ClinicalRecord(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "Background.",
+                null);
+
+            clinicalRecord.AddEncounter(
+                new DateTime(2026, 5, 12, 9, 0, 0, DateTimeKind.Utc),
+                "Routine visit.",
+                ClinicalEncounterConsultationType.Treatment,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Guid.NewGuid());
+
+            var dto = clinicalRecord.ToDetailDto();
+
+            Assert.Empty(dto.Timeline);
+        }
+
         private static void SetCreatedAt(ClinicalDiagnosis diagnosis, DateTime value)
         {
             var field = typeof(ClinicalDiagnosis)

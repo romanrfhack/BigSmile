@@ -186,7 +186,80 @@ namespace BigSmile.UnitTests.Clinical
         }
 
         [Fact]
-        public void QuestionnaireEndpoints_RequireClinicalReadAndClinicalWritePolicies()
+        public async Task GetEncounters_ReturnsNotFound_WhenClinicalRecordDoesNotExist()
+        {
+            var patientId = Guid.NewGuid();
+            var commandService = new Mock<IClinicalRecordCommandService>();
+            var queryService = new Mock<IClinicalRecordQueryService>();
+            queryService
+                .Setup(service => service.GetEncountersByPatientIdAsync(patientId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IReadOnlyList<ClinicalEncounterDto>?)null);
+
+            var controller = new PatientClinicalRecordsController(commandService.Object, queryService.Object);
+
+            var result = await controller.GetEncounters(patientId);
+
+            Assert.IsType<NotFoundResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task CreateEncounter_ReturnsCreated_WhenCommandServiceSucceeds()
+        {
+            var patientId = Guid.NewGuid();
+            var response = new ClinicalEncounterDto(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                patientId,
+                new DateTime(2026, 5, 12, 12, 0, 0, DateTimeKind.Utc),
+                "Tooth sensitivity.",
+                "Treatment",
+                36.7m,
+                120,
+                80,
+                72.5m,
+                168.0m,
+                16,
+                78,
+                Guid.NewGuid(),
+                "Encounter note.",
+                DateTime.UtcNow,
+                Guid.NewGuid());
+
+            var commandService = new Mock<IClinicalRecordCommandService>();
+            commandService
+                .Setup(service => service.CreateEncounterAsync(
+                    patientId,
+                    It.IsAny<CreateClinicalEncounterCommand>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var queryService = new Mock<IClinicalRecordQueryService>();
+            var controller = new PatientClinicalRecordsController(commandService.Object, queryService.Object);
+
+            var result = await controller.CreateEncounter(
+                patientId,
+                new PatientClinicalRecordsController.CreateClinicalEncounterRequest
+                {
+                    OccurredAtUtc = response.OccurredAtUtc,
+                    ChiefComplaint = "Tooth sensitivity.",
+                    ConsultationType = "Treatment",
+                    TemperatureC = 36.7m,
+                    BloodPressureSystolic = 120,
+                    BloodPressureDiastolic = 80,
+                    WeightKg = 72.5m,
+                    HeightCm = 168.0m,
+                    RespiratoryRatePerMinute = 16,
+                    HeartRateBpm = 78,
+                    NoteText = "Encounter note."
+                });
+
+            var created = Assert.IsType<CreatedAtActionResult>(result.Result);
+            Assert.Equal(nameof(PatientClinicalRecordsController.GetEncounters), created.ActionName);
+            Assert.Same(response, created.Value);
+        }
+
+        [Fact]
+        public void QuestionnaireAndEncounterEndpoints_RequireClinicalReadAndClinicalWritePolicies()
         {
             var getAuthorize = typeof(PatientClinicalRecordsController)
                 .GetMethod(nameof(PatientClinicalRecordsController.GetQuestionnaire))!
@@ -198,9 +271,21 @@ namespace BigSmile.UnitTests.Clinical
                 .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: false)
                 .Cast<AuthorizeAttribute>()
                 .Single();
+            var getEncountersAuthorize = typeof(PatientClinicalRecordsController)
+                .GetMethod(nameof(PatientClinicalRecordsController.GetEncounters))!
+                .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: false)
+                .Cast<AuthorizeAttribute>()
+                .Single();
+            var createEncounterAuthorize = typeof(PatientClinicalRecordsController)
+                .GetMethod(nameof(PatientClinicalRecordsController.CreateEncounter))!
+                .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: false)
+                .Cast<AuthorizeAttribute>()
+                .Single();
 
             Assert.Equal(AuthorizationPolicies.ClinicalRead, getAuthorize.Policy);
             Assert.Equal(AuthorizationPolicies.ClinicalWrite, putAuthorize.Policy);
+            Assert.Equal(AuthorizationPolicies.ClinicalRead, getEncountersAuthorize.Policy);
+            Assert.Equal(AuthorizationPolicies.ClinicalWrite, createEncounterAuthorize.Policy);
         }
 
         [Fact]
@@ -322,6 +407,58 @@ namespace BigSmile.UnitTests.Clinical
 
             Assert.Throws<JsonException>(() =>
                 JsonSerializer.Deserialize<PatientClinicalRecordsController.ClinicalMedicalAnswerRequest>(json, options));
+        }
+
+        [Fact]
+        public void CreateClinicalEncounterRequest_RejectsInvalidVitals()
+        {
+            var request = new PatientClinicalRecordsController.CreateClinicalEncounterRequest
+            {
+                OccurredAtUtc = DateTime.UtcNow,
+                ChiefComplaint = "Tooth sensitivity.",
+                ConsultationType = "Treatment",
+                TemperatureC = 52.0m,
+                BloodPressureSystolic = 110,
+                BloodPressureDiastolic = 120
+            };
+
+            var results = Validate(request);
+
+            Assert.Contains(results, result => result.MemberNames.Contains(nameof(PatientClinicalRecordsController.CreateClinicalEncounterRequest.TemperatureC)));
+            Assert.Contains(results, result => result.MemberNames.Contains(nameof(PatientClinicalRecordsController.CreateClinicalEncounterRequest.BloodPressureDiastolic)));
+        }
+
+        [Fact]
+        public void CreateClinicalEncounterRequest_RejectsInvalidConsultationType()
+        {
+            var request = new PatientClinicalRecordsController.CreateClinicalEncounterRequest
+            {
+                OccurredAtUtc = DateTime.UtcNow,
+                ChiefComplaint = "Tooth sensitivity.",
+                ConsultationType = "FollowUp"
+            };
+
+            var results = Validate(request);
+
+            Assert.Contains(results, result => result.MemberNames.Contains(nameof(PatientClinicalRecordsController.CreateClinicalEncounterRequest.ConsultationType)));
+        }
+
+        [Fact]
+        public void CreateClinicalEncounterRequest_DoesNotAcceptTenantIdOrCreatedByUserIdFromJson()
+        {
+            var json = """
+                {
+                  "tenantId": "4bff6ec8-7a0f-4b5c-bcd7-2c60778b3526",
+                  "createdByUserId": "5dff6ec8-7a0f-4b5c-bcd7-2c60778b3526",
+                  "occurredAtUtc": "2026-05-12T12:00:00Z",
+                  "chiefComplaint": "Tooth sensitivity.",
+                  "consultationType": "Treatment"
+                }
+                """;
+            var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+
+            Assert.Throws<JsonException>(() =>
+                JsonSerializer.Deserialize<PatientClinicalRecordsController.CreateClinicalEncounterRequest>(json, options));
         }
 
         private static IReadOnlyCollection<ValidationResult> Validate(object value)

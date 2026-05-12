@@ -40,6 +40,7 @@ namespace BigSmile.Domain.Entities
         public ICollection<ClinicalDiagnosis> Diagnoses { get; private set; } = new List<ClinicalDiagnosis>();
         public ICollection<ClinicalSnapshotHistoryEntry> SnapshotHistory { get; private set; } = new List<ClinicalSnapshotHistoryEntry>();
         public ICollection<ClinicalMedicalAnswer> MedicalAnswers { get; private set; } = new List<ClinicalMedicalAnswer>();
+        public ICollection<ClinicalEncounter> Encounters { get; private set; } = new List<ClinicalEncounter>();
 
         private ClinicalRecord()
         {
@@ -194,6 +195,51 @@ namespace BigSmile.Domain.Entities
             Touch(createdByUserId);
 
             return diagnosis;
+        }
+
+        public ClinicalEncounter AddEncounter(
+            DateTime occurredAtUtc,
+            string chiefComplaint,
+            ClinicalEncounterConsultationType consultationType,
+            decimal? temperatureC,
+            int? bloodPressureSystolic,
+            int? bloodPressureDiastolic,
+            decimal? weightKg,
+            decimal? heightCm,
+            int? respiratoryRatePerMinute,
+            int? heartRateBpm,
+            string? noteText,
+            Guid createdByUserId)
+        {
+            EnsureActor(createdByUserId);
+
+            var encounter = new ClinicalEncounter(
+                TenantId,
+                Id,
+                PatientId,
+                occurredAtUtc,
+                chiefComplaint,
+                consultationType,
+                temperatureC,
+                bloodPressureSystolic,
+                bloodPressureDiastolic,
+                weightKg,
+                heightCm,
+                respiratoryRatePerMinute,
+                heartRateBpm,
+                clinicalNote: null,
+                createdByUserId);
+
+            if (!string.IsNullOrWhiteSpace(noteText))
+            {
+                var linkedNote = AddClinicalNote(noteText, createdByUserId);
+                encounter.LinkClinicalNote(linkedNote);
+            }
+
+            Encounters.Add(encounter);
+            Touch(createdByUserId);
+
+            return encounter;
         }
 
         public ClinicalDiagnosis ResolveDiagnosis(Guid diagnosisId, Guid resolvedByUserId)

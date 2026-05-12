@@ -435,6 +435,7 @@ Responsible for:
 * allergies
 * diagnoses
 * fixed medical questionnaire backend
+* clinical encounters and vitals backend
 
 ### 9.6 Odontogram
 

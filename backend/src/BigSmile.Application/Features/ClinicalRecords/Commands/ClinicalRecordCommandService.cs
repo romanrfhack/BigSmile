@@ -30,6 +30,19 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
     public sealed record SaveClinicalMedicalQuestionnaireCommand(
         IReadOnlyCollection<SaveClinicalMedicalAnswerCommand> Answers);
 
+    public sealed record CreateClinicalEncounterCommand(
+        DateTime OccurredAtUtc,
+        string ChiefComplaint,
+        ClinicalEncounterConsultationType ConsultationType,
+        decimal? TemperatureC,
+        int? BloodPressureSystolic,
+        int? BloodPressureDiastolic,
+        decimal? WeightKg,
+        decimal? HeightCm,
+        int? RespiratoryRatePerMinute,
+        int? HeartRateBpm,
+        string? NoteText);
+
     public interface IClinicalRecordCommandService
     {
         Task<ClinicalRecordDetailDto> CreateAsync(
@@ -60,6 +73,11 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
         Task<ClinicalMedicalQuestionnaireDto> UpdateQuestionnaireAsync(
             Guid patientId,
             SaveClinicalMedicalQuestionnaireCommand command,
+            CancellationToken cancellationToken = default);
+
+        Task<ClinicalEncounterDto> CreateEncounterAsync(
+            Guid patientId,
+            CreateClinicalEncounterCommand command,
             CancellationToken cancellationToken = default);
     }
 
@@ -237,6 +255,44 @@ namespace BigSmile.Application.Features.ClinicalRecords.Commands
             }
 
             return clinicalRecord.ToQuestionnaireDto();
+        }
+
+        public async Task<ClinicalEncounterDto> CreateEncounterAsync(
+            Guid patientId,
+            CreateClinicalEncounterCommand command,
+            CancellationToken cancellationToken = default)
+        {
+            var tenantId = GetRequiredTenantId();
+            var actorUserId = GetRequiredUserId();
+            var patient = await GetRequiredPatientAsync(patientId, cancellationToken);
+
+            EnsurePatientBelongsToTenant(patient, tenantId);
+
+            var clinicalRecord = await _clinicalRecordRepository.GetByPatientIdAsync(patientId, cancellationToken);
+            if (clinicalRecord is null)
+            {
+                throw new InvalidOperationException("The clinical record must be created explicitly before adding encounters.");
+            }
+
+            EnsureClinicalRecordBelongsToTenantAndPatient(clinicalRecord, tenantId, patient.Id);
+
+            var encounter = clinicalRecord.AddEncounter(
+                command.OccurredAtUtc,
+                command.ChiefComplaint,
+                command.ConsultationType,
+                command.TemperatureC,
+                command.BloodPressureSystolic,
+                command.BloodPressureDiastolic,
+                command.WeightKg,
+                command.HeightCm,
+                command.RespiratoryRatePerMinute,
+                command.HeartRateBpm,
+                command.NoteText,
+                actorUserId);
+
+            await _clinicalRecordRepository.UpdateAsync(clinicalRecord, cancellationToken);
+
+            return encounter.ToDto();
         }
 
         private async Task<Patient> GetRequiredPatientAsync(Guid patientId, CancellationToken cancellationToken)
