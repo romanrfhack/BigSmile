@@ -33,9 +33,9 @@ import { TranslatePipe } from '../../../shared/i18n';
       gap: 0.85rem;
       border-radius: 20px;
       border: 1px solid var(--bsm-color-border);
-      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
+      background: var(--bsm-gradient-surface);
       padding: 1.5rem;
-      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+      box-shadow: var(--bsm-shadow-sm);
     }
 
     .eyebrow {
@@ -59,7 +59,7 @@ import { TranslatePipe } from '../../../shared/i18n';
     }
 
     .muted {
-      color: #7a8ea3;
+      color: var(--bsm-color-text-muted);
     }
 
     .btn {
@@ -74,7 +74,7 @@ import { TranslatePipe } from '../../../shared/i18n';
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
   `]
 })

@@ -53,10 +53,10 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
 
     .empty-copy {
       border-radius: 16px;
-      border: 1px dashed #c7d4e0;
-      background: #f7fafc;
+      border: 1px dashed var(--bsm-color-border);
+      background: var(--bsm-color-neutral-soft);
       padding: 1rem;
-      color: #607387;
+      color: var(--bsm-color-text-muted);
     }
 
     .diagnosis-card {
@@ -64,7 +64,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
       gap: 0.75rem;
       border-radius: 16px;
       border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
       padding: 1rem;
     }
 
@@ -83,7 +83,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
     .diagnosis-head p,
     .resolved-copy {
       margin: 0.2rem 0 0;
-      color: #607387;
+      color: var(--bsm-color-text-muted);
     }
 
     .head-actions {
@@ -100,14 +100,14 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
       min-width: 88px;
       padding: 0.45rem 0.8rem;
       border-radius: 999px;
-      background: #e7f4ea;
-      color: #1d6a36;
+      background: var(--bsm-color-success-soft);
+      color: var(--bsm-color-success-text);
       font-weight: 700;
     }
 
     .status-resolved {
-      background: #eef2f6;
-      color: #536677;
+      background: var(--bsm-color-neutral-soft);
+      color: var(--bsm-color-text-muted);
     }
 
     .resolve-btn {
@@ -115,7 +115,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
       border-radius: 999px;
       padding: 0.65rem 0.95rem;
       background: var(--bsm-color-text-brand);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
       font: inherit;
       font-weight: 700;
       cursor: pointer;
@@ -123,7 +123,7 @@ import { ClinicalDiagnosis } from '../models/clinical-record.models';
 
     .notes-copy {
       margin: 0;
-      color: #35506d;
+      color: var(--bsm-color-text);
       white-space: pre-wrap;
     }
   `]

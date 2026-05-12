@@ -45,10 +45,10 @@ import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clin
 
     .empty-copy {
       border-radius: 16px;
-      border: 1px dashed #c7d4e0;
-      background: #f7fafc;
+      border: 1px dashed var(--bsm-color-border);
+      background: var(--bsm-color-neutral-soft);
       padding: 1rem;
-      color: #607387;
+      color: var(--bsm-color-text-muted);
     }
 
     .timeline-card {
@@ -56,7 +56,7 @@ import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clin
       gap: 0.8rem;
       border-radius: 16px;
       border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
       padding: 1rem;
     }
 
@@ -77,7 +77,7 @@ import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clin
       display: grid;
       gap: 0.2rem;
       justify-items: end;
-      color: #607387;
+      color: var(--bsm-color-text-muted);
       font-size: 0.95rem;
       text-align: right;
     }
@@ -96,18 +96,18 @@ import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clin
     }
 
     .event-note {
-      background: #e8f2ff;
-      color: #1f5e9e;
+      background: var(--bsm-color-info-soft);
+      color: var(--bsm-color-info-text);
     }
 
     .event-diagnosis-created {
-      background: #e8f4ea;
-      color: #22663a;
+      background: var(--bsm-color-success-soft);
+      color: var(--bsm-color-success-text);
     }
 
     .event-diagnosis-resolved {
-      background: #eef2f6;
-      color: #536677;
+      background: var(--bsm-color-neutral-soft);
+      color: var(--bsm-color-text-muted);
     }
 
     strong {
@@ -117,7 +117,7 @@ import { ClinicalTimelineEntry, ClinicalTimelineEventType } from '../models/clin
 
     .summary {
       margin: 0;
-      color: #35506d;
+      color: var(--bsm-color-text);
       white-space: pre-wrap;
     }
 

@@ -50,10 +50,10 @@ import {
 
     .empty-copy {
       border-radius: 16px;
-      border: 1px dashed #c7d4e0;
-      background: #f7fafc;
+      border: 1px dashed var(--bsm-color-border);
+      background: var(--bsm-color-neutral-soft);
       padding: 1rem;
-      color: #607387;
+      color: var(--bsm-color-text-muted);
     }
 
     .history-card {
@@ -61,7 +61,7 @@ import {
       gap: 0.8rem;
       border-radius: 16px;
       border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
       padding: 1rem;
     }
 
@@ -82,7 +82,7 @@ import {
       display: grid;
       gap: 0.2rem;
       justify-items: end;
-      color: #607387;
+      color: var(--bsm-color-text-muted);
       font-size: 0.95rem;
       text-align: right;
     }
@@ -101,23 +101,23 @@ import {
     }
 
     .entry-initialized {
-      background: #eef2f6;
-      color: #536677;
+      background: var(--bsm-color-neutral-soft);
+      color: var(--bsm-color-text-muted);
     }
 
     .entry-background {
-      background: #e8f2ff;
-      color: #1f5e9e;
+      background: var(--bsm-color-info-soft);
+      color: var(--bsm-color-info-text);
     }
 
     .entry-medications {
-      background: #fff3e3;
-      color: #8c4a07;
+      background: var(--bsm-color-warning-soft);
+      color: var(--bsm-color-warning-text);
     }
 
     .entry-allergies {
-      background: #fbeaf4;
-      color: #8b2b63;
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger-text);
     }
 
     strong {
@@ -127,7 +127,7 @@ import {
 
     .section-copy {
       margin: 0;
-      color: #35506d;
+      color: var(--bsm-color-text);
     }
 
     @media (max-width: 768px) {

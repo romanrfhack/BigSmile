@@ -67,7 +67,7 @@ import { TranslatePipe } from '../../../shared/i18n';
     .section-head p,
     .empty-copy {
       margin: 0.35rem 0 0;
-      color: #5d6d82;
+      color: var(--bsm-color-text-muted);
     }
 
     .allergy-list {
@@ -81,7 +81,7 @@ import { TranslatePipe } from '../../../shared/i18n';
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       border-radius: 16px;
       border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
       padding: 1rem;
     }
 
@@ -99,7 +99,7 @@ import { TranslatePipe } from '../../../shared/i18n';
       padding: 0.8rem 0.9rem;
       font: inherit;
       color: var(--bsm-color-text-brand);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
     }
 
     textarea {
@@ -115,8 +115,8 @@ import { TranslatePipe } from '../../../shared/i18n';
       justify-self: start;
       border: none;
       padding: 0;
-      background: transparent;
-      color: #a03337;
+      background: none;
+      color: var(--bsm-color-danger-text);
       font: inherit;
       font-weight: 700;
       cursor: pointer;
@@ -137,7 +137,7 @@ import { TranslatePipe } from '../../../shared/i18n';
     }
 
     small {
-      color: #9b2d30;
+      color: var(--bsm-color-danger-text);
       font-weight: 600;
     }
 

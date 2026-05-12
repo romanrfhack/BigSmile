@@ -30,10 +30,10 @@ import { ClinicalNote } from '../models/clinical-record.models';
 
     .empty-copy {
       border-radius: 16px;
-      border: 1px dashed #c7d4e0;
-      background: #f7fafc;
+      border: 1px dashed var(--bsm-color-border);
+      background: var(--bsm-color-neutral-soft);
       padding: 1rem;
-      color: #607387;
+      color: var(--bsm-color-text-muted);
     }
 
     .note-card {
@@ -41,7 +41,7 @@ import { ClinicalNote } from '../models/clinical-record.models';
       gap: 0.55rem;
       border-radius: 16px;
       border: 1px solid var(--bsm-color-border);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
       padding: 1rem;
     }
 
@@ -54,13 +54,13 @@ import { ClinicalNote } from '../models/clinical-record.models';
     }
 
     header span {
-      color: #607387;
+      color: var(--bsm-color-text-muted);
       font-size: 0.95rem;
     }
 
     p {
       margin: 0;
-      color: #35506d;
+      color: var(--bsm-color-text);
       white-space: pre-wrap;
     }
   `]

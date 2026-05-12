@@ -45,9 +45,9 @@ import { AddClinicalDiagnosisRequest } from '../models/clinical-record.models';
       gap: 1rem;
       border-radius: 20px;
       border: 1px solid var(--bsm-color-border);
-      background: linear-gradient(180deg, #ffffff 0%, var(--bsm-color-surface) 100%);
+      background: var(--bsm-gradient-surface);
       padding: 1.4rem 1.5rem;
-      box-shadow: 0 20px 36px rgba(20, 48, 79, 0.08);
+      box-shadow: var(--bsm-shadow-sm);
     }
 
     .eyebrow {
@@ -78,7 +78,7 @@ import { AddClinicalDiagnosisRequest } from '../models/clinical-record.models';
       padding: 0.8rem 0.9rem;
       font: inherit;
       color: var(--bsm-color-text-brand);
-      background: #ffffff;
+      background: var(--bsm-color-bg);
     }
 
     textarea {
@@ -89,9 +89,9 @@ import { AddClinicalDiagnosisRequest } from '../models/clinical-record.models';
     .error-banner {
       padding: 0.85rem 1rem;
       border-radius: 12px;
-      border: 1px solid #f2c4c4;
-      background: #fff4f4;
-      color: #8d292d;
+      border: 1px solid var(--bsm-color-danger-border);
+      background: var(--bsm-color-danger-soft);
+      color: var(--bsm-color-danger-text);
     }
 
     .form-actions {
@@ -110,11 +110,11 @@ import { AddClinicalDiagnosisRequest } from '../models/clinical-record.models';
 
     .btn-primary {
       background: var(--bsm-color-primary);
-      color: #ffffff;
+      color: var(--bsm-color-bg);
     }
 
     small {
-      color: #9b2d30;
+      color: var(--bsm-color-danger-text);
       font-weight: 600;
     }
   `]

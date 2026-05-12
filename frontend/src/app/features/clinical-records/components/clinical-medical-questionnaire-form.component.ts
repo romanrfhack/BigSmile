@@ -325,7 +325,7 @@ type MedicalQuestionnaireAnswerForm = FormGroup<{
       align-items: center;
       justify-content: center;
       min-width: 7.5rem;
-      border: 1px solid transparent;
+      border: 1px solid var(--bsm-color-border);
       border-radius: var(--bsm-radius-pill);
       padding: 0.75rem 1rem;
       font: inherit;
