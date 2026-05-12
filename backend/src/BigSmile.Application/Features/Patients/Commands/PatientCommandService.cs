@@ -16,7 +16,11 @@ namespace BigSmile.Application.Features.Patients.Commands
         string? ClinicalAlertsSummary,
         string? ResponsiblePartyName,
         string? ResponsiblePartyRelationship,
-        string? ResponsiblePartyPhone);
+        string? ResponsiblePartyPhone,
+        PatientSex Sex = PatientSex.Unspecified,
+        string? Occupation = null,
+        PatientMaritalStatus MaritalStatus = PatientMaritalStatus.Unspecified,
+        string? ReferredBy = null);
 
     public interface IPatientCommandService
     {
@@ -52,7 +56,11 @@ namespace BigSmile.Application.Features.Patients.Commands
                 command.ClinicalAlertsSummary,
                 command.ResponsiblePartyName,
                 command.ResponsiblePartyRelationship,
-                command.ResponsiblePartyPhone);
+                command.ResponsiblePartyPhone,
+                command.Sex,
+                command.Occupation,
+                command.MaritalStatus,
+                command.ReferredBy);
 
             await _patientRepository.AddAsync(patient, cancellationToken);
             return patient.ToDetailDto();
@@ -78,7 +86,11 @@ namespace BigSmile.Application.Features.Patients.Commands
                 command.ClinicalAlertsSummary,
                 command.ResponsiblePartyName,
                 command.ResponsiblePartyRelationship,
-                command.ResponsiblePartyPhone);
+                command.ResponsiblePartyPhone,
+                command.Sex,
+                command.Occupation,
+                command.MaritalStatus,
+                command.ReferredBy);
 
             await _patientRepository.UpdateAsync(patient, cancellationToken);
             return patient.ToDetailDto();

@@ -4,7 +4,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/i18n';
 import { SectionCardComponent, StatusBadgeComponent, StickyActionBarComponent } from '../../../shared/ui';
-import { PatientDetail, SavePatientRequest } from '../models/patient.models';
+import { PatientDetail, PatientMaritalStatus, PatientSex, SavePatientRequest } from '../models/patient.models';
+
+const PATIENT_SEX_OPTIONS: PatientSex[] = ['Unspecified', 'Female', 'Male', 'Other'];
+const PATIENT_MARITAL_STATUS_OPTIONS: PatientMaritalStatus[] = [
+  'Unspecified',
+  'Single',
+  'Married',
+  'Divorced',
+  'Widowed',
+  'Other'
+];
 
 function getTodayIsoDate(): string {
   const today = new Date();
@@ -122,6 +132,56 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
                 class="field-error"
                 role="alert">
                 {{ 'Date of birth cannot be in the future.' | t }}
+              </small>
+            </label>
+
+            <label class="form-field" for="patient-sex">
+              <span>{{ 'Sex' | t }}</span>
+              <select id="patient-sex" formControlName="sex">
+                <option *ngFor="let option of sexOptions" [value]="option">{{ option | t }}</option>
+              </select>
+            </label>
+
+            <label class="form-field" for="patient-occupation">
+              <span>{{ 'Occupation' | t }}</span>
+              <input
+                id="patient-occupation"
+                type="text"
+                formControlName="occupation"
+                [attr.aria-invalid]="showAnyError('occupation') ? 'true' : 'false'"
+                [attr.aria-describedby]="showError('occupation', 'maxlength') ? 'patient-occupation-error' : null"
+              />
+              <small
+                *ngIf="showError('occupation', 'maxlength')"
+                id="patient-occupation-error"
+                class="field-error"
+                role="alert">
+                {{ 'Occupation must be 100 characters or fewer.' | t }}
+              </small>
+            </label>
+
+            <label class="form-field" for="patient-marital-status">
+              <span>{{ 'Marital status' | t }}</span>
+              <select id="patient-marital-status" formControlName="maritalStatus">
+                <option *ngFor="let option of maritalStatusOptions" [value]="option">{{ option | t }}</option>
+              </select>
+            </label>
+
+            <label class="form-field" for="patient-referred-by">
+              <span>{{ 'Referred by' | t }}</span>
+              <input
+                id="patient-referred-by"
+                type="text"
+                formControlName="referredBy"
+                [attr.aria-invalid]="showAnyError('referredBy') ? 'true' : 'false'"
+                [attr.aria-describedby]="showError('referredBy', 'maxlength') ? 'patient-referred-by-error' : null"
+              />
+              <small
+                *ngIf="showError('referredBy', 'maxlength')"
+                id="patient-referred-by-error"
+                class="field-error"
+                role="alert">
+                {{ 'Referred by must be 100 characters or fewer.' | t }}
               </small>
             </label>
 
@@ -292,6 +352,7 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
     }
 
     input,
+    select,
     textarea {
       width: 100%;
       border: 1px solid var(--bsm-color-border);
@@ -312,6 +373,7 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
     }
 
     input:focus,
+    select:focus,
     textarea:focus {
       outline: none;
       border-color: var(--bsm-color-accent-accessible);
@@ -319,6 +381,7 @@ function responsiblePartyValidator(control: AbstractControl): ValidationErrors |
     }
 
     input[aria-invalid='true'],
+    select[aria-invalid='true'],
     textarea[aria-invalid='true'] {
       border-color: var(--bsm-color-danger);
     }
@@ -451,10 +514,17 @@ export class PatientFormComponent implements OnChanges {
   @Output() saved = new EventEmitter<SavePatientRequest>();
   @Output() cancelled = new EventEmitter<void>();
 
+  readonly sexOptions = PATIENT_SEX_OPTIONS;
+  readonly maritalStatusOptions = PATIENT_MARITAL_STATUS_OPTIONS;
+
   readonly form = this.formBuilder.group({
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
     dateOfBirth: ['', [Validators.required, dateOfBirthValidator]],
+    sex: ['Unspecified', [Validators.required]],
+    occupation: ['', [Validators.maxLength(100)]],
+    maritalStatus: ['Unspecified', [Validators.required]],
+    referredBy: ['', [Validators.maxLength(100)]],
     primaryPhone: ['', [Validators.maxLength(40)]],
     email: ['', [Validators.email, Validators.maxLength(256)]],
     isActive: [true, [Validators.required]],
@@ -502,6 +572,10 @@ export class PatientFormComponent implements OnChanges {
         firstName: '',
         lastName: '',
         dateOfBirth: '',
+        sex: 'Unspecified',
+        occupation: '',
+        maritalStatus: 'Unspecified',
+        referredBy: '',
         primaryPhone: '',
         email: '',
         isActive: true,
@@ -519,6 +593,10 @@ export class PatientFormComponent implements OnChanges {
       firstName: this.initialPatient.firstName,
       lastName: this.initialPatient.lastName,
       dateOfBirth: this.initialPatient.dateOfBirth,
+      sex: this.initialPatient.sex,
+      occupation: this.initialPatient.occupation ?? '',
+      maritalStatus: this.initialPatient.maritalStatus,
+      referredBy: this.initialPatient.referredBy ?? '',
       primaryPhone: this.initialPatient.primaryPhone ?? '',
       email: this.initialPatient.email ?? '',
       isActive: this.initialPatient.isActive,
@@ -548,6 +626,10 @@ export class PatientFormComponent implements OnChanges {
       firstName: this.normalizeRequired(raw.firstName),
       lastName: this.normalizeRequired(raw.lastName),
       dateOfBirth: raw.dateOfBirth ?? '',
+      sex: this.normalizeSex(raw.sex),
+      occupation: this.normalizeOptional(raw.occupation),
+      maritalStatus: this.normalizeMaritalStatus(raw.maritalStatus),
+      referredBy: this.normalizeOptional(raw.referredBy),
       primaryPhone: this.normalizeOptional(raw.primaryPhone),
       email: this.normalizeOptional(raw.email),
       isActive: raw.isActive ?? true,
@@ -578,5 +660,15 @@ export class PatientFormComponent implements OnChanges {
   private normalizeOptional(value: string | null | undefined): string | null {
     const normalized = `${value ?? ''}`.trim();
     return normalized ? normalized : null;
+  }
+
+  private normalizeSex(value: string | null | undefined): PatientSex {
+    const normalized = `${value ?? ''}`.trim() as PatientSex;
+    return PATIENT_SEX_OPTIONS.includes(normalized) ? normalized : 'Unspecified';
+  }
+
+  private normalizeMaritalStatus(value: string | null | undefined): PatientMaritalStatus {
+    const normalized = `${value ?? ''}`.trim() as PatientMaritalStatus;
+    return PATIENT_MARITAL_STATUS_OPTIONS.includes(normalized) ? normalized : 'Unspecified';
   }
 }

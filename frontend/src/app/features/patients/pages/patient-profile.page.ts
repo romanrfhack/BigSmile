@@ -124,6 +124,27 @@ import { PatientsFacade } from '../facades/patients.facade';
             </dl>
           </app-section-card>
 
+          <app-section-card [title]="'Demographics' | t" variant="default">
+            <dl class="detail-grid">
+              <div>
+                <dt>{{ 'Sex' | t }}</dt>
+                <dd>{{ (patient.sex || 'Unspecified') | t }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'Occupation' | t }}</dt>
+                <dd>{{ patient.occupation || ('Not provided' | t) }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'Marital status' | t }}</dt>
+                <dd>{{ (patient.maritalStatus || 'Unspecified') | t }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'Referred by' | t }}</dt>
+                <dd>{{ patient.referredBy || ('Not provided' | t) }}</dd>
+              </div>
+            </dl>
+          </app-section-card>
+
           <app-section-card [title]="'Clinical alerts' | t" [variant]="patient.hasClinicalAlerts ? 'accent' : 'compact'">
             <div class="section-status">
               <app-status-badge

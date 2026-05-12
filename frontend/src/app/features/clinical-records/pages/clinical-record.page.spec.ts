@@ -164,7 +164,11 @@ describe('ClinicalRecordPageComponent', () => {
     patientsFacade = {
       currentPatient: signal({
         id: 'patient-1',
-        fullName: 'Ana Lopez'
+        fullName: 'Ana Lopez',
+        sex: 'Female',
+        occupation: 'Dentist',
+        maritalStatus: 'Single',
+        referredBy: 'Existing patient'
       }),
       loadingPatient: signal(false),
       detailError: signal<string | null>(null),

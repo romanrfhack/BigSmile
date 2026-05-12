@@ -65,6 +65,28 @@ import {
         {{ clinicalRecordsFacade.recordError() | t }}
       </div>
 
+      <section
+        *ngIf="patientsFacade.currentPatient() as patient"
+        class="patient-context-strip"
+        [attr.aria-label]="'Patient demographics' | t">
+        <article class="patient-context-item">
+          <span>{{ 'Sex' | t }}</span>
+          <strong>{{ (patient.sex || 'Unspecified') | t }}</strong>
+        </article>
+        <article class="patient-context-item">
+          <span>{{ 'Occupation' | t }}</span>
+          <strong>{{ patient.occupation || ('Not provided' | t) }}</strong>
+        </article>
+        <article class="patient-context-item">
+          <span>{{ 'Marital status' | t }}</span>
+          <strong>{{ (patient.maritalStatus || 'Unspecified') | t }}</strong>
+        </article>
+        <article class="patient-context-item">
+          <span>{{ 'Referred by' | t }}</span>
+          <strong>{{ patient.referredBy || ('Not provided' | t) }}</strong>
+        </article>
+      </section>
+
       <app-clinical-record-empty-state
         *ngIf="!clinicalRecordsFacade.loadingRecord() && clinicalRecordsFacade.recordMissing() && !clinicalRecordsFacade.recordError()"
         [canWrite]="canWrite"
@@ -231,6 +253,43 @@ import {
       gap: 1.25rem;
     }
 
+    .patient-context-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      padding: 0.85rem;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-sm);
+      background: var(--bsm-gradient-surface);
+      box-shadow: var(--bsm-shadow-sm);
+    }
+
+    .patient-context-item {
+      display: grid;
+      gap: 0.35rem;
+      min-width: 0;
+      padding: 0.75rem 0.85rem;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-sm);
+      background: var(--bsm-color-bg);
+    }
+
+    .patient-context-item span {
+      color: var(--bsm-color-text-muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .patient-context-item strong {
+      min-width: 0;
+      color: var(--bsm-color-text-brand);
+      font-size: 0.98rem;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
     .record-meta {
       display: grid;
       gap: 1rem;
@@ -303,6 +362,10 @@ import {
     @media (max-width: 768px) {
       .page-head {
         flex-direction: column;
+      }
+
+      .patient-context-strip {
+        grid-template-columns: 1fr;
       }
     }
   `]

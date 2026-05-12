@@ -6,6 +6,7 @@ namespace BigSmile.Domain.Entities
     public class Patient : Entity<Guid>, ITenantOwnedEntity
     {
         private const int DefaultMaxNameLength = 100;
+        private const int PatientDemographicMaxLength = 100;
         private const int ClinicalAlertsSummaryMaxLength = 500;
 
         public Guid TenantId { get; private set; }
@@ -14,6 +15,10 @@ namespace BigSmile.Domain.Entities
         public string FirstName { get; private set; } = string.Empty;
         public string LastName { get; private set; } = string.Empty;
         public DateOnly DateOfBirth { get; private set; }
+        public PatientSex Sex { get; private set; } = PatientSex.Unspecified;
+        public string? Occupation { get; private set; }
+        public PatientMaritalStatus MaritalStatus { get; private set; } = PatientMaritalStatus.Unspecified;
+        public string? ReferredBy { get; private set; }
         public string? PrimaryPhone { get; private set; }
         public string? Email { get; private set; }
         public bool IsActive { get; private set; } = true;
@@ -45,7 +50,11 @@ namespace BigSmile.Domain.Entities
             string? clinicalAlertsSummary = null,
             string? responsiblePartyName = null,
             string? responsiblePartyRelationship = null,
-            string? responsiblePartyPhone = null)
+            string? responsiblePartyPhone = null,
+            PatientSex sex = PatientSex.Unspecified,
+            string? occupation = null,
+            PatientMaritalStatus maritalStatus = PatientMaritalStatus.Unspecified,
+            string? referredBy = null)
         {
             if (tenantId == Guid.Empty)
             {
@@ -57,6 +66,7 @@ namespace BigSmile.Domain.Entities
             FirstName = NormalizeRequired(firstName, nameof(firstName), DefaultMaxNameLength);
             LastName = NormalizeRequired(lastName, nameof(lastName), DefaultMaxNameLength);
             DateOfBirth = EnsureValidDateOfBirth(dateOfBirth);
+            SetDemographics(sex, occupation, maritalStatus, referredBy);
             PrimaryPhone = NormalizeOptional(primaryPhone, nameof(primaryPhone), 40);
             Email = NormalizeOptional(email, nameof(email), 256);
             IsActive = isActive;
@@ -76,11 +86,16 @@ namespace BigSmile.Domain.Entities
             string? clinicalAlertsSummary,
             string? responsiblePartyName,
             string? responsiblePartyRelationship,
-            string? responsiblePartyPhone)
+            string? responsiblePartyPhone,
+            PatientSex sex,
+            string? occupation,
+            PatientMaritalStatus maritalStatus,
+            string? referredBy)
         {
             FirstName = NormalizeRequired(firstName, nameof(firstName), DefaultMaxNameLength);
             LastName = NormalizeRequired(lastName, nameof(lastName), DefaultMaxNameLength);
             DateOfBirth = EnsureValidDateOfBirth(dateOfBirth);
+            SetDemographics(sex, occupation, maritalStatus, referredBy);
             PrimaryPhone = NormalizeOptional(primaryPhone, nameof(primaryPhone), 40);
             Email = NormalizeOptional(email, nameof(email), 256);
             IsActive = isActive;
@@ -131,6 +146,18 @@ namespace BigSmile.Domain.Entities
             ResponsiblePartyPhone = normalizedPhone;
         }
 
+        private void SetDemographics(
+            PatientSex sex,
+            string? occupation,
+            PatientMaritalStatus maritalStatus,
+            string? referredBy)
+        {
+            Sex = EnsureDefinedEnum(sex, nameof(sex));
+            Occupation = NormalizeOptional(occupation, nameof(occupation), PatientDemographicMaxLength);
+            MaritalStatus = EnsureDefinedEnum(maritalStatus, nameof(maritalStatus));
+            ReferredBy = NormalizeOptional(referredBy, nameof(referredBy), PatientDemographicMaxLength);
+        }
+
         private void SetClinicalAlerts(bool hasClinicalAlerts, string? clinicalAlertsSummary)
         {
             HasClinicalAlerts = hasClinicalAlerts;
@@ -153,6 +180,17 @@ namespace BigSmile.Domain.Entities
             }
 
             return dateOfBirth;
+        }
+
+        private static TEnum EnsureDefinedEnum<TEnum>(TEnum value, string paramName)
+            where TEnum : struct, Enum
+        {
+            if (!Enum.IsDefined(typeof(TEnum), value))
+            {
+                throw new ArgumentException($"{paramName} is not supported.", paramName);
+            }
+
+            return value;
         }
 
         private static string NormalizeRequired(string value, string paramName, int maxLength)

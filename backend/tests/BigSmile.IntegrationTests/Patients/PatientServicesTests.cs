@@ -35,9 +35,17 @@ namespace BigSmile.IntegrationTests.Patients
                     "Allergic to latex.",
                     "Maria Lopez",
                     "Mother",
-                    "5559990000"));
+                    "5559990000",
+                    PatientSex.Female,
+                    "Dentist",
+                    PatientMaritalStatus.Single,
+                    "Existing patient"));
 
             Assert.Equal("Ana Lopez", patient.FullName);
+            Assert.Equal("Female", patient.Sex);
+            Assert.Equal("Dentist", patient.Occupation);
+            Assert.Equal("Single", patient.MaritalStatus);
+            Assert.Equal("Existing patient", patient.ReferredBy);
             Assert.True(patient.IsActive);
             Assert.True(patient.HasClinicalAlerts);
             Assert.Equal("Allergic to latex.", patient.ClinicalAlertsSummary);
@@ -47,6 +55,10 @@ namespace BigSmile.IntegrationTests.Patients
 
             Assert.Equal(tenantA.Id, storedPatient.TenantId);
             Assert.Equal("Ana", storedPatient.FirstName);
+            Assert.Equal(PatientSex.Female, storedPatient.Sex);
+            Assert.Equal("Dentist", storedPatient.Occupation);
+            Assert.Equal(PatientMaritalStatus.Single, storedPatient.MaritalStatus);
+            Assert.Equal("Existing patient", storedPatient.ReferredBy);
             Assert.True(storedPatient.HasClinicalAlerts);
             Assert.Equal("Allergic to latex.", storedPatient.ClinicalAlertsSummary);
             Assert.Equal("Maria Lopez", storedPatient.ResponsiblePartyName);
@@ -96,10 +108,18 @@ namespace BigSmile.IntegrationTests.Patients
                     "Should be cleared",
                     "Mario Lopez",
                     "Father",
-                    "5554448888"));
+                    "5554448888",
+                    PatientSex.Female,
+                    "Teacher",
+                    PatientMaritalStatus.Married,
+                    "Community campaign"));
 
             Assert.NotNull(updated);
             Assert.Equal("Ana Sofia Lopez", updated!.FullName);
+            Assert.Equal("Female", updated.Sex);
+            Assert.Equal("Teacher", updated.Occupation);
+            Assert.Equal("Married", updated.MaritalStatus);
+            Assert.Equal("Community campaign", updated.ReferredBy);
             Assert.False(updated.IsActive);
             Assert.False(updated.HasClinicalAlerts);
             Assert.Null(updated.ClinicalAlertsSummary);
@@ -108,10 +128,49 @@ namespace BigSmile.IntegrationTests.Patients
             var storedPatient = await verificationContext.Patients.SingleAsync();
 
             Assert.Equal("Ana Sofia", storedPatient.FirstName);
+            Assert.Equal(PatientSex.Female, storedPatient.Sex);
+            Assert.Equal("Teacher", storedPatient.Occupation);
+            Assert.Equal(PatientMaritalStatus.Married, storedPatient.MaritalStatus);
+            Assert.Equal("Community campaign", storedPatient.ReferredBy);
             Assert.False(storedPatient.IsActive);
             Assert.False(storedPatient.HasClinicalAlerts);
             Assert.Null(storedPatient.ClinicalAlertsSummary);
             Assert.Equal("Mario Lopez", storedPatient.ResponsiblePartyName);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ReturnsNullForCrossTenantPatientAccess()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez", "5551234567");
+
+            var tenantContext = new TenantContext();
+            tenantContext.SetRequestContext(Guid.NewGuid().ToString(), AccessScope.Tenant, isAuthenticated: true, tenantB.Id.ToString());
+
+            await using var context = CreateContext(databaseName, tenantContext);
+            var commandService = new PatientCommandService(new EfPatientRepository(context), tenantContext);
+
+            var result = await commandService.UpdateAsync(
+                patientA.Id,
+                new SavePatientCommand(
+                    "Ana Sofia",
+                    "Lopez",
+                    new DateOnly(1991, 2, 14),
+                    "5551112222",
+                    "ana.sofia@example.com",
+                    true,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    PatientSex.Female,
+                    "Teacher",
+                    PatientMaritalStatus.Married,
+                    "Community campaign"));
+
+            Assert.Null(result);
         }
 
         [Fact]
@@ -168,6 +227,8 @@ namespace BigSmile.IntegrationTests.Patients
 
             Assert.NotNull(detail);
             Assert.True(detail!.HasClinicalAlerts);
+            Assert.Equal("Unspecified", detail.Sex);
+            Assert.Equal("Unspecified", detail.MaritalStatus);
             Assert.Equal("Requires antibiotic prophylaxis.", detail.ClinicalAlertsSummary);
             Assert.True(results[0].HasClinicalAlerts);
             Assert.Null(typeof(BigSmile.Application.Features.Patients.Dtos.PatientSummaryDto)

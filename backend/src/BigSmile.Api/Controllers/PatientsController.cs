@@ -3,6 +3,7 @@ using BigSmile.Api.Authorization;
 using BigSmile.Application.Features.Patients.Commands;
 using BigSmile.Application.Features.Patients.Dtos;
 using BigSmile.Application.Features.Patients.Queries;
+using BigSmile.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -114,6 +115,18 @@ namespace BigSmile.Api.Controllers
 
             public DateOnly DateOfBirth { get; set; }
 
+            [MaxLength(20)]
+            public string? Sex { get; set; } = PatientSex.Unspecified.ToString();
+
+            [MaxLength(100)]
+            public string? Occupation { get; set; }
+
+            [MaxLength(20)]
+            public string? MaritalStatus { get; set; } = PatientMaritalStatus.Unspecified.ToString();
+
+            [MaxLength(100)]
+            public string? ReferredBy { get; set; }
+
             [MaxLength(40)]
             public string? PrimaryPhone { get; set; }
 
@@ -149,6 +162,20 @@ namespace BigSmile.Api.Controllers
                     yield return new ValidationResult("Date of birth cannot be in the future.", new[] { nameof(DateOfBirth) });
                 }
 
+                if (!TryParseEnumName<PatientSex>(Sex, out _))
+                {
+                    yield return new ValidationResult(
+                        "Sex must be one of: Unspecified, Female, Male, Other.",
+                        new[] { nameof(Sex) });
+                }
+
+                if (!TryParseEnumName<PatientMaritalStatus>(MaritalStatus, out _))
+                {
+                    yield return new ValidationResult(
+                        "Marital status must be one of: Unspecified, Single, Married, Divorced, Widowed, Other.",
+                        new[] { nameof(MaritalStatus) });
+                }
+
                 if ((HasValue(ResponsiblePartyRelationship) || HasValue(ResponsiblePartyPhone)) &&
                     !HasValue(ResponsiblePartyName))
                 {
@@ -160,6 +187,9 @@ namespace BigSmile.Api.Controllers
 
             public SavePatientCommand ToCommand()
             {
+                var sex = ParseEnumName<PatientSex>(Sex, nameof(Sex));
+                var maritalStatus = ParseEnumName<PatientMaritalStatus>(MaritalStatus, nameof(MaritalStatus));
+
                 return new SavePatientCommand(
                     FirstName,
                     LastName,
@@ -171,12 +201,50 @@ namespace BigSmile.Api.Controllers
                     ClinicalAlertsSummary,
                     ResponsiblePartyName,
                     ResponsiblePartyRelationship,
-                    ResponsiblePartyPhone);
+                    ResponsiblePartyPhone,
+                    sex,
+                    Occupation,
+                    maritalStatus,
+                    ReferredBy);
             }
 
             private static bool HasValue(string? value)
             {
                 return !string.IsNullOrWhiteSpace(value);
+            }
+
+            private static TEnum ParseEnumName<TEnum>(string? value, string propertyName)
+                where TEnum : struct, Enum
+            {
+                if (TryParseEnumName<TEnum>(value, out var parsed))
+                {
+                    return parsed;
+                }
+
+                throw new ArgumentException($"{propertyName} has an unsupported value.", propertyName);
+            }
+
+            private static bool TryParseEnumName<TEnum>(string? value, out TEnum parsed)
+                where TEnum : struct, Enum
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    parsed = default;
+                    return true;
+                }
+
+                var normalized = value.Trim();
+                foreach (var candidate in Enum.GetValues<TEnum>())
+                {
+                    if (string.Equals(candidate.ToString(), normalized, StringComparison.OrdinalIgnoreCase))
+                    {
+                        parsed = candidate;
+                        return true;
+                    }
+                }
+
+                parsed = default;
+                return false;
             }
         }
     }

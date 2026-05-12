@@ -22,6 +22,10 @@ describe('PatientsFacade', () => {
             lastName: 'Lopez',
             fullName: 'Ana Lopez',
             dateOfBirth: '1991-02-14',
+            sex: 'Female',
+            occupation: 'Dentist',
+            maritalStatus: 'Single',
+            referredBy: 'Existing patient',
             primaryPhone: '5551234567',
             email: 'ana@example.com',
             isActive: true,
@@ -37,6 +41,10 @@ describe('PatientsFacade', () => {
           lastName: 'Lopez',
           fullName: 'Ana Lopez',
           dateOfBirth: '1991-02-14',
+          sex: 'Female',
+          occupation: 'Dentist',
+          maritalStatus: 'Single',
+          referredBy: 'Existing patient',
           primaryPhone: '5551234567',
           email: 'ana@example.com',
           isActive: true,
@@ -80,6 +88,7 @@ describe('PatientsFacade', () => {
 
     expect(requestedPatientId).toBe('patient-1');
     expect(facade.currentPatient()?.id).toBe('patient-1');
+    expect(facade.currentPatient()?.sex).toBe('Female');
     expect(facade.currentPatient()?.clinicalAlertsSummary).toBe('Allergy to latex.');
     expect(facade.currentPatient()?.responsibleParty?.name).toBe('Maria Lopez');
     expect(facade.loadingPatient()).toBe(false);

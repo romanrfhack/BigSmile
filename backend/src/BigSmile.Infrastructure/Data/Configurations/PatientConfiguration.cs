@@ -22,6 +22,22 @@ namespace BigSmile.Infrastructure.Data.Configurations
                 .HasColumnType("date")
                 .IsRequired();
 
+            builder.Property(patient => patient.Sex)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .IsRequired();
+
+            builder.Property(patient => patient.Occupation)
+                .HasMaxLength(100);
+
+            builder.Property(patient => patient.MaritalStatus)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .IsRequired();
+
+            builder.Property(patient => patient.ReferredBy)
+                .HasMaxLength(100);
+
             builder.Property(patient => patient.PrimaryPhone)
                 .HasMaxLength(40);
 
