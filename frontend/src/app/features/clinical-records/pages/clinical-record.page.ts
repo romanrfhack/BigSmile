@@ -98,6 +98,10 @@ import {
           <strong>{{ patient.dateOfBirth | bsDate: 'longDate' }}</strong>
         </article>
         <article class="patient-context-item">
+          <span>{{ 'Age' | t }}</span>
+          <strong>{{ getAgeLabel(patient.dateOfBirth) }}</strong>
+        </article>
+        <article class="patient-context-item">
           <span>{{ 'Sex' | t }}</span>
           <strong>{{ (patient.sex || 'Unspecified') | t }}</strong>
         </article>
@@ -479,6 +483,45 @@ export class ClinicalRecordPageComponent implements OnInit {
 
   get patientDisplayName(): string {
     return this.patientsFacade.currentPatient()?.fullName ?? this.i18n.translate('this patient');
+  }
+
+  calculateAge(dateOfBirth: string, referenceDate = new Date()): number | null {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(`${dateOfBirth ?? ''}`.trim());
+    if (!match) {
+      return null;
+    }
+
+    const birthYear = Number(match[1]);
+    const birthMonth = Number(match[2]);
+    const birthDay = Number(match[3]);
+    const hasInvalidParts =
+      !Number.isInteger(birthYear) ||
+      birthMonth < 1 ||
+      birthMonth > 12 ||
+      birthDay < 1 ||
+      birthDay > 31;
+
+    if (hasInvalidParts) {
+      return null;
+    }
+
+    const referenceYear = referenceDate.getFullYear();
+    const referenceMonth = referenceDate.getMonth() + 1;
+    const referenceDay = referenceDate.getDate();
+
+    let age = referenceYear - birthYear;
+    if (referenceMonth < birthMonth || (referenceMonth === birthMonth && referenceDay < birthDay)) {
+      age -= 1;
+    }
+
+    return age >= 0 ? age : null;
+  }
+
+  getAgeLabel(dateOfBirth: string): string {
+    const age = this.calculateAge(dateOfBirth);
+    return age === null
+      ? this.i18n.translate('Not provided')
+      : this.i18n.translate('{age} years', { age });
   }
 
   ngOnInit(): void {

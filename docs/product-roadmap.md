@@ -212,18 +212,19 @@ Front desk users can manage the daily operation of the clinic through the system
 Allow clinicians to maintain a structured patient clinical record.
 
 ## Current status
-- Release 3 is open and in progress
-- Release 3.1 — Clinical Record Foundation is accepted
-- Release 3.2 — Basic Diagnoses Foundation is accepted
-- Release 3.3 — Clinical Timeline Read Model is accepted
-- Release 3.4 — Clinical Snapshot Change History is accepted
-- Release 3.5 — Medical Questionnaire Backend is accepted
-- Release 3.6 — Clinical Encounter / Vitals Backend is accepted
+- Release 3 is complete as the foundational clinical release
+- Release 3.1 — Clinical Record Foundation is accepted as closure evidence
+- Release 3.2 — Basic Diagnoses Foundation is accepted as closure evidence
+- Release 3.3 — Clinical Timeline Read Model is accepted as closure evidence
+- Release 3.4 — Clinical Snapshot Change History is accepted as closure evidence
+- Release 3.5 — Medical Questionnaire Backend is accepted as closure evidence
+- Release 3.6 — Clinical Encounter / Vitals Backend is accepted as closure evidence
 - A bounded frontend UI integration for the fixed Release 3.5 medical questionnaire now exists inside the existing clinical record screen, without changing backend contracts or permissions
 - A bounded frontend UI integration for Release 3.6 clinical encounters/vitals now exists inside the existing clinical record screen, without changing backend contracts, permissions, timeline behavior, Patient data, or later modules
+- Patient age is derived in the Clinical Records UI from `Patient.DateOfBirth`; age is not persisted and no `Age` field is added to backend/API contracts
 
 ## Scope
-Release 3 is being delivered in bounded slices. The currently accepted slices are Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5, and Release 3.6, and they cover:
+Release 3 was delivered in bounded slices. The accepted closure slices are Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5, and Release 3.6, and they cover:
 
 - explicit clinical record creation
 - medical background summary
@@ -275,7 +276,7 @@ A user operating under the current clinical permissions can consult and update t
 
 ## Current access note
 - `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive clinical permissions in the currently accepted Release 3 slices
+- `TenantUser` does not receive clinical permissions in the accepted Release 3 closure
 
 ## Key UX goals
 - clear navigation from patient profile to clinical record
@@ -314,14 +315,12 @@ A user operating under the current clinical permissions can consult and update t
 Introduce the dental visual layer of the product.
 
 ## Current status
-- Release 4 is open and in progress
-- Release 4.1 — Odontogram Foundation is accepted
-- Release 4.2 — Odontogram Surface Foundation is accepted
-- Release 4.3 — Basic Dental Findings Foundation is accepted
-- Release 4.4 — Dental Findings Change History is accepted
+- Release 4 is the next planned functional phase after Release 3 closure
+- Release 4 is not opened by the Release 3 closure documentation
+- Release 4 should start with a dedicated bounded slice, beginning with Release 4.1 — Odontogram Foundation
 
 ## Scope
-Release 4 is being delivered in bounded slices. The currently accepted slices are Release 4.1, Release 4.2, Release 4.3, and Release 4.4, and they cover:
+Release 4 should be delivered in bounded slices. The first planned slice should cover:
 
 - explicit odontogram creation
 - exactly one odontogram per patient per tenant
@@ -331,23 +330,13 @@ Release 4 is being delivered in bounded slices. The currently accepted slices ar
 - tooth-level current state
 - minimal status catalog `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`
 - explicit single-tooth status updates
-- minimal O/M/D/B/L surface detail inside the existing odontogram
-- minimal surface status catalog `Unknown` / `Healthy` / `Restored` / `Caries`
-- explicit single-surface status updates
-- no tooth-status auto-aggregation from surface changes in the accepted slices
-- basic per-surface findings on top of the accepted surface foundation
-- minimal findings catalog `Caries` / `Restoration` / `MissingStructure` / `Sealant`
-- explicit single-surface finding add/remove operations
-- findings returned inside the existing odontogram read model
-- no tooth-status or surface-status auto-aggregation from findings in the accepted slices
-- bounded findings change history for those accepted basic findings only
-- `FindingAdded` / `FindingRemoved` entries returned newest-first inside the existing odontogram read model
-- findings history kept separate from any future dental timeline
 - minimal audit metadata on the odontogram and each tooth state
-- minimal patient-context UI for empty state, creation, visualization, single-tooth editing, single-surface editing, single-surface findings editing, and selected-surface findings history inside the same odontogram page
+- minimal patient-context UI for empty state, creation, visualization, and single-tooth state updates
+
+Later Release 4 slices may add surfaces, basic findings and bounded findings history only after the foundation is explicitly accepted.
 
 ## Expected outcome
-A user operating under the current odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context, including minimal surface detail, basic surface findings, and bounded add/remove findings history, without opening later dental modules.
+A user operating under future odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context without opening later dental modules.
 
 ## Core users
 - Dentist
@@ -355,8 +344,8 @@ A user operating under the current odontogram permissions can initialize, consul
 - Tenant Admin
 
 ## Current access note
-- `odontogram.read` and `odontogram.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive odontogram permissions in the currently accepted Release 4.4 slice
+- Odontogram permissions must be introduced only with an explicit Release 4 slice.
+- Do not grant odontogram access incidentally from Release 3 closure.
 
 ## Key UX goals
 - clear patient-context navigation
@@ -389,12 +378,11 @@ A user operating under the current odontogram permissions can initialize, consul
 Connect diagnosis with operational and commercial treatment planning.
 
 ## Current status
-- Release 5.1 — Treatment Plan Foundation is accepted
-- Release 5.2 — Quote Basics is also accepted on top of Release 5.1
-- Release 5 remains in progress; advanced pricing, taxes, discounts, billing linkage, and wider commercial workflows remain deferred beyond the accepted 5.2 slice
+- Release 5 is planned after Release 4
+- Release 5 is not opened by the Release 3 closure documentation
 
 ## Scope
-Release 5 is being delivered in bounded slices. The currently accepted slices are Release 5.1 and Release 5.2. Together they currently cover:
+Release 5 should be delivered in bounded slices. The initial planned scope includes:
 - explicit treatment plan creation for an existing patient
 - exactly one active treatment plan per patient per tenant
 - `GET` returning `404` when the treatment plan does not exist
@@ -413,8 +401,7 @@ Release 5 is being delivered in bounded slices. The currently accepted slices ar
 - line-level `UnitPrice`, `LineTotal`, and `QuoteTotal`
 - bounded quote status with `Draft` / `Proposed` / `Accepted`
 - positive line pricing required to move `Draft -> Proposed`, preserved while the quote stays `Proposed`, and revalidated on `Proposed -> Accepted`
-- minimal patient-context UI for explicit quote creation, empty state, no-treatment-plan message, line pricing, totals, and quote status changes
-- `treatmentquote.read` and `treatmentquote.write` restricted to `PlatformAdmin` and `TenantAdmin`
+- minimal patient-context UI for treatment planning and later quote work when explicitly opened
 - no discounts or taxes
 - no billing linkage
 - no scheduling linkage
@@ -431,10 +418,7 @@ Clinicians and tenant administrators can move from clinical or odontogram contex
 - Tenant Admin
 
 ## Current access note
-- `treatmentplan.read` and `treatmentplan.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive treatment plan permissions in the accepted Release 5.1 slice
-- `treatmentquote.read` and `treatmentquote.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive treatment quote permissions in the accepted Release 5.2 slice
+- Treatment plan and quote permissions must be introduced only with explicit Release 5 slices.
 
 ## Key UX goals
 - easy transition from diagnosis to treatment
@@ -444,7 +428,7 @@ Clinicians and tenant administrators can move from clinical or odontogram contex
 - simple treatment lifecycle
 
 ## Out of scope
-- advanced pricing beyond the bounded 5.2 slice
+- advanced pricing beyond a bounded quote slice
 - discounts and taxes
 - billing handoff
 - scheduling handoff
@@ -465,11 +449,9 @@ Clinicians and tenant administrators can move from clinical or odontogram contex
 Enable clinics to record charges, payments, and balances as part of the operational workflow.
 
 ## Current status
-- Release 6 is now open in the repository
-- Release 6.1 — Billing Foundation is accepted as the current bounded slice of Release 6
-- The current accepted scope is limited to explicit billing document creation from an accepted quote, `GET` returning `404` when missing, no autocreation, exactly one billing document per quote, snapshot-only billing lines, inherited simple currency handling from the accepted quote, bounded `Draft` / `Issued` status, and read-only behavior once issued
-- `billing.read` and `billing.write` are currently restricted to `PlatformAdmin` and `TenantAdmin`
-- Payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows remain deferred beyond the accepted Release 6.1 slice
+- Release 6 is planned after Release 5
+- Release 6 is not opened by the Release 3 closure documentation
+- Payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows remain deferred
 
 ## Scope
 - charges linked to treatment plans or items
@@ -507,15 +489,9 @@ The clinic can register and track money related to patient care in one operation
 ## 11. Release 7 — Documents and Dashboard
 
 ## Current status
-- Release 7 is now open in the repository
-- Release 7.1 — Documents Foundation is accepted as a bounded slice of Release 7
-- Release 7.2 — Dashboard Foundation is accepted as a bounded slice of Release 7
-- Release 7 complete is not closed
-- The accepted Release 7.1 scope is limited to tenant-owned and patient-owned `PatientDocument` records with explicit patient-scoped upload, active listing, authorized download, logical retire, private local storage, allowlist `application/pdf` / `image/jpeg` / `image/png`, a simple 10 MB maximum size, and no autocreation
-- `document.read` and `document.write` are currently restricted to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive document permissions in this slice
-- The accepted Release 7.2 scope is limited to a tenant-scoped dashboard summary, pure read-model aggregation, `GET /api/dashboard/summary`, KPI cards for active patients, today appointments, today pending appointments, active documents, active treatment plans, accepted quotes, issued billing documents, and `generatedAtUtc`, with no dashboard table and no persisted snapshots
-- `dashboard.read` is currently restricted to `TenantAdmin`; `TenantUser` and `PlatformAdmin` do not receive dashboard permissions in this slice
-- OCR, rich preview, versioning, external sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboard, doctor dashboard, advanced reporting, exports, and advanced document workflows remain deferred beyond the current accepted scope
+- Release 7 is planned after Release 6
+- Release 7 is not opened by the Release 3 closure documentation
+- OCR, rich preview, versioning, external sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboard, doctor dashboard, advanced reporting, exports, and advanced document workflows remain deferred
 
 ## Goal
 Complete the initial operational MVP with file support and high-level visibility.
@@ -536,9 +512,9 @@ Complete the initial operational MVP with file support and high-level visibility
 - pending appointments of the day
 - active patient documents
 - active treatment plans
-- accepted quotes
-- issued billing documents
-- advanced analytics, charts, complex filters, daily income summaries, balances, branch dashboards, doctor dashboards, exports, and advanced reporting deferred beyond Release 7.2
+- accepted quotes when Release 5 has introduced quotes
+- issued billing documents when Release 6 has introduced billing
+- advanced analytics, charts, complex filters, daily income summaries, balances, branch dashboards, doctor dashboards, exports, and advanced reporting remain deferred beyond the initial dashboard foundation
 
 ## Expected outcome
 The MVP becomes operationally complete for day-to-day usage.
@@ -587,33 +563,9 @@ This MVP should be strong enough to validate:
 Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 
 ## Current status
-- Phase 2 is open in progress
-- Phase 2.1 — Appointment Confirmation Foundation is accepted
-- Phase 2.2 — Manual Reminder Log Foundation is accepted
-- Phase 2.3 — Reminder Scheduling Preparation is accepted
-- Phase 2.4 — Reminder Worklist Follow-up Actions is accepted
-- Phase 2.5 — Reminder Template Draft Foundation is accepted
-- Phase 2.6 — Reminder Template Usage Traceability is accepted
-- Phase 2 complete is not closed
-- The accepted Phase 2.1 slice only adds appointment confirmation as an operational signal on existing Scheduling
-- Appointment confirmation status remains separate from `AppointmentStatus` and uses the minimal `Pending` / `Confirmed` catalog
-- Phase 2.1 exposes the minimal mutation endpoint `PUT /api/appointments/{id}/confirmation`
-- Phase 2.1 reuses `scheduling.read` for reads and `scheduling.write` for mutations; it adds no new permissions
-- Phase 2.2 adds only manual contact-attempt logging per existing appointment through `GET /api/appointments/{id}/reminder-log` and `POST /api/appointments/{id}/reminder-log`, with minimal channel/outcome catalogs, optional short notes, creator/timestamp metadata, newest-first reads, existing `scheduling.read` / `scheduling.write`, and no new permissions
-- Phase 2.2 does not change `AppointmentStatus` or `AppointmentConfirmationStatus`
-- Phase 2.3 adds only manual reminder preparation for existing appointments through explicit set/clear/complete operations, preferred manual channel, due date/time, completion/update metadata, and a branch-aware pending/due reminder list in Scheduling
-- Phase 2.3 does not send messages, does not automatically change `AppointmentStatus` or `AppointmentConfirmationStatus`, does not automatically create reminder log entries, reuses `scheduling.read` / `scheduling.write`, and adds no new permissions
-- Phase 2.4 adds only an explicit manual follow-up action from the pending/due reminder worklist, creating exactly one reminder log entry and changing reminder completion or appointment confirmation only when explicit request flags ask for those changes
-- Phase 2.4 does not auto-complete or auto-confirm when `outcome = Reached`
-- Phase 2.4 does not change `AppointmentStatus`, does not change `ReminderDueAtUtc` or `ReminderChannel`, does not add permissions, and does not add persistence schema
-- Phase 2.5 adds only internal tenant-owned text template drafts for manual reminder work, active listing, create/update/deactivate, preview/render against an existing appointment in current tenant/branch scope, controlled placeholders `{{patientName}}`, `{{appointmentDate}}`, `{{appointmentTime}}`, `{{branchName}}` and `{{tenantName}}`, unknown placeholders preserved and reported, and manual use of rendered preview as suggested follow-up note text
-- Phase 2.5 adds no new permissions and reuses `scheduling.read` / `scheduling.write`
-- Phase 2.5 preview does not save anything and does not mutate appointment, template, reminder log, or reminder schedule state
-- Phase 2.6 adds only internal traceability when a manual follow-up originated from a Phase 2.5 template source: nullable `ReminderTemplateId` and `ReminderTemplateNameSnapshot` on `AppointmentReminderLogEntry`
-- Phase 2.6 keeps both fields null when there is no template source, derives `ReminderTemplateNameSnapshot` server-side from the active template, and does not accept `ReminderTemplateNameSnapshot` from the client
-- Phase 2.6 keeps `notes` as the final manual text and does not store a separate template body snapshot, rendered body snapshot, `TemplateVersion`, `DeliveryTemplateId`, `ProviderTemplateId`, or delivery metadata
-- Phase 2.6 adds no new permissions and reuses `scheduling.read` / `scheduling.write`
-- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain outside Phase 2.6
+- Phase 2 is a later roadmap phase after the MVP is stable
+- Phase 2 is not the next phase after Release 3 closure
+- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain deferred
 
 ## Candidate features
 - WhatsApp reminders

@@ -277,6 +277,23 @@ describe('ClinicalRecordPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('No clinical record yet');
   });
 
+  it('renders patient age derived from date of birth without duplicating patient data', () => {
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    fixture.detectChanges();
+
+    const expectedAge = fixture.componentInstance.calculateAge('1991-02-14');
+
+    expect(fixture.nativeElement.textContent).toContain('Age');
+    expect(fixture.nativeElement.textContent).toContain(`${expectedAge} years`);
+  });
+
+  it('calculates patient age from date of birth against a reference date', () => {
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+
+    expect(fixture.componentInstance.calculateAge('1991-02-14', new Date(2026, 1, 13))).toBe(34);
+    expect(fixture.componentInstance.calculateAge('1991-02-14', new Date(2026, 1, 14))).toBe(35);
+  });
+
   it('loads the medical questionnaire when the clinical record page opens', () => {
     const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
     fixture.detectChanges();

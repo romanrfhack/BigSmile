@@ -4,7 +4,7 @@
 
 Documentar una auditoria tecnica y un mapeo formal del formato fisico de historia clinica compartido por el cliente contra el estado real del repositorio BigSmile.
 
-Este documento nacio como mapeo/auditoria. Actualmente tambien registra el cierre backend del slice `Release 3.5 — Medical Questionnaire Backend`, la integracion frontend acotada del cuestionario medico estructurado en Clinical Records, el cierre backend del slice `Release 3.6 — Clinical Encounter / Vitals Backend`, y la integracion frontend acotada de consulta/signos vitales sobre los endpoints existentes. Su objetivo sigue siendo separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y proponer slices futuros pequenos y auditables para incorporar la captura clinica restante derivada del formato fisico.
+Este documento nacio como mapeo/auditoria. Actualmente tambien registra el cierre formal de `Release 3 — Clinical Records` como release clinico fundacional, con evidencia en los slices aceptados Release 3.1 a Release 3.6, la integracion frontend acotada del cuestionario medico estructurado, la integracion frontend acotada de consulta/signos vitales y el contexto read-only de Patient con edad derivada desde `Patient.DateOfBirth`. Su objetivo sigue siendo separar ownership por modulo, evitar duplicar datos ya cubiertos por Patients, evitar contaminar Clinical Records con Billing o Scheduling, y mantener fuera del cierre los follow-ups que pertenecen a Patients o Billing.
 
 ## 2. Estado canonico y deriva detectada
 
@@ -13,10 +13,10 @@ Estado confirmado desde `STATE — BigSmile.md`, `README.md`, `PROJECT_MAP.md`, 
 - Release 1 — Patients esta completada.
 - Release 2 — Scheduling esta completada.
 - `doctor-based views` siguen diferidas y no hay provider/doctor assignment en el codigo actual.
-- Release 3 — Clinical Records no es una fase futura virgen: ya esta abierta y preservada por slices aceptados Release 3.1, 3.2, 3.3, 3.4, 3.5 y 3.6.
-- La fase activa canonica actual es Phase 2 Expansion — Modern Operations, con slices aceptados hasta Phase 2.6.
+- Release 3 — Clinical Records no es una fase futura: quedo completada como release clinico fundacional mediante los slices aceptados Release 3.1, 3.2, 3.3, 3.4, 3.5 y 3.6.
+- La siguiente fase funcional prevista por roadmap es Release 4 — Odontogram. Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP, no al paso inmediato despues de Release 3.
 
-Deriva frente al objetivo textual de este slice: la instruccion pide confirmar que Release 3 es la siguiente fase funcional. El estado canonico actual no confirma eso; indica que Release 3 ya existe en codigo y documentacion, y que debe preservarse. Por lo tanto, este documento trata el trabajo como mapeo/auditoria para una expansion futura acotada de Clinical Records, no como reapertura funcional de Release 3 desde cero.
+Deriva resuelta: el cierre de Release 3 se documenta sobre evidencia real de codigo, pruebas y UI, sin abrir Release 4, sin tratar Phase 2 como siguiente paso y sin ampliar Clinical Records hacia Billing, Scheduling, Odontogram, Treatments, Documents o doctor/provider scope.
 
 ## 3. Estado real encontrado en codigo
 
@@ -172,7 +172,7 @@ Actualizacion Release 3.6: las filas cuyo owner recomendado es `ClinicalNote / E
 | --- | --- | --- | --- | --- | --- |
 | Fecha | Derived / Read-only / Encounter | Parcial | Parcial | Mostrar `ClinicalRecord.CreatedAtUtc` para fecha de creacion; para consulta clinica usar `ClinicalEncounter.OccurredAtUtc`. No guardar una fecha duplicada sin significado clinico claro. | Duplicar metadata o confundir fecha de expediente con fecha de consulta. |
 | Nombre | Patient | Si | No | Leer desde `Patient.FullName`. No copiar a ClinicalRecord. | Duplicacion y desalineacion de identidad. |
-| Edad | Derived / Read-only | Parcial | Parcial | Calcular desde `Patient.DateOfBirth` en UI/read model. No persistir edad. | Edad persistida queda obsoleta. |
+| Edad | Derived / Read-only | Si | No | Calcular desde `Patient.DateOfBirth` en UI read-only. No persistir edad ni agregar `Age` al backend. | Edad persistida queda obsoleta. |
 | Fecha de nacimiento | Patient | Si | No | Leer desde `Patient.DateOfBirth`. | Duplicacion de datos personales. |
 | Sexo | Patient | Si | No | Leer desde `Patient.Sex`; mostrar en Clinical solo como contexto read-only. | Duplicacion si se vuelve a capturar en Clinical. |
 | Ocupacion | Patient | Si | No | Leer desde `Patient.Occupation`; no copiar a ClinicalRecord. | Duplicacion futura y busqueda inconsistente si se re-modela en Clinical. |
@@ -516,4 +516,13 @@ Validacion recomendada:
 
 ## 14. Decision recomendada inmediata
 
-Estado inmediato: `Patient Demographics` se mantiene como fuente de verdad para sexo, ocupacion, estado civil y referido por; Clinical Records ya consume esos datos como contexto read-only cuando estan disponibles. La UI del cuestionario medico fijo de Release 3.5 ya esta integrada contra los endpoints backend existentes. La UI de encounters/vitals de Release 3.6 tambien esta integrada de forma acotada contra los endpoints backend existentes. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.
+Estado inmediato: `Release 3 — Clinical Records` queda cerrada como release clinico fundacional. `Patient Demographics` se mantiene como fuente de verdad para sexo, ocupacion, estado civil, referido por y fecha de nacimiento; Clinical Records consume esos datos como contexto read-only y deriva la edad en UI sin persistirla. La UI del cuestionario medico fijo de Release 3.5 ya esta integrada contra los endpoints backend existentes. La UI de encounters/vitals de Release 3.6 tambien esta integrada de forma acotada contra los endpoints backend existentes. Billing fields deben quedar fuera hasta un slice fiscal/billing explicito.
+
+Siguiente fase funcional prevista: `Release 4 — Odontogram`.
+
+Follow-ups fuera del cierre de Release 3:
+
+- Patient Contact Details para telefonos separados casa/oficina/celular, solo si el cliente lo confirma.
+- Billing/fiscal profile para datos de facturacion.
+- Hardening opcional de DTOs clinicos antiguos para rechazar JSON con miembros no mapeados.
+- Riesgo futuro: cualquier query directa a tablas hijas clinicas debe usar join tenant-aware o modelarse tenant-owned.

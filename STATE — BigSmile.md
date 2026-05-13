@@ -16,13 +16,11 @@
 
 **Multitenancy** — [Hecho] La estrategia base es shared database + shared schema + TenantId como discriminador transversal, con TenantContext por request, enforcement centralizado, y bypass solo para operaciones de plataforma, explícito y auditable.
 
-**Auth** — [Hecho] La base de identidad y autenticación ya está establecida sobre JWT y ahora la fundación tenant-aware de autorización quedó formalizada: claims de scope/permiso, `TenantContext` enriquecido, policies/handlers por scope, `/api/auth/me`, override de plataforma explícito y auditable, y soporte mínimo de frontend para consumir el contexto actual sin persistencia insegura en navegador.
+**Auth** — [Hecho] La base de identidad y autenticación ya está establecida sobre JWT y la fundación tenant-aware de autorización quedó formalizada: claims de scope/permiso, TenantContext enriquecido, policies/handlers por scope, `/api/auth/me`, override de plataforma explícito y auditable, y soporte mínimo de frontend para consumir el contexto actual sin persistencia insegura en navegador.
 
-**Persistencia** — [Hecho] La persistencia base es EF Core sobre SQL Server, con AppDbContext, migraciones, seed durable y validación de login real contra base SQL Server. Tenant, Branch e identidad ya comparten la misma ruta de persistencia durable. BranchId solo se usa cuando el dominio lo requiere, subordinado a TenantId.
+**Persistencia** — [Hecho] La persistencia base es EF Core sobre SQL Server, con AppDbContext, migraciones, seed durable y validación de login real contra base SQL Server. Tenant, Branch e identidad comparten la misma ruta de persistencia durable. BranchId solo se usa cuando el dominio lo requiere, subordinado a TenantId.
 
 **Frontend** — [Hecho] El frontend queda fijado como feature-based, con separación entre páginas, componentes, facades, data-access y modelos; se prohíbe dispersar llamadas HTTP en componentes/páginas y se prioriza UX operativa rápida para recepción y clínica.
-
-**Principios no negociables** — [Hecho] Tenant isolation no negociable; Branch no reemplaza a Tenant; no usar filtrado manual disperso como estrategia principal; producto antes que app ad hoc; cambios pequeños, auditables y reversibles; arquitectura mantenible; UX operativa como feature; no introducir complejidad distribuida prematura.
 
 ## 3. Fases completadas
 
@@ -38,521 +36,140 @@
 
 [Hecho] Release 2 — Scheduling — completada.
 
-[Hecho] La corrección de consistencia de persistencia quedó absorbida dentro de Identity + Persistence Foundation: tenant y branch ya no viven en un path in-memory separado, el seed es durable y el login real contra SQL Server ya fue validado.
+[Hecho] Release 3 — Clinical Records — completada.
 
 [Hecho] El cierre formal de Release 2 se apoya en evidencia de código, pruebas, revisión de release y documentación alineada para calendario diario/semanal branch-aware, creación/edición/reprogramación/cancelación de citas, appointment notes, blocked slots y estados `Attended` / `NoShow`.
 
 [Hecho] `doctor-based views` quedó explícitamente diferido por decisión documentada a un slice futuro acotado; no forma parte del cierre efectivo de Release 2.
 
-[Hecho] No existe evidencia canónica de cierre para los releases funcionales posteriores a los slices aceptados Release 5.1 — Treatment Plan Foundation, Release 5.2 — Quote Basics, Release 6.1 — Billing Foundation, Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation; Release 5 — Treatments and Quotes no debe asumirse como cerrada, Release 6 — Billing no debe asumirse como cerrada más allá del slice aceptado Release 6.1 — Billing Foundation, y Release 7 — Documents and Dashboard no debe asumirse como cerrada más allá de los slices aceptados 7.1 y 7.2.
+[Hecho] El cierre formal de Release 3 se apoya en auditoría de código, pruebas y documentación del alcance aceptado Release 3.1 a Release 3.6: creación explícita de expediente clínico, snapshot base, alergias actuales, notas append-only, diagnósticos básicos, timeline clínica acotada, snapshot history, cuestionario médico fijo basado en el formato físico, consulta clínica/signos vitales, atribución por usuario y protección con `clinical.read` / `clinical.write` sin TenantId desde cliente.
 
 ## 4. Fase actual
 
-[Hecho] La última fase marcada como completada sigue siendo Release 2 — Scheduling.
+[Hecho] La última fase funcional marcada como completada es Release 3 — Clinical Records.
 
-[Hecho] Release 2 — Scheduling ya quedó cerrada con el alcance roadmap reconciliado, confirmado en código, pruebas, revisión de release y documentación alineada.
+[Hecho] Release 3 — Clinical Records queda cerrada y preservada como release clínico fundacional. Los slices Release 3.1 a Release 3.6 permanecen como evidencia aceptada de cierre.
 
-[Hecho] README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md ya fueron reconciliados con este estado canónico y ubican al repositorio más allá del bootstrap / early foundation stage.
-
-[Hecho] Release 3 — Clinical Records ya fue abierta y quedó preservada mediante los slices aceptados Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5 y Release 3.6, sin asumir slices clínicos posteriores no probados por código y documentación alineada.
-
-[Hecho] Los slices aceptados de Release 3 son Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 3.5 — Medical Questionnaire Backend y Release 3.6 — Clinical Encounter / Vitals Backend.
-
-[Hecho] Release 4 — Odontogram ya fue abierta y queda preservada mediante los slices aceptados Release 4.1, Release 4.2, Release 4.3 y Release 4.4.
-
-[Hecho] Los slices aceptados actuales de Release 4 son Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation y Release 4.4 — Dental Findings Change History.
-
-[Hecho] Release 5 — Treatments and Quotes ya fue abierta y está en progreso.
-
-[Hecho] Los slices aceptados actuales de Release 5 son Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics.
-
-[Hecho] Release 5.2 — Quote Basics ya quedó aceptada sobre la base de Release 5.1, sin marcar todavía Release 5 como cerrada.
-
-[Hecho] Release 6 — Billing ya fue abierta y está en progreso.
-
-[Hecho] El slice aceptado actual de Release 6 es Release 6.1 — Billing Foundation.
-
-[Hecho] Release 7 — Documents and Dashboard ya fue abierta en el repositorio.
-
-[Hecho] Los slices aceptados actuales de Release 7 son Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation.
-
-[Hecho] Release 7 completa sigue abierta y no debe tratarse como cerrada.
-
-[Hecho] Phase 2 Expansion — Modern Operations sigue abierta en el repositorio mediante los slices aceptados `Phase 2.1 — Appointment Confirmation Foundation`, `Phase 2.2 — Manual Reminder Log Foundation`, `Phase 2.3 — Reminder Scheduling Preparation`, `Phase 2.4 — Reminder Worklist Follow-up Actions`, `Phase 2.5 — Reminder Template Draft Foundation` y `Phase 2.6 — Reminder Template Usage Traceability`.
-
-[Hecho] `Phase 2.3 — Reminder Scheduling Preparation` ya quedó aceptada y agrega preparación manual mínima de recordatorio por cita existente: `ReminderRequired`, canal preferido manual, fecha/hora objetivo, completado manual, metadata mínima de actualización, API/UI mínima y lista branch-aware de recordatorios pendientes/vencidos. Esto no cierra Phase 2 ni implementa WhatsApp, email, SMS, reminders automáticos, providers, jobs, colas, webhooks, templates, scheduler real, retry automático, campaigns, online booking, portal de paciente ni automatizaciones.
-
-[Hecho] `Phase 2.4 — Reminder Worklist Follow-up Actions` ya quedó aceptada y agrega una acción manual explícita desde la worklist de recordatorios pendientes/vencidos para registrar exactamente un intento de contacto, completar opcionalmente el reminder solo cuando `completeReminder = true`, y confirmar opcionalmente la cita solo cuando `confirmAppointment = true`. No cambia `AppointmentStatus`, no agrega permisos, no crea tablas ni columnas, y sigue sin implementar envío real por WhatsApp/email/SMS, providers, jobs, colas, webhooks, templates, scheduler real, retry automático ni automatización.
-
-[Hecho] `Phase 2.5 — Reminder Template Draft Foundation` ya quedó aceptada y agrega plantillas internas tenant-owned de texto para apoyar recordatorios manuales: create/list/update/deactivate, preview autorizado contra una cita existente en scope tenant/branch, placeholders controlados `{{patientName}}`, `{{appointmentDate}}`, `{{appointmentTime}}`, `{{branchName}}` y `{{tenantName}}`, unknown placeholders preservados y reportados, y UI mínima en Scheduling para gestionar templates y usar un preview como nota sugerida en follow-up manual. Este slice no cierra Phase 2 y no implementa envío real por WhatsApp/email/SMS, providers, jobs, colas, webhooks, external delivery templates, scheduler real, retry automation, campaigns, patient portal ni online booking.
-
-[Hecho] `Phase 2.6 — Reminder Template Usage Traceability` ya quedó aceptada y agrega solo trazabilidad interna mínima del template usado cuando un follow-up manual se registra desde el helper de templates: `AppointmentReminderLogEntry` puede guardar `ReminderTemplateId` y `ReminderTemplateNameSnapshot` nullable. Si no hay template source, ambos quedan null; cuando hay template, `ReminderTemplateNameSnapshot` se deriva en servidor desde el template activo y no se acepta desde cliente. `Notes` sigue siendo el texto manual final registrado; no se guarda body snapshot, rendered snapshot, `TemplateVersion`, `DeliveryTemplateId`, `ProviderTemplateId` ni metadata de delivery. Este slice no cierra Phase 2, no agrega permisos y no implementa envío real por WhatsApp/email/SMS, providers, jobs, colas, webhooks, external delivery templates, scheduler real, retry automation, campaigns, patient portal ni online booking.
-
-[Hecho] Release 3.1 cubre, de forma acotada:
-- `ClinicalRecord` tenant-owned y patient-owned
-- exactamente 1 expediente activo por Patient por Tenant
-- creación explícita vía `POST /api/patients/{patientId}/clinical-record`
-- `GET /api/patients/{patientId}/clinical-record` devuelve `404` si no existe
-- no hay autocreación ni por GET ni por agregar nota
-- snapshot base con medical background summary y current medications summary
-- lista actual de alergias
-- clinical notes append-only con orden newest-first en lectura/UI
-- clinician attribution mínima y metadata básica de auditoría
-
-[Hecho] Release 3.2 cubre, de forma acotada:
-- diagnósticos básicos dentro de un `ClinicalRecord` existente
-- alta explícita vía `POST /api/patients/{patientId}/clinical-record/diagnoses`
-- resolución explícita vía `POST /api/patients/{patientId}/clinical-record/diagnoses/{diagnosisId}/resolve`
-- enriquecimiento de `GET /api/patients/{patientId}/clinical-record` para incluir diagnósticos
-- sin autocreación del expediente clínico
-- diagnósticos básicos y no codificados
-- estados mínimos `Active` / `Resolved`
-- orden `active-first` y `newest-first` dentro de cada grupo en lectura/UI
-
-[Hecho] Release 3.3 cubre, de forma acotada:
-- enriquecimiento del read model existente de `ClinicalRecord`
-- timeline clínica dentro del expediente clínico existente, sin endpoint nuevo
-- construcción de timeline desde `ClinicalNotes` y `ClinicalDiagnoses` ya persistidos
-- eventos limitados a `ClinicalNoteCreated`, `ClinicalDiagnosisCreated` y `ClinicalDiagnosisResolved`
-- orden `newest-first` en lectura/UI
-- sin tabla nueva de timeline
-- sin timeline cross-module
-
-[Hecho] Release 3.4 cubre, de forma acotada:
-- historial de cambios del snapshot base dentro del `ClinicalRecord`
-- entrada inicial de historial al crear explícitamente el expediente clínico
-- entradas solo por cambios efectivos en medical background summary, current medications summary y current allergies
-- enriquecimiento del read model existente de `ClinicalRecord` para incluir `snapshotHistory`
-- orden `newest-first` en lectura/UI
-- separación explícita entre `snapshotHistory` y la timeline aceptada en Release 3.3
-- sin restore
-- sin versionado completo
-- sin diff rico
-- sin autocreación del expediente clínico
-
-[Hecho] Release 3.5 — Medical Questionnaire Backend cubre, de forma acotada:
-- `ClinicalMedicalAnswer` tenant-owned, patient-owned y ligado a un `ClinicalRecord` existente
-- cuestionario médico estructurado con catálogo fijo de `QuestionKey` basado en `docs/release-3-clinical-records-form-mapping.md`
-- respuestas mínimas `Unknown` / `Yes` / `No` con `Details` opcional acotado
-- endpoints `GET /api/patients/{patientId}/clinical-record/questionnaire` y `PUT /api/patients/{patientId}/clinical-record/questionnaire`
-- `GET` devuelve `404` cuando falta el expediente clínico existente, sin autocreación
-- `PUT` hace upsert por `QuestionKey` y mantiene unicidad por `TenantId` + `ClinicalRecordId` + `QuestionKey`
-- `TenantId` se toma de `TenantContext`, no del request, y el contrato rechaza miembros JSON no mapeados
-- validación de paciente y expediente dentro del tenant actual antes de leer o mutar
-- reutilización de `clinical.read` / `clinical.write` sin permisos nuevos
-- sin form builder configurable por tenant
-- sin sincronización automática hacia alergias actuales, timeline o snapshot history
-- sin Billing, Odontogram, Treatments, Documents, Scheduling ni doctor/provider assignment
-
-[Hecho] La UI bounded del cuestionario médico estructurado ya existe dentro de la pantalla de expediente clínico existente. Consume únicamente los endpoints aceptados de Release 3.5, usa el catálogo fijo de `QuestionKey`, labels i18n, grupos clínicos, contexto read-only desde Patients, estados loading/empty/error/saving y acciones Guardar/Cancelar; no cambia backend, contratos API, permisos, guards, tenant resolution, alergias actuales, timeline, snapshot history ni módulos posteriores.
-
-[Hecho] Release 3.6 — Clinical Encounter / Vitals Backend cubre, de forma acotada:
-- `ClinicalEncounter` tenant-owned, patient-owned y ligado a un `ClinicalRecord` existente
-- consulta clínica explícita con `OccurredAtUtc`, `ChiefComplaint`, `ConsultationType` `Treatment` / `Urgency` / `Other`, signos vitales opcionales y metadata mínima `CreatedAtUtc` / `CreatedByUserId`
-- signos vitales acotados: temperatura C, presión arterial sistólica/diastólica, peso kg, talla cm, frecuencia respiratoria por minuto y frecuencia cardiaca BPM
-- endpoints `GET /api/patients/{patientId}/clinical-record/encounters` y `POST /api/patients/{patientId}/clinical-record/encounters`
-- `GET` devuelve `404` cuando falta el expediente clínico existente, sin autocreación
-- `POST` requiere un `ClinicalRecord` existente y puede crear una `ClinicalNote` append-only vinculada cuando `noteText` viene informado
-- `TenantId` se toma de `TenantContext`, no del request, y el contrato rechaza miembros JSON no mapeados
-- `CreatedByUserId` se deriva del contexto de usuario y no se acepta desde cliente
-- validación de paciente y expediente dentro del tenant actual antes de leer o mutar
-- reutilización de `clinical.read` / `clinical.write` sin permisos nuevos
-- sin PUT/DELETE de encounters
-- sin edición/borrado de signos vitales
-- sin enriquecimiento nuevo de timeline, sin tabla nueva de timeline y sin timeline cross-module
-- sin tocar Patient demographics, Billing, Scheduling, Odontogram, Treatments, Documents ni doctor/provider assignment
-
-[Hecho] La UI bounded de consulta clínica y signos vitales ya existe dentro de la pantalla de expediente clínico existente. Consume únicamente `GET` / `POST /api/patients/{patientId}/clinical-record/encounters` mediante data-access y facade de `features/clinical-records`, muestra encounters recientes newest-first, captura `OccurredAtUtc`, `ChiefComplaint`, `ConsultationType`, signos vitales opcionales y `noteText` opcional, y conserva estados loading/empty/error/saving con labels i18n. No cambia backend, contratos API, permisos, guards, tenant resolution, timeline, Patient demographics ni módulos posteriores.
-
-[Hecho] En esta fase, `clinical.read` y `clinical.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos clínicos.
-
-[Hecho] Release 4.1 cubre, de forma acotada:
-- `Odontogram` tenant-owned y patient-owned
-- exactamente 1 odontogram por Patient por Tenant
-- creación explícita vía `POST /api/patients/{patientId}/odontogram`
-- `GET /api/patients/{patientId}/odontogram` devuelve `404` si no existe
-- no hay autocreación ni por GET ni por update
-- inicialización explícita de 32 dientes permanentes de adulto usando convención FDI/ISO de 2 dígitos (`11-18`, `21-28`, `31-38`, `41-48`)
-- estados mínimos por diente `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`
-- actualización explícita del estado actual de un diente vía `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}`
-- metadata mínima de auditoría por odontograma y por diente
-- soporte frontend mínimo desde el contexto del paciente para empty state, creación explícita, visualización y edición simple
-
-[Hecho] Release 4.2 cubre, de forma acotada:
-- preservación íntegra del alcance aceptado de Release 4.1
-- enriquecimiento del read model existente del odontograma para incluir superficies por diente
-- catálogo de superficies mínimo y uniforme `O` / `M` / `D` / `B` / `L`
-- catálogo mínimo de estados por superficie `Unknown` / `Healthy` / `Restored` / `Caries`
-- persistencia mínima tenant-safe por superficie dentro del odontograma existente
-- actualización explícita del estado actual de una superficie vía `PUT /api/patients/{patientId}/odontogram/teeth/{toothCode}/surfaces/{surfaceCode}`
-- sin recálculo automático complejo del estado por diente
-- soporte frontend mínimo dentro de la página actual del odontograma para inspeccionar y editar superficies
-- no hay autocreación del odontograma ni por `GET` ni por updates de superficie
-
-[Hecho] Release 4.3 cubre, de forma acotada:
-- preservación íntegra de los alcances aceptados de Release 4.1 y Release 4.2
-- hallazgos dentales básicos sobre superficies existentes dentro del `Odontogram` ya creado
-- múltiples hallazgos básicos por superficie con ownership tenant-owned y patient-owned a través del odontograma
-- catálogo mínimo de hallazgos `Caries` / `Restoration` / `MissingStructure` / `Sealant`
-- enriquecimiento de `GET /api/patients/{patientId}/odontogram` para incluir hallazgos por superficie
-- alta explícita vía `POST /api/patients/{patientId}/odontogram/teeth/{toothCode}/surfaces/{surfaceCode}/findings`
-- eliminación explícita vía `DELETE /api/patients/{patientId}/odontogram/teeth/{toothCode}/surfaces/{surfaceCode}/findings/{findingId}`
-- metadata mínima `createdAtUtc` / `createdByUserId` por hallazgo
-- no hay autocreación del odontograma ni por `GET` ni por operaciones de findings
-- coexistencia explícita entre `surface status` y findings sin recálculo automático del estado de superficie o diente
-- soporte frontend mínimo dentro de la página actual del odontograma para listar/agregar/quitar hallazgos de la superficie seleccionada
-
-[Hecho] Release 4.4 cubre, de forma acotada:
-- preservación íntegra de los alcances aceptados de Release 4.1, Release 4.2 y Release 4.3
-- historial mínimo y acotado de cambios para los hallazgos básicos aceptados en superficies existentes del `Odontogram`
-- entradas `FindingAdded` y `FindingRemoved` solo para cambios efectivos de hallazgos básicos
-- sin backfill histórico para hallazgos previos a Release 4.4
-- enriquecimiento de `GET /api/patients/{patientId}/odontogram` para incluir `findingsHistory` root-level ordenado `newest-first`
-- cada entrada de history expone al menos `entryType`, `toothCode`, `surfaceCode`, `findingType`, `changedAtUtc`, `changedByUserId`, `summary` y `referenceFindingId` opcional
-- separación explícita entre los hallazgos actuales y su historial acotado
-- persistencia mínima tenant-safe del historial dentro del aggregate `Odontogram`
-- soporte frontend mínimo dentro de la página actual del odontograma para visualizar findings history de la superficie seleccionada
-- sin restore
-- sin versionado completo del odontograma
-- sin timeline dental global
-- sin linkage con tratamientos, diagnósticos clínicos o documentos
-
-[Hecho] En esta fase, `odontogram.read` y `odontogram.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de odontograma.
-
-[Hecho] Release 4 completa no está cerrada. Findings complejos, linkage con tratamientos/diagnósticos/documentos, timeline dental global, historial/versionado general del odontograma, surface history, bulk editing complejo, odontograma infantil y UI avanzada de charting dental siguen fuera del alcance aceptado de Release 4.4.
-
-[Hecho] Release 5.1 cubre, de forma acotada:
-- `TreatmentPlan` tenant-owned y patient-owned
-- exactamente 1 treatment plan activo por Patient por Tenant
-- creación explícita vía `POST /api/patients/{patientId}/treatment-plan`
-- `GET /api/patients/{patientId}/treatment-plan` devuelve `404` si no existe
-- no hay autocreación ni por `GET` ni por `POST /items`
-- items básicos con `title`, `category`, `quantity`, `notes` y referencia dental opcional `toothCode` / `surfaceCode`
-- `toothCode` opcional validado con FDI adulta permanente y `surfaceCode` opcional validado con `O` / `M` / `D` / `B` / `L`, requiriendo `toothCode` cuando existe `surfaceCode`
-- endpoints mínimos para `POST /items`, `DELETE /items/{itemId}` y `PUT /status`
-- estados mínimos `Draft` / `Proposed` / `Accepted`
-- UI mínima desde el contexto del paciente para empty state, creación explícita, listado de items, add/remove de items y edición de status
-- sin pricing
-- sin quotes formales
-- sin billing linkage
-- sin scheduling automático
-- sin versionado completo del plan
-
-[Hecho] En esta fase, `treatmentplan.read` y `treatmentplan.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de treatment plan.
-
-[Hecho] Release 5.2 cubre, de forma acotada:
-- `TreatmentQuote` tenant-owned y patient-owned ligado explícitamente a un `TreatmentPlan` existente del mismo paciente y tenant
-- exactamente 1 quote por `TreatmentPlan` en este slice
-- creación explícita vía `POST /api/patients/{patientId}/treatment-plan/quote`
-- `GET /api/patients/{patientId}/treatment-plan/quote` devuelve `404` si no existe
-- no hay autocreación ni por `GET` ni por updates de precio/status
-- snapshot explícito de los items actuales del `TreatmentPlan` al momento de crear la quote
-- items de quote con `sourceTreatmentPlanItemId`, `title`, `category`, `quantity`, `notes`, `toothCode`, `surfaceCode` y `unitPrice`
-- `CurrencyCode` fijo en `MXN` en este slice
-- `LineTotal` y `Total` calculados de forma básica sin impuestos ni descuentos
-- endpoints mínimos para `PUT /items/{quoteItemId}/price` y `PUT /status`
-- estados mínimos `Draft` / `Proposed` / `Accepted`
-- regla mínima de pricing: todos los items deben tener `unitPrice > 0` para pasar de `Draft` a `Proposed`; una quote `Proposed` no puede conservar items con `unitPrice <= 0` y `Proposed -> Accepted` vuelve a validar precios positivos
-- quote read-only al quedar en `Accepted`
-- UI mínima desde el contexto del paciente y del treatment plan para empty state, mensaje explícito cuando falta el treatment plan, creación explícita, edición acotada de precio por línea, total y cambio de status
-- sin add/remove manual de items en la quote
-- sin regenerate/rebuild automático
-- sin múltiples quotes por paciente
-- sin descuentos
-- sin impuestos
-- sin billing linkage
-- sin export rica
-- sin versionado completo
-
-[Hecho] En esta fase, `treatmentquote.read` y `treatmentquote.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de quote.
-
-[Hecho] Release 6.1 cubre, de forma acotada:
-- `BillingDocument` tenant-owned y patient-owned ligado explícitamente a una `TreatmentQuote` existente del mismo paciente y tenant
-- exactamente 1 billing document por `TreatmentQuote` en este slice
-- creación explícita vía `POST /api/patients/{patientId}/treatment-plan/quote/billing`
-- `GET /api/patients/{patientId}/treatment-plan/quote/billing` devuelve `404` si no existe
-- no hay autocreación ni por `GET` ni por cambios de status
-- snapshot explícito de los items actuales de la `TreatmentQuote` aceptada al momento de crear el billing document
-- items de billing con `sourceTreatmentQuoteItemId`, `title`, `category`, `quantity`, `notes`, `toothCode`, `surfaceCode`, `unitPrice` y `lineTotal`
-- `CurrencyCode` heredado/simple desde la quote aceptada; en el repo actual sigue siendo `MXN`
-- `LineTotal` y `TotalAmount` calculados de forma básica sin impuestos ni descuentos
-- endpoint mínimo para `PUT /status`
-- estados mínimos `Draft` / `Issued`
-- transición acotada `Draft -> Issued`
-- billing document read-only al quedar en `Issued`
-- UI mínima desde el contexto del paciente y de la quote para mensaje explícito cuando falta la quote, mensaje explícito cuando la quote no está `Accepted`, creación explícita, render de líneas y total, y issue explícito
-- sin edición manual de líneas
-- sin pagos
-- sin CFDI/PAC
-- sin impuestos
-- sin descuentos
-- sin cancelaciones
-- sin billing avanzado
-
-[Hecho] En esta fase, `billing.read` y `billing.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de billing.
-
-[Hecho] Release 6 completa no está cerrada. Pagos, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, cancelaciones y workflows avanzados de billing siguen fuera del alcance aceptado de Release 6.1.
-
-[Hecho] Release 7.1 cubre, de forma acotada:
-- `PatientDocument` tenant-owned y patient-owned
-- múltiples documentos por Patient por Tenant
-- upload explícito vía `POST /api/patients/{patientId}/documents` usando `multipart/form-data`
-- `GET /api/patients/{patientId}/documents` devuelve solo documentos activos y no autocrea nada
-- `GET /api/patients/{patientId}/documents/{documentId}/download` descarga solo documentos activos vía API autorizada
-- `DELETE /api/patients/{patientId}/documents/{documentId}` retira lógicamente el documento
-- storage binario privado mínimo en filesystem local fuera del web root, detrás de una abstracción de storage
-- metadatos mínimos `originalFileName`, `contentType`, `sizeBytes`, `storageKey`, `uploadedAtUtc`, `uploadedByUserId`, `deletedAtUtc` y `deletedByUserId`
-- allowlist explícito `application/pdf` / `image/jpeg` / `image/png`
-- tamaño máximo explícito de 10 MB
-- soporte frontend mínimo desde el contexto del paciente para empty state, upload, listado, descarga y retiro lógico
-
-[Hecho] En esta fase, `document.read` y `document.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos de documentos.
-
-[Hecho] Release 7.2 — Dashboard Foundation ya quedó aceptada sin cerrar Release 7. El slice cubre, de forma acotada:
-- dashboard summary tenant-scoped vía `GET /api/dashboard/summary`
-- read model puro sin nueva fuente de verdad y sin snapshots persistidos
-- métricas mínimas `activePatientsCount`, `todayAppointmentsCount`, `todayPendingAppointmentsCount`, `activeDocumentsCount`, `activeTreatmentPlansCount`, `acceptedQuotesCount`, `issuedBillingDocumentsCount` y `generatedAtUtc`
-- agregación sobre Patients, Scheduling, Documents, Treatment Plans, Treatment Quotes y Billing ya existentes
-- permiso explícito `dashboard.read`
-- `dashboard.read` concedido a `TenantAdmin`; `TenantUser` no recibe permisos de dashboard en esta fase
-- `PlatformAdmin` no recibe `dashboard.read` en esta fase porque todavía no existe un path seguro de selección de tenant para este dashboard tenant-scoped
-- UI mínima con página dedicada de dashboard, ruta protegida y cards KPI simples
-- sin tablas nuevas de dashboard
-- sin analytics avanzadas, charts, filtros complejos, branch dashboard, doctor dashboard, exportación, alertas en tiempo real ni reporting histórico
-
-[Hecho] Release 7 completa no está cerrada aunque Release 7.1 y Release 7.2 ya están aceptadas. OCR, rich preview, thumbnails, versionado, sharing externo, plantillas, PDFs generados, clasificación automática, workflows documentales avanzados, analytics/dashboard avanzado, charts, filtros complejos, branch dashboard, doctor dashboard y reporting avanzado siguen fuera del alcance aceptado actual.
-
-[Hecho] Phase 2.1 — Appointment Confirmation Foundation ya quedó aceptada y cubre, de forma acotada:
-- estado de confirmación separado de `AppointmentStatus`
-- catálogo mínimo `Pending` / `Confirmed`
-- citas nuevas y existentes con default `Pending`
-- `ConfirmedAtUtc` y `ConfirmedByUserId` como metadata mínima de confirmación
-- endpoint mínimo `PUT /api/appointments/{id}/confirmation`
-- operación explícita para confirmar una cita existente
-- operación explícita para volver la confirmación a pendiente, limpiando metadata
-- read model de Scheduling enriquecido con campos de confirmación
-- UI mínima en la página existente de Scheduling para distinguir y cambiar confirmación
-- preservación de `scheduling.read` / `scheduling.write` sin permisos nuevos
-- bloqueo de cambios de confirmación cuando la cita está en estados terminales existentes `Cancelled`, `Attended` o `NoShow`
-- sin WhatsApp, email, SMS, reminders automáticos, jobs/background workers, online booking, portal de paciente, plantillas, campañas, colas, webhooks ni dashboard avanzado
-
-[Hecho] Phase 2.2 — Manual Reminder Log Foundation ya quedó aceptada y agrega, de forma acotada:
-- `AppointmentReminderLogEntry` tenant-owned asociado a una `Appointment` existente
-- registro manual explícito de intentos de contacto por cita
-- canales mínimos `Phone` / `WhatsApp` / `Email` / `Other` solo como registro operativo manual, sin envío real
-- resultados mínimos `Reached` / `NoAnswer` / `LeftMessage`
-- notas opcionales acotadas a 500 caracteres
-- metadata mínima `CreatedAtUtc` y `CreatedByUserId`
-- endpoints mínimos `GET /api/appointments/{id}/reminder-log` y `POST /api/appointments/{id}/reminder-log`
-- UI mínima en Scheduling para listar intentos newest-first y agregar un intento manual
-- reutilización de `scheduling.read` / `scheduling.write` sin permisos nuevos
-- sin cambios automáticos a `AppointmentStatus` ni `AppointmentConfirmationStatus`
-- sin envío real por WhatsApp, email o SMS
-- sin providers, jobs/background workers, colas, webhooks, templates, scheduler de reminders, retry automático, campañas, patient portal, online booking ni dashboard avanzado
-
-[Hecho] Phase 2.3 — Reminder Scheduling Preparation ya quedó aceptada y agrega, de forma acotada:
-- intención manual de recordatorio dentro de una `Appointment` existente
-- campos mínimos `ReminderRequired`, `ReminderChannel`, `ReminderDueAtUtc`, `ReminderCompletedAtUtc`, `ReminderCompletedByUserId`, `ReminderUpdatedAtUtc` y `ReminderUpdatedByUserId`
-- reutilización del catálogo manual `Phone` / `WhatsApp` / `Email` / `Other`; WhatsApp y Email son solo intención de contacto manual
-- operaciones explícitas `PUT /api/appointments/{id}/manual-reminder`, `PUT /api/appointments/{id}/manual-reminder/complete` y `GET /api/appointments/manual-reminders`
-- estado operativo derivado `NotRequired` / `Pending` / `Due` / `Completed`, sin enum persistido nuevo
-- bloqueo de configuración nueva en citas terminales; limpieza y completado permitidos cuando existe intención previa
-- lista simple branch-aware de pendientes/vencidos ordenada por `ReminderDueAtUtc`
-- UI mínima en Scheduling para configurar, limpiar, completar y ver pendientes/vencidos
-- reutilización de `scheduling.read` / `scheduling.write` sin permisos nuevos
-- sin cambios automáticos a `AppointmentStatus` ni `AppointmentConfirmationStatus`
-- sin creación automática de reminder log
-- sin envío real por WhatsApp, email o SMS
-- sin providers, jobs/background workers, colas, webhooks, templates, scheduler real, retry automático, campañas, patient portal, online booking ni dashboard avanzado
-
-[Hecho] Phase 2.4 — Reminder Worklist Follow-up Actions ya quedó aceptada y agrega, de forma acotada:
-- endpoint `POST /api/appointments/{id}/manual-reminder/follow-up`
-- acción manual desde la pending/due reminder worklist existente
-- creación de exactamente una `AppointmentReminderLogEntry` por follow-up
-- completado opcional del reminder manual solo con `completeReminder = true`
-- confirmación opcional de la cita solo con `confirmAppointment = true`
-- sin auto-completion ni auto-confirmación por `outcome = Reached`
-- bloqueo de confirmación cuando la cita está en estado terminal
-- reutilización de `scheduling.write` sin permisos nuevos
-- sin cambios a `AppointmentStatus`
-- sin cambios a `ReminderDueAtUtc` ni `ReminderChannel`
-- sin schema nuevo
-- sin envío real por WhatsApp, email o SMS
-- sin providers, jobs/background workers, colas, webhooks, templates, scheduler real, retry automático, campañas, patient portal, online booking ni dashboard avanzado
-
-[Hecho] Phase 2.5 — Reminder Template Draft Foundation ya quedó aceptada y agrega, de forma acotada:
-- `ReminderTemplate` tenant-owned sin `BranchId`
-- plantillas internas de texto para soporte operativo manual, no delivery externo
-- operaciones `create/list/update/deactivate` protegidas con `scheduling.write` para mutaciones y `scheduling.read` para list/preview
-- preview/render contra una `Appointment` existente en scope tenant/branch actual
-- placeholders soportados `{{patientName}}`, `{{appointmentDate}}`, `{{appointmentTime}}`, `{{branchName}}` y `{{tenantName}}`
-- placeholders desconocidos preservados en el texto y reportados como `unknownPlaceholders`
-- preview sin persistencia y sin mutar appointment/template/log/reminder
-- UI mínima en Scheduling para gestión de templates y uso explícito de preview como nota sugerida en follow-up manual
-- sin permisos nuevos
-- sin envío real por WhatsApp/email/SMS, providers, jobs/background workers, colas, webhooks, external delivery templates, scheduler real, retry automation, campaigns, patient portal ni online booking
-
-[Hecho] Phase 2.6 — Reminder Template Usage Traceability ya quedó aceptada y agrega, de forma acotada:
-- campos nullable `ReminderTemplateId` y `ReminderTemplateNameSnapshot` en `AppointmentReminderLogEntry`
-- ambos campos quedan null cuando el follow-up manual no tiene template source
-- trazabilidad interna solo cuando el follow-up manual desde la worklist usa un `ReminderTemplate` activo en el tenant actual
-- snapshot del nombre del template derivado en servidor desde el template activo al registrar el follow-up, sin aceptar `ReminderTemplateNameSnapshot` desde cliente y sin actualizar logs históricos si el template cambia después
-- `Notes` permanece como el texto manual final registrado
-- sin `ReminderTemplateBodySnapshot`, sin `RenderedBodySnapshot`, sin `TemplateVersion`, sin `DeliveryTemplateId`, sin `ProviderTemplateId` y sin metadata de delivery
-- reutilización de `scheduling.read` / `scheduling.write` sin permisos nuevos
-- sin envío real por WhatsApp/email/SMS, providers, jobs/background workers, colas, webhooks, external delivery templates, scheduler real, retry automation, campaigns, patient portal ni online booking
-
-[Hecho + Inferencia operativa] El proyecto ya no está solo dentro de Release 3; ahora preserva Release 3 mediante cuatro slices aceptados y abrió Release 4 con cuatro slices aceptados sobre una base que ya incluye Patients y Scheduling cerrados.
-
-[Hecho combinado] Lo ya establecido a nivel fundacional incluye, como mínimo:
-- estructura de solución
-- baseline multi-tenant
-- tenant/branch context
-- auth base
-- persistencia EF Core + SQL Server
-- migraciones y seed durable
-- login real validado contra base SQL Server
-- error handling
-- auditing/logging base
-- validación arquitectónica
-- CI
-- pruebas backend y frontend de baseline
-
-[Hecho] El primer slice de Patients implementado hasta ahora cubre:
-- registro de paciente
-- actualización de paciente
-- búsqueda tenant-scoped de pacientes
-- consulta de perfil básico
-- responsible party inline
-- estatus activo/inactivo
-- persistencia EF Core + migración inicial del módulo
-- endpoints y permisos explícitos `patient.read` / `patient.write`
-
-[Hecho] Sobre ese slice inicial ya quedó completado el siguiente sub-slice mínimo de Patients:
-- basic clinical alerts
-- `HasClinicalAlerts` en paciente
-- `ClinicalAlertsSummary` como texto corto y acotado
-- visibilidad de estado de alertas en búsqueda/listado
-- soporte en alta/edición/perfil
-- limpieza automática del summary cuando `HasClinicalAlerts = false`
-
-[Hecho] La corrección mínima final de cierre para Release 1 quedó absorbida sin ampliar scope:
-- validación frontend para impedir fecha de nacimiento futura en el formulario de pacientes
-- prueba frontend enfocada para ese guardrail operativo
-- validación backend existente preservada sin cambios
-
-[Hecho] Patients sigue manteniendo el modelo branch-neutral y tenant-owned; este avance no abre aún expediente clínico, diagnósticos, historia clínica, timeline, adjuntos, scheduling ni otros módulos posteriores.
-
-[Hecho] Con esa corrección mínima final, Release 1 — Patients ya tiene evidencia suficiente de cierre sin abrir sub-slices adicionales ni debilitar tenant isolation.
-
-## 5. Release 2 — Scheduling
-
-**Nombre exacto** — [Hecho] Release 2 — Scheduling.
-
-**Objetivo** — [Hecho + Inferencia alineada a docs] Abrir Scheduling solo sobre una base ya endurecida de aislamiento tenant-aware, authz por scope/membership/permiso y un módulo Patients ya cerrado.
-
-**Estado operativo actual** — [Hecho] Release 2 quedó formalmente cerrada tras absorber los slices mínimos aceptados y reconciliar explícitamente el alcance para dejar `doctor-based views` diferido a un slice futuro acotado.
-
-**Primer slice implementado de Release 2** — [Hecho]
-- agregado `Appointment` tenant-owned y branch-aware
-- enlace obligatorio a `Patient` existente dentro del tenant
-- estatus mínimo explícito `Scheduled` / `Cancelled`
-- creación, edición, reprogramación y cancelación de citas
-- vista mínima de calendario diario/semanal por sucursal
-- filtrado branch-aware usando membership, rol y permisos existentes
-- permisos explícitos `scheduling.read` / `scheduling.write`
-- soporte frontend mínimo con página de scheduling, selector de sucursal, vista day/week y formulario de cita
-
-**Segundo sub-slice implementado de Release 2** — [Hecho]
-- agregado `AppointmentBlock` tenant-owned y branch-aware como entidad dedicada, sin sobrecargar `AppointmentStatus`
-- rango horario mínimo `StartsAt` / `EndsAt` con validación explícita de rango válido
-- `Label` opcional corto para motivo operativo del bloqueo
-- persistencia EF Core + migración dedicada `AddAppointmentBlocks`
-- visibilidad de blocked slots dentro del mismo read model del calendario existente, sin crear una segunda vista de acceso
-- endpoints mínimos para crear y eliminar blocked slots dentro del bounded context Scheduling
-- bloqueo de creación/reprogramación de citas cuando se solapan con blocked slots de la misma sucursal
-- cobertura automática para creación/lectura tenant-scoped, acceso cross-tenant prohibido, restricciones branch-aware y colisiones cita-vs-block
-- soporte frontend mínimo para crear, visualizar y eliminar blocked slots desde la página actual de Scheduling
-
-**Tercer sub-slice implementado de Release 2** — [Hecho]
-- extensión mínima del lifecycle de `Appointment` con estados explícitos `Attended` y `NoShow`
-- transiciones de dominio acotadas `MarkAttended()` y `MarkNoShow()` solo desde `Scheduled`
-- bloqueo explícito de transiciones incompatibles desde `Cancelled`, `Attended` y `NoShow`
-- endpoints mínimos para marcar citas como attended o no-show sin abrir un segundo modelo de acceso
-- read model de calendario existente preservado y enriquecido con los nuevos estados para distinción visual mínima
-- soporte frontend mínimo para marcar attended/no-show desde la selección de cita y mostrar badges/estilos diferenciados en el calendario
-- cobertura automática para transiciones permitidas, transiciones inválidas, acceso cross-tenant prohibido, restricciones branch-aware y representación de estados en calendario
-
-**Estado de Release 2** — [Hecho] completado.
-
-**Decisión de alcance** — [Hecho] `doctor-based views` se difiere explícitamente a un slice futuro porque no es un parche pequeño de UI: requiere un slice dedicado de provider/doctor assignment, cambios de modelo y read models específicos de calendario.
-
-**Fase abierta actual** — [Hecho] Phase 2 Expansion — Modern Operations, iniciada por `Phase 2.1 — Appointment Confirmation Foundation` ya aceptada, continuada por `Phase 2.2 — Manual Reminder Log Foundation`, `Phase 2.3 — Reminder Scheduling Preparation`, `Phase 2.4 — Reminder Worklist Follow-up Actions`, `Phase 2.5 — Reminder Template Draft Foundation` y `Phase 2.6 — Reminder Template Usage Traceability` ya aceptadas, apoyada sobre el MVP operativo ya preservado por Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation, el slice aceptado Release 6.1 — Billing Foundation, Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas, con los slices Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5, Release 3.6, Release 4.1, Release 4.2, Release 4.3 y Release 4.4 preservados como base clínica, dental y comercial inmediata. Phase 2 completa no debe tratarse como cerrada.
-
-**Precondición ya resuelta** — [Hecho]
-- policies y/o handlers backend para tenant user / tenant admin / platform admin o equivalentes
-- autorización evaluada por scope, membership, rol y permiso; no solo por nombre de rol
-- enforcement centralizado tenant-aware para reads/writes en datos tenant-owned actuales
-- soporte explícito y auditable para platform override permitido
-- pruebas automáticas para reads/writes cross-tenant prohibidos, restricciones branch-aware y escenarios permitidos de bypass de plataforma
-- endpoint `/api/auth/me` y base frontend de guards/contexto actual
-
-## 6. Riesgos y temas a vigilar
-
-**Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal: cualquier fuga cross-tenant por modelado incompleto, resolución insegura de tenant, filtros incompletos o bypass silencioso compromete la frontera primaria de seguridad.
-
-**Authorization model** — [Hecho] La fundación ya quedó cerrada y probada por membership, scope y permisos; el catálogo inicial es pequeño a propósito y seguirá evolucionando por módulo sin reabrir la forma base del modelo.
-
-**Query filters y acceso a datos** — [Hecho] Los filtros globales de tenant y el enforcement centralizado siguen siendo críticos; el riesgo es degradarlos con filtros manuales dispersos, accesos ad hoc o bypasses no controlados.
-
-**Privileged/platform paths** — [Hecho] Toda operación fuera del tenant scope normal debe ser explícita, mínima, segregada y auditable; el riesgo es normalizar caminos privilegiados sin trazabilidad suficiente.
-
-**Consistencia TenantId / BranchId** — [Hecho] BranchId sigue siendo scope operativo subordinado; el riesgo es usarlo como sustituto implícito de TenantId o permitir combinaciones tenant/branch inconsistentes.
-
-**Claims y contrato de identidad** — [Hecho] El contrato base ya quedó formalizado con user id, role, scope, permission, tenant claim y branch claim cuando aplica; futuras fases solo deberían extenderlo de forma compatible.
-
-**UX operativa** — [Hecho] La seguridad y la estructura técnica no deben degradar la velocidad ni la claridad de los flujos núcleo; la UX operativa sigue siendo restricción de producto.
-
-**CI / tests** — [Hecho] Cambios en tenant handling, authz, pacientes, clínica, pagos, documentos y overrides de plataforma requieren cobertura explícita y evidencia de validación; “compila” no es criterio suficiente.
-
-**Alineación documental futura** — [Hecho] README.md, PROJECT_MAP.md y AGENTS.md ya están reconciliados con el estado canónico; el riesgo ahora es reintroducir desalineación cuando avance una fase o cambie una decisión arquitectónica sin actualizar STATE y documentación base en el mismo cambio.
+[Hecho] La siguiente fase funcional prevista por el roadmap es Release 4 — Odontogram.
+
+[Hecho] Release 4 — Odontogram no queda abierta por este cierre documental. Cualquier implementación o aceptación de Release 4 debe realizarse en un slice futuro explícito, con alcance, pruebas y documentación propios.
+
+[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe tratarse como siguiente paso inmediato después de cerrar Release 3, ni antes de completar Release 4, Release 5, Release 6 y Release 7 según `docs/product-roadmap.md`.
+
+## 5. Release 3 — Clinical Records
+
+**Nombre exacto** — [Hecho] Release 3 — Clinical Records.
+
+**Estado operativo actual** — [Hecho] completada como release clínico fundacional.
+
+**Evidencia de cierre** — [Hecho] Release 3 queda cerrada mediante los slices aceptados:
+
+- Release 3.1 — Clinical Record Foundation.
+- Release 3.2 — Basic Diagnoses Foundation.
+- Release 3.3 — Clinical Timeline Read Model.
+- Release 3.4 — Clinical Snapshot Change History.
+- Release 3.5 — Medical Questionnaire Backend.
+- Release 3.6 — Clinical Encounter / Vitals Backend.
+
+**Alcance cerrado** — [Hecho]
+
+- `ClinicalRecord` tenant-owned y patient-owned.
+- Exactamente un expediente clínico activo por Patient por Tenant.
+- Creación explícita vía `POST /api/patients/{patientId}/clinical-record`.
+- `GET /api/patients/{patientId}/clinical-record` devuelve `404` cuando no existe.
+- Sin autocreación por lectura, notas, diagnósticos, cuestionario o encounters.
+- Snapshot base con medical background summary, current medications summary y alergias actuales.
+- Clinical notes append-only con orden newest-first.
+- Diagnósticos básicos no codificados con alta y resolución explícitas.
+- Timeline clínica acotada, construida solo desde notas y diagnósticos/resoluciones, sin endpoint nuevo y sin tabla nueva.
+- Snapshot history acotado, separado de la timeline.
+- Cuestionario médico estructurado con catálogo fijo `QuestionKey`, respuestas `Unknown` / `Yes` / `No` y `Details` opcional acotado.
+- Consulta clínica/signos vitales mediante `ClinicalEncounter` sobre un expediente existente.
+- `ChiefComplaint`, `ConsultationType` `Treatment` / `Urgency` / `Other`, signos vitales opcionales y `noteText` opcional como nota append-only vinculada.
+- `TenantId` y `CreatedByUserId` derivados del contexto, no aceptados desde cliente en los contratos nuevos.
+- Reutilización de `clinical.read` / `clinical.write`, sin permisos nuevos.
+- UI acotada dentro de `features/clinical-records`, con HTTP en data-access y orquestación por facade.
+- Contexto read-only de Patient para identidad/demografía, incluyendo edad derivada desde `Patient.DateOfBirth` sin persistir edad ni agregar `Age` al backend.
+
+**Acceso clínico** — [Hecho] En esta fase, `clinical.read` y `clinical.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos clínicos.
+
+**Fuera del cierre** — [Hecho]
+
+- Full o advanced patient clinical timeline.
+- Timeline cross-module.
+- Restore/revert de snapshot history.
+- Versionado completo del expediente clínico.
+- Rich snapshot diff.
+- Form builder configurable por tenant.
+- Sincronización automática de alergias desde questionnaire.
+- Eventos de questionnaire o encounter en timeline.
+- Edición/borrado de encounters.
+- Doctor/provider assignment.
+- Scheduling, Billing, Odontogram, Treatments o Documents.
+
+**Campos del formato físico fuera del cierre clínico** — [Hecho]
+
+- Teléfonos separados casa/oficina/celular pertenecen a un futuro mini-slice Patient Contact Details, solo si el cliente lo confirma.
+- `Requiere factura` y datos de facturación pertenecen a Billing/fiscal profile futuro, no a Clinical Records.
+
+## 6. Releases previos cerrados
+
+**Release 1 — Patients** — [Hecho] cubre registro, actualización, búsqueda tenant-scoped, perfil básico, responsible party inline, estatus activo/inactivo, basic clinical alerts, validación de fecha de nacimiento futura y permisos `patient.read` / `patient.write`.
+
+**Release 2 — Scheduling** — [Hecho] cubre citas tenant-owned y branch-aware, calendario diario/semanal, creación/edición/reprogramación/cancelación, appointment notes, blocked slots, estados `Attended` / `NoShow`, permisos `scheduling.read` / `scheduling.write` y diferimiento explícito de doctor-based views.
 
 ## 7. Backlog inmediato
 
 Lista priorizada:
 
-1. Preservar Releases 1 y 2 ya cerrados sin debilitar la fundación tenant-aware ya cerrada.
+1. Preservar Releases 1, 2 y 3 ya cerrados sin debilitar la fundación tenant-aware ya cerrada.
 
-2. Preservar Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics ya aceptadas, preservar Release 6.1 — Billing Foundation aceptada sin reabrir billing avanzado, preservar Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation aceptadas sin cerrar Release 7, preservar Phase 2.1 — Appointment Confirmation Foundation, Phase 2.2 — Manual Reminder Log Foundation, Phase 2.3 — Reminder Scheduling Preparation, Phase 2.4 — Reminder Worklist Follow-up Actions, Phase 2.5 — Reminder Template Draft Foundation y Phase 2.6 — Reminder Template Usage Traceability ya aceptadas, sin asumir cerrada Phase 2 completa.
+2. Preparar el siguiente slice funcional de `Release 4 — Odontogram` solo cuando se abra explícitamente, manteniendo tenant safety, permisos acotados y documentación alineada.
 
 3. Mantener diferidas las `doctor-based views` hasta abrir un slice dedicado de provider/doctor assignment; no reintroducirlas como parche incidental de UI.
 
-4. Mantener explícitos y auditables los privileged/platform paths a medida que aparezcan endpoints funcionales.
+4. Mantener fuera de Clinical Records los follow-ups de Patient Contact Details, Billing/fiscal profile y cualquier scope de Odontogram/Treatments/Documents.
 
-5. Extender el catálogo de permisos solo junto con módulos reales, evitando inflarlo antes de tiempo.
+5. Considerar como hardening opcional futuro el rechazo de JSON con miembros no mapeados en DTOs clínicos antiguos, sin cambiar permisos ni contratos funcionales sin slice explícito.
 
-6. Mantener sincronizados STATE — BigSmile.md, README.md, PROJECT_MAP.md y AGENTS.md cuando avance el estado del proyecto.
+6. Si en el futuro se consultan directamente tablas hijas clínicas, esas queries deben usar join tenant-aware o modelarse como tenant-owned.
 
-## 8. Criterios para no perder el rumbo
+7. Mantener sincronizados STATE — BigSmile.md, README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md cuando avance el estado del proyecto.
+
+## 8. Riesgos y temas a vigilar
+
+**Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal: cualquier fuga cross-tenant por modelado incompleto, resolución insegura de tenant, filtros incompletos o bypass silencioso compromete la frontera primaria de seguridad.
+
+**Authorization model** — [Hecho] La fundación ya quedó cerrada y probada por membership, scope y permisos; el catálogo inicial seguirá evolucionando por módulo sin reabrir la forma base del modelo.
+
+**Query filters y acceso a datos** — [Hecho] Los filtros globales de tenant y el enforcement centralizado siguen siendo críticos; el riesgo es degradarlos con filtros manuales dispersos, accesos ad hoc o bypasses no controlados.
+
+**Clinical child tables** — [Hecho] Los hijos clínicos históricos se consumen a través de `ClinicalRecord`; cualquier acceso directo futuro debe conservar tenant safety mediante join tenant-aware o modelado tenant-owned.
+
+**Privileged/platform paths** — [Hecho] Toda operación fuera del tenant scope normal debe ser explícita, mínima, segregada y auditable.
+
+**UX operativa** — [Hecho] La seguridad y la estructura técnica no deben degradar la velocidad ni la claridad de los flujos núcleo.
+
+**Alineación documental futura** — [Hecho] El riesgo ahora es reintroducir desalineación cuando avance una fase o cambie una decisión sin actualizar STATE y documentación base en el mismo cambio.
+
+## 9. Criterios para no perder el rumbo
 
 [Hecho] No olvidar que BigSmile es producto SaaS multi-tenant para clínicas, no una solución one-off; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewabilidad rompe el rumbo.
 
 [Hecho] El orden del producto importa: primero foundation, luego Patients, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing, Documents and Dashboard; después vendrán recordatorios, online booking, facturación electrónica, patient portal, analytics y automatizaciones.
 
-[Hecho] Capacidades importantes aunque todavía no estén implementadas o cerradas: reminders por WhatsApp/email, online booking, advanced multi-branch administration, tenant branding/feature flags, onboarding automation, patient portal, analytics avanzados y automatizaciones. No deben olvidarse en el diseño aunque no entren todavía.
+[Hecho] Phase 2 ocurre después del MVP operativo, no inmediatamente después de Release 3.
 
 [Hecho] Restricciones de diseño a preservar: modular monolith; capas y ownership explícitos; TenantId como boundary primario; BranchId subordinado; shared DB/schema inicial; sin microservicios ni DB por tenant en esta etapa; sin bypass oculto de plataforma; sin lógica crítica de negocio/autorización solo en UI.
 
-[Hecho] La UX operativa rápida es parte del diseño: búsqueda/alta de paciente, agenda, clínica, tratamientos y pagos deben seguir siendo flujos cortos, claros y de baja fricción.
-
 [Hecho] Ningún release funcional del roadmap debe tratarse como completado sin evidencia explícita en código y documentación alineada.
 
-## 9. Nota tipo ADR resumida
+## 10. Nota tipo ADR resumida
 
-**Estado:** Aceptada como nota canónica operativa; reconciliada con README.md, PROJECT_MAP.md y AGENTS.md.
+**Estado:** Aceptada como nota canónica operativa; reconciliada con README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md.
 
 **Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients y Release 2 — Scheduling; tratar Release 3 — Clinical Records como base inmediata preservada mediante Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 3.5 — Medical Questionnaire Backend y Release 3.6 — Clinical Encounter / Vitals Backend aceptadas; tratar Release 4 — Odontogram como base dental inmediata preservada mediante Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation y Release 4.4 — Dental Findings Change History aceptadas; tratar Release 5 — Treatments and Quotes como fase previa preservada con Release 5.1 — Treatment Plan Foundation y Release 5.2 — Quote Basics aceptadas; tratar Release 6 — Billing como fase previa abierta preservada mediante el slice aceptado Release 6.1 — Billing Foundation sin marcar todavía Release 6 como cerrada; tratar Release 7 — Documents and Dashboard como fase previa abierta preservada mediante los slices aceptados Release 7.1 — Documents Foundation y Release 7.2 — Dashboard Foundation, sin marcar todavía Release 7 como cerrada; tratar Phase 2 Expansion — Modern Operations como fase activa abierta mediante Phase 2.1 — Appointment Confirmation Foundation, Phase 2.2 — Manual Reminder Log Foundation, Phase 2.3 — Reminder Scheduling Preparation, Phase 2.4 — Reminder Worklist Follow-up Actions, Phase 2.5 — Reminder Template Draft Foundation y Phase 2.6 — Reminder Template Usage Traceability ya aceptadas, sin marcar Phase 2 como cerrada ni asumir implementados WhatsApp/email/SMS/reminders automáticos/providers/jobs/queues/webhooks/external delivery templates/scheduler real/retry/campaigns/online booking/patient portal; tratar `doctor-based views` como diferido a un slice futuro acotado; tratar README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md como reconciliados con STATE; no asumir cerradas Release 7, Phase 2 ni las fases posteriores mientras no exista evidencia explícita en código y documentación alineada.
+**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients, Release 2 — Scheduling y Release 3 — Clinical Records. Tratar Release 3.1 a Release 3.6 como evidencia aceptada de cierre. Tratar Release 4 — Odontogram como siguiente fase funcional prevista, no abierta por este cierre. Tratar Phase 2 Expansion — Modern Operations como roadmap posterior al MVP, no como siguiente paso inmediato después de Release 3.
 
-**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients y Scheduling, preservar los slices aceptados Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 3.5 — Medical Questionnaire Backend, Release 3.6 — Clinical Encounter / Vitals Backend, Release 4.1 — Odontogram Foundation, Release 4.2 — Odontogram Surface Foundation, Release 4.3 — Basic Dental Findings Foundation, Release 4.4 — Dental Findings Change History, Release 5.1 — Treatment Plan Foundation, Release 5.2 — Quote Basics, Release 6.1 — Billing Foundation, Release 7.1 — Documents Foundation, Release 7.2 — Dashboard Foundation, Phase 2.1 — Appointment Confirmation Foundation, Phase 2.2 — Manual Reminder Log Foundation, Phase 2.3 — Reminder Scheduling Preparation, Phase 2.4 — Reminder Worklist Follow-up Actions, Phase 2.5 — Reminder Template Draft Foundation y Phase 2.6 — Reminder Template Usage Traceability, continuar Phase 2 en slices acotados sin ampliar scope a mensajería/reminders automáticos, y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
+**Consecuencias:** La prioridad inmediata pasa a ser preservar el cierre de Patients, Scheduling y Clinical Records, preparar Release 4 solo mediante slices explícitos, mantener Clinical Records fuera de Billing/Scheduling/Odontogram/Treatments/Documents y mantener sincronizados STATE y documentación base cada vez que cambie el estado del proyecto.
