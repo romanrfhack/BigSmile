@@ -14,6 +14,7 @@ import { PatientsFacade } from '../../patients/facades/patients.facade';
 import { ClinicalBackgroundFormComponent } from '../components/clinical-background-form.component';
 import { ClinicalDiagnosisCreateFormComponent } from '../components/clinical-diagnosis-create-form.component';
 import { ClinicalDiagnosesListComponent } from '../components/clinical-diagnoses-list.component';
+import { ClinicalEncounterVitalsSectionComponent } from '../components/clinical-encounter-vitals-section.component';
 import { ClinicalMedicalQuestionnaireFormComponent } from '../components/clinical-medical-questionnaire-form.component';
 import { ClinicalNoteCreateFormComponent } from '../components/clinical-note-create-form.component';
 import { ClinicalNotesListComponent } from '../components/clinical-notes-list.component';
@@ -23,6 +24,7 @@ import { ClinicalTimelineListComponent } from '../components/clinical-timeline-l
 import { ClinicalRecordsFacade } from '../facades/clinical-records.facade';
 import {
   AddClinicalDiagnosisRequest,
+  AddClinicalEncounterRequest,
   AddClinicalNoteRequest,
   SaveClinicalMedicalQuestionnaireRequest,
   SaveClinicalRecordSnapshotRequest
@@ -38,6 +40,7 @@ import {
     ClinicalBackgroundFormComponent,
     ClinicalDiagnosisCreateFormComponent,
     ClinicalDiagnosesListComponent,
+    ClinicalEncounterVitalsSectionComponent,
     ClinicalMedicalQuestionnaireFormComponent,
     ClinicalNoteCreateFormComponent,
     ClinicalNotesListComponent,
@@ -53,9 +56,9 @@ import {
   template: `
     <section class="clinical-record-page">
       <app-page-header
-        [eyebrow]="('Release' | t) + ' 3.5 / ' + ('Clinical record' | t)"
+        [eyebrow]="('Release' | t) + ' 3.5 / 3.6 / ' + ('Clinical record' | t)"
         [title]="'Clinical record' | t"
-        [subtitle]="'Structured clinical record for {patientDisplayName} with explicit creation, base snapshot, fixed medical questionnaire, current allergies, diagnoses, append-only notes, and separated history sections.' | t:{ patientDisplayName }">
+        [subtitle]="'Structured clinical record for {patientDisplayName} with explicit creation, base snapshot, fixed medical questionnaire, encounters and vitals, current allergies, diagnoses, append-only notes, and separated history sections.' | t:{ patientDisplayName }">
         <a *ngIf="patientId" page-header-actions [routerLink]="['/patients', patientId]" class="clinical-action clinical-action--secondary">
           {{ 'Back to patient' | t }}
         </a>
@@ -166,6 +169,19 @@ import {
             </div>
           </dl>
         </app-section-card>
+
+        <app-clinical-encounter-vitals-section
+          [encounters]="clinicalRecordsFacade.currentEncounters()"
+          [loading]="clinicalRecordsFacade.loadingEncounters()"
+          [missing]="clinicalRecordsFacade.encountersMissing()"
+          [error]="clinicalRecordsFacade.encountersError()"
+          [saveError]="encounterError"
+          [saving]="savingEncounter"
+          [canWrite]="canWrite"
+          [revision]="encounterFormRevision"
+          (saved)="addEncounter($event)"
+          (retryRequested)="reloadEncounters()">
+        </app-clinical-encounter-vitals-section>
 
         <app-clinical-medical-questionnaire-form
           [questionnaire]="clinicalRecordsFacade.currentQuestionnaire()"
@@ -450,12 +466,15 @@ export class ClinicalRecordPageComponent implements OnInit {
   savingNote = false;
   savingDiagnosis = false;
   savingQuestionnaire = false;
+  savingEncounter = false;
   snapshotError: string | null = null;
   noteError: string | null = null;
   diagnosisError: string | null = null;
   questionnaireSaveError: string | null = null;
+  encounterError: string | null = null;
   noteFormRevision = 0;
   diagnosisFormRevision = 0;
+  encounterFormRevision = 0;
   resolvingDiagnosisId: string | null = null;
 
   get patientDisplayName(): string {
@@ -475,6 +494,7 @@ export class ClinicalRecordPageComponent implements OnInit {
     this.clinicalRecordsFacade.clearRecord();
     this.clinicalRecordsFacade.loadRecord(this.patientId);
     this.clinicalRecordsFacade.loadQuestionnaire(this.patientId);
+    this.clinicalRecordsFacade.loadEncounters(this.patientId);
   }
 
   startCreate(): void {
@@ -504,6 +524,7 @@ export class ClinicalRecordPageComponent implements OnInit {
         this.savingSnapshot = false;
         this.creatingRecord = false;
         this.reloadQuestionnaire();
+        this.reloadEncounters();
       },
       error: () => {
         this.savingSnapshot = false;
@@ -521,6 +542,15 @@ export class ClinicalRecordPageComponent implements OnInit {
 
     this.questionnaireSaveError = null;
     this.clinicalRecordsFacade.loadQuestionnaire(this.patientId);
+  }
+
+  reloadEncounters(): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.encounterError = null;
+    this.clinicalRecordsFacade.loadEncounters(this.patientId);
   }
 
   saveQuestionnaire(payload: SaveClinicalMedicalQuestionnaireRequest): void {
@@ -561,6 +591,27 @@ export class ClinicalRecordPageComponent implements OnInit {
         error: () => {
           this.savingNote = false;
           this.noteError = 'The clinical note could not be added.';
+        }
+      });
+  }
+
+  addEncounter(payload: AddClinicalEncounterRequest): void {
+    if (!this.patientId) {
+      return;
+    }
+
+    this.savingEncounter = true;
+    this.encounterError = null;
+
+    this.clinicalRecordsFacade.addEncounter(this.patientId, payload)
+      .subscribe({
+        next: () => {
+          this.savingEncounter = false;
+          this.encounterFormRevision += 1;
+        },
+        error: () => {
+          this.savingEncounter = false;
+          this.encounterError = 'The clinical encounter could not be saved.';
         }
       });
   }

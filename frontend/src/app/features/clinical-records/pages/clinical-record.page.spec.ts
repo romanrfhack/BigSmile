@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PatientsFacade } from '../../patients/facades/patients.facade';
+import { ClinicalEncounterVitalsSectionComponent } from '../components/clinical-encounter-vitals-section.component';
 import { ClinicalRecordsFacade } from '../facades/clinical-records.facade';
 import { ClinicalRecordPageComponent } from './clinical-record.page';
 
@@ -14,8 +15,10 @@ describe('ClinicalRecordPageComponent', () => {
   let updateCalls: any[];
   let addNoteCalls: any[];
   let addDiagnosisCalls: any[];
+  let addEncounterCalls: any[];
   let resolveDiagnosisCalls: any[];
   let loadQuestionnaireCalls: string[];
+  let loadEncountersCalls: string[];
   let updateQuestionnaireCalls: any[];
 
   beforeEach(async () => {
@@ -24,8 +27,10 @@ describe('ClinicalRecordPageComponent', () => {
     updateCalls = [];
     addNoteCalls = [];
     addDiagnosisCalls = [];
+    addEncounterCalls = [];
     resolveDiagnosisCalls = [];
     loadQuestionnaireCalls = [];
+    loadEncountersCalls = [];
     updateQuestionnaireCalls = [];
 
     clinicalRecordsFacade = {
@@ -37,9 +42,16 @@ describe('ClinicalRecordPageComponent', () => {
       loadingQuestionnaire: signal(false),
       questionnaireMissing: signal(false),
       questionnaireError: signal<string | null>(null),
+      currentEncounters: signal<any[]>([]),
+      loadingEncounters: signal(false),
+      encountersMissing: signal(false),
+      encountersError: signal<string | null>(null),
       loadRecord: () => undefined,
       loadQuestionnaire: (patientId: string) => {
         loadQuestionnaireCalls.push(patientId);
+      },
+      loadEncounters: (patientId: string) => {
+        loadEncountersCalls.push(patientId);
       },
       clearRecord: () => undefined,
       createRecord: (_patientId: string, payload: any) => {
@@ -111,6 +123,30 @@ describe('ClinicalRecordPageComponent', () => {
           ]
         });
         return of(clinicalRecordsFacade.currentRecord());
+      },
+      addEncounter: (_patientId: string, payload: any) => {
+        addEncounterCalls.push(payload);
+        const encounter = {
+          id: `encounter-${addEncounterCalls.length}`,
+          clinicalRecordId: 'record-1',
+          patientId: 'patient-1',
+          occurredAtUtc: payload.occurredAtUtc,
+          chiefComplaint: payload.chiefComplaint,
+          consultationType: payload.consultationType,
+          temperatureC: payload.temperatureC,
+          bloodPressureSystolic: payload.bloodPressureSystolic,
+          bloodPressureDiastolic: payload.bloodPressureDiastolic,
+          weightKg: payload.weightKg,
+          heightCm: payload.heightCm,
+          respiratoryRatePerMinute: payload.respiratoryRatePerMinute,
+          heartRateBpm: payload.heartRateBpm,
+          clinicalNoteId: payload.noteText ? 'note-encounter-1' : null,
+          noteText: payload.noteText,
+          createdAtUtc: '2026-05-12T18:00:00Z',
+          createdByUserId: 'user-2'
+        };
+        clinicalRecordsFacade.currentEncounters.set([encounter, ...clinicalRecordsFacade.currentEncounters()]);
+        return of(encounter);
       },
       addDiagnosis: (_patientId: string, payload: any) => {
         addDiagnosisCalls.push(payload);
@@ -248,6 +284,13 @@ describe('ClinicalRecordPageComponent', () => {
     expect(loadQuestionnaireCalls).toEqual(['patient-1']);
   });
 
+  it('loads clinical encounters when the clinical record page opens', () => {
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    fixture.detectChanges();
+
+    expect(loadEncountersCalls).toEqual(['patient-1']);
+  });
+
   it('creates the clinical record only after the explicit create flow starts', () => {
     const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
     const component = fixture.componentInstance;
@@ -335,6 +378,60 @@ describe('ClinicalRecordPageComponent', () => {
 
     expect(addNoteCalls).toEqual([{ noteText: 'Newest note' }]);
     expect(clinicalRecordsFacade.currentRecord()?.notes[0]?.noteText).toBe('Newest note');
+  });
+
+  it('adds a clinical encounter through the facade', () => {
+    clinicalRecordsFacade.recordMissing.set(false);
+    clinicalRecordsFacade.currentRecord.set({
+      clinicalRecordId: 'record-1',
+      patientId: 'patient-1',
+      medicalBackgroundSummary: 'Background',
+      currentMedicationsSummary: null,
+      allergies: [],
+      diagnoses: [],
+      snapshotHistory: [],
+      timeline: [],
+      notes: [],
+      createdAtUtc: '2026-04-20T10:00:00Z',
+      createdByUserId: 'user-1',
+      lastUpdatedAtUtc: '2026-04-20T10:00:00Z',
+      lastUpdatedByUserId: 'user-1'
+    });
+
+    const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.addEncounter({
+      occurredAtUtc: '2026-05-12T18:00:00.000Z',
+      chiefComplaint: 'Tooth pain',
+      consultationType: 'Urgency',
+      temperatureC: 36.8,
+      bloodPressureSystolic: 120,
+      bloodPressureDiastolic: 80,
+      weightKg: null,
+      heightCm: null,
+      respiratoryRatePerMinute: null,
+      heartRateBpm: 78,
+      noteText: 'Patient reports pain at night.'
+    });
+
+    expect(addEncounterCalls).toEqual([
+      {
+        occurredAtUtc: '2026-05-12T18:00:00.000Z',
+        chiefComplaint: 'Tooth pain',
+        consultationType: 'Urgency',
+        temperatureC: 36.8,
+        bloodPressureSystolic: 120,
+        bloodPressureDiastolic: 80,
+        weightKg: null,
+        heightCm: null,
+        respiratoryRatePerMinute: null,
+        heartRateBpm: 78,
+        noteText: 'Patient reports pain at night.'
+      }
+    ]);
+    expect(clinicalRecordsFacade.currentEncounters()[0]?.chiefComplaint).toBe('Tooth pain');
   });
 
   it('renders diagnoses with active and resolved states', () => {
@@ -516,5 +613,12 @@ describe('ClinicalRecordPageComponent', () => {
         ]
       }
     ]);
+  });
+
+  it('keeps clinical page and component orchestration free of direct HTTP clients', () => {
+    expect(ClinicalRecordPageComponent.toString()).not.toContain('HttpClient');
+    expect(ClinicalRecordPageComponent.toString()).not.toContain('fetch');
+    expect(ClinicalEncounterVitalsSectionComponent.toString()).not.toContain('HttpClient');
+    expect(ClinicalEncounterVitalsSectionComponent.toString()).not.toContain('fetch');
   });
 });

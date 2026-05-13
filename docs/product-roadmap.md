@@ -220,6 +220,7 @@ Allow clinicians to maintain a structured patient clinical record.
 - Release 3.5 — Medical Questionnaire Backend is accepted
 - Release 3.6 — Clinical Encounter / Vitals Backend is accepted
 - A bounded frontend UI integration for the fixed Release 3.5 medical questionnaire now exists inside the existing clinical record screen, without changing backend contracts or permissions
+- A bounded frontend UI integration for Release 3.6 clinical encounters/vitals now exists inside the existing clinical record screen, without changing backend contracts, permissions, timeline behavior, Patient data, or later modules
 
 ## Scope
 Release 3 is being delivered in bounded slices. The currently accepted slices are Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5, and Release 3.6, and they cover:
@@ -261,9 +262,11 @@ Release 3 is being delivered in bounded slices. The currently accepted slices ar
 - optional bounded vitals: temperature C, systolic/diastolic blood pressure, weight kg, height cm, respiratory rate, and heart rate
 - optional append-only linked `ClinicalNote` when encounter `noteText` is provided
 - no request-provided `TenantId` or `CreatedByUserId` for encounters
+- frontend section inside the existing clinical record screen for recent encounters and compact encounter/vitals creation, with i18n labels, read-only Patient context, and loading/empty/error/saving states
+- no frontend-driven changes to timeline, Patient demographics, Scheduling, Billing, Odontogram, Treatments, Documents, or doctor/provider scope
 
 ## Expected outcome
-A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking, a bounded clinical timeline read model, bounded snapshot history, a fixed medical questionnaire, and backend encounter/vitals capture without opening later clinical modules.
+A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking, a bounded clinical timeline read model, bounded snapshot history, a fixed medical questionnaire, and encounter/vitals capture without opening later clinical modules.
 
 ## Core users
 - Dentist
@@ -293,7 +296,6 @@ A user operating under the current clinical permissions can consult and update t
 - automatic allergy synchronization from questionnaire answers
 - questionnaire events in the clinical timeline
 - configurable or dynamic questionnaire UI
-- frontend encounter/vitals UI
 - encounter editing or deletion
 - new encounter-specific timeline event model
 - odontogram

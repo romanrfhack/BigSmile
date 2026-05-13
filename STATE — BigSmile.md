@@ -161,7 +161,8 @@
 - sin edición/borrado de signos vitales
 - sin enriquecimiento nuevo de timeline, sin tabla nueva de timeline y sin timeline cross-module
 - sin tocar Patient demographics, Billing, Scheduling, Odontogram, Treatments, Documents ni doctor/provider assignment
-- sin frontend en este slice
+
+[Hecho] La UI bounded de consulta clínica y signos vitales ya existe dentro de la pantalla de expediente clínico existente. Consume únicamente `GET` / `POST /api/patients/{patientId}/clinical-record/encounters` mediante data-access y facade de `features/clinical-records`, muestra encounters recientes newest-first, captura `OccurredAtUtc`, `ChiefComplaint`, `ConsultationType`, signos vitales opcionales y `noteText` opcional, y conserva estados loading/empty/error/saving con labels i18n. No cambia backend, contratos API, permisos, guards, tenant resolution, timeline, Patient demographics ni módulos posteriores.
 
 [Hecho] En esta fase, `clinical.read` y `clinical.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos clínicos.
 

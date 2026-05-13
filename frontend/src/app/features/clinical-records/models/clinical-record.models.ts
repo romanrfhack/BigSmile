@@ -75,6 +75,42 @@ export interface ClinicalRecord {
   lastUpdatedByUserId: string;
 }
 
+export type ClinicalEncounterConsultationType = 'Treatment' | 'Urgency' | 'Other';
+
+export interface ClinicalEncounter {
+  id: string;
+  clinicalRecordId: string;
+  patientId: string;
+  occurredAtUtc: string;
+  chiefComplaint: string;
+  consultationType: ClinicalEncounterConsultationType;
+  temperatureC: number | null;
+  bloodPressureSystolic: number | null;
+  bloodPressureDiastolic: number | null;
+  weightKg: number | null;
+  heightCm: number | null;
+  respiratoryRatePerMinute: number | null;
+  heartRateBpm: number | null;
+  clinicalNoteId: string | null;
+  noteText: string | null;
+  createdAtUtc: string;
+  createdByUserId: string;
+}
+
+export interface AddClinicalEncounterRequest {
+  occurredAtUtc: string;
+  chiefComplaint: string;
+  consultationType: ClinicalEncounterConsultationType;
+  temperatureC: number | null;
+  bloodPressureSystolic: number | null;
+  bloodPressureDiastolic: number | null;
+  weightKg: number | null;
+  heightCm: number | null;
+  respiratoryRatePerMinute: number | null;
+  heartRateBpm: number | null;
+  noteText: string | null;
+}
+
 export interface SaveClinicalRecordAllergyRequest {
   substance: string;
   reactionSummary: string | null;

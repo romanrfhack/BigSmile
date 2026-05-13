@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   AddClinicalDiagnosisRequest,
+  AddClinicalEncounterRequest,
   AddClinicalNoteRequest,
+  ClinicalEncounter,
   ClinicalMedicalQuestionnaire,
   ClinicalRecord,
   SaveClinicalMedicalQuestionnaireRequest,
@@ -26,6 +28,10 @@ export class ClinicalRecordsApiService {
     return this.http.get<ClinicalMedicalQuestionnaire>(`${this.baseUrl}/${patientId}/clinical-record/questionnaire`);
   }
 
+  getClinicalEncounters(patientId: string): Observable<ClinicalEncounter[]> {
+    return this.http.get<ClinicalEncounter[]>(`${this.baseUrl}/${patientId}/clinical-record/encounters`);
+  }
+
   createClinicalRecord(patientId: string, payload: SaveClinicalRecordSnapshotRequest): Observable<ClinicalRecord> {
     return this.http.post<ClinicalRecord>(`${this.baseUrl}/${patientId}/clinical-record`, payload);
   }
@@ -43,6 +49,10 @@ export class ClinicalRecordsApiService {
 
   addClinicalNote(patientId: string, payload: AddClinicalNoteRequest): Observable<ClinicalRecord> {
     return this.http.post<ClinicalRecord>(`${this.baseUrl}/${patientId}/clinical-record/notes`, payload);
+  }
+
+  addClinicalEncounter(patientId: string, payload: AddClinicalEncounterRequest): Observable<ClinicalEncounter> {
+    return this.http.post<ClinicalEncounter>(`${this.baseUrl}/${patientId}/clinical-record/encounters`, payload);
   }
 
   addDiagnosis(patientId: string, payload: AddClinicalDiagnosisRequest): Observable<ClinicalRecord> {

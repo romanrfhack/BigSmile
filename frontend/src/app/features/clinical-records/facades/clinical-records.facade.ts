@@ -4,7 +4,9 @@ import { tap } from 'rxjs';
 import { ClinicalRecordsApiService } from '../data-access/clinical-records-api.service';
 import {
   AddClinicalDiagnosisRequest,
+  AddClinicalEncounterRequest,
   AddClinicalNoteRequest,
+  ClinicalEncounter,
   ClinicalMedicalQuestionnaire,
   ClinicalRecord,
   SaveClinicalMedicalQuestionnaireRequest,
@@ -25,6 +27,10 @@ export class ClinicalRecordsFacade {
   readonly loadingQuestionnaire = signal(false);
   readonly questionnaireMissing = signal(false);
   readonly questionnaireError = signal<string | null>(null);
+  readonly currentEncounters = signal<ClinicalEncounter[]>([]);
+  readonly loadingEncounters = signal(false);
+  readonly encountersMissing = signal(false);
+  readonly encountersError = signal<string | null>(null);
 
   loadRecord(patientId: string): void {
     this.loadingRecord.set(true);
@@ -61,6 +67,7 @@ export class ClinicalRecordsFacade {
     this.recordMissing.set(false);
     this.recordError.set(null);
     this.clearQuestionnaire();
+    this.clearEncounters();
   }
 
   loadQuestionnaire(patientId: string): void {
@@ -96,6 +103,39 @@ export class ClinicalRecordsFacade {
     this.questionnaireError.set(null);
   }
 
+  loadEncounters(patientId: string): void {
+    this.loadingEncounters.set(true);
+    this.encountersMissing.set(false);
+    this.encountersError.set(null);
+
+    this.clinicalRecordsApi.getClinicalEncounters(patientId)
+      .subscribe({
+        next: (encounters) => {
+          this.setLoadedEncounters(encounters);
+        },
+        error: (error: unknown) => {
+          this.currentEncounters.set([]);
+          this.loadingEncounters.set(false);
+
+          if (error instanceof HttpErrorResponse && error.status === 404) {
+            this.encountersMissing.set(true);
+            this.encountersError.set(null);
+            return;
+          }
+
+          this.encountersMissing.set(false);
+          this.encountersError.set('The clinical encounters could not be loaded.');
+        }
+      });
+  }
+
+  clearEncounters(): void {
+    this.currentEncounters.set([]);
+    this.loadingEncounters.set(false);
+    this.encountersMissing.set(false);
+    this.encountersError.set(null);
+  }
+
   createRecord(patientId: string, payload: SaveClinicalRecordSnapshotRequest) {
     return this.clinicalRecordsApi.createClinicalRecord(patientId, payload).pipe(
       tap((record) => this.setLoadedRecord(record))
@@ -111,6 +151,20 @@ export class ClinicalRecordsFacade {
   addNote(patientId: string, payload: AddClinicalNoteRequest) {
     return this.clinicalRecordsApi.addClinicalNote(patientId, payload).pipe(
       tap((record) => this.setLoadedRecord(record))
+    );
+  }
+
+  addEncounter(patientId: string, payload: AddClinicalEncounterRequest) {
+    return this.clinicalRecordsApi.addClinicalEncounter(patientId, payload).pipe(
+      tap((encounter) => {
+        this.currentEncounters.set(
+          [encounter, ...this.currentEncounters().filter((current) => current.id !== encounter.id)]
+            .sort((left, right) => right.occurredAtUtc.localeCompare(left.occurredAtUtc))
+        );
+        this.loadingEncounters.set(false);
+        this.encountersMissing.set(false);
+        this.encountersError.set(null);
+      })
     );
   }
 
@@ -144,5 +198,12 @@ export class ClinicalRecordsFacade {
     this.loadingQuestionnaire.set(false);
     this.questionnaireMissing.set(false);
     this.questionnaireError.set(null);
+  }
+
+  private setLoadedEncounters(encounters: ClinicalEncounter[]): void {
+    this.currentEncounters.set(encounters);
+    this.loadingEncounters.set(false);
+    this.encountersMissing.set(false);
+    this.encountersError.set(null);
   }
 }
