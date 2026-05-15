@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/i18n';
+import { StickyActionBarComponent } from '../../../shared/ui';
 import { ClinicalRecord, SaveClinicalRecordSnapshotRequest } from '../models/clinical-record.models';
 import { ClinicalAllergiesEditorComponent } from './clinical-allergies-editor.component';
 
 @Component({
   selector: 'app-clinical-background-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ClinicalAllergiesEditorComponent, TranslatePipe],
+  imports: [CommonModule, ReactiveFormsModule, ClinicalAllergiesEditorComponent, StickyActionBarComponent, TranslatePipe],
   template: `
     <form class="clinical-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="section-head">
@@ -41,21 +42,21 @@ import { ClinicalAllergiesEditorComponent } from './clinical-allergies-editor.co
 
       <div *ngIf="error" class="error-banner">{{ error | t }}</div>
 
-      <div class="form-actions">
+      <app-sticky-action-bar [ariaLabel]="'Clinical snapshot actions' | t">
         <button type="button" class="btn btn-secondary" (click)="cancel()" [disabled]="saving">
           {{ (mode === 'edit' ? 'Reset form' : 'Cancel') | t }}
         </button>
         <button type="submit" class="btn btn-primary" [disabled]="saving">
           {{ (saving ? 'Saving...' : mode === 'edit' ? 'Save clinical snapshot' : 'Create clinical record') | t }}
         </button>
-      </div>
+      </app-sticky-action-bar>
     </form>
   `,
   styles: [`
     .clinical-form {
       display: grid;
       gap: 1.25rem;
-      border-radius: 20px;
+      border-radius: var(--bsm-radius-sm);
       border: 1px solid var(--bsm-color-border);
       background: var(--bsm-gradient-surface);
       padding: 1.4rem 1.5rem;
@@ -96,7 +97,7 @@ import { ClinicalAllergiesEditorComponent } from './clinical-allergies-editor.co
 
     textarea {
       border: 1px solid var(--bsm-color-border);
-      border-radius: 12px;
+      border-radius: var(--bsm-radius-sm);
       padding: 0.8rem 0.9rem;
       font: inherit;
       color: var(--bsm-color-text-brand);
@@ -111,22 +112,15 @@ import { ClinicalAllergiesEditorComponent } from './clinical-allergies-editor.co
 
     .error-banner {
       padding: 0.85rem 1rem;
-      border-radius: 12px;
+      border-radius: var(--bsm-radius-sm);
       border: 1px solid var(--bsm-color-danger-border);
       background: var(--bsm-color-danger-soft);
       color: var(--bsm-color-danger-text);
     }
 
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
     .btn {
       border: none;
-      border-radius: 999px;
+      border-radius: var(--bsm-radius-pill);
       padding: 0.8rem 1.1rem;
       font: inherit;
       font-weight: 700;

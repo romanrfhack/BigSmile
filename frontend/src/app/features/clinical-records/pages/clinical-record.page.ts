@@ -26,9 +26,12 @@ import {
   AddClinicalDiagnosisRequest,
   AddClinicalEncounterRequest,
   AddClinicalNoteRequest,
+  ClinicalRecord,
   SaveClinicalMedicalQuestionnaireRequest,
   SaveClinicalRecordSnapshotRequest
 } from '../models/clinical-record.models';
+
+type ClinicalRecordTabId = 'summary' | 'background' | 'encounters' | 'notes' | 'diagnoses' | 'history';
 
 @Component({
   selector: 'app-clinical-record-page',
@@ -56,9 +59,9 @@ import {
   template: `
     <section class="clinical-record-page">
       <app-page-header
-        [eyebrow]="('Release' | t) + ' 3.5 / 3.6 / ' + ('Clinical record' | t)"
+        [eyebrow]="'Clinical workspace' | t"
         [title]="'Clinical record' | t"
-        [subtitle]="'Structured clinical record for {patientDisplayName} with explicit creation, base snapshot, fixed medical questionnaire, encounters and vitals, current allergies, diagnoses, append-only notes, and separated history sections.' | t:{ patientDisplayName }">
+        [subtitle]="'Operational clinical view for {patientDisplayName}: patient context, medical history, consultations, notes, diagnoses, timeline, and snapshot history.' | t:{ patientDisplayName }">
         <a *ngIf="patientId" page-header-actions [routerLink]="['/patients', patientId]" class="clinical-action clinical-action--secondary">
           {{ 'Back to patient' | t }}
         </a>
@@ -153,127 +156,233 @@ import {
       </app-clinical-background-form>
 
       <article *ngIf="clinicalRecordsFacade.currentRecord() as record" class="record-shell">
-        <app-section-card [title]="'Clinical record audit' | t" variant="compact">
-          <dl class="record-meta">
-            <div>
-              <dt>{{ 'Created' | t }}</dt>
-              <dd>{{ record.createdAtUtc | bsDate: 'medium' }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'Created by' | t }}</dt>
-              <dd>{{ record.createdByUserId }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'Last updated' | t }}</dt>
-              <dd>{{ record.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'Updated by' | t }}</dt>
-              <dd>{{ record.lastUpdatedByUserId }}</dd>
-            </div>
-          </dl>
-        </app-section-card>
-
-        <app-clinical-encounter-vitals-section
-          [encounters]="clinicalRecordsFacade.currentEncounters()"
-          [loading]="clinicalRecordsFacade.loadingEncounters()"
-          [missing]="clinicalRecordsFacade.encountersMissing()"
-          [error]="clinicalRecordsFacade.encountersError()"
-          [saveError]="encounterError"
-          [saving]="savingEncounter"
-          [canWrite]="canWrite"
-          [revision]="encounterFormRevision"
-          (saved)="addEncounter($event)"
-          (retryRequested)="reloadEncounters()">
-        </app-clinical-encounter-vitals-section>
-
-        <app-clinical-medical-questionnaire-form
-          [questionnaire]="clinicalRecordsFacade.currentQuestionnaire()"
-          [loading]="clinicalRecordsFacade.loadingQuestionnaire()"
-          [missing]="clinicalRecordsFacade.questionnaireMissing()"
-          [error]="clinicalRecordsFacade.questionnaireError()"
-          [saveError]="questionnaireSaveError"
-          [saving]="savingQuestionnaire"
-          [canWrite]="canWrite"
-          (saved)="saveQuestionnaire($event)"
-          (retryRequested)="reloadQuestionnaire()">
-        </app-clinical-medical-questionnaire-form>
-
-        <app-clinical-background-form
-          [mode]="'edit'"
-          [initialRecord]="record"
-          [saving]="savingSnapshot"
-          [error]="snapshotError"
-          (saved)="saveSnapshot($event)">
-        </app-clinical-background-form>
-
-        <section class="snapshot-history-shell">
-          <div class="notes-head">
-            <div>
-              <p class="eyebrow">{{ 'Snapshot history' | t }}</p>
-              <h3>{{ 'Base snapshot changes only' | t }}</h3>
-              <p class="section-copy">{{ 'Snapshot history and the Release 3.3 clinical timeline stay as separate sections in this slice.' | t }}</p>
-            </div>
-          </div>
-
-          <app-clinical-snapshot-history-list [snapshotHistory]="record.snapshotHistory"></app-clinical-snapshot-history-list>
+        <section class="clinical-overview" [attr.aria-label]="'Clinical record summary' | t">
+          <article class="overview-card overview-card--accent">
+            <span>{{ 'Record status' | t }}</span>
+            <strong>{{ 'Active clinical record' | t }}</strong>
+            <app-status-badge tone="success" [label]="'Ready for clinical work' | t"></app-status-badge>
+          </article>
+          <article class="overview-card">
+            <span>{{ 'Current allergies' | t }}</span>
+            <strong>{{ record.allergies.length }}</strong>
+            <small>{{ 'Kept separate from questionnaire answers' | t }}</small>
+          </article>
+          <article class="overview-card">
+            <span>{{ 'Consultations' | t }}</span>
+            <strong>{{ clinicalRecordsFacade.currentEncounters().length }}</strong>
+            <small>{{ 'Recent encounters' | t }}</small>
+          </article>
+          <article class="overview-card">
+            <span>{{ 'Open diagnoses' | t }}</span>
+            <strong>{{ getActiveDiagnosisCount(record) }}</strong>
+            <small>{{ 'Basic diagnoses' | t }}</small>
+          </article>
+          <article class="overview-card">
+            <span>{{ 'Notes' | t }}</span>
+            <strong>{{ record.notes.length }}</strong>
+            <small>{{ 'Newest first' | t }}</small>
+          </article>
+          <article class="overview-card">
+            <span>{{ 'Last updated' | t }}</span>
+            <strong>{{ record.lastUpdatedAtUtc | bsDate: 'short' }}</strong>
+            <small>{{ 'Snapshot metadata' | t }}</small>
+          </article>
         </section>
 
-        <section class="timeline-shell">
-          <div class="notes-head">
-            <div>
-              <p class="eyebrow">{{ 'Clinical timeline' | t }}</p>
-              <h3>{{ 'Newest clinical events first' | t }}</h3>
-              <p class="section-copy">{{ 'Only note created, diagnosis created, and diagnosis resolved events are included in this slice.' | t }}</p>
+        <nav class="clinical-tabs" role="tablist" [attr.aria-label]="'Clinical record sections' | t">
+          <button
+            *ngFor="let tab of tabs"
+            type="button"
+            role="tab"
+            class="clinical-tab"
+            [id]="'clinical-tab-' + tab.id"
+            [class.clinical-tab--active]="activeTab === tab.id"
+            [attr.aria-selected]="activeTab === tab.id"
+            [attr.aria-controls]="'clinical-panel-' + tab.id"
+            (click)="selectTab(tab.id)">
+            <span>{{ tab.label | t }}</span>
+            <small>{{ tab.description | t }}</small>
+          </button>
+        </nav>
+
+        <ng-container [ngSwitch]="activeTab">
+          <section
+            *ngSwitchCase="'summary'"
+            class="tab-panel"
+            id="clinical-panel-summary"
+            role="tabpanel"
+            aria-labelledby="clinical-tab-summary">
+            <div class="summary-layout">
+              <app-section-card [title]="'Record traceability' | t" [subtitle]="'Creation and update metadata for this clinical record.' | t" variant="compact">
+                <dl class="record-meta">
+                  <div>
+                    <dt>{{ 'Created' | t }}</dt>
+                    <dd>{{ record.createdAtUtc | bsDate: 'medium' }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ 'Created by' | t }}</dt>
+                    <dd>{{ record.createdByUserId }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ 'Last updated' | t }}</dt>
+                    <dd>{{ record.lastUpdatedAtUtc | bsDate: 'medium' }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ 'Updated by' | t }}</dt>
+                    <dd>{{ record.lastUpdatedByUserId }}</dd>
+                  </div>
+                </dl>
+              </app-section-card>
+
+              <app-section-card [title]="'Clinical snapshot preview' | t" [subtitle]="'Read-only summary of the current base snapshot.' | t" variant="accent">
+                <div class="snapshot-preview">
+                  <article>
+                    <span>{{ 'Medical background summary' | t }}</span>
+                    <p>{{ record.medicalBackgroundSummary || ('Not provided' | t) }}</p>
+                  </article>
+                  <article>
+                    <span>{{ 'Current medications summary' | t }}</span>
+                    <p>{{ record.currentMedicationsSummary || ('Not provided' | t) }}</p>
+                  </article>
+                </div>
+              </app-section-card>
             </div>
-          </div>
+          </section>
 
-          <app-clinical-timeline-list [timeline]="record.timeline"></app-clinical-timeline-list>
-        </section>
+          <section
+            *ngSwitchCase="'background'"
+            class="tab-panel"
+            id="clinical-panel-background"
+            role="tabpanel"
+            aria-labelledby="clinical-tab-background">
+            <div class="tab-stack">
+              <app-clinical-background-form
+                [mode]="'edit'"
+                [initialRecord]="record"
+                [saving]="savingSnapshot"
+                [error]="snapshotError"
+                (saved)="saveSnapshot($event)">
+              </app-clinical-background-form>
 
-        <section class="diagnoses-shell">
-          <div class="notes-head">
-            <div>
-              <p class="eyebrow">{{ 'Diagnoses' | t }}</p>
-              <h3>{{ 'Basic diagnoses only' | t }}</h3>
-              <p class="section-copy">{{ 'No coded catalogs or treatment linkage in this slice.' | t }}</p>
+              <app-clinical-medical-questionnaire-form
+                [questionnaire]="clinicalRecordsFacade.currentQuestionnaire()"
+                [loading]="clinicalRecordsFacade.loadingQuestionnaire()"
+                [missing]="clinicalRecordsFacade.questionnaireMissing()"
+                [error]="clinicalRecordsFacade.questionnaireError()"
+                [saveError]="questionnaireSaveError"
+                [saving]="savingQuestionnaire"
+                [canWrite]="canWrite"
+                (saved)="saveQuestionnaire($event)"
+                (retryRequested)="reloadQuestionnaire()">
+              </app-clinical-medical-questionnaire-form>
             </div>
-          </div>
+          </section>
 
-          <app-clinical-diagnosis-create-form
-            *ngIf="canWrite"
-            [saving]="savingDiagnosis"
-            [error]="diagnosisError"
-            [revision]="diagnosisFormRevision"
-            (saved)="addDiagnosis($event)">
-          </app-clinical-diagnosis-create-form>
+          <section
+            *ngSwitchCase="'encounters'"
+            class="tab-panel"
+            id="clinical-panel-encounters"
+            role="tabpanel"
+            aria-labelledby="clinical-tab-encounters">
+            <app-clinical-encounter-vitals-section
+              [encounters]="clinicalRecordsFacade.currentEncounters()"
+              [loading]="clinicalRecordsFacade.loadingEncounters()"
+              [missing]="clinicalRecordsFacade.encountersMissing()"
+              [error]="clinicalRecordsFacade.encountersError()"
+              [saveError]="encounterError"
+              [saving]="savingEncounter"
+              [canWrite]="canWrite"
+              [revision]="encounterFormRevision"
+              (saved)="addEncounter($event)"
+              (retryRequested)="reloadEncounters()">
+            </app-clinical-encounter-vitals-section>
+          </section>
 
-          <app-clinical-diagnoses-list
-            [diagnoses]="record.diagnoses"
-            [canWrite]="canWrite"
-            [resolvingDiagnosisId]="resolvingDiagnosisId"
-            (resolveRequested)="resolveDiagnosis($event)">
-          </app-clinical-diagnoses-list>
-        </section>
-
-        <section class="notes-shell">
-          <div class="notes-head">
-            <div>
-              <p class="eyebrow">{{ 'Clinical notes' | t }}</p>
-              <h3>{{ 'Notes newest first' | t }}</h3>
+          <section
+            *ngSwitchCase="'notes'"
+            class="tab-panel notes-shell"
+            id="clinical-panel-notes"
+            role="tabpanel"
+            aria-labelledby="clinical-tab-notes">
+            <div class="notes-head">
+              <div>
+                <p class="eyebrow">{{ 'Clinical notes' | t }}</p>
+                <h3>{{ 'Notes newest first' | t }}</h3>
+              </div>
             </div>
-          </div>
 
-          <app-clinical-note-create-form
-            *ngIf="canWrite"
-            [saving]="savingNote"
-            [error]="noteError"
-            [revision]="noteFormRevision"
-            (saved)="addNote($event)">
-          </app-clinical-note-create-form>
+            <app-clinical-note-create-form
+              *ngIf="canWrite"
+              [saving]="savingNote"
+              [error]="noteError"
+              [revision]="noteFormRevision"
+              (saved)="addNote($event)">
+            </app-clinical-note-create-form>
 
-          <app-clinical-notes-list [notes]="record.notes"></app-clinical-notes-list>
-        </section>
+            <app-clinical-notes-list [notes]="record.notes"></app-clinical-notes-list>
+          </section>
+
+          <section
+            *ngSwitchCase="'diagnoses'"
+            class="tab-panel diagnoses-shell"
+            id="clinical-panel-diagnoses"
+            role="tabpanel"
+            aria-labelledby="clinical-tab-diagnoses">
+            <div class="notes-head">
+              <div>
+                <p class="eyebrow">{{ 'Diagnoses' | t }}</p>
+                <h3>{{ 'Basic diagnoses only' | t }}</h3>
+                <p class="section-copy">{{ 'Basic non-coded diagnoses for clinical follow-up. Treatment linkage stays outside this workspace.' | t }}</p>
+              </div>
+            </div>
+
+            <app-clinical-diagnosis-create-form
+              *ngIf="canWrite"
+              [saving]="savingDiagnosis"
+              [error]="diagnosisError"
+              [revision]="diagnosisFormRevision"
+              (saved)="addDiagnosis($event)">
+            </app-clinical-diagnosis-create-form>
+
+            <app-clinical-diagnoses-list
+              [diagnoses]="record.diagnoses"
+              [canWrite]="canWrite"
+              [resolvingDiagnosisId]="resolvingDiagnosisId"
+              (resolveRequested)="resolveDiagnosis($event)">
+            </app-clinical-diagnoses-list>
+          </section>
+
+          <section
+            *ngSwitchCase="'history'"
+            class="tab-panel history-grid"
+            id="clinical-panel-history"
+            role="tabpanel"
+            aria-labelledby="clinical-tab-history">
+            <section class="timeline-shell">
+              <div class="notes-head">
+                <div>
+                  <p class="eyebrow">{{ 'Clinical timeline' | t }}</p>
+                  <h3>{{ 'Newest clinical events first' | t }}</h3>
+                  <p class="section-copy">{{ 'Only note and diagnosis activity is shown here.' | t }}</p>
+                </div>
+              </div>
+
+              <app-clinical-timeline-list [timeline]="record.timeline"></app-clinical-timeline-list>
+            </section>
+
+            <section class="snapshot-history-shell">
+              <div class="notes-head">
+                <div>
+                  <p class="eyebrow">{{ 'Snapshot history' | t }}</p>
+                  <h3>{{ 'Base snapshot changes only' | t }}</h3>
+                  <p class="section-copy">{{ 'Snapshot history remains separate from the clinical timeline.' | t }}</p>
+                </div>
+              </div>
+
+              <app-clinical-snapshot-history-list [snapshotHistory]="record.snapshotHistory"></app-clinical-snapshot-history-list>
+            </section>
+          </section>
+        </ng-container>
       </article>
     </section>
   `,
@@ -313,6 +422,18 @@ import {
     .record-shell {
       display: grid;
       gap: 1.25rem;
+    }
+
+    .summary-layout,
+    .tab-stack,
+    .history-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .summary-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+      align-items: start;
     }
 
     .loading-grid {
@@ -461,10 +582,19 @@ export class ClinicalRecordPageComponent implements OnInit {
 
   readonly canWrite = inject(AuthService).hasPermissions(['clinical.write']);
   readonly loadingCards = [0, 1, 2];
+  readonly tabs: Array<{ id: ClinicalRecordTabId; label: string; description: string }> = [
+    { id: 'summary', label: 'Summary', description: 'Snapshot at a glance' },
+    { id: 'background', label: 'Medical history', description: 'Snapshot and questionnaire' },
+    { id: 'encounters', label: 'Consultation / vitals', description: 'Clinical encounters' },
+    { id: 'notes', label: 'Notes', description: 'Append-only notes' },
+    { id: 'diagnoses', label: 'Diagnoses', description: 'Active and resolved' },
+    { id: 'history', label: 'Timeline / history', description: 'Separated record trails' }
+  ];
 
   private readonly route = inject(ActivatedRoute);
 
   patientId: string | null = null;
+  activeTab: ClinicalRecordTabId = 'summary';
   creatingRecord = false;
   savingSnapshot = false;
   savingNote = false;
@@ -522,6 +652,14 @@ export class ClinicalRecordPageComponent implements OnInit {
     return age === null
       ? this.i18n.translate('Not provided')
       : this.i18n.translate('{age} years', { age });
+  }
+
+  selectTab(tabId: ClinicalRecordTabId): void {
+    this.activeTab = tabId;
+  }
+
+  getActiveDiagnosisCount(record: ClinicalRecord): number {
+    return record.diagnoses.filter((diagnosis) => diagnosis.status === 'Active').length;
   }
 
   ngOnInit(): void {

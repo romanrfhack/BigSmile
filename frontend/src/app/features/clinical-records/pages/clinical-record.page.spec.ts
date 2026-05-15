@@ -525,10 +525,17 @@ describe('ClinicalRecordPageComponent', () => {
     const fixture = TestBed.createComponent(ClinicalRecordPageComponent);
     fixture.detectChanges();
 
+    fixture.nativeElement.querySelector('#clinical-tab-diagnoses')?.click();
+    fixture.detectChanges();
+
     expect(fixture.nativeElement.textContent).toContain('Diagnoses');
     expect(fixture.nativeElement.textContent).toContain('Occlusal caries');
     expect(fixture.nativeElement.textContent).toContain('Active');
     expect(fixture.nativeElement.textContent).toContain('Resolved');
+
+    fixture.nativeElement.querySelector('#clinical-tab-history')?.click();
+    fixture.detectChanges();
+
     expect(fixture.nativeElement.textContent).toContain('Snapshot history');
     expect(fixture.nativeElement.textContent).toContain('Clinical snapshot initialized');
     expect(fixture.nativeElement.textContent).toContain('Medical background updated');

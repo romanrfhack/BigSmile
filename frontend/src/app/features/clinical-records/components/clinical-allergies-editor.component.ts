@@ -12,7 +12,7 @@ import { TranslatePipe } from '../../../shared/i18n';
       <div class="section-head">
         <div>
           <h3>{{ 'Current allergies' | t }}</h3>
-          <p>{{ 'Keep only current, clinically relevant allergies in this slice.' | t }}</p>
+          <p>{{ 'Keep only current, clinically relevant allergies here.' | t }}</p>
         </div>
         <button type="button" class="btn btn-secondary" (click)="addRequested.emit()">{{ 'Add allergy' | t }}</button>
       </div>
@@ -79,7 +79,7 @@ import { TranslatePipe } from '../../../shared/i18n';
       display: grid;
       gap: 0.85rem;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      border-radius: 16px;
+      border-radius: var(--bsm-radius-sm);
       border: 1px solid var(--bsm-color-border);
       background: var(--bsm-color-bg);
       padding: 1rem;
