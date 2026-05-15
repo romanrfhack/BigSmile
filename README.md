@@ -73,6 +73,14 @@ Future phases will expand into:
 - Advanced analytics
 - Automations and follow-up workflows
 
+### UX / Existing Code Reconciliation
+
+After the formal closure of Release 3, active work should be treated as a `client-driven UX redesign / visual organization pass`.
+
+The repository contains functional code in modules that are later than the formal roadmap state, including Odontogram, Treatments/Quotes, Billing, Documents, Dashboard, and reminders/manual reminders. The presence of code, routes, permissions, migrations, or tests in those areas does not mean Release 4, Release 5, Release 6, Release 7, or Phase 2 are open, accepted, or closed.
+
+Until each module receives a specific audit and acceptance pass, those later modules must be classified as `implemented but not formally accepted/reconciled`. Visual slices may improve presentation, organization, copy, color, microinteractions, modals, drawers, tabs, sticky action bars, and UX debt without changing backend behavior, APIs, permissions, auth, tenant context, branch context, migrations, or functional scope.
+
 ---
 
 ## Technology Stack

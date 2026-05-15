@@ -62,6 +62,16 @@ Canonical project status:
 * **Release 3 — Clinical Records:** completed as the foundational clinical release through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, **Release 3.4 — Clinical Snapshot Change History**, **Release 3.5 — Medical Questionnaire Backend**, and **Release 3.6 — Clinical Encounter / Vitals Backend**
 * **Next planned functional phase:** **Release 4 — Odontogram**
 
+### UX / existing-code reconciliation
+
+After Release 3 closure, active work should be treated as a `client-driven UX redesign / visual organization pass`.
+
+The repository contains functional code in later roadmap modules, including Odontogram, Treatments/Quotes, Billing, Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, migrations, or tests in those modules do not by themselves open, accept, or close Release 4, Release 5, Release 6, Release 7, or Phase 2.
+
+Until a module-specific audit and acceptance pass happens, those later modules are `implemented but not formally accepted/reconciled`.
+
+Visual slices may improve presentation, organization, copy, color, microinteractions, modals/drawers/tabs/sticky action bars, and UX debt without changing backend, APIs, permissions, auth, tenant context, branch context, migrations, or functional scope.
+
 ### Current expected priority
 
 Preserve the completed Release 3 clinical foundation and prepare the next planned functional phase only when explicitly opened:

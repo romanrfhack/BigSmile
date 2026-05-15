@@ -56,6 +56,16 @@
 
 [Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe tratarse como siguiente paso inmediato después de cerrar Release 3, ni antes de completar Release 4, Release 5, Release 6 y Release 7 según `docs/product-roadmap.md`.
 
+## 4.1 Nota de reconciliación UX / código existente
+
+[Hecho] El trabajo activo posterior al cierre de Release 3 debe tratarse como `client-driven UX redesign / visual organization pass`.
+
+[Hecho] El repositorio contiene código funcional existente en módulos posteriores al roadmap formal, incluyendo Odontogram, Treatments/Quotes, Billing, Documents, Dashboard y recordatorios/manual reminders. La presencia de código, rutas, permisos, migrations o tests en esos módulos no implica por sí misma que Release 4, Release 5, Release 6, Release 7 o Phase 2 estén abiertas, aceptadas o cerradas.
+
+[Hecho] Hasta una auditoría y aceptación específica por módulo, esos módulos posteriores deben clasificarse como `implemented but not formally accepted/reconciled`.
+
+[Hecho] Los slices visuales pueden mejorar presentación, organización, copy, color, microinteracciones, modales/drawers/tabs/sticky action bars y deuda UX sin cambiar backend, APIs, permissions, auth, tenant context, branch context, migrations ni scope funcional.
+
 ## 5. Release 3 — Clinical Records
 
 **Nombre exacto** — [Hecho] Release 3 — Clinical Records.
