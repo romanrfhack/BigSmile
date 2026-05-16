@@ -59,8 +59,8 @@ type SchedulingEditorSurface = 'appointment' | 'block';
   template: `
     <section class="scheduling-page">
       <app-page-header
-        [eyebrow]="('Release' | t) + ' 2 / ' + ('Scheduling' | t)"
-        [title]="'Scheduling foundation' | t"
+        [eyebrow]="'Scheduling' | t"
+        [title]="'Scheduling' | t"
         [subtitle]="'Branch-aware day and week calendar for {tenantName}.' | t:{ tenantName }">
         <div page-header-actions class="header-actions" *ngIf="canWrite">
           <button type="button" class="btn btn-primary" (click)="startCreate()">

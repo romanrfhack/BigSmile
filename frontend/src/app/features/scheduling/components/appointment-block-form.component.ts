@@ -12,7 +12,7 @@ import { AppointmentBlockFormValue } from '../models/scheduling.models';
     <form class="block-form" [formGroup]="form" (ngSubmit)="submit()">
       <header class="form-head">
         <div>
-          <p class="eyebrow">{{ 'Release' | t }} 2 / {{ 'Scheduling' | t }}</p>
+          <p class="eyebrow">{{ 'Blocked slot' | t }}</p>
           <h3>{{ 'Block time slot' | t }}</h3>
           <p class="subtitle">
             {{ 'Reserve operational time in the selected branch without creating a patient appointment.' | t }}

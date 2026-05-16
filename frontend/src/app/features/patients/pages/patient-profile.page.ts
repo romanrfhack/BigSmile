@@ -28,7 +28,7 @@ import { PatientsFacade } from '../facades/patients.facade';
     <section class="profile-page">
       <ng-container *ngIf="patientsFacade.currentPatient() as patient; else patientProfileState">
         <app-page-header
-          [eyebrow]="('Release' | t) + ' 1 / ' + ('Patients' | t)"
+          [eyebrow]="'Patients' | t"
           [title]="patient.fullName"
           [subtitle]="'Tenant-scoped patient identity, status, basic clinical alerts, and responsible-party context.' | t">
           <a page-header-actions routerLink="/patients" class="profile-action profile-action--secondary">
@@ -205,7 +205,7 @@ import { PatientsFacade } from '../facades/patients.facade';
 
       <ng-template #patientProfileState>
         <app-page-header
-          [eyebrow]="('Release' | t) + ' 1 / ' + ('Patients' | t)"
+          [eyebrow]="'Patients' | t"
           [title]="'Patient profile' | t"
           [subtitle]="'Tenant-scoped patient identity, status, basic clinical alerts, and responsible-party context.' | t">
           <a page-header-actions routerLink="/patients" class="profile-action profile-action--secondary">

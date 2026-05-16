@@ -17,7 +17,7 @@ import {
     <form class="appointment-form" [formGroup]="form" (ngSubmit)="submit()">
       <header class="form-head">
         <div>
-          <p class="eyebrow">{{ 'Release' | t }} 2 / {{ 'Scheduling' | t }}</p>
+          <p class="eyebrow">{{ 'Appointment' | t }}</p>
           <h3>{{ title | t }}</h3>
           <p class="subtitle">
             {{ subtitle | t }}

@@ -24,7 +24,7 @@ import { PatientsFacade } from '../facades/patients.facade';
   template: `
     <section class="patients-page">
       <app-page-header
-        [eyebrow]="('Release' | t) + ' 1 / ' + ('Patients' | t)"
+        [eyebrow]="'Patients' | t"
         [title]="'Patient search' | t"
         [subtitle]="'Search and maintain patient records for {tenantName} without leaving tenant scope.' | t:{ tenantName }">
         <a page-header-actions routerLink="/patients/new" class="patients-action patients-action--primary">

@@ -28,9 +28,9 @@ import {
   template: `
     <section class="dashboard-page">
       <app-page-header
-        [eyebrow]="('Release' | t) + ' 7.2 / ' + ('Dashboard Foundation' | t)"
+        [eyebrow]="'Dashboard' | t"
         [title]="'Operational dashboard' | t"
-        [subtitle]="'Tenant-scoped summary of current clinic operations. This foundation uses simple read-model aggregation only.' | t">
+        [subtitle]="'Tenant-scoped summary of current clinic operations.' | t">
         <app-status-badge
           *ngIf="dashboardFacade.summary() as summary"
           page-header-actions
@@ -61,7 +61,7 @@ import {
           *ngIf="!dashboardFacade.loading() && !dashboardFacade.error() && !dashboardFacade.summary()"
           icon="D"
           [title]="'No dashboard summary is loaded yet.' | t"
-          [description]="'Tenant-scoped summary of current clinic operations. This foundation uses simple read-model aggregation only.' | t">
+          [description]="'Tenant-scoped summary of current clinic operations.' | t">
         </app-empty-state>
       </app-section-card>
     </section>

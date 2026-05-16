@@ -22,7 +22,7 @@ import { LoadingSkeletonComponent, PageHeaderComponent, SectionCardComponent } f
   template: `
     <section class="page-shell">
       <app-page-header
-        [eyebrow]="('Release' | t) + ' 1 / ' + ('Patients' | t)"
+        [eyebrow]="'Patients' | t"
         [title]="(isEditMode ? 'Edit patient' : 'Register patient') | t"
         [subtitle]="(isEditMode
           ? 'Tenant-scoped patient identity, status, basic clinical alerts, and responsible-party context.'
