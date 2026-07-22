@@ -27,10 +27,10 @@ namespace BigSmile.IntegrationTests.PatientDocuments
                 await Assert.ThrowsAsync<InvalidOperationException>(() =>
                     store.SaveAsync("../outside.pdf", content));
 
-                Assert.Throws<InvalidOperationException>(() =>
+                await Assert.ThrowsAsync<InvalidOperationException>(() =>
                     store.OpenReadAsync("../outside.pdf"));
 
-                Assert.Throws<InvalidOperationException>(() =>
+                await Assert.ThrowsAsync<InvalidOperationException>(() =>
                     store.DeleteIfExistsAsync("../outside.pdf"));
 
                 Assert.False(File.Exists(outsidePath));
