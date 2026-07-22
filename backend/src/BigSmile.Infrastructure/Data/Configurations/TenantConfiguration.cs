@@ -21,6 +21,11 @@ namespace BigSmile.Infrastructure.Data.Configurations
                 .IsUnique()
                 .HasFilter("[Subdomain] IS NOT NULL");
 
+            builder.Property(t => t.TimeZoneId)
+                .HasMaxLength(Tenant.TimeZoneIdMaxLength)
+                .HasDefaultValue(Tenant.DefaultTimeZoneId)
+                .IsRequired();
+
             builder.Property(t => t.IsActive)
                 .IsRequired();
 
