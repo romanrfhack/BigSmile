@@ -7,32 +7,25 @@ replacements = [
     (
         'Encoding.UTF8.GetBytes("pdf-binary")',
         'Encoding.UTF8.GetBytes("%PDF-1.7\\npdf-binary")',
-        1,
     ),
     (
         'Encoding.UTF8.GetBytes("pdf")',
         'Encoding.UTF8.GetBytes("%PDF-1.7\\npdf")',
-        3,
     ),
     (
         'Encoding.UTF8.GetBytes("platform-pdf")',
         'Encoding.UTF8.GetBytes("%PDF-1.7\\nplatform-pdf")',
-        1,
     ),
 ]
 
-for old, new, expected_count in replacements:
-    actual_count = text.count(old)
-    if actual_count != expected_count:
-        raise RuntimeError(f"Expected {expected_count} occurrences of {old!r}, found {actual_count}")
+for old, new in replacements:
+    count = text.count(old)
+    print(f"Replacing {count} occurrence(s) of {old}")
     text = text.replace(old, new)
 
 marker = """        [Fact]
         public async Task UploadAsync_Fails_WhenFileSizeExceedsTheSliceLimit()
 """
-if text.count(marker) != 1:
-    raise RuntimeError("Patient document size-test insertion marker was not found exactly once")
-
 new_test = """        [Fact]
         public async Task UploadAsync_Fails_WhenContentDoesNotMatchDeclaredType()
         {
@@ -69,5 +62,12 @@ new_test = """        [Fact]
 
 """
 
-path.write_text(text.replace(marker, new_test + marker, 1), encoding="utf-8")
+if "UploadAsync_Fails_WhenContentDoesNotMatchDeclaredType" not in text:
+    if text.count(marker) != 1:
+        raise RuntimeError("Patient document size-test insertion marker was not found exactly once")
+    text = text.replace(marker, new_test + marker, 1)
+else:
+    print("Mismatch test already present")
+
+path.write_text(text, encoding="utf-8")
 print("Patched PatientDocumentServicesTests.cs")
