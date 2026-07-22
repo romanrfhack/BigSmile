@@ -1,6 +1,7 @@
 using System.Reflection;
 using BigSmile.Api.Controllers;
 using BigSmile.Domain.Entities;
+using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BigSmile.UnitTests.Documents
@@ -19,9 +20,9 @@ namespace BigSmile.UnitTests.Documents
             var requestSizeLimit = uploadMethod.GetCustomAttribute<RequestSizeLimitAttribute>();
             var formLimits = uploadMethod.GetCustomAttribute<RequestFormLimitsAttribute>();
 
-            Assert.NotNull(requestSizeLimit);
+            var requestSizeMetadata = Assert.IsAssignableFrom<IRequestSizeLimitMetadata>(requestSizeLimit);
             Assert.NotNull(formLimits);
-            Assert.Equal(expectedLimit, requestSizeLimit!.Bytes);
+            Assert.Equal(expectedLimit, requestSizeMetadata.MaxRequestBodySize);
             Assert.Equal(expectedLimit, formLimits!.MultipartBodyLengthLimit);
         }
     }
