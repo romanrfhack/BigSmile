@@ -42,7 +42,7 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Fixed 39-question medical questionnaire backend | Completed as Release 3.5 | Existing Clinical Records code and tests |
 | Internal staff questionnaire UI | Completed | Existing Clinical Records UI |
 | Familiar `Sí / No / Sin respuesta` capture redesign | Completed and merged | PR #1 |
-| Patient-facing architecture decision | Accepted in ADR 004; pending merge of PR #3 | PR #3 |
+| Patient-facing architecture decision | Accepted and merged | ADR 004 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Planned; not implemented | Issue #4 |
 | PI-2 intake draft | Planned; not implemented | Issue #5 |
@@ -354,9 +354,9 @@ It is complete only when:
 
 The current repository remains positioned at Release 4 — Odontogram as the next planned functional phase.
 
-For Patient Intake and Portal, the next action is organizational rather than implementation:
+For Patient Intake and Portal, the current action is to preserve the accepted plan without opening implementation:
 
-1. Merge ADR 004 and this plan.
+1. ADR 004 and this plan were merged through PR #3 — completed.
 2. Keep issues #4 through #7 open and ordered.
 3. Do not start PI-1 until Phase 2.1 is explicitly opened after MVP acceptance or a future documented roadmap reprioritization.
 4. When Phase 2.1 opens, start only with issue #4 and update canonical state in the same PR that opens the slice.
