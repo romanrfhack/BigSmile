@@ -16,6 +16,7 @@ It exists to answer:
 - how to avoid architectural drift
 
 This file complements:
+- STATE — BigSmile.md
 - README.md
 - docs/architecture.md
 - docs/tenant-model.md
@@ -24,7 +25,7 @@ This file complements:
 - docs/decisions/*.md
 - AGENTS.md
 
-If there is any conflict, follow the architecture and ADR documents first, then use this file as an operational guide.
+If there is any conflict, start with `STATE — BigSmile.md`, then follow accepted architecture and ADR documents before using this file as an operational guide.
 
 ---
 
@@ -60,13 +61,19 @@ Canonical project status:
 * **Release 1 — Patients:** completed
 * **Release 2 — Scheduling:** completed
 * **Release 3 — Clinical Records:** completed as the foundational clinical release through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, **Release 3.4 — Clinical Snapshot Change History**, **Release 3.5 — Medical Questionnaire Backend**, and **Release 3.6 — Clinical Encounter / Vitals Backend**
-* **Next planned functional phase:** **Release 4 — Odontogram**
+* **Release 4 — Odontogram:** completed as the foundational odontogram release through accepted slices **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, and **Release 4.4 — Dental Findings Change History**
+* **Next planned functional phase:** **Release 5 — Treatments and Quotes**
+
+### Release 4 closure evidence
+
+* `docs/release-4-odontogram-audit-and-closure.md`
+* ADR 007 — `docs/decisions/007-release-4-odontogram-closure.md`
 
 ### UX / existing-code reconciliation
 
-After Release 3 closure, active work should be treated as a `client-driven UX redesign / visual organization pass`.
+Odontogram is now `Accepted / preserved` after a module-specific audit of its domain, application, API, persistence, permissions, frontend, migrations and tests.
 
-The repository contains functional code in later roadmap modules, including Odontogram, Treatments/Quotes, Billing, Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, migrations, or tests in those modules do not by themselves open, accept, or close Release 4, Release 5, Release 6, Release 7, or Phase 2.
+The repository still contains functional code in later roadmap modules, including Treatments/Quotes, Billing, Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, migrations, or tests in those modules do not by themselves open, accept, or close Release 5, Release 6, Release 7, or Phase 2.
 
 Until a module-specific audit and acceptance pass happens, those later modules are `implemented but not formally accepted/reconciled`.
 
@@ -74,23 +81,20 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve the completed Release 3 clinical foundation and prepare the next planned functional phase only when explicitly opened:
+Preserve Releases 1 through 4 and audit the existing Treatments/Quotes implementation before accepting or adding functionality:
 
-* preserving the completed Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5, and Release 3.6 clinical slices as the accepted closure evidence
-* preserving the accepted Release 3.5 scope: fixed medical questionnaire on an existing clinical record, `ClinicalMedicalAnswer` tenant-owned/patient-owned records, allowed `QuestionKey` catalog, `Unknown` / `Yes` / `No` answers, optional bounded details, `GET` / `PUT /api/patients/{patientId}/clinical-record/questionnaire`, bounded frontend UI integration inside the existing clinical record screen, no request-provided `TenantId`, no permissions beyond `clinical.read` / `clinical.write`, and no form builder or cross-module side effects
-* preserving the accepted Release 3.6 scope: tenant-owned/patient-owned `ClinicalEncounter` records under an existing clinical record, `GET` / `POST /api/patients/{patientId}/clinical-record/encounters`, bounded `Treatment` / `Urgency` / `Other` consultation type, optional bounded vitals, optional append-only linked `ClinicalNote`, server-derived `TenantId` and `CreatedByUserId`, no permissions beyond `clinical.read` / `clinical.write`, bounded frontend UI integration inside the existing clinical record screen through feature data-access/facade, no PUT/DELETE, no new timeline event model, and no cross-module side effects
-* deriving Patient age in the Clinical Records UI from `Patient.DateOfBirth` without persisting age or adding `Age` to backend/API contracts
-* keeping Release 4, Treatments, Billing, Documents/Dashboard, Phase 2 automations and all later roadmap scope unopened until a dedicated slice intentionally starts them
-* keeping payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, OCR, document workflows, WhatsApp/email/SMS sending, external providers, automatic reminders, jobs, queues, webhooks, retry automation, online booking, patient portal and advanced dashboard behavior deferred beyond the current Release 3 closure
-* preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
-* preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
-* keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
-* only on top of the completed tenant-aware authorization and tenant enforcement baseline
-* while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
-* with continued validation through CI, tests, logging, auditing, and architectural guardrails
-* building forward from the completed Patients and Scheduling releases without reopening closed release scope casually
+* preserve the accepted Release 3.1 to 3.6 clinical boundary
+* preserve the accepted Release 4.1 to 4.4 odontogram boundary
+* keep advanced Odontogram scope deferred, including child/mixed dentition, full state history/versioning, restore, advanced charting, imaging and cross-module linkage
+* inspect Treatments/Quotes domain, application, API, persistence, permissions, migrations, frontend and tests against Release 5
+* do not treat existing TreatmentPlan/TreatmentQuote code as accepted solely because it exists
+* keep payments, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, OCR, document workflows, automated messaging/providers/jobs/queues/retries, online booking and advanced dashboards deferred until their owning phases are explicitly accepted
+* keep doctor-based views deferred until provider/doctor assignment is intentionally opened
+* preserve scope-aware authorization, explicit platform override behavior and centralized tenant safety
+* continue validation through CI, tests, logging, auditing and architectural guardrails
+* keep Phase 2.1 Patient Intake and Portal planned under ADR 006 without opening PI-1 to PI-4 before the MVP gate or an explicit reprioritization
 
-Do not treat the repository as feature-complete unless the actual codebase clearly proves it. No functional roadmap release should be treated as closed without explicit code and documentation evidence.
+Do not treat the repository as feature-complete unless actual code and aligned documentation clearly prove it. No functional roadmap release should be treated as closed without explicit audit, tests and documentation evidence.
 
 ---
 
@@ -100,6 +104,7 @@ Expected layout:
 
 ```text
 /
+  STATE — BigSmile.md
   README.md
   AGENTS.md
   PROJECT_MAP.md
@@ -112,11 +117,12 @@ Expected layout:
 
 ### Root-level intent
 
+* `STATE — BigSmile.md` -> canonical current project state
 * `README.md` -> product and repo overview
-* `AGENTS.md` -> how the agent should behave
+* `AGENTS.md` -> how agents/contributors should behave
 * `PROJECT_MAP.md` -> operational repo map
 * `REVIEW_RULES.md` -> review and validation checklist
-* `docs/` -> architectural and product documentation
+* `docs/` -> architectural, release, product and operational documentation
 * `backend/` -> .NET backend
 * `frontend/` -> Angular frontend
 * `.github/` -> CI/CD and repo automation
@@ -135,6 +141,12 @@ Expected layout:
 * `docs/contributing.md`
 * `docs/decisions/*.md`
 
+### Release and future-scope evidence
+
+* `docs/release-3-clinical-records-form-mapping.md`
+* `docs/release-4-odontogram-audit-and-closure.md`
+* `docs/patient-intake-and-portal-plan.md`
+
 ### Documentation ownership rules
 
 Update documentation when changes affect:
@@ -147,6 +159,7 @@ Update documentation when changes affect:
 * roadmap priorities
 * repository conventions
 * important workflows
+* formal release state
 
 ### ADR expectation
 
@@ -160,6 +173,7 @@ Create or update an ADR when changing:
 * module ownership
 * major integration patterns
 * major frontend state strategy
+* formal release scope when ambiguity would otherwise remain
 
 ---
 
@@ -238,7 +252,8 @@ Expected important aggregates:
 * ClinicalRecord
 * Odontogram
 * TreatmentPlan
-* Payment
+* TreatmentQuote
+* BillingDocument / future Payment records
 
 Must not depend on:
 
@@ -397,9 +412,11 @@ Feature-local types and view contracts.
 ### Frontend anti-drift rules
 
 * no direct HTTP calls scattered across pages/components
-* no giant page components
+* no giant page components without an explicit decomposition plan
 * no feature logic hidden in shared unless truly shared
 * no business-critical authorization only in UI
+* no internal release/slice language in clinic-facing copy when touching visible UI
+* use `--bsm-*` tokens instead of introducing isolated hardcoded visual styles
 
 ---
 
@@ -423,12 +440,14 @@ Owns:
 
 Owns:
 
-* users
+* staff users
 * roles
 * permissions
 * memberships
 * sessions
 * access policies
+
+Patient-facing identity is a separate future boundary under ADR 006 and must not reuse staff membership semantics.
 
 ### 7.3 Patients
 
@@ -439,6 +458,7 @@ Owns:
 * responsible party
 * patient alerts
 * patient search
+* contact/demographic source of truth
 
 ### 7.4 Scheduling
 
@@ -451,6 +471,8 @@ Owns:
 * rescheduling
 * no-shows
 
+Doctor-based views remain outside the accepted Release 2 scope until provider assignment exists.
+
 ### 7.5 Clinical
 
 Owns:
@@ -462,16 +484,20 @@ Owns:
 * diagnoses
 * fixed medical questionnaire backend and bounded frontend integration
 * clinical encounters and vitals backend and bounded frontend integration
+* bounded timeline and snapshot history
 
 ### 7.6 Odontogram
 
-Owns:
+Accepted Release 4 ownership:
 
-* odontogram
-* tooth state
-* surface state
-* findings
-* dental visual status
+* odontogram aggregate
+* permanent adult FDI tooth state
+* bounded `O/M/D/B/L` surface state
+* basic surface findings
+* append-only finding add/remove history
+* dental visual status and patient-context UI
+
+Future treatment/diagnosis/document linkage, complete dental history/versioning, child/mixed dentition and advanced charting remain deferred.
 
 ### 7.7 Treatments
 
@@ -481,7 +507,9 @@ Owns:
 * treatment plans
 * quotes
 * acceptance
-* treatment progress
+* future treatment progress
+
+Existing code is the next audit target and is not formally accepted until Release 5 reconciliation.
 
 ### 7.8 Billing
 
@@ -494,6 +522,8 @@ Owns:
 * cash sessions
 * future invoicing integration
 
+Existing code remains unaccepted until Release 6 audit.
+
 ### 7.9 Documents
 
 Owns:
@@ -502,6 +532,8 @@ Owns:
 * patient documents
 * radiographies
 * consent-related file storage
+
+Existing code remains unaccepted until Release 7 audit.
 
 ### 7.10 Notifications
 
@@ -512,6 +544,8 @@ Owns:
 * delivery status
 * templates
 * future WhatsApp/email flows
+
+Manual reminder helpers/templates do not imply automated provider delivery, jobs, queues or retry workflows.
 
 ### 7.11 Reporting
 
@@ -553,13 +587,19 @@ Examples:
 * payment -> tenant + sometimes branch
 * patient -> tenant, not necessarily branch-owned
 * clinical record -> tenant, patient-owned context
+* odontogram -> tenant, patient-owned context
 * treatment plan -> tenant, patient-owned context
+
+### Child-table rule
+
+If a child table does not carry `TenantId` and is queried directly rather than through its tenant-owned aggregate, the query must include an explicit tenant-aware join or the model must be changed to explicit tenant ownership.
 
 ### Never assume
 
 * branch alone is enough for security
 * users can jump tenant boundaries
 * platform operations can bypass tenant safety silently
+* a route/body `PatientId` or `TenantId` is an authority source
 
 ---
 
@@ -612,9 +652,11 @@ Add new behavior according to module ownership.
 Examples:
 
 * new patient registration use case -> `Application/Patients/...`
-* new appointment rules -> `Domain/Scheduling` or equivalent module structure
-* new payment persistence adapter -> `Infrastructure/...`
-* new endpoint -> `Api/...`
+* new appointment rules -> Scheduling domain/application
+* new Odontogram rule -> Odontogram domain/application, not Clinical or Treatments for convenience
+* new TreatmentPlan rule -> Treatments domain/application after Release 5 audit identifies an accepted gap
+* new payment persistence adapter -> Infrastructure
+* new endpoint -> Api
 
 ### Frontend
 
@@ -625,11 +667,12 @@ Examples:
 * patient search screen -> `features/patients/pages`
 * appointment calendar widget -> `features/scheduling/components`
 * patient facade -> `features/patients/facades`
+* odontogram API calls -> `features/odontogram/data-access`
 * treatment API calls -> `features/treatments/data-access`
 
 ### Documentation
 
-If a structural rule changes, also update docs and possibly ADRs.
+If structure, security, release state or ownership changes, update docs and an ADR where appropriate.
 
 ---
 
@@ -646,6 +689,7 @@ These should be treated as stable unless formally changed:
 * multi-tenancy as foundational
 * backend layered structure
 * frontend feature structure
+* accepted Release 1 through Release 4 boundaries
 * roadmap order
 * security-first posture
 
@@ -653,14 +697,14 @@ These should be treated as stable unless formally changed:
 
 These may still evolve through implementation and ADRs:
 
-* exact auth/session implementation
-* exact permission catalog
-* exact frontend state pattern details
-* storage provider choice
-* notification provider choice
+* exact future permission catalog
+* Release 5+ formal scope acceptance
+* patient-facing identity implementation
+* storage/notification provider choices
 * reporting depth
 * invoicing integration details
 * onboarding automation details
+* visual debt and component decomposition
 
 ### Rule
 
@@ -670,56 +714,47 @@ Do not casually change stable areas without explicit documentation and review.
 
 ## 12. Release-Oriented Map
 
-The project should grow in this order unless docs explicitly change:
+The project grows in this order unless docs explicitly change:
 
 ### Release 0
 
-Foundation:
-
-* solution structure
-* tenant model implementation base
-* auth/authz
-* auditing
-* error handling
-* logging
-* architecture tests
-* CI baseline
+Foundation — completed.
 
 ### Release 1
 
-Patients
+Patients — completed.
 
 ### Release 2
 
-Scheduling
+Scheduling — completed.
 
 ### Release 3
 
-Clinical Records
+Clinical Records — completed.
 
 ### Release 4
 
-Odontogram
+Odontogram — completed through slices 4.1 to 4.4.
 
 ### Release 5
 
-Treatments and Quotes
+Treatments and Quotes — next; existing code must be audited before acceptance.
 
 ### Release 6
 
-Billing
+Billing — planned after Release 5.
 
 ### Release 7
 
-Documents and Dashboard
+Documents and Dashboard — planned after Release 6.
 
 ### Later phases
 
-* reminders
-* online booking
+* Phase 2.1 Patient Intake and Portal Foundation under ADR 006
+* reminders/providers/online booking
 * electronic invoicing
 * advanced SaaS platform features
-* patient portal
+* full patient portal
 * advanced analytics
 * automations
 
@@ -736,9 +771,12 @@ Changes in these areas require extra care:
 * authorization
 * patient records
 * clinical records
-* payments
+* odontogram aggregate/child access
+* treatments and quotes
+* payments/billing
 * document access
 * platform bypass logic
+* public patient-facing endpoints
 
 ### High-risk frontend areas
 
@@ -746,17 +784,18 @@ Changes in these areas require extra care:
 * tenant/branch context switching
 * route guards
 * patient data screens
-* payment flows
-* clinical note entry
+* clinical and odontogram editing
+* treatment/payment flows
 * large page growth
 * cross-feature dependencies
 
 ### High-risk documentation areas
 
 * architecture changes
-* roadmap changes
+* roadmap/release-state changes
 * tenant model changes
 * permission model changes
+* ADR numbering and canonical references
 
 ---
 
@@ -764,25 +803,19 @@ Changes in these areas require extra care:
 
 When working in this repo:
 
-1. Read the core docs first
-2. Inspect current code and file structure
-3. Determine the owning module
-4. Choose the smallest correct implementation step
-5. Keep changes auditable and reversible
-6. Validate as much as possible
-7. Update docs if structure or rules changed
-8. Leave a clear summary for human/CODEX review
+1. Read canonical docs first.
+2. Inspect current code, migrations and tests.
+3. Determine the owning module.
+4. Distinguish existing code from formally accepted scope.
+5. Choose the smallest correct implementation or reconciliation step.
+6. Keep changes auditable and reversible.
+7. Validate tenant/security and CI as much as possible.
+8. Update docs if state or rules changed.
+9. Leave a clear completed/pending summary.
 
 #### Agent Workflow Guidance note
 
-If a specific area is still sparse or scaffold-only, prefer:
-
-* finishing its local foundation
-* conventions
-* architecture guardrails
-* minimal vertical slice examples
-
-Do not expand many business features at once from a still-sparse area.
+For Release 5, audit existing Treatments/Quotes code before adding new behavior. Reuse valid implementation rather than rebuilding it. If a specific area is sparse, prefer local foundations and minimal vertical slices rather than broad expansion.
 
 ---
 
@@ -795,7 +828,9 @@ Do not expand many business features at once from a still-sparse area.
 * secrets committed to repo
 * feature code placed in unrelated modules
 * documentation drifting far behind implementation
+* code presence treated as automatic release acceptance
 * advanced features added before the core workflow is stable
+* closed Clinical/Odontogram boundaries reopened incidentally for Treatments
 
 ---
 
@@ -819,8 +854,36 @@ Look at:
 * Scheduling module
 * branch-aware rules
 * tenant/branch context
+* ADR 003
 * frontend scheduling feature
-* reporting implications later
+
+### If working on Clinical Records
+
+Look at:
+
+* ClinicalRecords application/domain/API
+* `docs/release-3-clinical-records-form-mapping.md`
+* clinical permissions and tenant tests
+* frontend features/clinical-records
+
+### If working on Odontogram
+
+Look at:
+
+* Odontograms domain/application/API/persistence
+* frontend features/odontogram
+* `docs/release-4-odontogram-audit-and-closure.md`
+* ADR 007
+* accepted deferred-scope list before proposing linkage or advanced charting
+
+### If working on Treatments/Quotes
+
+Look at:
+
+* Release 5 roadmap section
+* TreatmentPlans/TreatmentQuotes code and tests
+* tenant/permission behavior
+* existing code as audit evidence, not automatic acceptance
 
 ### If working on auth or permissions
 
@@ -832,6 +895,15 @@ Look at:
 * security rules
 * contribution rules
 * tenant/platform scope separation
+
+### If working on Patient Intake/Portal
+
+Look at:
+
+* ADR 006
+* `docs/patient-intake-and-portal-plan.md`
+* issues #2 and #4 to #7
+* no implementation is active yet
 
 ### If working on platform admin functions
 
@@ -847,16 +919,17 @@ Look at:
 
 ## 17. Final Rule
 
-Use this map to stay oriented, but do not use it as an excuse to ignore the architecture documents.
+Use this map to stay oriented, but do not use it as an excuse to ignore canonical state or architecture documents.
 
 When in doubt, follow this order:
 
 1. security
 2. tenant isolation
-3. module ownership
-4. maintainability
-5. operational UX
-6. speed of delivery
+3. accepted release boundary
+4. module ownership
+5. maintainability
+6. operational UX
+7. speed of delivery
 
 ### Guiding question
 
@@ -883,6 +956,6 @@ Operational deployment baseline:
 - database: BigSmile
 - pilot protection: Nginx Basic Auth
 
-This is documented in docs/decisions/004-manual-vps-deployment-foundation.md.
+This is documented in `docs/decisions/004-manual-vps-deployment-foundation.md`.
 
 GitHub Actions deployment should automate the same release/rollback flow and must not introduce a different deployment model without a new decision.

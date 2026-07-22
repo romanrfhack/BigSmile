@@ -14,7 +14,7 @@ Core business definitions:
 
 Initial product direction:
 - Start with a strong operational MVP
-- Early functional focus: patients / clinical records first, then continue through the roadmap
+- Protect the continuous clinic workflow: appointment → patient → clinical record → odontogram → treatment plan → quote → billing → follow-up
 - Long-term goal: scalable, maintainable, secure, multi-tenant product for multiple clinics
 
 # Mandatory reading order
@@ -31,54 +31,55 @@ Before proposing or implementing any change, always read and follow these source
 9. `docs/contributing.md`
 10. `docs/decisions/*.md`
 
-Then inspect the relevant code, tests, and current repository structure.
+Then inspect the relevant code, tests, migrations, current repository structure and module-specific audit documents.
 
 Treat `STATE — BigSmile.md` as the canonical starting point for current project status.
-If these sources diverge from the repository, summarize the drift explicitly and use the canonical state plus the actual codebase to choose the next safe step.
-Do not invent implemented modules, completed releases, or functional coverage that are not confirmed by code and aligned documentation.
+If these sources diverge from the repository, summarize the drift explicitly and use the canonical state plus actual code to choose the next safe step.
+Do not invent implemented modules, completed releases or functional coverage that are not confirmed by code and aligned documentation.
 
 # Working mode
 Operate with high autonomy, but not with hidden assumptions.
 
 Default behavior:
-- Make decisions autonomously when the documentation and codebase make the correct direction reasonably clear.
-- Ask the user only when a decision is ambiguous, irreversible, business-critical, security-sensitive, or when multiple valid options would materially change the architecture or product direction.
+- Make decisions autonomously when documentation and code make the correct direction reasonably clear.
+- Ask only when a decision is ambiguous, irreversible, business-critical, security-sensitive or materially changes architecture/product direction.
 - Prefer progress over unnecessary blocking.
-- Prefer small, auditable, reversible changes.
+- Prefer small, auditable and reversible changes.
+- Do not reimplement a capability that already exists; audit and reconcile it first.
 
 # Decision policy
 You may decide without asking when:
-- The change is clearly aligned with `STATE — BigSmile.md`, `README.md`, and the project docs
-- The change is local, safe, and reversible
-- Naming, file placement, folder structure, and implementation style are already implied by the architecture
-- A missing detail can be resolved using the documented principles without changing product direction
+- the change is clearly aligned with canonical state and repository docs
+- the change is local, safe and reversible
+- naming, placement and implementation style are already implied by the architecture
+- a missing detail can be resolved without changing product direction
 
 You must ask before proceeding when:
-- The decision changes a core product rule
-- The decision affects tenant isolation rules
-- The decision changes tenant resolution strategy
-- The decision changes authentication/session strategy
-- The decision changes authorization scope or role semantics
-- The decision introduces external services, paid dependencies, or vendor lock-in
-- The decision requires secrets, credentials, certificates, or infrastructure access not already configured
-- The decision would delete or rewrite significant existing work
-- The decision conflicts with roadmap priorities
-- The decision has more than one strong architectural path and the docs do not settle it
+- the decision changes a core product rule
+- the decision changes tenant isolation or tenant resolution
+- the decision changes authentication/session strategy
+- the decision changes authorization scope or role semantics
+- the decision introduces external services, paid dependencies or vendor lock-in
+- the decision requires secrets, credentials, certificates or infrastructure access not already configured
+- the decision deletes or rewrites significant existing work
+- the decision conflicts with roadmap priorities
+- multiple strong architectural paths remain and the docs do not settle them
 
 # Non-negotiable architecture rules
 - Bigsmile is a product, not a throwaway internal app.
 - Multi-tenancy is foundational.
 - Tenant isolation is non-negotiable.
-- Branch is an operational scope, not the primary security boundary.
-- Do not implement manual tenant filtering as the main safety strategy when centralized enforcement is possible.
+- Branch is operational scope, not the primary security boundary.
+- Do not use manual tenant filtering as the main safety strategy when centralized enforcement is possible.
 - Do not weaken tenant safety for convenience.
-- Use a modular monolith architecture unless the project documentation explicitly changes that decision.
+- Use a modular monolith unless project documentation explicitly changes that decision.
 - Respect backend boundaries: Api / Application / Domain / Infrastructure / SharedKernel.
 - Respect frontend boundaries: core / shell / shared / features.
-- Prefer use-case oriented application design (vertical slices / lightweight CQRS).
+- Prefer use-case-oriented application design and lightweight CQRS.
 - Avoid giant services and giant frontend pages.
-- Keep important business invariants close to the domain model.
+- Keep important invariants close to the domain model.
 - Security-first: do not add insecure defaults.
+- Code presence does not equal formal release acceptance; require module-specific evidence.
 
 # Stack expectations
 - Backend: .NET 10 / ASP.NET Core Web API
@@ -88,7 +89,7 @@ You must ask before proceeding when:
 - Product model: multi-tenant SaaS
 
 # Current product direction
-This repository is beyond the initial bootstrap / early foundation stage.
+This repository is beyond the bootstrap / early foundation stage.
 
 Canonical project status:
 - `Foundation / Release 0 base`: completed
@@ -97,64 +98,74 @@ Canonical project status:
 - `Tenant-Aware Authorization Foundation`: completed
 - `Release 1 — Patients`: completed
 - `Release 2 — Scheduling`: completed
-- `Release 3 — Clinical Records`: completed as the foundational clinical release through accepted slices `Release 3.1 — Clinical Record Foundation`, `Release 3.2 — Basic Diagnoses Foundation`, `Release 3.3 — Clinical Timeline Read Model`, `Release 3.4 — Clinical Snapshot Change History`, `Release 3.5 — Medical Questionnaire Backend`, and `Release 3.6 — Clinical Encounter / Vitals Backend`
-- Next planned functional phase: `Release 4 — Odontogram`
+- `Release 3 — Clinical Records`: completed through accepted slices 3.1 to 3.6
+- `Release 4 — Odontogram`: completed through accepted slices 4.1 to 4.4
+- Next planned functional phase: `Release 5 — Treatments and Quotes`
 
-Current roadmap position:
-- `Release 3 — Clinical Records` is closed and preserved; prepare `Release 4 — Odontogram` only when explicitly opened in a bounded slice.
+Release 4 closure evidence:
+- `docs/release-4-odontogram-audit-and-closure.md`
+- ADR 007 — `docs/decisions/007-release-4-odontogram-closure.md`
 
-Treat the repository as having an established technical and architectural foundation, but not as functionally complete.
-Do not assume roadmap releases `Patients`, `Scheduling`, `Clinical Records`, `Odontogram`, `Treatments and Quotes`, `Billing`, or `Documents and Dashboard` are implemented or closed unless the actual codebase and aligned documentation explicitly prove it.
-Within `Release 3 — Clinical Records`, treat slices 3.1 to 3.6 as accepted evidence of closure. Do not assume slices beyond them are implemented or required for Release 3 closure unless the actual codebase and aligned documentation explicitly prove it.
-Within `Release 4 — Odontogram`, do not assume implementation or acceptance before a dedicated bounded slice is intentionally opened.
-Phase 2 Expansion — Modern Operations belongs after the initial MVP. Do not treat it as the next step immediately after Release 3, and do not treat WhatsApp, email, SMS, reminders automáticos, providers, jobs, queues, webhooks, external delivery templates, scheduler de reminders, retry automático, campaigns, online booking, patient portal, dashboard avanzado, or later Phase 2 capabilities as implemented or accepted unless future code and aligned documentation explicitly prove it.
-After Release 3 closure, continue following `docs/product-roadmap.md`; the next planned functional phase is `Release 4 — Odontogram`.
+Treat Release 4 as the accepted foundational Odontogram boundary:
+- explicit creation and `404` when missing
+- one tenant-owned/patient-owned odontogram per patient/tenant
+- 32 permanent adult FDI teeth
+- bounded tooth and surface states
+- basic surface findings
+- append-only finding add/remove history
+- tenant-aware access and explicit `odontogram.read` / `odontogram.write`
+
+Do not reopen advanced Odontogram scope incidentally. Child/mixed dentition, bulk editing, full dental timeline/history, restore/versioning, treatment/diagnosis/document linkage, advanced charting, imaging overlays and AI detection remain future bounded work.
+
+Repository code also exists in later modules, including Treatments/Quotes, Billing, Documents, Dashboard and reminders. Until each module receives a specific audit and acceptance pass, classify it as `implemented but not formally accepted/reconciled`.
+
+Phase 2.1 — Patient Intake and Portal Foundation is planned after the initial MVP:
+- architecture accepted in ADR 006
+- implementation issues #4 to #7 remain open
+- PI-1 to PI-4 are not implemented or active
+- full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Help preserve the completed authorization foundation, the completed `Release 1 — Patients` module, the completed `Release 2 — Scheduling` module, and the completed `Release 3 — Clinical Records` release while preparing future work in bounded, auditable slices aligned with `STATE — BigSmile.md`, the repository documentation, and the actual codebase.
+Preserve Releases 1 to 4 and audit the existing `Release 5 — Treatments and Quotes` implementation against the bounded roadmap before accepting or changing it.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
-- keep authorization decisions based on scope (`platform` / `tenant` / `branch`), membership, role, and permission
-- preserve tenant isolation across identity, persistence, and access enforcement while new business modules appear
-- preserve the closed Scheduling release without reopening scope casually
-- preserve the accepted Release 3.1 scope: explicit clinical record creation, base snapshot, current allergies, and append-only notes
-- preserve the accepted Release 3.2 scope: basic diagnoses on existing clinical records, explicit diagnosis add/resolve operations, diagnosis read-model inclusion, basic non-coded diagnosis data, and no full timeline / odontogram / treatments / documents yet
-- preserve the accepted Release 3.3 scope: clinical timeline read model inside the existing clinical record, built from notes and diagnoses only, with no new endpoint, no new table, and no cross-module timeline
-- preserve the accepted Release 3.4 scope: bounded snapshot history for the base clinical snapshot, with an initial entry on explicit clinical record creation, effective-change entries for background / medications / allergies only, separation from the Release 3.3 timeline, and no restore / full versioning / rich diff
-- preserve the accepted Release 3.5 scope: structured medical questionnaire on an existing clinical record, fixed `QuestionKey` catalog, `Unknown` / `Yes` / `No` answers, optional bounded `Details`, `GET` / `PUT` under `/api/patients/{patientId}/clinical-record/questionnaire`, bounded frontend UI integration inside the existing clinical record screen, upsert by `QuestionKey`, `TenantId` from `TenantContext`, reuse of `clinical.read` / `clinical.write`, and no form builder, Billing, Odontogram, Treatments, Documents, Scheduling, timeline enrichment, allergy auto-sync, or doctor/provider assignment
-- preserve the accepted Release 3.6 scope: `ClinicalEncounter` tenant-owned/patient-owned on an existing clinical record, explicit `GET` / `POST /api/patients/{patientId}/clinical-record/encounters`, `OccurredAtUtc`, `ChiefComplaint`, `ConsultationType` `Treatment` / `Urgency` / `Other`, optional bounded vitals, optional append-only linked `ClinicalNote` from `noteText`, server-derived `TenantId` and `CreatedByUserId`, reuse of `clinical.read` / `clinical.write`, bounded frontend UI integration inside the existing clinical record screen through feature data-access/facade, no PUT/DELETE, no new timeline event model, no patient demographic duplication, no Billing/Scheduling/Odontogram/Treatments/Documents, and no doctor/provider assignment
-- preserve the current clinical access restriction: `clinical.read` / `clinical.write` belong to `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive clinical permissions in this phase
-- keep Release 4, Treatments, Billing, Documents/Dashboard, Phase 2 automations and all later roadmap scope unopened until a dedicated slice intentionally starts them
-- keep payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, OCR, document workflows, WhatsApp/email/SMS sending, external providers, automatic reminders, jobs, queues, webhooks, retry automation, online booking, patient portal and advanced dashboard behavior deferred beyond the current Release 3 closure
-- keep doctor-based views deferred until a dedicated provider/doctor assignment slice is intentionally opened
+- preserve completed Patients, Scheduling, Clinical Records and Odontogram behavior
+- audit Treatments/Quotes domain, application, API, persistence, permissions, frontend, migrations and tests
+- distinguish code presence from accepted Release 5 scope
+- avoid reopening Odontogram or Clinical Records through incidental linkage
+- keep doctor-based views deferred until provider/doctor assignment is intentionally opened
+- keep Phase 2.1 planned and inactive until the MVP gate or explicit reprioritization
 - keep privileged/platform paths explicit and auditable
-- maintain automated coverage for forbidden cross-tenant reads/writes, branch-aware restrictions, and permitted platform override scenarios
-- update documentation and ADRs whenever tenant resolution, auth/session, authorization, or patient-module behavior materially changes
+- maintain automated coverage for cross-tenant, branch-aware and allowed platform scenarios
+- update canonical documentation whenever a release or architectural decision changes
 
-If a task touches later functional roadmap modules, keep the change bounded and do not assume unfinished business modules already exist.
+If a task touches later modules, keep the change bounded and do not assume the module is accepted merely because implementation exists.
 
 # Implementation style
-- Prefer clear and conventional naming
-- Prefer focused classes, handlers, services, and components
-- Avoid clever abstractions with weak ownership
-- Prefer explicit code over magical code
-- Keep the codebase understandable for future review by humans and CODEX
-- Preserve consistency over novelty
+- Prefer clear and conventional naming.
+- Prefer focused classes, handlers, services and components.
+- Avoid clever abstractions with weak ownership.
+- Prefer explicit code over magical code.
+- Keep the codebase understandable for human and AI review.
+- Preserve consistency over novelty.
+- Do not mix functional changes with unrelated visual or documentation refactors.
 
 # Change strategy
 For any non-trivial task:
-1. inspect the relevant code and docs
-2. state the current situation
-3. identify the smallest correct next step
-4. implement in small coherent increments
-5. run relevant validation
-6. document what changed and why
+1. inspect canonical docs
+2. inspect relevant code, migrations and tests
+3. state current situation and any drift
+4. identify the smallest correct next step
+5. implement in coherent increments
+6. run relevant validation
+7. document what changed and why
+8. leave explicit completed and pending scope
 
 # Documentation obligations
 When making important changes, update the relevant documentation.
 
-At minimum, keep these aligned:
+At minimum, keep these aligned when state changes:
 - `STATE — BigSmile.md`
 - `AGENTS.md`
 - `README.md`
@@ -168,92 +179,87 @@ At minimum, keep these aligned:
 
 Create or update an ADR when a change affects:
 - architecture style
-- tenant model
-- tenant resolution strategy
+- tenant model or resolution
 - authentication/session strategy
 - authorization model
 - database tenancy strategy
 - major module boundaries
 - major frontend state strategy
 - important integration patterns
+- formal release-scope reconciliation when ambiguity would otherwise remain
 
-If project status advances to a new completed phase, reflect it in `STATE — BigSmile.md` and reconcile the rest of the base documentation accordingly.
-Do not leave `AGENTS.md` or other base docs describing the repository as bootstrap-stage once the canonical state has moved forward.
+If project status advances, update STATE and reconcile base documentation in the same change.
 
 # Reviewability requirements
-Every meaningful task should leave enough evidence for later review by humans or CODEX.
+Every meaningful task should leave enough evidence for later review.
 
-When completing work, produce a concise review packet including:
+Review packet:
 - objective
 - files changed
 - architectural reasoning
 - tenant/security implications
 - tests run
-- open questions
-- risks or follow-up items
+- completed scope
+- pending scope
+- risks and follow-ups
 
 # Validation expectations
-Always validate the change as much as possible with available tooling.
-
-Expected validation types:
-- backend build
-- frontend build
-- unit tests
-- integration tests
-- architecture validation / architecture tests
-- linting / formatting
+Validate as much as available tooling allows:
+- backend restore/build
+- architecture validation/tests
+- backend unit tests
+- backend integration tests
+- frontend install/build
+- frontend unit tests
 - e2e tests when relevant
+- linting/formatting when configured
 
-If validation cannot be run, explicitly state what was not validated and why.
+If validation cannot run, state exactly what was not validated and why.
 
 # Security rules
-- Never commit secrets, tokens, passwords, certificates, or private keys
-- Never hardcode sensitive configuration in versioned files
-- Never trust tenant scope from unsafe client input
-- Never enforce critical authorization only in frontend
-- Always treat patient, clinical, payment, and document data as sensitive
-- Audit platform overrides and sensitive operations
+- Never commit secrets, tokens, passwords, certificates or private keys.
+- Never hardcode sensitive production configuration.
+- Never trust tenant scope from unsafe client input.
+- Never enforce critical authorization only in frontend.
+- Treat patient, clinical, billing and document data as sensitive.
+- Audit platform overrides and sensitive operations.
 
 # Tenant safety checklist
 Before finalizing any backend or data-access change, verify:
 - Is the record tenant-owned?
-- Is TenantId modeled correctly?
-- Does branch remain subordinate to tenant?
+- Is `TenantId` modeled correctly?
+- Does Branch remain subordinate to Tenant?
 - Can this read another tenant’s data?
 - Can this write another tenant’s data?
 - Does authorization align with scope?
-- Does a platform bypass exist, and if so, is it explicit and auditable?
+- Is any platform bypass explicit and auditable?
+- If querying a non-tenant-owned child table directly, is there an explicit tenant-aware join?
 
 # Frontend rules
-- Keep pages focused
-- Use facades for feature orchestration
-- Keep HTTP access in data-access layers
-- Avoid business logic hidden inside presentation components
-- Optimize for operational UX:
-  - fast patient search
-  - fast patient registration
-  - fast appointment creation
-  - clear clinical workflows
-  - low-friction treatment planning
-  - quick payment registration
+- Keep pages focused.
+- Use facades for feature orchestration.
+- Keep HTTP access in data-access layers.
+- Avoid business logic hidden inside presentation components.
+- Keep visible user copy free of internal release/slice terminology.
+- Use shared `--bsm-*` tokens instead of isolated hardcoded colors when touching visual code.
+- Optimize for operational UX: patient search/registration, scheduling, clinical capture, odontogram, treatment planning and billing.
 
 # What not to do
-- Do not invent modules that contradict the documented architecture
-- Do not introduce infrastructure or vendors without justification
-- Do not refactor unrelated areas while implementing a feature unless necessary
-- Do not mix platform and tenant concerns casually
-- Do not create large mixed-purpose diffs when smaller ones are possible
-- Do not optimize prematurely for microservices or advanced distributed complexity
-- Do not assume the repository is empty or nearly empty as the default working condition
-- No functional roadmap release should be treated as completed unless the actual codebase and aligned documentation explicitly prove it
+- Do not invent modules that contradict the documented architecture.
+- Do not introduce infrastructure or vendors without justification.
+- Do not refactor unrelated areas while implementing a feature unless necessary.
+- Do not mix platform and tenant concerns casually.
+- Do not create large mixed-purpose diffs when smaller ones are possible.
+- Do not optimize prematurely for microservices or distributed complexity.
+- Do not assume the repository is empty or nearly empty.
+- Do not mark a release completed without code, tests and aligned documentation.
+- Do not reopen closed release scope to make a later module easier.
 
 # Escalation rule
-If blocked, do not stop at a vague message.
-
-Instead:
+If blocked:
 - explain the exact blocker
 - explain what was confirmed from docs/code
-- explain the options
+- explain the valid options
 - recommend the best option
 - ask only the minimum necessary question
 
@@ -261,10 +267,11 @@ Instead:
 When in doubt, favor:
 - tenant safety
 - maintainability
-- clear boundaries
+- clear ownership
 - small reversible steps
 - explicit documentation
 - product coherence
+- evidence before acceptance
 
 # Final guiding question
 For every meaningful decision, ask:

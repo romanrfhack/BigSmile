@@ -3,269 +3,259 @@
 - **Status:** Accepted
 - **Date:** 2026-07-22
 - **Decision Type:** Product scope, authentication boundary, clinical-data workflow
-- **Scope:** Patient self-registration, existing-patient activation, medical-history intake, audit trail
-- **Applies To:** Identity, Patients, Clinical Records, API, frontend, persistence, security, roadmap
-- **Roadmap Placement:** Phase 2.1 — Patient Intake and Portal Foundation, after the initial MVP
-- **Tracking:** GitHub issue #2; implementation issues #4, #5, #6, and #7
+- **Scope:** Patient self-registration, existing-patient activation, medical-history intake and audit
+- **Applies To:** Identity, Patients, Clinical Records, API, frontend, persistence, security and roadmap
+- **Roadmap Placement:** Phase 2.1 after the initial MVP
+- **Tracking:** issue #2; implementation issues #4, #5, #6 and #7
 
 ## Context
 
-The client confirmed that BigSmile must support two patient-facing workflows:
+The client confirmed three requirements:
 
-1. A new patient waiting at the clinic can open BigSmile, register, and begin completing demographic data and the fixed medical-history questionnaire.
-2. An existing patient can activate access and complement information that the clinic has not captured yet.
-3. Patient-originated changes must remain traceable in an audit log.
+1. A new patient waiting at the clinic can register and begin completing demographic/contact data and the fixed medical-history questionnaire.
+2. An existing patient can activate access and complement information not yet captured by the clinic.
+3. Patient-originated changes remain traceable and require clinic review before canonical application.
 
-The current authentication model is staff-oriented. `User` authenticates through `/api/auth/login`, requires a `UserTenantMembership`, and receives permissions based on staff roles. The current `TenantUser` role has patient and scheduling permissions, while clinical access is granted to privileged clinic roles. Reusing those memberships for patients would create an excessive and unsafe authorization surface.
+Current authentication is staff-oriented. `User` signs in through `/api/auth`, requires `UserTenantMembership` and receives tenant operational permissions from a staff role. Reusing that boundary for patients would violate least privilege.
 
-The current clinical questionnaire stores the latest `Unknown` / `Yes` / `No` answer and updater metadata, but it does not preserve a complete immutable history of patient-originated revisions. The current `Patient` aggregate is canonical tenant-owned operational data and should not be created or modified directly by an anonymous public endpoint without duplicate resolution and clinic review.
+The current clinical questionnaire stores latest values and updater metadata but is not an immutable patient-originated intake history. Canonical `Patient` and `ClinicalRecord` data must not be created or overwritten directly from anonymous/public endpoints.
 
-This requirement formalizes a bounded patient-intake and self-service foundation for Phase 2 — Modern Operations. It does not open the full patient portal, online booking, messaging, billing, documents, or professional clinical-record browsing.
+This decision formalizes a bounded intake/update foundation for Phase 2. It does not open a full patient portal.
 
 ## Decision
 
-BigSmile will introduce a separate **Patient Intake and Portal** boundary rather than treating patients as normal clinic staff users.
+BigSmile will introduce a separate **Patient Intake and Portal** boundary.
 
-### 1. Separate patient identity boundary
+### 1. Separate patient identity
 
-A new tenant-owned `PatientPortalAccount` will represent patient authentication.
+A tenant-owned `PatientPortalAccount` will:
 
-It will:
+- remain separate from `UserTenantMembership` and staff roles;
+- link to at most one canonical Patient in Phase 2.1;
+- carry patient-specific activation, lockout, recovery and session metadata;
+- authenticate through dedicated patient endpoints/scheme;
+- use patient-specific JWT audience/scope and self-only policies;
+- never receive `patient.read`, `patient.write`, `clinical.read`, `clinical.write`, scheduling, billing, document or platform permissions.
 
-- be separate from `UserTenantMembership` and staff role mappings;
-- link to at most one canonical `Patient` in the initial slice;
-- carry its own activation, lockout, recovery, and session metadata;
-- authenticate through dedicated patient-portal endpoints;
-- receive a patient-specific JWT audience/scope and self-only authorization policies;
-- never receive `patient.read`, `patient.write`, `clinical.read`, `clinical.write`, scheduling, billing, document, or platform permissions.
+`TenantId`, portal-account id and linked `PatientId` come from verified server-issued context. Request bodies and arbitrary route identifiers are not authority sources.
 
-Patient-portal authorization will derive `TenantId`, portal account id, and linked `PatientId` from verified server-issued claims. Patient-facing contracts will not accept an arbitrary `TenantId` or target `PatientId` as an authority source.
+### 2. Existing-patient activation
 
-### 2. Invitation-based activation for existing patients
-
-An existing patient will activate portal access through a staff-issued `PatientPortalInvitation` bound to:
+Existing patients activate through a staff-issued `PatientPortalInvitation` bound server-side to:
 
 - `TenantId`;
 - `PatientId`;
-- invitation purpose;
-- short expiration time;
+- purpose;
+- short expiry;
 - single-use state;
 - revocation state.
 
-Only a cryptographic hash of the invitation token will be stored. A token cannot be replayed after consumption, expiration, or revocation.
+Only a cryptographic token hash is stored. Consumption, expiry and revocation are enforced transactionally. Public patient search/claim by name, email, phone or date of birth is forbidden.
 
-The public API will not expose patient search or record claiming by name, email, phone, or date of birth. This avoids enumeration and account-takeover paths.
+### 3. New-patient waiting-room entry
 
-### 3. Tenant-scoped intake session for new patients
+Staff may generate a short-lived tenant-scoped QR/link.
 
-A new patient in the waiting room will enter through a short-lived tenant-scoped intake link or QR generated by clinic staff.
+The public flow creates a `PatientIntake` draft, not a canonical Patient or ClinicalRecord. Staff later resolves duplicates and decides whether to link an existing Patient or create a new one.
 
-The public flow will create a `PatientIntake` draft, not a canonical `Patient` or `ClinicalRecord` directly. The draft may later be linked to an existing patient or accepted as a new patient after staff review.
+### 4. Staged data workflow
 
-This keeps duplicate resolution, tenant ownership, and clinical-record creation inside authenticated clinic workflows.
+Patient-originated data follows:
 
-### 4. Draft, submit, review, and apply workflow
+```text
+Draft -> Submitted -> Reviewed -> Applied
+                           \-> Rejected
+```
 
-Patient-originated data will move through explicit states:
+- `Draft`: patient can save effective changes.
+- `Submitted`: immutable revision awaiting review.
+- `Reviewed`: staff inspected identity/data/conflicts.
+- `Applied`: accepted fields copied through explicit canonical use cases.
+- `Rejected`: submission retained without canonical application.
 
-- `Draft` — patient can save effective changes;
-- `Submitted` — immutable revision created and awaiting clinic review;
-- `Reviewed` — staff has inspected identity and data;
-- `Applied` — accepted fields copied to canonical Patient / Clinical Records through existing domain/application rules;
-- `Rejected` — submission is retained but not applied.
-
-The patient portal will not directly modify professional clinical data such as:
+Patient/public endpoints do not directly modify:
 
 - diagnoses;
 - clinical notes;
-- encounters and vital signs;
-- odontogram;
-- treatments;
-- billing;
-- documents;
+- encounters/vitals;
 - current clinical alerts;
-- current allergies without explicit review.
+- current allergies without explicit review;
+- odontogram;
+- treatments/quotes;
+- billing;
+- documents.
 
-Medical-questionnaire answers submitted by the patient remain clearly attributed as patient-originated. Clinic staff applies accepted data through a dedicated use case, preserving the existing tenant-aware clinical rules.
+Questionnaire answers remain attributed as patient-originated. Staff application remains separately attributable.
 
-### 5. Append-only audit and revisions
+### 5. Append-only revisions and audit
 
-BigSmile will add a domain-specific, append-only patient-intake audit trail.
+Every effective save or lifecycle/security transition records at minimum:
 
-Every effective save or lifecycle transition will record at minimum:
-
-- `TenantId`;
-- intake id;
-- linked patient id when available;
-- actor type: `Patient`, `Staff`, or `System`;
+- tenant;
+- intake and linked patient when available;
+- actor type (`Patient`, `Staff`, `System`);
 - actor id;
-- action type;
-- timestamp UTC;
+- action;
+- UTC timestamp;
 - revision number;
 - changed field identifiers or normalized diff;
 - correlation id;
-- source metadata limited to what is operationally and legally justified.
+- only justified source metadata.
 
-Tokens, passwords, raw authorization headers, and other secrets must never be written to the audit trail.
-
-The system will not log every keystroke. A new revision is created only for an effective explicit save, submit, review, apply, reject, invitation, activation, or security transition.
+Passwords, token values, raw authorization headers and secrets are never audited. The system does not log every keystroke.
 
 ### 6. Frontend separation
 
-The Angular frontend will add a dedicated patient-intake feature and route area, separate from the authenticated staff shell.
+Angular adds a patient-specific route/feature area separate from the staff shell, with:
 
-It will use:
+- patient auth/session service;
+- patient route guards;
+- feature-local facade/data-access/models;
+- mobile/tablet-first waiting-room forms;
+- the same fixed medical-question catalog;
+- explicit save/submit states;
+- clear clinic-review messaging.
 
-- patient-specific auth/session service;
-- patient-specific route guards;
-- feature-local facade and data-access;
-- mobile/tablet-first forms suitable for waiting-room use;
-- the same fixed medical-question catalog, without duplicating backend ownership rules;
-- explicit save and submit states;
-- clear messaging that clinic review is required before changes appear in the canonical patient or clinical record.
+The existing staff clinical-record questionnaire remains the internal operational view.
 
-The existing staff clinical-record questionnaire remains unchanged as the internal operational view.
+### 7. Security requirements
 
-### 7. Security controls
+Phase 2.1 requires:
 
-The foundation requires:
+- rate limiting on anonymous activation/registration;
+- generic anti-enumeration errors;
+- secure password hashing or an approved stronger compatible method;
+- token hashing and constant-time comparison;
+- transactional single-use/expiry/revocation;
+- lockout/recovery before remote production readiness;
+- server-side ownership checks on every patient read/write;
+- centralized tenant enforcement for all new tenant-owned entities;
+- no platform override in patient policies;
+- automated IDOR, replay, cross-tenant, expiry, revocation and concurrency coverage.
 
-- rate limiting on all anonymous activation and registration endpoints;
-- generic anti-enumeration responses;
-- password hashing using the existing secure abstraction or a stronger compatible implementation;
-- invitation token hashing and constant-time validation;
-- single-use and expiry enforcement in a transaction;
-- lockout and recovery controls before remote production access;
-- server-side ownership checks on every patient-portal read/write;
-- query filters or equivalent centralized tenant enforcement for all new tenant-owned entities;
-- no platform override behavior in patient-portal policies;
-- tests for IDOR, replay, cross-tenant access, duplicate consumption, expiry, revocation, and concurrency.
+### 8. Roadmap placement and gate
 
-### 8. Roadmap placement and implementation gate
+Phase 2.1 starts only after the initial MVP is formally accepted and stable unless a future explicit decision reprioritizes it.
 
-This capability is planned as **Phase 2.1 — Patient Intake and Portal Foundation**, the first bounded capability inside **Phase 2 Expansion — Modern Operations** after the initial MVP is formally accepted and stable.
+Current roadmap frontier after Release 4 closure:
 
-This placement is intentional because:
+```text
+Release 5 -> Release 6 -> Release 7 -> Phase 2.1
+```
 
-- the requirement directly supports intake forms and digital patient updates;
-- it depends on stable Patients and Clinical Records behavior;
-- clinic review/application depends on the operational MVP remaining authoritative;
-- a public authentication boundary should not interrupt the current Release 4 → Release 7 dependency chain without an explicit future reprioritization decision.
+The current next planned functional phase is Release 5 — Treatments and Quotes.
 
-The accepted ADR does **not** open Phase 2.1 implementation now. The current next planned functional phase remains Release 4 — Odontogram.
-
-The broader patient portal remains in Phase 4. Phase 2.1 is limited to account activation, self-service intake/update, clinic review/application, and audit. It does not include professional clinical-record browsing, booking, billing, documents, treatments, or messaging.
+The broader patient portal remains Phase 4 work. Phase 2.1 is limited to activation, self-service intake/update, clinic review/application and audit.
 
 ## Implementation slices
 
 ### PI-1 — Access and Invitation Foundation — issue #4
 
-- `PatientPortalAccount` and `PatientPortalInvitation` entities;
-- persistence configuration, indexes, migration, and tenant filters;
+- account/invitation entities;
+- persistence/indexes/migration/tenant filters;
 - staff issue/revoke endpoints;
 - patient activation/login/current-session endpoints;
-- dedicated JWT claims, auth scheme, policies, rate limiting, and integration tests;
-- no medical questionnaire writes yet.
+- dedicated claims/scheme/policies/rate limiting;
+- replay/expiry/revocation/concurrency tests;
+- no questionnaire writes.
 
 ### PI-2 — Intake Draft — issue #5
 
-- `PatientIntake` aggregate and fixed questionnaire draft answers;
-- new-patient tenant intake session;
-- existing-patient prelinked intake;
-- patient self-only read/save endpoints;
-- mobile/tablet frontend capture;
-- append-only effective-save revisions.
+- `PatientIntake` and fixed questionnaire draft answers;
+- new-patient and prelinked existing-patient intake;
+- self-only read/save;
+- optimistic concurrency;
+- append-only effective-save revisions;
+- mobile/tablet frontend.
 
-### PI-3 — Submit, Review, and Apply — issue #6
+### PI-3 — Submit, Review and Apply — issue #6
 
-- immutable submitted revisions;
+- immutable submitted revision;
 - staff review worklist;
 - duplicate/link/create decisions;
-- application to canonical Patient and Clinical Records through explicit use cases;
-- conflict detection and concurrency handling.
+- explicit canonical application;
+- provenance/conflict/idempotency handling;
+- transition audit.
 
 ### PI-4 — Audit Visibility and Hardening — issue #7
 
 - staff-visible audit timeline;
-- account recovery and session revocation;
-- additional abuse controls;
+- lockout/recovery/session revocation;
+- invitation/session revocation;
 - privacy/retention controls;
-- e2e coverage and operational runbook.
+- e2e and operational runbook.
 
 ## Alternatives considered
 
-### Reuse `User` and `TenantUser`
+### Reuse `User` / `TenantUser`
 
-**Rejected.** It is smaller initially but grants or risks granting tenant-wide operational permissions to patients. It also mixes staff membership semantics with self-service identity and weakens least privilege.
+**Rejected.** It mixes staff membership with patient self-service and risks tenant-wide operational permissions.
 
-### Let anonymous registration create Patient and ClinicalRecord immediately
+### Create Patient/ClinicalRecord directly from public registration
 
-**Rejected.** It creates duplicate, spam, ownership, and clinical-data integrity risks. Public intake must first create a pending draft/submission.
+**Rejected.** It creates duplicate, spam, ownership and clinical-integrity risks.
 
-### Let patients write canonical clinical questionnaire answers directly
+### Let patients write canonical questionnaire answers directly
 
-**Rejected for the initial slice.** Direct writes reduce implementation steps but blur patient statements with clinician-reviewed data and make conflict handling harder. Staged review and apply provides clearer provenance and safer clinical operations.
+**Rejected for Phase 2.1.** It blurs patient statements with clinic-reviewed data and weakens conflict/provenance handling.
 
-### Use only one-time forms without persistent accounts
+### One-time forms without accounts
 
-**Not selected as the target model.** It is useful for a kiosk-only MVP but does not satisfy the requirement that existing patients return later to complement information. One-time invitations remain part of secure account activation.
+**Not selected as target model.** Useful for a kiosk-only flow but insufficient for returning existing patients.
 
-### Generic application-wide audit log only
+### Generic application audit only
 
-**Not sufficient by itself.** Infrastructure audit events may be added later, but patient intake requires domain-level revisions that preserve clinical provenance and review/application lifecycle.
+**Insufficient.** Intake requires domain-level immutable revisions and lifecycle provenance.
 
-### Implement before Release 4
+### Implement before remaining MVP releases
 
-**Not selected.** The client confirmed the capability is desired but did not assign it a higher priority than the existing roadmap. Placing the bounded foundation after the initial MVP preserves dependency order and avoids destabilizing the current operational-core sequence.
+**Not selected.** The client confirmed the need but did not reprioritize it ahead of Release 5 to Release 7.
 
 ## Consequences
 
 ### Positive
 
-- Patients receive least-privilege, self-only access.
-- Existing staff authorization remains stable and backward compatible.
-- New registrations do not pollute canonical patient data before review.
-- Existing patients can be linked securely without public record search.
-- Every patient-originated update has explicit provenance and immutable history.
-- The implementation can progress in small, testable slices.
-- The capability is visible in the roadmap without displacing the current operational-core releases.
+- strict least-privilege patient access;
+- staff auth remains backward compatible;
+- public registration does not pollute canonical records;
+- existing patients link without public search;
+- patient-originated updates have immutable provenance;
+- implementation can proceed in bounded slices.
 
 ### Trade-offs
 
-- A second authentication boundary adds implementation and operational complexity.
-- Clinic staff must review submissions before canonical application.
-- Invitation issuance is required before existing-patient activation.
-- Remote activation eventually needs a delivery/recovery channel; automated email/SMS/WhatsApp remains outside PI-1 unless separately approved.
-- Supporting dependents or multiple patient records per account is deferred.
-- The capability remains planned until the initial MVP is formally accepted or the roadmap is explicitly reprioritized.
+- second auth boundary increases implementation/operations complexity;
+- staff review adds an explicit step;
+- existing-patient activation requires invitation;
+- remote activation eventually requires delivery/recovery decisions;
+- dependents/multiple patients per account are deferred;
+- capability remains planned until the MVP gate or reprioritization.
 
 ## Non-goals
 
-- Online booking;
-- patient access to diagnoses, clinical notes, odontogram, treatment plans, billing, or documents;
-- automated email, SMS, or WhatsApp delivery;
-- digital signature or advanced consent;
+- online booking;
+- patient access to professional clinical records or odontogram;
+- treatment/quote/billing/document access;
+- automated email/SMS/WhatsApp;
+- digital signature/advanced consent;
 - family/dependent accounts;
 - configurable form builder;
-- automatic clinical interpretation of patient responses.
+- automatic clinical interpretation or allergy/alert synchronization.
 
-## Decision confirmation
+## Product confirmation
 
 Product confirmed on 2026-07-22 that:
 
-1. Patient changes must be staged for clinic review before canonical application.
-2. Existing-patient access begins through staff-issued, single-use invitations.
-3. The initial waiting-room flow may use a clinic-generated QR/link without an external messaging provider.
-4. The client has not assigned this capability a priority that should displace the current roadmap.
-5. The capability is therefore accepted as Phase 2.1 after the initial MVP, while the full patient portal remains deferred to Phase 4.
+1. clinic review precedes canonical application;
+2. existing-patient access begins through staff-issued single-use invitation;
+3. waiting-room pilot may use clinic-generated QR/link without external provider;
+4. the capability does not displace the current MVP roadmap;
+5. full patient portal remains separate future scope.
 
-## Implementation status at acceptance
+## Implementation status
 
-- Architecture decision: accepted.
-- General implementation plan: tracked in `docs/patient-intake-and-portal-plan.md`.
-- Parent tracking: issue #2.
-- PI-1: planned in issue #4; not implemented.
-- PI-2: planned in issue #5; not implemented.
-- PI-3: planned in issue #6; not implemented.
-- PI-4: planned in issue #7; not implemented.
-- Backend/API/database/frontend implementation: not started by this ADR.
+- Decision: accepted.
+- General plan: `docs/patient-intake-and-portal-plan.md`.
+- Parent: issue #2.
+- PI-1 to PI-4: planned, not implemented.
+- Backend/API/database/frontend patient-facing implementation: not started.

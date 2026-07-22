@@ -8,21 +8,23 @@
 
 [Hecho] Stack principal: backend .NET 10 + ASP.NET Core Web API + EF Core + SQL Server; frontend Angular 21 + TypeScript; calidad/operación con GitHub Actions, pruebas automatizadas, logging estructurado, health checks y auditoría.
 
-[Hecho] Modelo SaaS: Tenant = clínica/consultorio cliente; Branch = sucursal/ubicación interna del tenant. TenantId es la frontera primaria de seguridad y propiedad; BranchId es scope operativo subordinado, no el boundary principal.
+[Hecho] Modelo SaaS: Tenant = clínica/consultorio cliente; Branch = sucursal/ubicación interna del tenant. `TenantId` es la frontera primaria de seguridad y propiedad; `BranchId` es scope operativo subordinado, no el boundary principal.
 
 ## 2. Decisiones arquitectónicas cerradas
 
-**Arquitectura general** — [Hecho] BigSmile arranca como modular monolith, con fronteras explícitas de backend (Api / Application / Domain / Infrastructure / SharedKernel) y frontend (core / shell / shared / features). No hay decisión de microservicios para la etapa inicial.
+**Arquitectura general** — [Hecho] BigSmile inicia como modular monolith, con fronteras explícitas de backend (Api / Application / Domain / Infrastructure / SharedKernel) y frontend (core / shell / shared / features). No hay decisión de microservicios para la etapa inicial.
 
-**Multitenancy** — [Hecho] La estrategia base es shared database + shared schema + TenantId como discriminador transversal, con TenantContext por request, enforcement centralizado, y bypass solo para operaciones de plataforma, explícito y auditable.
+**Multitenancy** — [Hecho] La estrategia base es shared database + shared schema + `TenantId` como discriminador transversal, con `TenantContext` por request, enforcement centralizado y bypass solo para operaciones de plataforma explícitas y auditables.
 
-**Auth** — [Hecho] La base de identidad y autenticación ya está establecida sobre JWT y la fundación tenant-aware de autorización quedó formalizada: claims de scope/permiso, TenantContext enriquecido, policies/handlers por scope, `/api/auth/me`, override de plataforma explícito y auditable, y soporte mínimo de frontend para consumir el contexto actual sin persistencia insegura en navegador.
+**Auth** — [Hecho] La base de identidad y autenticación está establecida sobre JWT y autorización tenant-aware: claims de scope/permiso, `TenantContext` enriquecido, policies/handlers por scope, `/api/auth/me`, override de plataforma explícito y auditable, y contexto frontend en memoria.
 
-**Persistencia** — [Hecho] La persistencia base es EF Core sobre SQL Server, con AppDbContext, migraciones, seed durable y validación de login real contra base SQL Server. Tenant, Branch e identidad comparten la misma ruta de persistencia durable. BranchId solo se usa cuando el dominio lo requiere, subordinado a TenantId.
+**Persistencia** — [Hecho] La persistencia base es EF Core sobre SQL Server, con `AppDbContext`, migraciones, seed durable y login real contra SQL Server. `BranchId` solo se usa cuando el dominio lo requiere y permanece subordinado a `TenantId`.
 
-**Frontend** — [Hecho] El frontend queda fijado como feature-based, con separación entre páginas, componentes, facades, data-access y modelos; se prohíbe dispersar llamadas HTTP en componentes/páginas y se prioriza UX operativa rápida para recepción y clínica.
+**Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 004 queda aceptado como decisión futura: la identidad de paciente será separada del acceso interno de personal; los pacientes no reutilizarán `TenantUser`, `UserTenantMembership` ni permisos tenant-wide; pacientes existentes se activarán por invitación single-use y pacientes nuevos usarán enlace/QR tenant-scoped; la información seguirá `Draft -> Submitted -> Reviewed -> Applied/Rejected`; la aplicación canónica requerirá revisión de la clínica; y los cambios tendrán bitácora append-only. Esta decisión queda planificada como Phase 2.1 después del MVP inicial, no abre implementación actual.
+**Patient Intake and Portal Foundation** — [Hecho] ADR 006 queda aceptado como decisión futura: identidad de paciente separada del acceso interno; sin `TenantUser`, `UserTenantMembership` ni permisos tenant-wide; invitaciones single-use para pacientes existentes; enlace/QR tenant-scoped para pacientes nuevos; flujo `Draft -> Submitted -> Reviewed -> Applied/Rejected`; revisión clínica antes de aplicación canónica; y bitácora append-only. Se ubica en Phase 2.1 después del MVP inicial y no abre implementación actual.
+
+**Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
 ## 3. Fases completadas
 
@@ -40,47 +42,49 @@
 
 [Hecho] Release 3 — Clinical Records — completada.
 
-[Hecho] El cierre formal de Release 2 se apoya en evidencia de código, pruebas, revisión de release y documentación alineada para calendario diario/semanal branch-aware, creación/edición/reprogramación/cancelación de citas, appointment notes, blocked slots y estados `Attended` / `NoShow`.
+[Hecho] Release 4 — Odontogram — completada como release fundacional mediante Release 4.1, 4.2, 4.3 y 4.4.
 
-[Hecho] `doctor-based views` quedó explícitamente diferido por decisión documentada a un slice futuro acotado; no forma parte del cierre efectivo de Release 2.
+[Hecho] El cierre formal de Release 2 cubre calendario diario/semanal branch-aware, creación/edición/reprogramación/cancelación, appointment notes, blocked slots y estados `Attended` / `NoShow`. `doctor-based views` permanece diferido porque requiere provider/doctor assignment.
 
-[Hecho] El cierre formal de Release 3 se apoya en auditoría de código, pruebas y documentación del alcance aceptado Release 3.1 a Release 3.6: creación explícita de expediente clínico, snapshot base, alergias actuales, notas append-only, diagnósticos básicos, timeline clínica acotada, snapshot history, cuestionario médico fijo basado en el formato físico, consulta clínica/signos vitales, atribución por usuario y protección con `clinical.read` / `clinical.write` sin TenantId desde cliente.
+[Hecho] El cierre formal de Release 3 cubre creación explícita de expediente clínico, snapshot base, alergias actuales, notas append-only, diagnósticos básicos, timeline clínica acotada, snapshot history, cuestionario médico fijo, consulta/signos vitales, atribución por usuario y protección con `clinical.read` / `clinical.write`.
+
+[Hecho] El cierre formal de Release 4 se apoya en auditoría de dominio, aplicación, API, persistencia, permisos, frontend y pruebas para odontograma explícito, 32 dientes FDI permanentes adultos, estados de diente, superficies `O/M/D/B/L`, hallazgos básicos y change history append-only de hallazgos.
 
 ## 4. Fase actual
 
-[Hecho] La última fase funcional marcada como completada es Release 3 — Clinical Records.
+[Hecho] La última fase funcional marcada como completada es Release 4 — Odontogram.
 
-[Hecho] Release 3 — Clinical Records queda cerrada y preservada como release clínico fundacional. Los slices Release 3.1 a Release 3.6 permanecen como evidencia aceptada de cierre.
+[Hecho] Release 4 queda cerrada y preservada como release odontológica fundacional. Los slices Release 4.1 a Release 4.4 permanecen como evidencia aceptada de cierre.
 
-[Hecho] La siguiente fase funcional prevista por el roadmap es Release 4 — Odontogram.
+[Hecho] La siguiente fase funcional prevista por el roadmap es Release 5 — Treatments and Quotes.
 
-[Hecho] Release 4 — Odontogram no queda abierta por este cierre documental. Cualquier implementación o aceptación de Release 4 debe realizarse en un slice futuro explícito, con alcance, pruebas y documentación propios.
+[Hecho] Release 5 no queda abierta por el cierre de Release 4. Cualquier aceptación debe realizarse mediante auditoría/slice explícito, con alcance, pruebas y documentación propios.
 
-[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe tratarse como siguiente paso inmediato después de cerrar Release 3, ni antes de completar y aceptar Release 4, Release 5, Release 6 y Release 7 según `docs/product-roadmap.md`.
+[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe abrirse antes de completar y aceptar Release 5, Release 6 y Release 7, salvo repriorización futura explícita y documentada.
 
-[Hecho] Phase 2.1 — Patient Intake and Portal Foundation queda planificada dentro de Phase 2, después del MVP inicial. Su arquitectura y plan general están aceptados, pero PI-1 a PI-4 no están implementados ni abiertos como fase activa.
+[Hecho] Phase 2.1 — Patient Intake and Portal Foundation permanece planificada dentro de Phase 2. Su arquitectura y plan general están aceptados, pero PI-1 a PI-4 no están implementados ni abiertos como fase activa.
 
 ## 4.1 Nota de reconciliación UX / código existente
 
-[Hecho] El trabajo activo posterior al cierre de Release 3 debe tratarse como `client-driven UX redesign / visual organization pass` mientras no se abra explícitamente un nuevo slice funcional.
+[Hecho] El repositorio contiene código funcional en módulos posteriores al estado formal, incluyendo Treatments/Quotes, Billing, Documents, Dashboard y recordatorios/manual reminders.
 
-[Hecho] El repositorio contiene código funcional existente en módulos posteriores al roadmap formal, incluyendo Odontogram, Treatments/Quotes, Billing, Documents, Dashboard y recordatorios/manual reminders. La presencia de código, rutas, permisos, migrations o tests en esos módulos no implica por sí misma que Release 4, Release 5, Release 6, Release 7 o Phase 2 estén abiertas, aceptadas o cerradas.
+[Hecho] La presencia de código, rutas, permisos, migrations o tests no implica por sí misma aceptación o cierre. Hasta una auditoría específica, esos módulos se clasifican como `implemented but not formally accepted/reconciled`.
 
-[Hecho] Hasta una auditoría y aceptación específica por módulo, esos módulos posteriores deben clasificarse como `implemented but not formally accepted/reconciled`.
+[Hecho] Odontogram deja esa clasificación porque recibió auditoría específica y cierre formal mediante ADR 007 y `docs/release-4-odontogram-audit-and-closure.md`.
 
-[Hecho] Los slices visuales pueden mejorar presentación, organización, copy, color, microinteracciones, modales/drawers/tabs/sticky action bars y deuda UX sin cambiar backend, APIs, permissions, auth, tenant context, branch context, migrations ni scope funcional.
+[Hecho] Los slices visuales pueden mejorar presentación, organización, copy, color, microinteracciones, modales/drawers/tabs/sticky action bars y deuda UX sin cambiar backend, APIs, permissions, auth, tenant context, branch context, migrations ni alcance funcional.
 
-[Hecho] El ajuste UX del cuestionario médico solicitado por el cliente quedó integrado mediante PR #1: conserva el catálogo y contratos existentes, reemplaza dropdowns por opciones visibles `Sí / No / Sin respuesta`, agrega avance de captura y mantiene `Unknown` como estado seguro. No abrió patient self-service ni cambió backend, permisos o tenant isolation.
+[Hecho] El ajuste UX del cuestionario médico solicitado por el cliente quedó integrado mediante PR #1: opciones visibles `Sí / No / Sin respuesta`, avance de captura y preservación de `Unknown` como estado seguro.
 
 ## 4.2 Plan futuro — Phase 2.1 Patient Intake and Portal Foundation
 
 **Estado** — [Hecho] decisión aceptada y trabajo planificado; implementación no iniciada.
 
-**Ubicación** — [Hecho] primer capability acotado de Phase 2 — Modern Operations después del MVP inicial; no desplaza Release 4 como siguiente fase funcional actual.
+**Ubicación** — [Hecho] primer capability acotado de Phase 2 — Modern Operations después del MVP inicial; no desplaza Release 5 como siguiente fase funcional actual.
 
 **Tracking** — [Hecho]
 
-- ADR 004 — `docs/decisions/004-patient-intake-and-portal-foundation.md`.
+- ADR 006 — `docs/decisions/006-patient-intake-and-portal-foundation.md`.
 - Plan general — `docs/patient-intake-and-portal-plan.md`.
 - Parent issue — #2.
 - PI-1 Access and Invitation Foundation — issue #4.
@@ -100,11 +104,9 @@
 
 ## 5. Release 3 — Clinical Records
 
-**Nombre exacto** — [Hecho] Release 3 — Clinical Records.
+**Estado operativo actual** — [Hecho] completada y preservada como release clínica fundacional.
 
-**Estado operativo actual** — [Hecho] completada como release clínico fundacional.
-
-**Evidencia de cierre** — [Hecho] Release 3 queda cerrada mediante los slices aceptados:
+**Evidencia de cierre** — [Hecho]
 
 - Release 3.1 — Clinical Record Foundation.
 - Release 3.2 — Basic Diagnoses Foundation.
@@ -115,110 +117,140 @@
 
 **Alcance cerrado** — [Hecho]
 
-- `ClinicalRecord` tenant-owned y patient-owned.
-- Exactamente un expediente clínico activo por Patient por Tenant.
-- Creación explícita vía `POST /api/patients/{patientId}/clinical-record`.
-- `GET /api/patients/{patientId}/clinical-record` devuelve `404` cuando no existe.
-- Sin autocreación por lectura, notas, diagnósticos, cuestionario o encounters.
-- Snapshot base con medical background summary, current medications summary y alergias actuales.
-- Clinical notes append-only con orden newest-first.
-- Diagnósticos básicos no codificados con alta y resolución explícitas.
-- Timeline clínica acotada, construida solo desde notas y diagnósticos/resoluciones, sin endpoint nuevo y sin tabla nueva.
-- Snapshot history acotado, separado de la timeline.
-- Cuestionario médico estructurado con catálogo fijo `QuestionKey`, respuestas `Unknown` / `Yes` / `No` y `Details` opcional acotado.
-- Consulta clínica/signos vitales mediante `ClinicalEncounter` sobre un expediente existente.
-- `ChiefComplaint`, `ConsultationType` `Treatment` / `Urgency` / `Other`, signos vitales opcionales y `noteText` opcional como nota append-only vinculada.
-- `TenantId` y `CreatedByUserId` derivados del contexto, no aceptados desde cliente en los contratos nuevos.
-- Reutilización de `clinical.read` / `clinical.write`, sin permisos nuevos.
-- UI acotada dentro de `features/clinical-records`, con HTTP en data-access y orquestación por facade.
-- Contexto read-only de Patient para identidad/demografía, incluyendo edad derivada desde `Patient.DateOfBirth` sin persistir edad ni agregar `Age` al backend.
-
-**Acceso clínico** — [Hecho] En esta fase, `clinical.read` y `clinical.write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe permisos clínicos.
+- `ClinicalRecord` tenant-owned y patient-owned, exactamente uno activo por Patient/Tenant.
+- Creación explícita; `GET` devuelve `404` cuando no existe; sin autocreación.
+- Medical background, medicamentos actuales y alergias actuales.
+- Notas append-only y diagnósticos básicos add/resolve.
+- Timeline acotada basada en notas/diagnósticos y snapshot history separado.
+- Cuestionario fijo `Unknown` / `Yes` / `No` con `Details` opcional.
+- `ClinicalEncounter` con motivo, tipo y signos vitales opcionales.
+- `TenantId` y actor derivados del contexto.
+- `clinical.read` / `clinical.write` para `PlatformAdmin` y `TenantAdmin`; sin acceso clínico para `TenantUser`.
 
 **Fuera del cierre** — [Hecho]
 
-- Full o advanced patient clinical timeline.
-- Timeline cross-module.
-- Restore/revert de snapshot history.
-- Versionado completo del expediente clínico.
-- Rich snapshot diff.
-- Form builder configurable por tenant.
-- Sincronización automática de alergias desde questionnaire.
-- Eventos de questionnaire o encounter en timeline.
+- Timeline clínica avanzada o cross-module.
+- Restore/versionado completo/rich diff.
+- Form builder configurable y auto-sync de alergias.
 - Edición/borrado de encounters.
 - Doctor/provider assignment.
-- Scheduling, Billing, Odontogram, Treatments o Documents.
-- Patient self-service, portal e intake/review workflow.
+- Patient self-service y portal.
+- Scheduling, Billing, Odontogram, Treatments o Documents como parte del agregado Clinical.
 
-**Campos del formato físico fuera del cierre clínico** — [Hecho]
+## 6. Release 4 — Odontogram
 
-- Teléfonos separados casa/oficina/celular pertenecen a un futuro mini-slice Patient Contact Details o a campos propuestos del intake sujetos a revisión; no deben duplicarse sin decisión de ownership.
-- `Requiere factura` y datos de facturación pertenecen a Billing/fiscal profile futuro, no a Clinical Records.
+**Nombre exacto** — [Hecho] Release 4 — Odontogram.
 
-## 6. Releases previos cerrados
+**Estado operativo actual** — [Hecho] completada como release odontológica fundacional.
 
-**Release 1 — Patients** — [Hecho] cubre registro, actualización, búsqueda tenant-scoped, perfil básico, responsible party inline, estatus activo/inactivo, basic clinical alerts, validación de fecha de nacimiento futura y permisos `patient.read` / `patient.write`.
+**Evidencia de cierre** — [Hecho]
 
-**Release 2 — Scheduling** — [Hecho] cubre citas tenant-owned y branch-aware, calendario diario/semanal, creación/edición/reprogramación/cancelación, appointment notes, blocked slots, estados `Attended` / `NoShow`, permisos `scheduling.read` / `scheduling.write` y diferimiento explícito de doctor-based views.
+- Release 4.1 — Odontogram Foundation.
+- Release 4.2 — Odontogram Surface Foundation.
+- Release 4.3 — Basic Dental Findings Foundation.
+- Release 4.4 — Dental Findings Change History.
+- Auditoría — `docs/release-4-odontogram-audit-and-closure.md`.
+- Decisión — ADR 007 `docs/decisions/007-release-4-odontogram-closure.md`.
 
-## 7. Backlog inmediato
+**Alcance cerrado** — [Hecho]
+
+- `Odontogram` tenant-owned y patient-owned.
+- Exactamente uno por `TenantId + PatientId`.
+- Creación explícita; `GET` devuelve `404` cuando falta; sin autocreación.
+- 32 dientes permanentes adultos mediante FDI `11-18`, `21-28`, `31-38`, `41-48`.
+- Estado de diente `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`.
+- Cinco superficies `O/M/D/B/L` por diente.
+- Estado de superficie `Unknown` / `Healthy` / `Restored` / `Caries`.
+- Hallazgos básicos `Caries` / `Restoration` / `MissingStructure` / `Sealant`.
+- Add/remove explícito de hallazgos y rechazo de duplicados exactos.
+- Finding history append-only para add/remove, newest-first y separada de current findings.
+- Metadata UTC y actor en agregado, dientes, superficies, hallazgos e historial.
+- `odontogram.read` / `odontogram.write`; `TenantUser` sin permisos de Odontogram.
+- UI Angular en contexto de paciente, con HTTP en data-access y orquestación en facade.
+- Pruebas de contratos, validaciones, no autocreación, cross-tenant y frontend.
+
+**Tenant safety** — [Hecho] El agregado raíz tiene filtro tenant-aware y writes centralizados. Las tablas hijas se consumen mediante `Odontogram`; cualquier query directa futura debe usar join tenant-aware o modelar ownership explícito.
+
+**Fuera del cierre** — [Hecho]
+
+- Dentición infantil o mixta.
+- Bulk editing.
+- Catálogo complejo/configurable de hallazgos.
+- Linkage con diagnósticos, tratamientos, documentos o imágenes.
+- Timeline dental completa.
+- Historial completo de estados de diente/superficie.
+- Restore/revert y versionado completo.
+- Ortodoncia, periodoncia, overlays de imagen o AI-assisted detection.
+- Acceso del patient portal al odontograma.
+
+**Deuda UX no bloqueante** — [Hecho]
+
+- Reemplazar copy interno como `Release 4.4` por lenguaje clínico.
+- Migrar colores hardcodeados residuales a tokens `--bsm-*`.
+- Seguir dividiendo componentes grandes solo mediante slices visuales acotados.
+
+## 7. Releases previos cerrados
+
+**Release 1 — Patients** — [Hecho] registro, actualización, búsqueda tenant-scoped, perfil, responsible party, estatus, alertas clínicas básicas y permisos `patient.read` / `patient.write`.
+
+**Release 2 — Scheduling** — [Hecho] citas tenant-owned/branch-aware, calendario day/week, create/edit/reschedule/cancel, notes, blocked slots, `Attended` / `NoShow` y permisos `scheduling.read` / `scheduling.write`.
+
+## 8. Backlog inmediato
 
 Lista priorizada:
 
-1. Preservar Releases 1, 2 y 3 ya cerrados sin debilitar la fundación tenant-aware ya cerrada.
+1. Preservar Releases 1 a 4 ya cerrados sin debilitar la fundación tenant-aware.
 
-2. Preparar el siguiente slice funcional de `Release 4 — Odontogram` solo cuando se abra explícitamente, manteniendo tenant safety, permisos acotados y documentación alineada.
+2. Auditar el código existente de `Release 5 — Treatments and Quotes` contra el roadmap y abrir/aceptar únicamente slices con evidencia explícita.
 
-3. Mantener diferidas las `doctor-based views` hasta abrir un slice dedicado de provider/doctor assignment; no reintroducirlas como parche incidental de UI.
+3. No tratar Treatments/Quotes como aceptado solo porque existen código, endpoints, permissions, migrations o tests.
 
-4. Mantener fuera de Clinical Records los follow-ups de Patient Contact Details, Billing/fiscal profile y cualquier scope de Odontogram/Treatments/Documents/Patient Portal.
+4. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
 
-5. Considerar como hardening opcional futuro el rechazo de JSON con miembros no mapeados en DTOs clínicos antiguos, sin cambiar permisos ni contratos funcionales sin slice explícito.
+5. Mantener fuera de los agregados cerrados cualquier linkage cross-module no aceptado.
 
-6. Si en el futuro se consultan directamente tablas hijas clínicas, esas queries deben usar join tenant-aware o modelarse como tenant-owned.
+6. Si se consultan directamente tablas hijas de Clinical u Odontogram, usar join tenant-aware o modelarlas como tenant-owned.
 
-7. Mantener Phase 2.1 visible y trazable mediante ADR 004, `docs/patient-intake-and-portal-plan.md` e issues #2/#4/#5/#6/#7, sin iniciar PI-1 antes del gate de MVP o de una repriorización futura explícita.
+7. Mantener Phase 2.1 visible mediante ADR 006, su plan e issues #2/#4/#5/#6/#7, sin iniciar PI-1 antes del gate de MVP o repriorización explícita.
 
-8. Mantener sincronizados STATE — BigSmile.md, README.md, PROJECT_MAP.md, AGENTS.md y docs/product-roadmap.md cuando avance el estado del proyecto o se abra Phase 2.1.
+8. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS y product-roadmap cuando cambie el estado de Release 5 o Phase 2.1.
 
-## 8. Riesgos y temas a vigilar
+## 9. Riesgos y temas a vigilar
 
-**Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal: cualquier fuga cross-tenant por modelado incompleto, resolución insegura de tenant, filtros incompletos o bypass silencioso compromete la frontera primaria de seguridad.
+**Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal.
 
-**Authorization model** — [Hecho] La fundación ya quedó cerrada y probada por membership, scope y permisos; el catálogo inicial seguirá evolucionando por módulo sin reabrir la forma base del modelo.
+**Authorization model** — [Hecho] Permisos nuevos deben evolucionar junto con módulos reales, sin cambiar silenciosamente scopes o roles.
 
-**Patient-facing identity** — [Hecho] La futura frontera pública es de alto riesgo: no debe reutilizar staff membership, aceptar PatientId/TenantId como autoridad desde cliente, permitir platform override, exponer búsqueda pública de expedientes ni aplicar cambios canónicos sin revisión.
+**Patient-facing identity** — [Hecho] La futura frontera pública no debe reutilizar staff membership, aceptar `PatientId`/`TenantId` como autoridad, permitir platform override ni aplicar cambios canónicos sin revisión.
 
-**Query filters y acceso a datos** — [Hecho] Los filtros globales de tenant y el enforcement centralizado siguen siendo críticos; el riesgo es degradarlos con filtros manuales dispersos, accesos ad hoc o bypasses no controlados.
+**Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
 
-**Clinical child tables** — [Hecho] Los hijos clínicos históricos se consumen a través de `ClinicalRecord`; cualquier acceso directo futuro debe conservar tenant safety mediante join tenant-aware o modelado tenant-owned.
+**Clinical/Odontogram child tables** — [Hecho] Los accesos directos futuros necesitan tenant-aware joins u ownership explícito.
 
-**Privileged/platform paths** — [Hecho] Toda operación fuera del tenant scope normal debe ser explícita, mínima, segregada y auditable.
+**Privileged/platform paths** — [Hecho] Toda operación fuera de tenant scope normal debe ser explícita, mínima y auditable.
 
-**Clinical provenance** — [Hecho] Las declaraciones del paciente no equivalen a observaciones profesionales. Intake, revisión, aplicación y actor deben permanecer diferenciados y auditables.
+**Clinical provenance** — [Hecho] Las declaraciones de pacientes no equivalen a observaciones profesionales.
 
-**UX operativa** — [Hecho] La seguridad y la estructura técnica no deben degradar la velocidad ni la claridad de los flujos núcleo.
+**UX operativa** — [Hecho] Seguridad y estructura no deben degradar velocidad ni claridad.
 
-**Alineación documental futura** — [Hecho] El riesgo ahora es reintroducir desalineación cuando avance una fase o cambie una decisión sin actualizar STATE y documentación base en el mismo cambio.
+**Alineación documental futura** — [Hecho] Cada apertura/cierre debe actualizar código, pruebas y documentación en el mismo cambio.
 
-## 9. Criterios para no perder el rumbo
+## 10. Criterios para no perder el rumbo
 
-[Hecho] No olvidar que BigSmile es producto SaaS multi-tenant para clínicas, no una solución one-off; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewabilidad rompe el rumbo.
+[Hecho] BigSmile es un producto SaaS multi-tenant; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewability rompe el rumbo.
 
-[Hecho] El orden del producto importa: primero foundation, luego Patients, Scheduling, Clinical Records, Odontogram, Treatments and Quotes, Billing, Documents and Dashboard. Después del MVP inicial, Phase 2.1 cubre el bounded Patient Intake and Portal Foundation; el patient portal amplio permanece en Phase 4 junto con capacidades avanzadas.
+[Hecho] El orden actual es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. Después del MVP, Phase 2.1 cubre el bounded Patient Intake and Portal Foundation; el portal amplio permanece en Phase 4.
 
-[Hecho] Phase 2 ocurre después del MVP operativo, no inmediatamente después de Release 3, salvo una repriorización futura explícita y documentada.
+[Hecho] Ningún release funcional ni Phase 2.1 se considera completado sin evidencia explícita en código, pruebas y documentación alineada.
 
-[Hecho] Restricciones de diseño a preservar: modular monolith; capas y ownership explícitos; TenantId como boundary primario; BranchId subordinado; shared DB/schema inicial; sin microservicios ni DB por tenant en esta etapa; sin bypass oculto de plataforma; sin lógica crítica de negocio/autorización solo en UI.
+[Hecho] Restricciones a preservar: modular monolith, ownership explícito, `TenantId` como boundary primario, `BranchId` subordinado, shared DB/schema, sin bypass oculto y sin autorización crítica solo en UI.
 
-[Hecho] Ningún release funcional ni Phase 2.1 debe tratarse como completado sin evidencia explícita en código, pruebas y documentación alineada.
+## 11. Nota tipo ADR resumida
 
-## 10. Nota tipo ADR resumida
+**Estado:** Nota canónica actualizada con ADR 006 y ADR 007.
 
-**Estado:** Aceptada como nota canónica operativa; actualizada con ADR 004 y el plan futuro de Patient Intake and Portal.
+**Contexto:** El código de Odontogram estaba implementado pero clasificado correctamente como no reconciliado hasta una auditoría específica.
 
-**Contexto:** BigSmile es un SaaS multi-tenant para clínicas dentales, con arquitectura modular monolith, Tenant como frontera primaria de seguridad, Branch como scope operativo subordinado y una base fundacional ya establecida más allá de bootstrap. El cliente confirmó la necesidad futura de registro/intake por pacientes nuevos y actualización por pacientes existentes con revisión clínica y bitácora.
+**Decisión:** Cerrar Release 4 mediante slices 4.1 a 4.4, preservar su alcance fundacional y mover la frontera del roadmap a Release 5. Mantener Patient Intake and Portal como Phase 2.1 posterior al MVP mediante ADR 006.
 
-**Decisión:** Tratar como cerradas Foundation / Release 0 base, Pre-auth hardening, Identity + Persistence Foundation, Tenant-Aware Authorization Foundation, Release 1 — Patients, Release 2 — Scheduling y Release 3 — Clinical Records. Tratar Release 3.1 a Release 3.6 como evidencia aceptada de cierre. Tratar Release 4 — Odontogram como siguiente fase funcional prevista. Aceptar ADR 004 y ubicar Patient Intake and Portal Foundation en Phase 2.1 después del MVP inicial, sin abrir implementación actual ni el patient portal amplio.
-
-**Consecuencias:** La prioridad inmediata continúa siendo preservar Releases 1 a 3 y preparar Release 4 solo mediante slices explícitos. Patient Intake and Portal queda completamente visible y descompuesto en PI-1 a PI-4, pero no se implementa antes de su gate. Toda implementación futura deberá mantener identidad separada, self-scope, revisión antes de aplicación canónica, tenant isolation y bitácora append-only.
+**Consecuencias:** Treatments and Quotes es el siguiente módulo a auditar; no se acepta automáticamente. El alcance avanzado de Odontogram permanece diferido y la deuda visual se atiende mediante slices UX separados.
