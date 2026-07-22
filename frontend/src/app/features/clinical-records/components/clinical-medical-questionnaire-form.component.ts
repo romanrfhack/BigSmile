@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/i18n';
 import {
   EmptyStateComponent,
@@ -10,7 +10,6 @@ import {
   StickyActionBarComponent
 } from '../../../shared/ui';
 import {
-  CLINICAL_MEDICAL_ANSWER_VALUES,
   CLINICAL_MEDICAL_QUESTIONNAIRE_GROUPS,
   CLINICAL_MEDICAL_QUESTION_KEYS
 } from '../models/clinical-medical-questionnaire.catalog';
@@ -47,6 +46,14 @@ type MedicalQuestionnaireAnswerForm = FormGroup<{
       [subtitle]="'Fixed structured medical questionnaire for this existing clinical record.' | t"
       variant="elevated">
       <div section-card-actions class="questionnaire-status">
+        <span
+          *ngIf="!loading && !error && questionnaire"
+          class="questionnaire-progress"
+          role="status"
+          aria-live="polite">
+          <span class="visually-hidden">{{ 'Structured answers' | t }}:</span>
+          {{ capturedQuestionCount }} / {{ totalQuestionCount }}
+        </span>
         <app-status-badge
           *ngIf="loading"
           tone="info"
@@ -125,17 +132,27 @@ type MedicalQuestionnaireAnswerForm = FormGroup<{
                 class="question-card"
                 [formGroup]="answerForm(question.questionKey)">
                 <div class="question-main">
-                  <label [for]="answerControlId(question.questionKey)">
+                  <p [id]="questionLabelId(question.questionKey)">
                     {{ question.labelKey | t }}
-                  </label>
+                  </p>
 
-                  <select
-                    [id]="answerControlId(question.questionKey)"
-                    formControlName="answer">
-                    <option *ngFor="let answerValue of answerValues" [value]="answerValue">
-                      {{ answerValue | t }}
-                    </option>
-                  </select>
+                  <div
+                    class="answer-options"
+                    role="radiogroup"
+                    [attr.aria-labelledby]="questionLabelId(question.questionKey)">
+                    <label
+                      *ngFor="let answerValue of answerValues"
+                      class="answer-option"
+                      [for]="answerOptionId(question.questionKey, answerValue)">
+                      <input
+                        type="radio"
+                        [id]="answerOptionId(question.questionKey, answerValue)"
+                        [name]="answerControlName(question.questionKey)"
+                        [formControl]="answerForm(question.questionKey).controls.answer"
+                        [value]="answerValue">
+                      <span>{{ answerLabelKey(answerValue) | t }}</span>
+                    </label>
+                  </div>
                 </div>
 
                 <label
@@ -194,6 +211,31 @@ type MedicalQuestionnaireAnswerForm = FormGroup<{
       gap: 0.5rem;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .questionnaire-progress {
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.75rem;
+      border: 1px solid var(--bsm-color-primary-soft);
+      border-radius: var(--bsm-radius-pill);
+      padding: 0.25rem 0.65rem;
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-primary-dark);
+      font-size: 0.8rem;
+      font-weight: 800;
     }
 
     .questionnaire-error,
@@ -279,33 +321,90 @@ type MedicalQuestionnaireAnswerForm = FormGroup<{
       gap: 0.5rem;
     }
 
-    label,
+    .question-main p,
     .details-field span {
+      margin: 0;
       color: var(--bsm-color-text-brand);
       font-weight: 800;
       line-height: 1.3;
     }
 
-    select,
-    textarea {
-      width: 100%;
-      border: 1px solid var(--bsm-color-border);
-      border-radius: var(--bsm-radius-sm);
-      padding: 0.72rem 0.8rem;
-      background: var(--bsm-color-bg);
-      color: var(--bsm-color-text-brand);
-      font: inherit;
+    .answer-options {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.35rem;
     }
 
-    select:focus-visible,
+    .answer-option {
+      position: relative;
+      min-width: 0;
+    }
+
+    .answer-option input {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      margin: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .answer-option span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.35rem;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-pill);
+      padding: 0.5rem 0.6rem;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text-muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.1;
+      text-align: center;
+      cursor: pointer;
+      transition:
+        background-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
+        color var(--bsm-motion-fast) var(--bsm-ease-standard),
+        transform var(--bsm-motion-fast) var(--bsm-ease-standard);
+    }
+
+    .answer-option input:checked + span {
+      border-color: var(--bsm-color-primary);
+      background: var(--bsm-color-primary-soft);
+      color: var(--bsm-color-primary-dark);
+    }
+
+    .answer-option input:focus-visible + span,
     textarea:focus-visible,
     .btn:focus-visible {
       outline: none;
       box-shadow: var(--bsm-shadow-focus);
     }
 
+    .answer-option input:not(:disabled) + span:hover {
+      border-color: var(--bsm-color-primary-soft);
+      transform: translateY(-1px);
+    }
+
+    .answer-option input:disabled + span {
+      cursor: not-allowed;
+      opacity: 0.68;
+      transform: none;
+    }
+
     textarea {
+      width: 100%;
       min-height: 5.5rem;
+      border: 1px solid var(--bsm-color-border);
+      border-radius: var(--bsm-radius-sm);
+      padding: 0.72rem 0.8rem;
+      background: var(--bsm-color-bg);
+      color: var(--bsm-color-text-brand);
+      font: inherit;
       resize: vertical;
     }
 
@@ -363,6 +462,12 @@ type MedicalQuestionnaireAnswerForm = FormGroup<{
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .answer-option span,
+      .btn {
+        transition: none;
+      }
+
+      .answer-option input:not(:disabled) + span:hover,
       .btn:not(:disabled):hover {
         transform: none;
       }
@@ -402,12 +507,17 @@ export class ClinicalMedicalQuestionnaireFormComponent implements OnChanges {
   @Output() retryRequested = new EventEmitter<void>();
 
   readonly groups = CLINICAL_MEDICAL_QUESTIONNAIRE_GROUPS;
-  readonly answerValues = CLINICAL_MEDICAL_ANSWER_VALUES;
+  readonly answerValues: readonly ClinicalMedicalAnswerValue[] = ['Yes', 'No', 'Unknown'];
   readonly loadingCards = [0, 1, 2];
+  readonly totalQuestionCount = CLINICAL_MEDICAL_QUESTION_KEYS.length;
   readonly answers = this.formBuilder.array<MedicalQuestionnaireAnswerForm>([]);
-  readonly form = this.formBuilder.group({
-    answers: this.answers
-  });
+  readonly form = this.formBuilder.group({ answers: this.answers });
+
+  get capturedQuestionCount(): number {
+    return this.answers.controls.filter((answerForm) =>
+      answerForm.controls.answer.value !== 'Unknown' ||
+      answerForm.controls.details.value.trim().length > 0).length;
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['questionnaire']) {
@@ -428,8 +538,20 @@ export class ClinicalMedicalQuestionnaireFormComponent implements OnChanges {
     return answer;
   }
 
-  answerControlId(questionKey: ClinicalMedicalQuestionKey): string {
+  answerControlName(questionKey: ClinicalMedicalQuestionKey): string {
     return `medical-questionnaire-answer-${questionKey}`;
+  }
+
+  answerOptionId(questionKey: ClinicalMedicalQuestionKey, answerValue: ClinicalMedicalAnswerValue): string {
+    return `${this.answerControlName(questionKey)}-${answerValue.toLowerCase()}`;
+  }
+
+  answerLabelKey(answerValue: ClinicalMedicalAnswerValue): string {
+    return answerValue === 'Unknown' ? 'No answer' : answerValue;
+  }
+
+  questionLabelId(questionKey: ClinicalMedicalQuestionKey): string {
+    return `medical-questionnaire-label-${questionKey}`;
   }
 
   detailsControlId(questionKey: ClinicalMedicalQuestionKey): string {
