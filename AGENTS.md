@@ -101,7 +101,8 @@ Canonical project status:
 - `Release 3 — Clinical Records`: completed through accepted slices 3.1 to 3.6
 - `Release 4 — Odontogram`: completed through accepted slices 4.1 to 4.4
 - `Release 5 — Treatments and Quotes`: completed through accepted slices 5.1 and 5.2
-- Next planned functional phase: `Release 6 — Billing`
+- `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
+- Next planned functional phase: `Release 7 — Documents and Dashboard`
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -110,6 +111,10 @@ Release 4 closure evidence:
 Release 5 closure evidence:
 - `docs/release-5-treatments-and-quotes-audit-and-closure.md`
 - ADR 008 — `docs/decisions/008-release-5-treatments-and-quotes-closure.md`
+
+Release 6 closure evidence:
+- `docs/release-6-billing-audit-and-closure.md`
+- ADR 009 — `docs/decisions/009-release-6-billing-document-foundation.md`
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -132,9 +137,19 @@ Treat Release 5 as the accepted foundational Treatments/Quotes boundary:
 - positive pricing gates and accepted-quote immutability
 - tenant-aware access with explicit treatment-plan/quote permissions
 
-Do not reopen advanced Treatments/Quotes scope incidentally. Treatment catalog administration, multiple/archived plans, quote regeneration/versioning, multiple quotes, negotiation, taxes, discounts, Billing linkage, scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access remain future bounded work.
+Do not reopen advanced Treatments/Quotes scope incidentally. Treatment catalog administration, multiple/archived plans, quote regeneration/versioning, multiple quotes, negotiation, taxes, discounts, scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access remain future bounded work. Billing is accepted separately through Release 6.1; payments remain deferred.
 
-Repository code also exists in later modules, including Billing, Documents, Dashboard and reminders. Until each module receives a specific audit and acceptance pass, classify it as `implemented but not formally accepted/reconciled`.
+Treat Release 6 as the accepted foundational Billing boundary:
+- explicit Billing creation from an existing accepted quote
+- one tenant-owned/patient-owned Billing document per quote
+- snapshot-only lines with preserved currency and totals
+- bounded `Draft -> Issued` lifecycle and issue metadata
+- issued Billing document read-only
+- tenant-aware access with explicit `billing.read` / `billing.write`
+
+Do not reopen advanced Billing scope incidentally. Payments, allocations, balances, receipts, cash sessions, refunds/reversals, taxes/discounts, CFDI/PAC, multi-currency, accounting and Patient Portal access remain future bounded work. Payment must be designed as a separate aggregate rather than mutable fields on `BillingDocument`.
+
+Repository code also exists in later modules, including Documents, Dashboard and reminders. Until each module receives a specific audit and acceptance pass, classify it as `implemented but not formally accepted/reconciled`.
 
 Phase 2.1 — Patient Intake and Portal Foundation is planned after the initial MVP:
 - architecture accepted in ADR 006
@@ -143,14 +158,14 @@ Phase 2.1 — Patient Intake and Portal Foundation is planned after the initial 
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve Releases 1 to 5 and audit the existing `Release 6 — Billing` implementation against the bounded roadmap before accepting or changing it.
+Preserve Releases 1 to 6 and audit the existing `Release 7 — Documents and Dashboard` implementation against the bounded roadmap before accepting or changing it.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
-- preserve completed Patients, Scheduling, Clinical Records, Odontogram and Treatments/Quotes behavior
-- audit Billing domain, application, API, persistence, permissions, frontend, migrations and tests
-- distinguish code presence from accepted Release 6 scope
-- avoid reopening TreatmentPlan, TreatmentQuote, Odontogram or Clinical Records through incidental linkage
+- preserve completed Patients, Scheduling, Clinical Records, Odontogram, Treatments/Quotes and Billing behavior
+- audit Documents and Dashboard domain/application/API/persistence/storage/read models, permissions, frontend, migrations and tests
+- distinguish code presence from accepted Release 7 scope
+- avoid reopening Billing, TreatmentPlan, TreatmentQuote, Odontogram or Clinical Records through incidental linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep Phase 2.1 planned and inactive until the MVP gate or explicit reprioritization
 - keep privileged/platform paths explicit and auditable

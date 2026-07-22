@@ -51,8 +51,8 @@ A module is not complete merely because entities, endpoints, UI, migrations or t
 - **Release 3 — Clinical Records** — completed
 - **Release 4 — Odontogram** — completed
 - **Release 5 — Treatments and Quotes** — completed
-- **Release 6 — Billing** — next planned functional phase
-- **Release 7 — Documents and Dashboard** — planned after Release 6
+- **Release 6 — Billing** — completed
+- **Release 7 — Documents and Dashboard** — next planned functional phase
 - **Phase 2 Expansion — Modern Operations**
   - **Phase 2.1 — Patient Intake and Portal Foundation**
 - **Phase 3 Expansion — SaaS Growth**
@@ -326,7 +326,7 @@ Connect patient/clinical/odontogram context to an operational treatment proposal
 - quote regenerate/versioning
 - multiple quotes/negotiation
 - taxes and discounts
-- Billing/payment linkage
+- Billing behavior is outside Release 5 and accepted separately through Release 6.1; payment linkage remains deferred
 - scheduling linkage
 - treatment execution/progress
 - automatic plan/quote/Billing status synchronization
@@ -346,48 +346,61 @@ Connect patient/clinical/odontogram context to an operational treatment proposal
 ## 10. Release 6 — Billing
 
 ### Status
-Next planned functional phase; not formally opened or accepted.
+Completed through Release 6.1 — Billing Document Foundation.
 
-The repository contains Billing code, but it remains `implemented but not formally accepted/reconciled` until a dedicated audit verifies the bounded contract.
+### Closure evidence
+- Release 6.1 — Billing Document Foundation
+- Audit: `docs/release-6-billing-audit-and-closure.md`
+- ADR 009: `docs/decisions/009-release-6-billing-document-foundation.md`
 
 ### Goal
-Support basic operational financial tracking linked to accepted upstream treatment-plan and quote records.
+Provide a bounded commercial record created from an accepted treatment quote while preserving future payment and fiscal workflows as separate capabilities.
 
-### Planned bounded audit scope
-- explicit tenant-owned/patient-owned Billing root
-- relationship to an accepted TreatmentQuote without changing the quote snapshot
-- explicit creation and `404` when missing
-- no autocreation from reads or downstream operations
-- bounded issue/status lifecycle
-- line-level snapshot or charge semantics
-- totals and currency consistency
-- clear separation from payments, receipts and full cash management unless existing code is explicitly audited and accepted
+### Accepted scope
+- tenant-owned/patient-owned `BillingDocument`
+- explicit creation from an existing `Accepted` TreatmentQuote
+- `GET` returns `404` when missing
+- no autocreation from reads/status operations
+- one Billing document per TreatmentQuote
+- snapshot-only lines preserving source item, description, optional dental location, quantity, unit price and line total
+- preserved currency and total with SQL precision `decimal(18,2)`
+- lifecycle `Draft -> Issued`
+- issue UTC/actor metadata
+- issued document read-only
 - `billing.read` / `billing.write`
-- tenant/cross-tenant protection
-- bounded Angular patient-context workflow
+- bounded Angular patient-context create/read/issue workflow
+- tenant/cross-tenant/backend/frontend tests
 
-### Deferred unless the audit proves a coherent accepted slice
-- payment registration and allocation
-- partial/total payment lifecycle
-- balance ledger
-- receipts
-- refunds/reversals/cancellations
-- cash sessions
+### Current access
+- `PlatformAdmin` and `TenantAdmin`: Billing read/write permissions
+- `TenantUser`: no Billing permissions
+- patient-scoped operations require resolved tenant context
+
+### Deferred
+- payment registration/allocation
+- partial/total payment lifecycle and balances/ledger
+- receipts, refunds, reversals and cancellations
+- cash sessions and daily closing
 - taxes, discounts and CFDI/PAC
-- insurance claims
-- multi-currency
+- insurance and multi-currency
 - accounting/ERP workflows
-- automatic synchronization that mutates accepted TreatmentQuote state
+- multiple Billing documents, regeneration or versioning
+- automatic mutation of accepted TreatmentQuote state
+- Patient Portal access
 
-### Opening rule
-Start with a module-specific audit of existing Billing code. Do not add new functionality until the audit identifies a concrete roadmap gap.
+### Non-blocking hardening/UX debt
+- normalize concurrent-create unique conflicts if real use requires it
+- add optimistic concurrency before expanding concurrent issue roles
+- decide repeated-issue idempotency explicitly
+- add relational SQL Server constraint/precision coverage when CI supports it
+- replace internal release/slice copy and raw ids in clinic-facing UI
 
 ---
 
 ## 11. Release 7 — Documents and Dashboard
 
 ### Status
-Planned after Release 6.
+Next planned functional phase; not formally opened or accepted.
 
 ### Documents planned scope
 - tenant-owned/patient-owned document records
@@ -406,7 +419,7 @@ Planned after Release 6.
 - active documents
 - active treatment plans
 - accepted quotes
-- issued billing records after Release 6 acceptance
+- issued Billing documents from accepted Release 6.1
 
 ### Deferred
 - OCR/rich preview/versioning
@@ -433,9 +446,9 @@ The initial operational MVP is complete only after formal acceptance of:
 - Roles and Permissions
 - Basic Dashboard
 
-Current accepted frontier: **Release 5**.
+Current accepted frontier: **Release 6**.
 
-Remaining MVP release acceptance: **Release 6 and Release 7**.
+Remaining MVP release acceptance: **Release 7**.
 
 ---
 

@@ -75,9 +75,9 @@ Future phases will expand into:
 
 ### UX / Existing Code Reconciliation
 
-Release 4 — Odontogram and Release 5 — Treatments and Quotes are now formally accepted after module-specific audits of their domain, API, persistence, permissions, frontend and automated tests.
+Release 4 — Odontogram, Release 5 — Treatments and Quotes, and Release 6 — Billing are now formally accepted after module-specific audits of their domain, API, persistence, permissions, frontend and automated tests.
 
-The repository still contains functional code in modules later than the formal roadmap frontier, including Billing, Documents, Dashboard and reminders/manual reminders. Code, routes, permissions, migrations or tests in those modules do not by themselves mean Release 6, Release 7 or Phase 2 are open, accepted or closed.
+The repository still contains functional code in modules later than the formal roadmap frontier, including Documents, Dashboard and reminders/manual reminders. Code, routes, permissions, storage/read models or tests in those modules do not by themselves mean Release 7 or Phase 2 are open, accepted or closed.
 
 Until each later module receives its own audit and acceptance pass, it remains `implemented but not formally accepted/reconciled`. Visual slices may improve presentation, copy, color, microinteractions, modals, drawers, tabs, sticky action bars and UX debt without changing backend behavior, APIs, permissions, auth, tenant context, branch context, migrations or functional scope.
 
@@ -269,11 +269,12 @@ Completed foundation and functional milestones:
 * **Release 3 — Clinical Records**
 * **Release 4 — Odontogram**
 * **Release 5 — Treatments and Quotes**
+* **Release 6 — Billing**
 
 Current roadmap position:
 
-* **Latest completed delivery phase:** **Release 5 — Treatments and Quotes**
-* **Next planned functional phase:** **Release 6 — Billing**
+* **Latest completed delivery phase:** **Release 6 — Billing**
+* **Next planned functional phase:** **Release 7 — Documents and Dashboard**
 * **Phase 2.1 — Patient Intake and Portal Foundation:** planned after the initial MVP; architecture accepted in ADR 006; implementation not opened
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
@@ -315,16 +316,31 @@ The accepted Quote boundary includes explicit snapshot creation from an existing
 
 Treatment and quote reads/writes use `treatmentplan.*` and `treatmentquote.*`. `TenantUser` does not receive those permissions. Treatment/quote items remain child records accessed through tenant-owned aggregate roots.
 
-Advanced commercial and execution capabilities remain deferred: treatment catalog administration, multiple or archived plans, regenerate/versioning, multiple quotes or negotiation, taxes, discounts, Billing/Scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access.
+Advanced commercial and execution capabilities remain deferred: treatment catalog administration, multiple or archived plans, regenerate/versioning, multiple quotes or negotiation, taxes, discounts, Scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access. Billing is accepted separately through Release 6.1; payments remain deferred.
 
 Release 5 closure evidence:
 
 * `docs/release-5-treatments-and-quotes-audit-and-closure.md`
 * ADR 008 — `docs/decisions/008-release-5-treatments-and-quotes-closure.md`
 
+Release 6 is formally complete through:
+
+* **Release 6.1 — Billing Document Foundation**
+
+The accepted Billing boundary includes explicit snapshot creation from an existing accepted quote, one Billing document per quote, no autocreation, preserved currency and `decimal(18,2)` line/total amounts, a bounded `Draft -> Issued` lifecycle, issue actor/time metadata and issued-document immutability.
+
+Billing reads/writes use `billing.read` / `billing.write`. `TenantUser` does not receive those permissions. Billing lines remain child records accessed through the tenant-owned aggregate root.
+
+Payments, allocations, balances, receipts, cash sessions, refunds/reversals, taxes/discounts, CFDI/PAC, multi-currency, accounting and Patient Portal access remain deferred.
+
+Release 6 closure evidence:
+
+* `docs/release-6-billing-audit-and-closure.md`
+* ADR 009 — `docs/decisions/009-release-6-billing-document-foundation.md`
+
 The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The repository remains established but not functionally complete. Billing, Documents/Dashboard and Phase 2 work must not be assumed accepted until code and documentation explicitly prove it.
+The repository remains established but not functionally complete. Documents/Dashboard and Phase 2 work must not be assumed accepted until code and documentation explicitly prove it.
 
 ---
 
@@ -390,18 +406,21 @@ The repository remains established but not functionally complete. Billing, Docum
 * Explicit quote snapshot creation from a non-empty plan
 * One quote per plan, fixed `MXN`, line pricing and calculated totals
 * Positive pricing gates and accepted-quote immutability
-* Treatment execution, taxes/discounts, Billing/Scheduling linkage, versioning and negotiation remain deferred
+* Treatment execution, taxes/discounts, Scheduling linkage, versioning and negotiation remain deferred; Billing is accepted separately through Release 6.1
 
 ### Release 6 — Billing
 
-* Next planned functional phase after Release 5 closure
-* Existing code remains `implemented but not formally accepted/reconciled` until a dedicated audit
-* Billing should build only on accepted treatment-plan/quote contracts
-* Payments, balances, receipts, taxes, discounts, CFDI, cancellations and advanced workflows remain unaccepted until explicitly reconciled
+* Completed through Release 6.1 — Billing Document Foundation
+* Explicit creation from an accepted quote with `GET` returning `404` when missing and no autocreation
+* One Billing document per quote and snapshot-only lines
+* Preserved currency, unit price, line total and total with SQL precision `18,2`
+* `Draft -> Issued` lifecycle with issue metadata and issued read-only behavior
+* Payments, balances, receipts, cash management, taxes/discounts and CFDI remain deferred
 
 ### Release 7 — Documents and Dashboard
 
-* Planned after Release 6
+* Next planned functional phase after Release 6 closure
+* Existing code remains `implemented but not formally accepted/reconciled` until module-specific audits
 * Tenant-owned/patient-owned documents with authorized upload/download/retire
 * Basic dashboard remains read-model oriented
 * OCR, external sharing, generated PDFs, advanced analytics and reporting remain deferred
