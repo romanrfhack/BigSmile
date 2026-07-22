@@ -75,11 +75,11 @@ Future phases will expand into:
 
 ### UX / Existing Code Reconciliation
 
-After the formal closure of Release 3, active work should be treated as a `client-driven UX redesign / visual organization pass`.
+Release 4 — Odontogram is now formally accepted after a module-specific audit of its domain, API, persistence, permissions, frontend and automated tests.
 
-The repository contains functional code in modules that are later than the formal roadmap state, including Odontogram, Treatments/Quotes, Billing, Documents, Dashboard, and reminders/manual reminders. The presence of code, routes, permissions, migrations, or tests in those areas does not mean Release 4, Release 5, Release 6, Release 7, or Phase 2 are open, accepted, or closed.
+The repository still contains functional code in modules later than the formal roadmap frontier, including Treatments/Quotes, Billing, Documents, Dashboard and reminders/manual reminders. Code, routes, permissions, migrations or tests in those modules do not by themselves mean Release 5, Release 6, Release 7 or Phase 2 are open, accepted or closed.
 
-Until each module receives a specific audit and acceptance pass, those later modules must be classified as `implemented but not formally accepted/reconciled`. Visual slices may improve presentation, organization, copy, color, microinteractions, modals, drawers, tabs, sticky action bars, and UX debt without changing backend behavior, APIs, permissions, auth, tenant context, branch context, migrations, or functional scope.
+Until each later module receives its own audit and acceptance pass, it remains `implemented but not formally accepted/reconciled`. Visual slices may improve presentation, copy, color, microinteractions, modals, drawers, tabs, sticky action bars and UX debt without changing backend behavior, APIs, permissions, auth, tenant context, branch context, migrations or functional scope.
 
 ---
 
@@ -258,7 +258,7 @@ Bigsmile treats security as a foundational concern.
 
 Bigsmile is no longer in the initial bootstrap stage.
 
-Completed foundation milestones:
+Completed foundation and functional milestones:
 
 * **Foundation / Release 0 base**
 * **Pre-auth hardening**
@@ -267,44 +267,45 @@ Completed foundation milestones:
 * **Release 1 — Patients**
 * **Release 2 — Scheduling**
 * **Release 3 — Clinical Records**
+* **Release 4 — Odontogram**
 
 Current roadmap position:
 
-* **Latest completed delivery phase:** **Release 3 — Clinical Records**
-* **Next planned functional phase:** **Release 4 — Odontogram**
-* **Phase 2 Expansion — Modern Operations:** later roadmap phase after the initial MVP, not the next phase after Release 3
+* **Latest completed delivery phase:** **Release 4 — Odontogram**
+* **Next planned functional phase:** **Release 5 — Treatments and Quotes**
+* **Phase 2.1 — Patient Intake and Portal Foundation:** planned after the initial MVP; architecture accepted in ADR 006; implementation not opened
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
 Doctor-based views are explicitly deferred to a future bounded slice because they require provider/doctor assignment rather than a small UI-only filter.
 
-Release 3 is formally complete as the foundational clinical release. Release 3.1 is accepted with tenant-owned, patient-owned clinical records; explicit record creation; `GET` returning `404` when the record does not exist; no autocreation; medical background and current medications summaries; current allergies; append-only clinical notes returned newest-first; and minimal clinician attribution.
+Release 3 is formally complete as the foundational clinical release through accepted slices 3.1 to 3.6. It includes explicit clinical-record creation, medical background/current medications/current allergies, append-only notes, basic diagnoses, a bounded clinical timeline, separate snapshot history, the fixed medical questionnaire, and clinical encounters/vitals.
 
-Release 3.2 is also accepted and adds only the bounded diagnoses foundation on top of an existing clinical record: explicit diagnosis creation, explicit diagnosis resolution, diagnoses included in the clinical record read model, basic non-coded diagnosis text/notes, and `Active` / `Resolved` status with active-first ordering and newest-first ordering within each status group in reads and UI.
+The fixed questionnaire uses the accepted `Unknown` / `Yes` / `No` catalog with optional bounded details. Patient demographics remain owned by Patients, age is derived from date of birth, and the questionnaire does not automatically modify allergies, alerts, timeline or later modules.
 
-Release 3.3 is also accepted and adds only a bounded clinical timeline read model inside the existing clinical record read contract: no new endpoint, no new timeline table, no cross-module timeline, and only `ClinicalNoteCreated`, `ClinicalDiagnosisCreated`, and `ClinicalDiagnosisResolved` events returned newest-first from existing Clinical data.
+Clinical access remains restricted to `clinical.read` / `clinical.write` for `PlatformAdmin` and `TenantAdmin`; `TenantUser` does not receive clinical permissions.
 
-Release 3.4 is also accepted and adds only a bounded snapshot change history inside the existing clinical record read contract: an initial history entry when the record is created explicitly, additional entries only for effective changes to medical background, current medications, and current allergies, and a separate `snapshotHistory` section that does not merge with the accepted Release 3.3 timeline. This bounded history does not introduce restore, full record versioning, or rich diffs.
+Release 4 is formally complete as the foundational Odontogram release through:
 
-Release 3.5 — Medical Questionnaire Backend is also accepted as a backend slice. It adds tenant-owned `ClinicalMedicalAnswer` records under an existing clinical record, a fixed `QuestionKey` catalog based on `docs/release-3-clinical-records-form-mapping.md`, `Unknown` / `Yes` / `No` answers, optional bounded details, and `GET` / `PUT` endpoints at `/api/patients/{patientId}/clinical-record/questionnaire`. It reuses `clinical.read` / `clinical.write`, does not accept `TenantId` from the request, and does not create a form builder or sync automatically to allergies, timeline, snapshot history, Billing, Odontogram, Treatments, Documents, Scheduling, or doctor/provider assignment.
+* **Release 4.1 — Odontogram Foundation**
+* **Release 4.2 — Odontogram Surface Foundation**
+* **Release 4.3 — Basic Dental Findings Foundation**
+* **Release 4.4 — Dental Findings Change History**
 
-The current frontend includes a bounded UI integration for the fixed medical questionnaire inside the existing clinical record screen. It consumes only the accepted Release 3.5 endpoints, keeps Patient demographics read-only from Patients, derives age from `Patient.DateOfBirth` without persisting it, groups the fixed questions with i18n labels, and does not change backend contracts, permissions, allergy synchronization, timeline, snapshot history, or later modules.
+The accepted Odontogram boundary includes explicit creation and `404` when missing, one tenant-owned/patient-owned chart per patient/tenant, 32 permanent adult FDI teeth, bounded tooth and surface states, five `O/M/D/B/L` surfaces, a small basic finding catalog, explicit finding add/remove and append-only finding history returned newest-first.
 
-Release 3.6 — Clinical Encounter / Vitals Backend is also accepted as a backend slice. It adds tenant-owned and patient-owned `ClinicalEncounter` records under an existing clinical record, `GET` / `POST` endpoints at `/api/patients/{patientId}/clinical-record/encounters`, bounded consultation type values (`Treatment`, `Urgency`, `Other`), optional bounded vitals, server-derived `TenantId` and `CreatedByUserId`, and optional append-only linked `ClinicalNote` creation from encounter `noteText`. It reuses `clinical.read` / `clinical.write`, does not add PUT/DELETE, does not introduce new timeline events, and does not touch Patient demographics, Billing, Scheduling, Odontogram, Treatments, Documents, or doctor/provider assignment.
+Odontogram reads/writes use `odontogram.read` / `odontogram.write`. `TenantUser` does not receive those permissions. The supported path remains through the tenant-owned aggregate root; future direct child-table queries must be tenant-aware.
 
-The current frontend now also includes a bounded UI integration for clinical encounters and vital signs inside the existing clinical record screen. It consumes only the accepted Release 3.6 encounter endpoints through the Clinical Records data-access/facade, keeps Patient demographics read-only from Patients, lists recent encounters, captures a compact new encounter/vitals form, and does not change backend contracts, permissions, timeline behavior, Patient data, or later modules.
+Advanced Odontogram capabilities remain deferred: child/mixed dentition, bulk editing, full tooth/surface history, restore/versioning, treatment/diagnosis/document linkage, advanced orthodontic/periodontal charting, imaging overlays and AI detection.
 
-Release 3 remains preserved through the accepted slices above. The full or advanced clinical timeline, any cross-module timeline, restore, full clinical record versioning, form builder behavior, automatic allergy synchronization, configurable intake forms, questionnaire-driven cross-module behavior, encounter editing/deletion, and encounter-specific timeline events remain outside the accepted Release 3.6 scope.
+Closure evidence:
 
-Clinical access in this phase is intentionally restricted: `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, while `TenantUser` does not receive clinical permissions.
+* `docs/release-4-odontogram-audit-and-closure.md`
+* ADR 007 — `docs/decisions/007-release-4-odontogram-closure.md`
 
-The next planned functional phase is Release 4 — Odontogram. Release 4 should start only through an explicit bounded slice. Treatments, Billing, Documents/Dashboard and Phase 2 capabilities remain roadmap work after their prerequisite releases.
+The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The current authorization foundation now includes scope-aware JWT claims, explicit permission-based policies, platform override activation only through allowed policies, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend route/session wiring that stays in memory.
-
-Release 1 is now formally complete. The Patients module covers tenant-scoped patient registration, update, search, and profile retrieval; responsible-party data; active/inactive status; basic clinical alerts; and the small validation guardrails required for the release, including backend enforcement and client-side prevention of future dates of birth.
-
-The repository should be treated as having an established technical and architectural foundation, but not as functionally complete. No functional roadmap release should be assumed closed unless the codebase and aligned documentation explicitly prove it.
+The repository remains established but not functionally complete. Treatments/Quotes, Billing, Documents/Dashboard and Phase 2 work must not be assumed accepted until code and documentation explicitly prove it.
 
 ---
 
@@ -340,62 +341,55 @@ The repository should be treated as having an established technical and architec
 
 ### Release 3 — Clinical Records
 
-* Release 3 is complete as the foundational clinical release
-* Closure evidence: Release 3.1 — Clinical Record Foundation, Release 3.2 — Basic Diagnoses Foundation, Release 3.3 — Clinical Timeline Read Model, Release 3.4 — Clinical Snapshot Change History, Release 3.5 — Medical Questionnaire Backend, and Release 3.6 — Clinical Encounter / Vitals Backend
-* Explicit clinical record creation with `GET` returning `404` when missing and no autocreation
-* Medical background summary, current medications summary, current allergies, and append-only clinical notes
-* Notes returned newest-first in API/UI
-* Basic non-coded diagnoses on existing clinical records, with explicit add/resolve flows and `Active` / `Resolved` states
-* Diagnosis reads ordered active-first and newest-first within each status group
-* Clinical timeline read model inside the existing clinical record using only note-created / diagnosis-created / diagnosis-resolved events, newest-first, with no new endpoint and no new timeline table
-* Bounded snapshot history for the base clinical snapshot, returned newest-first and kept separate from the Release 3.3 timeline
-* Backend structured medical questionnaire with fixed question keys, `Unknown` / `Yes` / `No` answers, optional bounded details, and `GET` / `PUT /api/patients/{patientId}/clinical-record/questionnaire`
-* Bounded frontend integration for the fixed medical questionnaire inside the existing clinical record screen, with no backend/API/permission changes, no automatic allergy synchronization, and Patient age derived read-only from `Patient.DateOfBirth`
-* Backend clinical encounters/vitals on an existing clinical record through `GET` / `POST /api/patients/{patientId}/clinical-record/encounters`, with bounded consultation type, optional bounded vitals, and optional linked append-only clinical note
-* Bounded frontend integration for clinical encounters/vitals inside the existing clinical record screen, with no backend/API/permission changes, no Patient data duplication, no timeline enrichment, and no later-module linkage
-* Full or advanced clinical timeline, any cross-module timeline, restore, full versioning, rich snapshot diff, form builder behavior, automatic allergy synchronization, configurable intake forms, encounter editing/deletion, encounter-specific timeline events, odontogram, treatments, and documents deferred beyond the accepted slices
-* `clinical.read` / `clinical.write` restricted to `PlatformAdmin` and `TenantAdmin` in this phase
+* Completed foundational clinical release through slices 3.1 to 3.6
+* Explicit record creation with no autocreation
+* Snapshot, current allergies, append-only notes and basic diagnoses
+* Bounded timeline and separate snapshot history
+* Fixed medical questionnaire
+* Clinical encounter / vital-sign capture
+* Advanced clinical history, form builder, auto-sync and cross-module timeline remain deferred
 
 ### Release 4 — Odontogram
 
-* Release 4 is the next planned functional phase after Release 3 closure
-* Release 4 is not opened by the Release 3 closure documentation
-* Planned bounded slices start with Release 4.1 — Odontogram Foundation
+* Completed foundational Odontogram release through slices 4.1 to 4.4
 * Explicit odontogram creation with `GET` returning `404` when missing and no autocreation
-* Permanent adult FDI tooth numbering only (`11-18`, `21-28`, `31-38`, `41-48`)
-* Initial scope should remain bounded to the minimal odontogram foundation before later surfaces/findings/history slices
-* Complex findings, treatment linkage, diagnosis linkage, documents, wider dental history/timeline, surface history, restore/full versioning, and advanced charting remain deferred
+* Exactly one odontogram per patient/tenant
+* Permanent adult FDI numbering (`11-18`, `21-28`, `31-38`, `41-48`)
+* Bounded tooth status and explicit updates
+* Five bounded surfaces `O/M/D/B/L` and explicit surface updates
+* Basic surface findings with explicit add/remove
+* Append-only finding change history
+* Advanced charting, full history/versioning and cross-module linkage deferred
 
 ### Release 5 — Treatments and Quotes
 
-* Planned after Release 4
-* Explicit treatment plan creation with `GET` returning `404` when missing and no autocreation
-* Exactly one active treatment plan per patient per tenant
-* Basic treatment plan items with required title, optional category, simple quantity, short note, and optional adult FDI tooth/surface reference
-* Minimal plan lifecycle with `Draft`, `Proposed`, and `Accepted`
-* Quotes, pricing, taxes, billing linkage, scheduling linkage, treatment execution tracking, regenerate/versioning workflows, and multi-quote negotiation remain deferred until explicitly opened
+* Next planned functional phase after Release 4 closure
+* Existing code is `implemented but not formally accepted/reconciled` until a dedicated audit
+* Planned bounded scope starts with explicit treatment-plan creation and one active plan per patient/tenant
+* Basic items with optional adult FDI tooth/surface references
+* Minimal plan lifecycle `Draft` / `Proposed` / `Accepted`
+* Quotes and pricing must open only in explicit later slices
+* Taxes, discounts, billing/scheduling linkage, treatment execution, versioning and negotiation remain deferred until accepted
 
 ### Release 6 — Billing
 
 * Planned after Release 5
-* Billing should start only after treatment/quote foundations are intentionally opened
-* Payments, balances, receipts, taxes, discounts, CFDI, cancellations, and advanced billing workflows remain deferred
+* Billing should start only after treatment/quote foundations are accepted
+* Payments, balances, receipts, taxes, discounts, CFDI, cancellations and advanced workflows remain deferred
 
 ### Release 7 — Documents and Dashboard
 
 * Planned after Release 6
-* Tenant-owned and patient-owned `PatientDocument` records with explicit patient-scoped document upload through multipart/form-data
-* Active document list with authorized API download and logical retire
-* Private local filesystem storage with explicit allowlist `application/pdf`, `image/jpeg`, `image/png` and a 10 MB maximum size
-* Basic dashboard should remain read-model oriented
-* OCR, rich preview, versioning, external sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboards, doctor dashboards, exports, and advanced reporting remain deferred
+* Tenant-owned/patient-owned documents with authorized upload/download/retire
+* Basic dashboard remains read-model oriented
+* OCR, external sharing, generated PDFs, advanced analytics and reporting remain deferred
 
 ### Phase 2 Expansion — Modern Operations
 
 * Later roadmap phase after the MVP is stable
-* Phase 2 is not the next phase after Release 3 closure
-* Candidate scope includes reminders, confirmations, online booking, patient communication, patient portal and operational automation only after the MVP is stable
-* WhatsApp, email, SMS sending, automatic reminders, providers, jobs, queues, webhooks, external delivery templates, real scheduler workflows, retry automation, campaigns, online booking, patient portal, and advanced dashboards remain deferred
+* **Phase 2.1 — Patient Intake and Portal Foundation** is planned and architecturally accepted in ADR 006, but PI-1 to PI-4 are not implemented
+* The bounded capability includes patient activation, intake/update, clinic review/application and append-only audit
+* The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred
 
 ---
 
@@ -447,15 +441,16 @@ Expected configuration includes:
 
 ## Testing Strategy
 
-> Update this section to reflect the current automated validation baseline already present in the repository.
+The repository validation baseline includes:
 
-The project is expected to include:
-
-* Unit tests
-* Integration tests
-* Architecture tests
+* Backend unit tests
+* Backend integration tests
+* Architecture validation/tests
 * Frontend unit tests
-* End-to-end tests
+* End-to-end tests where relevant
+* GitHub Actions CI
+
+High-risk changes involving tenant handling, authorization, patient/clinical data, billing, documents or platform override require explicit automated evidence.
 
 ---
 
@@ -466,18 +461,19 @@ The project is expected to include:
 * Validate backend and frontend build
 * Run relevant tests
 * Do not commit secrets
-* Respect the architectural structure
+* Respect architectural structure
 * Preserve tenant isolation
 * Avoid unnecessary duplication
-* Keep components and services focused and clear
+* Keep components and services focused
+* Update canonical documentation when project state changes
 
 ### Pull requests
 
-* Explain the purpose of the change
-* Indicate affected modules
-* Describe risks
+* Explain purpose and affected modules
+* Describe architectural and tenant/security implications
+* Describe risks and reversibility
 * Include test evidence
-* Avoid mixing large refactors with unrelated business changes
+* Separate unrelated refactors from business changes
 
 ---
 
