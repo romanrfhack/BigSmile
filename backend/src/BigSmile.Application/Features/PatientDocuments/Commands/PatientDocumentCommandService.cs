@@ -67,6 +67,12 @@ namespace BigSmile.Application.Features.PatientDocuments.Commands
                 storageKey,
                 actorUserId);
 
+            await PatientDocumentContentValidator.ValidateAsync(
+                patientDocument.ContentType,
+                patientDocument.SizeBytes,
+                command.ContentStream,
+                cancellationToken);
+
             try
             {
                 await _patientDocumentBinaryStore.SaveAsync(storageKey, command.ContentStream, cancellationToken);
