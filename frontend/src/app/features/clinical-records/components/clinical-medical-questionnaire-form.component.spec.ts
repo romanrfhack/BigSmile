@@ -19,7 +19,7 @@ describe('ClinicalMedicalQuestionnaireFormComponent', () => {
     }).compileComponents();
   });
 
-  it('renders the fixed medical questionnaire groups and questions', () => {
+  it('renders the fixed medical questionnaire groups, questions, and completion progress', () => {
     const fixture = createComponent(buildQuestionnaire());
     fixture.detectChanges();
 
@@ -31,35 +31,58 @@ describe('ClinicalMedicalQuestionnaireFormComponent', () => {
     expect(text).toContain('Habits and dental conditions');
     expect(text).toContain('Pregnancy, anesthesia, and special conditions');
     expect(text).toContain('Diabetes');
+    expect(text).toContain(`0 / ${CLINICAL_MEDICAL_QUESTION_KEYS.length}`);
     expect(text).toContain('No medical questionnaire answers have been captured yet.');
   });
 
-  it('changes Unknown, Yes, and No answers and shows details when answer is Yes', () => {
+  it('shows visible Yes, No, and No answer options and reveals details when answer is Yes', () => {
     const fixture = createComponent(buildQuestionnaire());
     fixture.detectChanges();
 
-    const diabetesSelect = fixture.nativeElement.querySelector('#medical-questionnaire-answer-diabetes') as HTMLSelectElement;
-    expect(diabetesSelect.value).toBe('Unknown');
+    const yesRadio = fixture.nativeElement.querySelector(
+      '#medical-questionnaire-answer-diabetes-yes'
+    ) as HTMLInputElement;
+    const noRadio = fixture.nativeElement.querySelector(
+      '#medical-questionnaire-answer-diabetes-no'
+    ) as HTMLInputElement;
+    const unknownRadio = fixture.nativeElement.querySelector(
+      '#medical-questionnaire-answer-diabetes-unknown'
+    ) as HTMLInputElement;
 
-    diabetesSelect.value = 'Yes';
-    diabetesSelect.dispatchEvent(new Event('change'));
+    expect(yesRadio).not.toBeNull();
+    expect(noRadio).not.toBeNull();
+    expect(unknownRadio).not.toBeNull();
+    expect(unknownRadio.checked).toBe(true);
+    expect(unknownRadio.parentElement?.textContent).toContain('No answer');
+
+    yesRadio.click();
     fixture.detectChanges();
 
     expect(fixture.componentInstance.answerForm('diabetes').controls.answer.value).toBe('Yes');
     expect(fixture.nativeElement.querySelector('#medical-questionnaire-details-diabetes')).not.toBeNull();
+    expect(fixture.componentInstance.capturedQuestionCount).toBe(1);
 
-    diabetesSelect.value = 'No';
-    diabetesSelect.dispatchEvent(new Event('change'));
+    noRadio.click();
     fixture.detectChanges();
 
     expect(fixture.componentInstance.answerForm('diabetes').controls.answer.value).toBe('No');
+    expect(fixture.nativeElement.querySelector('#medical-questionnaire-details-diabetes')).toBeNull();
+    expect(fixture.componentInstance.capturedQuestionCount).toBe(1);
   });
 
-  it('shows details when an existing answer already has details', () => {
+  it('shows details when an existing answer already has details and counts answered questions', () => {
     const fixture = createComponent(buildQuestionnaire({
       diabetes: {
         answer: 'Unknown',
         details: 'Monitor glucose before long procedures.'
+      },
+      hypertension: {
+        answer: 'Yes',
+        details: null
+      },
+      smokes: {
+        answer: 'No',
+        details: null
       }
     }));
     fixture.detectChanges();
@@ -68,6 +91,7 @@ describe('ClinicalMedicalQuestionnaireFormComponent', () => {
 
     expect(details).not.toBeNull();
     expect(details.value).toBe('Monitor glucose before long procedures.');
+    expect(fixture.componentInstance.capturedQuestionCount).toBe(3);
   });
 
   it('saves a normalized payload for the fixed questionnaire catalog', () => {
