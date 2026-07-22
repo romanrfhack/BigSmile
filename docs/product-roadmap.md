@@ -2,548 +2,394 @@
 
 ## Purpose
 
-This document defines the initial product roadmap for **Bigsmile**.
+This document defines the controlled product sequence for Bigsmile, a multi-tenant SaaS platform for dental clinics and private practices.
 
-Its purpose is to establish a clear and controlled sequence for building the platform, so that Bigsmile evolves as a coherent product instead of a collection of disconnected features.
-
-This roadmap is intentionally designed to:
+The roadmap exists to:
 - validate business value early
-- keep scope under control
-- protect architectural quality
-- support future SaaS growth
-- avoid premature complexity
-
----
+- protect tenant isolation and architecture
+- keep scope explicit
+- preserve a coherent operational workflow
+- distinguish implemented code from formally accepted product scope
+- support future SaaS growth without premature complexity
 
 ## 1. Product Direction
 
-Bigsmile is being built as a SaaS platform for dental clinics and private practices.
-
-The product starts with a strong operational core for a single clinic, but it is designed from the beginning to support:
-- multiple tenants
-- multiple branches
-- independent administration
-- future feature expansion
-- commercial licensing
-
-### Product vision
-
-Bigsmile should become a platform that helps clinics operate their daily workflow through one continuous flow:
+Bigsmile supports the clinic workflow:
 
 **appointment → patient record → clinical record → odontogram → treatment plan → quote → payment → follow-up**
 
-The roadmap is organized around strengthening this operational backbone first.
-
----
+The operational core comes before automation-heavy or premium capabilities.
 
 ## 2. Roadmap Principles
 
-The roadmap follows these principles:
-
-### 2.1 Build the operational core first
-The first releases must solve the everyday workflow of a clinic before adding automation-heavy or premium features.
+### 2.1 Operational core first
+The initial releases must make day-to-day clinic work possible before adding broad portals, automation or advanced analytics.
 
 ### 2.2 Protect the foundation
-No feature should be added in a way that compromises:
+No feature may compromise:
 - tenant isolation
+- security
 - maintainability
 - modularity
-- security
-- UX clarity
+- reviewability
+- operational UX
 
 ### 2.3 Grow by business capability
-Features should be grouped and delivered by domain value, not by isolated technical tasks.
+Deliver bounded domain value, not disconnected technical tasks.
 
-### 2.4 Keep the MVP small but real
-The first public version should already be useful in real clinic operations.
+### 2.4 Small but real MVP
+Each accepted release must be useful, tested and explicit about deferred scope.
 
-### 2.5 Delay non-essential complexity
-Advanced features should only be added after the core workflow is stable.
-
----
+### 2.5 Code presence is not acceptance
+A module is not complete merely because entities, endpoints, UI, migrations or tests exist. Formal acceptance requires a module-specific audit and aligned documentation.
 
 ## 3. Product Phases Overview
 
-The initial roadmap is divided into the following phases:
-
-- **Release 0 — Foundation**
-- **Release 1 — Patients**
-- **Release 2 — Scheduling**
-- **Release 3 — Clinical Records**
-- **Release 4 — Odontogram**
-- **Release 5 — Treatments and Quotes**
-- **Release 6 — Billing**
-- **Release 7 — Documents and Dashboard**
+- **Release 0 — Foundation** — completed
+- **Release 1 — Patients** — completed
+- **Release 2 — Scheduling** — completed
+- **Release 3 — Clinical Records** — completed
+- **Release 4 — Odontogram** — completed
+- **Release 5 — Treatments and Quotes** — next planned functional phase
+- **Release 6 — Billing** — planned after Release 5
+- **Release 7 — Documents and Dashboard** — planned after Release 6
 - **Phase 2 Expansion — Modern Operations**
   - **Phase 2.1 — Patient Intake and Portal Foundation**
 - **Phase 3 Expansion — SaaS Growth**
 - **Phase 4 Expansion — Advanced Product Capabilities**
 
-Phase 2.1 is a bounded patient-facing intake and self-service foundation. It does not replace the full patient portal planned for Phase 4.
+Phase 2.1 is a bounded intake/update foundation and does not replace the full patient portal planned for Phase 4.
 
 ---
 
 ## 4. Release 0 — Foundation
 
-## Goal
-Build the technical and architectural base of the product before developing business modules.
+### Status
+Completed.
 
-## Scope
+### Goal
+Build the technical and architectural base before business modules.
+
+### Accepted scope
 - solution structure
-- backend projects
-- frontend projects
-- modular architecture baseline
+- modular monolith baseline
 - multi-tenancy foundation
-- authentication
-- authorization
+- authentication and tenant-aware authorization
 - roles and permissions baseline
-- tenant context
-- branch context
-- audit foundation
-- logging foundation
-- error handling foundation
+- tenant/branch context
+- EF Core + SQL Server persistence
+- migrations and durable seed
+- auditing/logging/error-handling foundations
 - architecture tests
 - CI/CD foundation
-- initial database bootstrap
-- coding conventions and repository structure
 
-## Expected outcome
-At the end of Release 0, Bigsmile should have:
-- a compilable backend
-- a compilable frontend
-- base authentication and authorization
-- a safe tenant model
-- architectural guardrails
-- a clear structure for future modules
+### Outcome
+Bigsmile has a compilable, testable and tenant-safe foundation for business releases.
 
-## Out of scope
-- full patient management
-- complete appointment workflows
-- business dashboards
-- billing flows
-- clinical modules
-
-## Why this release matters
-Without a strong foundation, every future module would introduce architectural risk and technical debt.
+### Deferred
+- microservices
+- database-per-tenant
+- distributed infrastructure without demonstrated need
 
 ---
 
 ## 5. Release 1 — Patients
 
-## Goal
-Enable clinics to register, maintain, and search patients efficiently.
+### Status
+Completed and preserved.
 
-## Scope
-- patient registration
-- patient update
-- patient search
-- patient profile
-- responsible party data
+### Goal
+Register, maintain and search patients safely within tenant scope.
+
+### Accepted scope
+- patient registration/update/search/profile
+- responsible-party data
+- active/inactive status
 - basic clinical alerts
-- patient status (active/inactive)
-- basic validations
-- tenant-scoped ownership
-- branch-neutral patient model
+- basic validations including future date-of-birth rejection
+- tenant-owned, branch-neutral patient model
+- `patient.read` / `patient.write`
+- operational Angular flows
 
-## Expected outcome
-Clinics can create and maintain patient records safely within tenant scope.
-
-## Core users
-- Front Desk
-- Dentist
-- Tenant Admin
-
-## Key UX goals
-- fast patient search
-- fast registration flow
-- low-friction editing
-- clear patient identification
-
-## Out of scope
+### Deferred
 - full clinical record
 - odontogram
-- full treatment workflow
-- advanced segmentation
+- treatment workflow
 - patient portal
+- advanced segmentation
 
 ---
 
 ## 6. Release 2 — Scheduling
 
-## Goal
-Provide the clinic with a practical operational calendar for managing appointments.
+### Status
+Completed and preserved.
 
-## Scope
-- daily calendar view
-- weekly calendar view
-- appointment creation
-- appointment editing
-- rescheduling
-- cancellation
-- no-show status
-- attended status
-- blocked time slots
-- branch-aware scheduling
+### Goal
+Provide a practical branch-aware operational calendar.
+
+### Accepted scope
+- day/week calendar
+- create/edit/reschedule/cancel appointments
 - appointment notes
+- `Scheduled` / `Cancelled` / `Attended` / `NoShow`
+- tenant-owned and branch-aware appointments
+- blocked slots
+- collision validation
+- `scheduling.read` / `scheduling.write`
+- operational Angular calendar/form flows
 
-## Expected outcome
-Front desk users can manage the daily operation of the clinic through the system.
-
-## Core users
-- Front Desk
-- Dentist
-- Tenant Admin
-
-## Key UX goals
-- create appointment in very few steps
-- reschedule quickly
-- visually understand the day
-- avoid calendar friction
-
-## Out of scope
-- doctor-based views, deferred to a future bounded Scheduling slice that introduces provider/doctor assignment
+### Deferred
+- doctor-based views and provider assignment
 - online booking
-- reminder automation
-- advanced waiting room workflows
-- AI-assisted scheduling
+- automated reminder delivery
+- advanced waiting-room workflows
+
+ADR 003 records the explicit doctor-view deferral.
 
 ---
 
 ## 7. Release 3 — Clinical Records
 
-## Goal
-Allow clinicians to maintain a structured patient clinical record.
+### Status
+Completed as the foundational clinical release.
 
-## Current status
-- Release 3 is complete as the foundational clinical release
-- Release 3.1 — Clinical Record Foundation is accepted as closure evidence
-- Release 3.2 — Basic Diagnoses Foundation is accepted as closure evidence
-- Release 3.3 — Clinical Timeline Read Model is accepted as closure evidence
-- Release 3.4 — Clinical Snapshot Change History is accepted as closure evidence
-- Release 3.5 — Medical Questionnaire Backend is accepted as closure evidence
-- Release 3.6 — Clinical Encounter / Vitals Backend is accepted as closure evidence
-- A bounded frontend UI integration for the fixed Release 3.5 medical questionnaire now exists inside the existing clinical record screen, without changing backend contracts or permissions
-- A bounded frontend UI integration for Release 3.6 clinical encounters/vitals now exists inside the existing clinical record screen, without changing backend contracts, permissions, timeline behavior, Patient data, or later modules
-- Patient age is derived in the Clinical Records UI from `Patient.DateOfBirth`; age is not persisted and no `Age` field is added to backend/API contracts
+### Closure evidence
+- Release 3.1 — Clinical Record Foundation
+- Release 3.2 — Basic Diagnoses Foundation
+- Release 3.3 — Clinical Timeline Read Model
+- Release 3.4 — Clinical Snapshot Change History
+- Release 3.5 — Medical Questionnaire Backend
+- Release 3.6 — Clinical Encounter / Vitals Backend
 
-## Scope
-Release 3 was delivered in bounded slices. The accepted closure slices are Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5, and Release 3.6, and they cover:
+### Accepted scope
+- tenant-owned/patient-owned `ClinicalRecord`
+- exactly one active record per patient/tenant
+- explicit creation; `GET` returns `404` when missing
+- no autocreation
+- medical background/current medications/current allergies
+- append-only notes, newest-first
+- basic diagnoses add/resolve
+- bounded timeline from note/diagnosis activity
+- separate bounded snapshot history
+- fixed medical-question catalog with `Unknown` / `Yes` / `No` and optional details
+- clinical encounters with reason/type and optional vitals
+- server-derived tenant and actor
+- `clinical.read` / `clinical.write`
+- bounded Angular UI through data-access/facade
 
-- explicit clinical record creation
-- medical background summary
-- current medications summary
-- current allergies
-- append-only clinical notes
-- note history returned newest-first in reads and UI
-- clinician attribution
-- audit-sensitive updates
-- basic non-coded diagnoses on existing clinical records
-- explicit diagnosis creation
-- explicit diagnosis resolution
-- diagnoses included in the clinical record read model
-- diagnosis ordering with active diagnoses first and newest-first within each status group
-- clinical timeline read model inside the existing clinical record read model
-- timeline events limited to `ClinicalNoteCreated`, `ClinicalDiagnosisCreated`, and `ClinicalDiagnosisResolved`
-- timeline ordering newest-first
-- no new timeline endpoint and no new timeline table
-- bounded snapshot history inside the existing clinical record read model
-- initial snapshot history entry on explicit clinical record creation
-- snapshot history entries only for effective changes to medical background summary, current medications summary, and current allergies
-- snapshot history ordering newest-first
-- snapshot history kept separate from the accepted Release 3.3 timeline
-- backend structured medical questionnaire on an existing clinical record
-- fixed `QuestionKey` catalog based on the physical form mapping
-- `ClinicalMedicalAnswer` records owned by tenant, patient, and clinical record
-- `Unknown` / `Yes` / `No` answers with optional bounded details
-- `GET` and `PUT /api/patients/{patientId}/clinical-record/questionnaire`
-- upsert by `QuestionKey` without accepting `TenantId` from the request
-- frontend form inside the existing clinical record screen for the fixed questionnaire catalog, grouped by clinical section with i18n labels, read-only Patient demographics context, and loading/empty/error/saving states
-- no questionnaire-driven changes to allergies, timeline, snapshot history, or other modules
-- backend clinical encounter/vitals capture on an existing clinical record
-- `ClinicalEncounter` records owned by tenant, patient, and clinical record
-- `GET` and `POST /api/patients/{patientId}/clinical-record/encounters`
-- bounded consultation type catalog `Treatment` / `Urgency` / `Other`
-- optional bounded vitals: temperature C, systolic/diastolic blood pressure, weight kg, height cm, respiratory rate, and heart rate
-- optional append-only linked `ClinicalNote` when encounter `noteText` is provided
-- no request-provided `TenantId` or `CreatedByUserId` for encounters
-- frontend section inside the existing clinical record screen for recent encounters and compact encounter/vitals creation, with i18n labels, read-only Patient context, and loading/empty/error/saving states
-- no frontend-driven changes to timeline, Patient demographics, Scheduling, Billing, Odontogram, Treatments, Documents, or doctor/provider scope
+### Current access
+- `PlatformAdmin` and `TenantAdmin`: clinical read/write
+- `TenantUser`: no clinical permissions
 
-## Expected outcome
-A user operating under the current clinical permissions can consult and update the patient’s foundational clinical record in a structured way, including basic diagnosis tracking, a bounded clinical timeline read model, bounded snapshot history, a fixed medical questionnaire, and encounter/vitals capture without opening later clinical modules.
-
-## Core users
-- Dentist
-- Assistant
-- Tenant Admin
-
-## Current access note
-- `clinical.read` and `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`
-- `TenantUser` does not receive clinical permissions in the accepted Release 3 closure
-
-## Key UX goals
-- clear navigation from patient profile to clinical record
-- readable history
-- fast note entry
-- clear active/resolved diagnosis visibility
-- secure access to sensitive information
-
-## Out of scope
-- full or advanced patient clinical timeline
-- any cross-module timeline
-- restore or revert of clinical snapshot history
-- full clinical record versioning
-- rich snapshot diff
-- coded diagnosis catalogs such as ICD/CIE/SNOMED
-- advanced diagnosis workflows beyond basic add/resolve
-- tenant-configurable form builder
-- automatic allergy synchronization from questionnaire answers
-- questionnaire events in the clinical timeline
-- configurable or dynamic questionnaire UI
-- encounter editing or deletion
-- new encounter-specific timeline event model
-- odontogram
-- treatments
-- documents
-- advanced specialty templates
-- AI note generation
-- electronic consent flows
-- advanced forms intake
-- patient self-service and portal workflows
+### Deferred
+- advanced/cross-module clinical timeline
+- full versioning, restore or rich diff
+- configurable form builder
+- automatic allergy synchronization
+- encounter edit/delete
+- provider/doctor assignment
+- patient self-service
+- cross-module Clinical ownership
 
 ---
 
 ## 8. Release 4 — Odontogram
 
-## Goal
-Introduce the dental visual layer of the product.
+### Status
+Completed as the foundational Odontogram release.
 
-## Current status
-- Release 4 is the next planned functional phase after Release 3 closure
-- Release 4 is not opened by the Release 3 closure documentation
-- Release 4 should start with a dedicated bounded slice, beginning with Release 4.1 — Odontogram Foundation
+### Closure evidence
+- Release 4.1 — Odontogram Foundation
+- Release 4.2 — Odontogram Surface Foundation
+- Release 4.3 — Basic Dental Findings Foundation
+- Release 4.4 — Dental Findings Change History
+- Audit: `docs/release-4-odontogram-audit-and-closure.md`
+- ADR 007: `docs/decisions/007-release-4-odontogram-closure.md`
 
-## Scope
-Release 4 should be delivered in bounded slices. The first planned slice should cover:
+### Goal
+Provide a bounded visual dental chart in patient context.
 
-- explicit odontogram creation
-- exactly one odontogram per patient per tenant
-- explicit `GET` returning `404` when missing
-- no autocreation
-- permanent adult FDI/ISO two-digit tooth numbering only (`11-18`, `21-28`, `31-38`, `41-48`)
-- tooth-level current state
-- minimal status catalog `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`
-- explicit single-tooth status updates
-- minimal audit metadata on the odontogram and each tooth state
-- minimal patient-context UI for empty state, creation, visualization, and single-tooth state updates
+### Accepted scope
+- tenant-owned/patient-owned `Odontogram`
+- exactly one odontogram per patient/tenant
+- explicit creation; `GET` returns `404` when missing
+- no autocreation from reads/updates
+- 32 permanent adult FDI teeth:
+  - `11-18`
+  - `21-28`
+  - `31-38`
+  - `41-48`
+- tooth status:
+  - `Unknown`
+  - `Healthy`
+  - `Missing`
+  - `Restored`
+  - `Caries`
+- explicit single-tooth updates
+- five surfaces per tooth: `O/M/D/B/L`
+- surface status: `Unknown` / `Healthy` / `Restored` / `Caries`
+- explicit surface updates
+- basic finding catalog:
+  - `Caries`
+  - `Restoration`
+  - `MissingStructure`
+  - `Sealant`
+- explicit finding add/remove and duplicate prevention
+- append-only finding add/remove history, newest-first
+- UTC/actor metadata
+- `odontogram.read` / `odontogram.write`
+- patient-context Angular chart/editor
+- tenant/cross-tenant/backend/frontend tests
 
-Later Release 4 slices may add surfaces, basic findings and bounded findings history only after the foundation is explicitly accepted.
+### Current access
+- `PlatformAdmin` and `TenantAdmin`: odontogram read/write permissions
+- `TenantUser`: no odontogram permissions
+- patient-scoped operations require resolved tenant context
 
-## Expected outcome
-A user operating under future odontogram permissions can initialize, consult, and update a bounded odontogram in the patient context without opening later dental modules.
-
-## Core users
-- Dentist
-- Assistant
-- Tenant Admin
-
-## Current access note
-- Odontogram permissions must be introduced only with an explicit Release 4 slice.
-- Do not grant odontogram access incidentally from Release 3 closure.
-
-## Key UX goals
-- clear patient-context navigation
-- low-friction explicit creation
-- fast single-tooth updates
-- fast single-surface updates
-- immediately understandable tooth and surface status representation
-
-## Out of scope
-- complex dental findings registration
-- treatment linkage
-- diagnosis linkage
-- documents linkage
-- wider dental timeline/history
-- surface history
-- odontogram restore/versioning
+### Deferred
+- child/mixed dentition
 - bulk editing
-- child or mixed dentition
-- advanced charting/canvas interaction
-- advanced orthodontic charting
-- advanced perio charting
+- complex/configurable findings
+- treatment/diagnosis/document/imaging linkage
+- complete tooth/surface history
+- full dental timeline
+- restore/revert/full versioning
+- orthodontic/periodontal charting
 - imaging overlays
-- AI-assisted findings detection
+- AI-assisted findings
+- patient-portal access
+
+### Non-blocking UX debt
+- replace internal release/slice copy with clinic-facing language
+- migrate residual hardcoded colors to `--bsm-*` tokens
+- split large UI components only through bounded visual slices
 
 ---
 
 ## 9. Release 5 — Treatments and Quotes
 
-## Goal
-Connect diagnosis with operational and commercial treatment planning.
+### Status
+Next planned functional phase; not formally opened or accepted.
 
-## Current status
-- Release 5 is planned after Release 4
-- Release 5 is not opened by the Release 3 closure documentation
+The repository contains Treatments/Quotes code, but it remains `implemented but not formally accepted/reconciled` until a dedicated audit verifies the bounded contract.
 
-## Scope
-Release 5 should be delivered in bounded slices. The initial planned scope includes:
-- explicit treatment plan creation for an existing patient
-- exactly one active treatment plan per patient per tenant
-- `GET` returning `404` when the treatment plan does not exist
-- no autocreation by read or by item operations
-- treatment plan items with required title, optional category, simple quantity, short note, and optional adult FDI `toothCode` plus optional `surfaceCode`
-- `surfaceCode` limited to `O` / `M` / `D` / `B` / `L` and requiring `toothCode`
-- explicit add/remove item flows
-- bounded plan status with `Draft` / `Proposed` / `Accepted`
-- minimal patient-context UI for empty state, explicit creation, item add/remove, and status changes
-- explicit treatment quote creation from the existing treatment plan
-- exactly one quote per treatment plan in this slice
-- `GET` returning `404` when the quote does not exist
-- no autocreation of the quote
-- quote items as a snapshot-only copy of the current treatment plan items
-- fixed `CurrencyCode = MXN` in this slice
-- line-level `UnitPrice`, `LineTotal`, and `QuoteTotal`
-- bounded quote status with `Draft` / `Proposed` / `Accepted`
-- positive line pricing required to move `Draft -> Proposed`, preserved while the quote stays `Proposed`, and revalidated on `Proposed -> Accepted`
-- minimal patient-context UI for treatment planning and later quote work when explicitly opened
-- no discounts or taxes
-- no billing linkage
-- no scheduling linkage
-- no treatment execution tracking
-- no quote regenerate/versioning or multi-quote negotiation
-- no plan versioning or archive
+### Goal
+Connect patient/clinical/odontogram context to an operational treatment proposal and bounded quote workflow.
 
-## Expected outcome
-Clinicians and tenant administrators can move from clinical or odontogram context to a structured, minimal treatment plan and then into a bounded commercial quote workflow without yet opening billing or advanced pricing.
+### Planned bounded sequence
 
-## Core users
-- Dentist
-- Front Desk
-- Tenant Admin
+#### Release 5.1 — Treatment Plan Foundation
+- explicit treatment-plan creation
+- `GET` returns `404` when missing
+- no autocreation
+- exactly one active treatment plan per patient/tenant
+- basic items:
+  - required title
+  - optional category
+  - positive simple quantity
+  - short optional note
+  - optional adult FDI tooth reference
+  - optional `O/M/D/B/L` surface requiring a tooth
+- explicit add/remove items
+- minimal lifecycle `Draft` / `Proposed` / `Accepted`
+- tenant/actor metadata
+- bounded Angular patient-context UI
 
-## Current access note
-- Treatment plan and quote permissions must be introduced only with explicit Release 5 slices.
+#### Release 5.2 — Quote Foundation
+Only after 5.1 is accepted:
+- explicit quote creation from an existing treatment plan
+- no autocreation
+- bounded line snapshot
+- `MXN` initial currency unless audit proves an accepted compatible contract
+- line unit price/line total/quote total
+- lifecycle `Draft` / `Proposed` / `Accepted`
+- explicit validation before proposal/acceptance
 
-## Key UX goals
-- easy transition from diagnosis to treatment
-- clear plan status
-- low-friction item capture
-- understandable plan status
-- simple treatment lifecycle
-
-## Out of scope
-- advanced pricing beyond a bounded quote slice
-- discounts and taxes
-- billing handoff
-- scheduling handoff
-- treatment execution/progress tracking
-- quote regenerate/versioning
-- multiple quotes per patient/negotiation
-- plan archive/versioning
-- complex insurance processing
-- installment financing logic
+### Deferred from initial Release 5 acceptance
+- taxes and discounts
+- billing linkage
+- scheduling linkage
+- treatment execution/progress
+- regenerate/versioning
+- multiple quotes/negotiation
+- insurance and financing
 - advanced approval workflows
-- automated treatment follow-up campaigns
+- automated follow-up
+
+### Opening rule
+Start with a module-specific audit of existing code. Do not add new functionality until the audit identifies a concrete roadmap gap.
 
 ---
 
 ## 10. Release 6 — Billing
 
-## Goal
-Enable clinics to record charges, payments, and balances as part of the operational workflow.
+### Status
+Planned after accepted Treatments/Quotes scope.
 
-## Current status
-- Release 6 is planned after Release 5
-- Release 6 is not opened by the Release 3 closure documentation
-- Payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, and advanced billing workflows remain deferred
+### Goal
+Support basic operational financial tracking linked to accepted upstream records.
 
-## Scope
-- charges linked to treatment plans or items
+### Planned scope
+- charges/billing records
 - payment registration
-- partial payments
-- total payments
-- balance tracking
+- partial/total payments
+- balances
 - payment methods
 - receipts
-- basic cash management
-- daily payment visibility
-- branch-aware payment operations when applicable
+- basic cash visibility
+- branch context when business meaning requires it
 
-## Expected outcome
-The clinic can register and track money related to patient care in one operational flow.
-
-## Core users
-- Front Desk
-- Tenant Admin
-
-## Key UX goals
-- register a payment quickly
-- see outstanding balance clearly
-- reduce operational confusion
-- support daily front desk operations
-
-## Out of scope
+### Deferred
 - full accounting
-- full tax invoicing
+- taxes/CFDI/PAC
 - insurance claims
-- ERP-level financial modules
+- refunds/reversals without explicit rules
+- ERP-level workflows
+
+Existing Billing code requires its own audit before formal acceptance.
 
 ---
 
 ## 11. Release 7 — Documents and Dashboard
 
-## Current status
-- Release 7 is planned after Release 6
-- Release 7 is not opened by the Release 3 closure documentation
-- OCR, rich preview, versioning, external sharing, templates, generated PDFs, advanced analytics, charts, complex filters, branch dashboard, doctor dashboard, advanced reporting, exports, and advanced document workflows remain deferred
+### Status
+Planned after Release 6.
 
-## Goal
-Complete the initial operational MVP with file support and high-level visibility.
+### Documents planned scope
+- tenant-owned/patient-owned document records
+- explicit authorized upload
+- private storage
+- allowlisted PDF/JPG/PNG
+- size limits
+- active list
+- authorized download
+- logical retire
 
-## Scope
-### Documents
-- patient attachments
-- radiographies
-- file upload
-- file association to patient
-- basic document categorization
-- simple document access controls
-
-### Dashboard
-- tenant-scoped operational summary foundation
+### Dashboard planned scope
+- tenant-scoped read model
 - active patients
-- appointments of the day
-- pending appointments of the day
-- active patient documents
+- today/pending appointments
+- active documents
 - active treatment plans
-- accepted quotes when Release 5 has introduced quotes
-- issued billing documents when Release 6 has introduced billing
-- advanced analytics, charts, complex filters, daily income summaries, balances, branch dashboards, doctor dashboards, exports, and advanced reporting remain deferred beyond the initial dashboard foundation
+- accepted quotes when Release 5 is accepted
+- issued billing when Release 6 is accepted
 
-## Expected outcome
-The MVP becomes operationally complete for day-to-day usage.
+### Deferred
+- OCR/rich preview/versioning
+- public/external sharing
+- generated PDFs/templates
+- advanced analytics/charts/exports
+- branch/doctor dashboards
+- BI-level reporting
 
-## Core users
-- Dentist
-- Front Desk
-- Tenant Admin
-
-## Key UX goals
-- quick operational visibility
-- easy access to relevant patient files
-- low-friction dashboard scanning
-
-## Out of scope
-- advanced analytics
-- BI-level dashboards
-- full document workflows
-- advanced storage lifecycle policies
+Existing Documents/Dashboard code requires module-specific audit before acceptance.
 
 ---
 
 ## 12. MVP Definition
 
-The initial MVP of Bigsmile is complete after:
+The initial operational MVP is complete only after formal acceptance of:
 - Patients
 - Scheduling
 - Clinical Records
@@ -554,262 +400,202 @@ The initial MVP of Bigsmile is complete after:
 - Roles and Permissions
 - Basic Dashboard
 
-This MVP should be strong enough to validate:
-- real operational usability
-- clinic adoption
-- workflow fit
-- commercial value
+Current accepted frontier: **Release 4**.
+
+Remaining MVP release acceptance: **Release 5, Release 6 and Release 7**.
 
 ---
 
 ## 13. Phase 2 Expansion — Modern Operations
 
-Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
-
-## Current status
-- Phase 2 is a later roadmap phase after the MVP is stable
-- Phase 2 is not the next phase after Release 3 closure
-- Phase 2.1 — Patient Intake and Portal Foundation is planned and architecturally accepted through ADR 004, but implementation is not opened
-- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, full patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain deferred
+### Status
+Later phase after the initial MVP is accepted and stable.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
+#### Status
+Architecturally accepted in ADR 006; implementation not opened.
+
 #### Goal
-
-Allow new and existing patients to provide or complement their information through a least-privilege, self-only workflow while keeping canonical patient and clinical data under clinic review.
-
-#### Roadmap position
-
-Phase 2.1 is the first bounded capability planned inside Phase 2 after the initial MVP is formally accepted and stable. It does not displace Release 4 through Release 7 unless a future explicit roadmap decision reprioritizes it.
+Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
 
 #### Accepted architecture
+- patient identity separate from staff membership/permissions
+- existing-patient activation through staff-issued single-use invitation
+- new-patient waiting-room QR/link creates intake draft, not canonical Patient/ClinicalRecord
+- `Draft -> Submitted -> Reviewed -> Applied/Rejected`
+- clinic review before canonical application
+- append-only revisions/audit
+- no platform override in patient-facing policies
 
-- Patient identity is separate from staff `UserTenantMembership`, roles, and permissions.
-- Existing patients activate access through staff-issued, single-use, expirable invitations.
-- New patients use a short-lived clinic-generated QR/link that creates a tenant-owned intake draft, not a canonical Patient or ClinicalRecord directly.
-- Patient-originated data follows `Draft -> Submitted -> Reviewed -> Applied/Rejected`.
-- Clinic review is required before canonical application.
-- Effective saves and lifecycle transitions create append-only revisions/audit entries.
-- Patient-facing access is self-scoped and has no platform override.
+#### Sequential implementation
+1. PI-1 — Access and Invitation Foundation — issue #4
+2. PI-2 — Intake Draft and Self-Service Capture — issue #5
+3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
+4. PI-4 — Audit Visibility and Security Hardening — issue #7
 
-#### Implementation slices
+#### Included
+- patient portal account/invitation foundation
+- waiting-room intake link
+- existing-patient activation
+- demographic/contact proposals
+- existing fixed medical-question catalog
+- draft/submission/review/apply
+- append-only audit
+- rate limiting, anti-enumeration, replay/revocation/recovery controls
 
-1. **PI-1 — Access and Invitation Foundation** — issue #4.
-2. **PI-2 — Intake Draft and Self-Service Capture** — issue #5.
-3. **PI-3 — Submit, Clinic Review, and Canonical Apply** — issue #6.
-4. **PI-4 — Audit Visibility and Security Hardening** — issue #7.
-
-The slices are sequential. Later slices may not bypass identity, tenant, provenance, review, or audit gates established by earlier slices.
-
-#### Included scope
-
-- `PatientPortalAccount` and `PatientPortalInvitation` foundations.
-- Dedicated patient auth/session boundary and self-only policies.
-- Waiting-room registration/intake link.
-- Existing-patient activation.
-- Demographic/contact proposals and the existing fixed medical-question catalog.
-- Intake draft, immutable submission, staff review, duplicate/link/create decision, and explicit apply.
-- Append-only intake revisions and audit visibility.
-- Rate limiting, anti-enumeration, replay protection, lockout/recovery, revocation, and e2e validation required by the bounded capability.
-
-#### Out of scope
-
-- Patient access to diagnoses, professional notes, encounters, vital signs, odontogram, treatments, quotes, billing, payments, or documents.
-- Online booking.
-- Automated email, SMS, or WhatsApp delivery.
-- Family/dependent accounts or multiple Patient records per account.
-- Configurable form builder.
-- Automatic allergy/alert synchronization or automatic clinical interpretation.
-- Advanced electronic consent/signature.
-
-#### Completion rule
-
-Phase 2.1 is complete only when PI-1 through PI-4 have accepted code, tests, documentation, operational runbook, tenant/IDOR/replay/concurrency coverage, clinic review before canonical application, and full provenance/audit evidence.
+#### Not included
+- professional clinical-record browsing
+- odontogram access
+- treatments/quotes/billing/documents access
+- online booking
+- automated email/SMS/WhatsApp
+- dependents/multiple patients per account
+- configurable form builder
+- automatic clinical interpretation or allergy/alert synchronization
 
 #### Tracking
+- ADR 006: `docs/decisions/006-patient-intake-and-portal-foundation.md`
+- plan: `docs/patient-intake-and-portal-plan.md`
+- parent issue #2
 
-- ADR 004 — `docs/decisions/004-patient-intake-and-portal-foundation.md`.
-- General plan — `docs/patient-intake-and-portal-plan.md`.
-- Parent issue — #2.
-
-## Other candidate features
-- WhatsApp reminders
-- email reminders
-- expanded appointment confirmation workflows beyond the current bounded foundations
+### Other Phase 2 candidates
+- reminders/confirmations with real providers
 - online booking
-- branch-level refinements
-- improved dashboard metrics
-- better treatment follow-up visibility
-
-## Goal
-Reduce operational friction, missed appointments, and manual coordination.
-
-## Why this phase comes after MVP
-These features are highly valuable, but they depend on the operational core being stable first.
+- branch refinements
+- dashboard metric improvements
+- treatment follow-up visibility
 
 ---
 
 ## 14. Phase 3 Expansion — SaaS Growth
 
-This phase focuses on turning Bigsmile from a strong clinic system into a stronger SaaS platform.
-
-## Candidate features
+Candidate capabilities:
 - advanced multi-branch administration
-- tenant settings expansion
-- branding by tenant
-- feature flags by plan
+- tenant settings and branding
+- feature flags/plans/subscriptions
 - onboarding automation
-- plan and subscription management
-- tenant support tools
+- tenant support tooling
 - platform administration improvements
 - tenant-level analytics
 
-## Goal
-Strengthen the commercial and operational SaaS layer.
-
-## Why this phase matters
-A product can work for one clinic and still fail as a SaaS if platform-level capabilities are weak.
+Goal: strengthen commercial SaaS operation without weakening tenant isolation.
 
 ---
 
 ## 15. Phase 4 Expansion — Advanced Product Capabilities
 
-This phase focuses on premium and advanced capabilities.
-
-## Candidate features
-- full patient portal beyond the bounded Phase 2.1 intake/update capability
-- patient access to selected approved records or documents through future explicit slices
-- advanced analytics
-- conversion metrics
-- treatment recall workflows
-- automation campaigns
+Candidate capabilities:
+- full patient portal beyond Phase 2.1
+- approved patient access to selected records/documents
+- advanced analytics/conversion metrics
+- recall and automation campaigns
 - inventory basics
 - electronic invoicing
-- support workflows for platform operations
 - future AI-assisted features
 
-## Goal
-Increase product value, differentiation, and retention.
-
-## Important note
-These features should be added only after the product foundation and core workflows are operationally strong. Phase 2.1 does not imply that the broader Phase 4 patient portal is implemented or accepted.
+Phase 2.1 does not imply the broader Phase 4 portal is implemented or accepted.
 
 ---
 
 ## 16. Release Dependencies
 
-The roadmap is intentionally sequential because some releases depend on earlier capabilities.
+- Foundation is required by all releases.
+- Patients precedes Clinical.
+- Scheduling depends on tenant/user/branch foundations.
+- Clinical depends on Patients.
+- Odontogram depends on Patients and the clinical context foundation.
+- Treatments/Quotes depends on stable patient/clinical/odontogram context.
+- Billing depends on accepted commercial records.
+- Documents depend on Patients and secure storage/access.
+- Dashboard depends on accepted upstream read models.
+- Phase 2.1 depends on stable Patients/Clinical behavior and the accepted MVP.
+- Full patient portal remains a separate future capability.
 
-### Core dependency chain
-
-- Foundation is required by all releases
-- Patients is required before meaningful Clinical workflows
-- Scheduling depends on tenant, user, and branch foundations
-- Clinical depends on Patients
-- Odontogram depends on Clinical and Patients
-- Treatments depend on Clinical and Odontogram context
-- Billing depends on Treatments or at least patient financial records
-- Documents depend on Patients and security rules
-- Dashboard depends on data produced by all prior releases
-- Phase 2.1 depends on stable Patients and Clinical Records behavior plus a formally accepted operational MVP
-- Phase 2.1 clinic review/apply depends on canonical operational modules remaining authoritative
-- Full patient portal capabilities remain separate future dependencies in Phase 4
-
-This dependency chain should guide implementation order.
+This dependency chain guides order unless an explicit documented reprioritization changes it.
 
 ---
 
-## 17. Non-Goals for the Initial Product Stages
+## 17. Non-Goals for Initial Product Stages
 
-The following are intentionally not part of the early roadmap:
 - microservices
-- overly complex enterprise integrations
+- database-per-tenant from day one
+- multi-region infrastructure
+- full ERP/accounting
 - advanced insurance claims
-- full accounting
-- full ERP processes
-- advanced AI workflows
 - excessive reporting depth
-- multi-region deployment complexity
-- separate database per tenant from day one
-
-These may be considered later if the business requires them.
+- advanced AI workflows
+- enterprise integrations without validated need
 
 ---
 
 ## 18. Validation Priorities
 
-The roadmap should validate these questions as early as possible:
+### Product
+- Are registration/search flows fast?
+- Does scheduling work daily?
+- Does Clinical feel natural and safe?
+- Is the accepted Odontogram understandable and efficient?
+- Can Release 5 support real treatment conversations?
+- Can Billing remain simple for front desk?
+- When Phase 2.1 opens, can patients complete intake without confusing declarations with reviewed canonical data?
 
-### Product validation
-- Do clinics actually use the scheduling flow daily?
-- Is patient registration fast enough?
-- Does the clinical flow feel natural to dentists?
-- Is the odontogram easy enough to use?
-- Does treatment planning support real conversations with patients?
-- Is billing simple enough for front desk staff?
-- When Phase 2.1 opens, can patients complete intake without confusing declarations with clinic-reviewed canonical data?
-- Can clinic staff review and apply patient submissions without excessive operational friction?
-
-### SaaS validation
-- Is tenant isolation working correctly?
-- Is branch segmentation sufficient for real operations?
-- Is the permission model practical?
-- Is the product structure sustainable for future modules?
-- Can the future patient-facing identity remain strictly self-scoped and isolated from staff authorization?
+### SaaS/security
+- Is tenant isolation preserved?
+- Is Branch used only as subordinate operational scope?
+- Are permissions practical and explicit?
+- Are module boundaries sustainable?
+- Are public/patient-facing identities strictly self-scoped?
 
 ---
 
 ## 19. Risks to Control
 
-The roadmap must actively control these risks:
-- growing scope too early
-- introducing premium features before the core is stable
-- adding modules without preserving architecture quality
-- mixing platform features with tenant operational features
-- weakening tenant isolation for convenience
-- building UX-heavy features without validating operational workflows first
-- reusing staff identity or tenant-wide permissions for patients
-- exposing patient enumeration, IDOR, token replay, or cross-tenant access through future public endpoints
-- allowing patient-originated data to overwrite canonical clinical data without clinic review, provenance, and conflict handling
-- calling a login/form implementation a complete patient portal without audit, recovery, revocation, and operational readiness
+- scope growth beyond bounded releases
+- accepting modules only because code exists
+- hidden cross-module ownership
+- weakening tenant isolation
+- branch used as tenant replacement
+- staff permissions reused for patients
+- public enumeration/IDOR/replay
+- silent canonical overwrite of patient/clinical data
+- visual complexity that degrades operational speed
+- documentation drifting behind code
 
 ---
 
 ## 20. Success Criteria by Stage
 
-### Foundation success
-- the architecture is stable
-- authentication and tenant model are working
-- CI and tests are in place
+### Foundation
+- stable architecture/auth/tenant model
+- CI and tests operational
 
-### MVP success
-- a clinic can operate core workflows inside Bigsmile
-- the core product feels usable and coherent
-- the system is ready for real pilot validation
+### Release 4 closure
+- bounded chart behavior accepted
+- tenant/cross-tenant evidence
+- advanced Odontogram scope explicitly deferred
+- base documentation aligned
 
-### Phase 2.1 success
-- new and existing patients can use the bounded intake/update workflows
-- patients receive no staff or tenant-wide permissions
+### MVP
+- clinic can operate the full core workflow
+- Releases 1 to 7 formally accepted
+- product ready for pilot validation
+
+### Phase 2.1
+- new/existing patient workflows work
+- no staff permissions granted to patients
 - clinic review precedes canonical application
-- duplicate, conflict, expiry, revocation, and recovery paths are operationally usable
-- every effective patient-originated change is traceable
-- public patient-facing security controls and automated coverage are complete
+- duplicate/conflict/recovery/revocation paths usable
+- every effective patient-originated change traceable
 
-### SaaS success
-- multiple tenants can operate safely
-- branch support is practical
-- onboarding and platform administration are sustainable
-
-### Product growth success
-- premium features add value without destabilizing the core
-- the product remains maintainable as it expands
+### SaaS growth
+- multiple tenants operate safely
+- onboarding/platform administration remain sustainable
 
 ---
 
 ## 21. Guiding Principle
 
-The roadmap exists to ensure that Bigsmile grows in the right order.
+Every feature should answer:
 
-Every new feature should be evaluated against this question:
-
-**Does this strengthen the operational core or the SaaS foundation at the right time?**
+**Does this strengthen the operational core or SaaS foundation at the right time, with explicit tenant-safe evidence?**
