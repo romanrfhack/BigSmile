@@ -25,21 +25,11 @@ Visual work does not automatically open or close releases and must not change ba
 - Release 2 — Scheduling.
 - Release 3 — Clinical Records through slices 3.1 to 3.6.
 - Release 4 — Odontogram through slices 4.1 to 4.4.
+- Release 5 — Treatments and Quotes through slices 5.1 and 5.2.
 
 ### Release 4 reconciliation
 
 Odontogram is no longer only `implemented but not formally accepted/reconciled`.
-
-The module received a specific audit covering:
-
-- domain invariants;
-- tenant ownership;
-- application services;
-- API contracts;
-- EF Core configuration and migrations;
-- permissions and policies;
-- Angular data-access/facade/page/components;
-- backend and frontend automated tests.
 
 Closure evidence:
 
@@ -53,11 +43,37 @@ Accepted Release 4 slices:
 3. Basic Dental Findings Foundation.
 4. Dental Findings Change History.
 
+### Release 5 reconciliation
+
+Treatments/Quotes is no longer only `implemented but not formally accepted/reconciled`.
+
+The module received a specific audit covering:
+
+- plan and quote domain invariants;
+- tenant/patient ownership;
+- application services and no-autocreation behavior;
+- API contracts;
+- EF Core configuration and migrations;
+- permissions and role mappings;
+- Angular data-access/facades/pages/components;
+- tenant, pricing, lifecycle, controller and frontend tests;
+- separation from Billing and treatment execution.
+
+Closure evidence:
+
+- `docs/release-5-treatments-and-quotes-audit-and-closure.md`;
+- ADR 008 — `docs/decisions/008-release-5-treatments-and-quotes-closure.md`.
+
+Accepted Release 5 slices:
+
+1. Treatment Plan Foundation.
+2. Quote Foundation.
+
 ### Current roadmap frontier
 
-The next planned functional phase is **Release 5 — Treatments and Quotes**.
+The next planned functional phase is **Release 6 — Billing**.
 
-Treatments/Quotes code exists, but it remains `implemented but not formally accepted/reconciled` until its own module audit occurs.
+Billing code exists, but it remains `implemented but not formally accepted/reconciled` until its own module audit occurs.
 
 ### Phase 2.1
 
@@ -84,8 +100,8 @@ Legend:
 | Scheduling | yes | yes | appointments, blocks, manual reminder helpers | `scheduling.read/write` | yes | yes | Accepted / preserved; automated delivery not accepted | partially redesigned |
 | Clinical Records | yes | yes | record, questionnaire, encounters, notes, diagnoses | `clinical.read/write` | yes | yes | Accepted / preserved | partially redesigned |
 | Odontogram | yes | yes | chart, teeth, surfaces, findings | `odontogram.read/write` | yes | yes | Accepted / preserved through Release 4.4 | partially redesigned; debt remains |
-| Treatments/Quotes | yes | yes | plan, items, status, quote | treatment permissions | yes | yes | Implemented but not reconciled; next audit target | partially redesigned |
-| Billing | yes | yes | quote/billing paths | `billing.read/write` | yes | yes | Implemented but not reconciled | partially redesigned |
+| Treatments/Quotes | yes | yes | plan, items, status, quote, pricing | treatment permissions | yes | yes | Accepted / preserved through Release 5.2 | partially redesigned; debt remains |
+| Billing | yes | yes | quote/billing paths | `billing.read/write` | yes | yes | Implemented but not reconciled; next audit target | partially redesigned |
 | Documents | yes | yes | upload/list/download/retire | `document.read/write` | yes | yes | Implemented but not reconciled | partially redesigned |
 | Dashboard | yes | yes | summary | `dashboard.read` | read-model based | yes | Implemented but not reconciled | partially redesigned |
 | Patient Intake/Portal | no | no | none accepted | none | none | none | Planned Phase 2.1 | not implemented |
@@ -94,9 +110,7 @@ Legend:
 
 ### Resolved drift: Odontogram
 
-Previously, canonical docs correctly said Release 4 was not open while code already contained its implementation. The module-specific audit now proves the bounded foundation and closes Release 4.
-
-This does not mean all future Odontogram features are accepted. Deferred scope remains:
+The module-specific audit proved the bounded foundation and closed Release 4. Advanced Odontogram scope remains deferred:
 
 - child/mixed dentition;
 - bulk editing;
@@ -107,9 +121,32 @@ This does not mean all future Odontogram features are accepted. Deferred scope r
 - AI detection;
 - patient-portal access.
 
+### Resolved drift: Treatments/Quotes
+
+The Release 5 audit proved:
+
+- explicit treatment-plan creation and no autocreation;
+- bounded items with optional FDI/surface references;
+- plan lifecycle and accepted-plan immutability;
+- explicit quote snapshot creation from a non-empty plan;
+- fixed `MXN` public path;
+- line pricing and calculated totals;
+- positive-pricing gates;
+- accepted-quote immutability;
+- tenant and permission protection.
+
+This does not accept:
+
+- treatment execution/progress;
+- multiple/archived plans;
+- quote versioning or negotiation;
+- taxes/discounts;
+- Billing or payment behavior;
+- Patient Portal access.
+
 ### Remaining drift: later modules
 
-Treatments/Quotes, Billing, Documents, Dashboard and reminder helpers contain real code beyond the formal release frontier.
+Billing, Documents, Dashboard and reminder helpers contain real code beyond the formal release frontier.
 
 They must remain unaccepted until their own audit verifies:
 
@@ -128,6 +165,7 @@ Several screens still expose development/release language such as:
 
 - `Release 4.4`;
 - `Release 5.1`;
+- `Release 5.2`;
 - `Release 6.1`;
 - `Release 7.1`;
 - `slice`;
@@ -138,7 +176,7 @@ This copy is useful for review but not for clinic operations. Replace it progres
 
 ### Large UI files
 
-Dense files include Scheduling, Clinical Records, the medical questionnaire, encounter/vitals, Odontogram grid/editor and later-module pages.
+Dense files include Scheduling, Clinical Records, the medical questionnaire, encounter/vitals, Odontogram grid/editor, Treatments/Quotes pages/components and later-module pages.
 
 File size alone is not a defect, but it is a signal to:
 
@@ -149,7 +187,7 @@ File size alone is not a defect, but it is a signal to:
 
 ### Visual tokens
 
-`--bsm-*` tokens are the accepted visual base. Residual hardcoded colors remain in Odontogram and later modules.
+`--bsm-*` tokens are the accepted visual base. Residual hardcoded colors remain in Odontogram, Treatments/Quotes and later modules.
 
 When touching those screens:
 
@@ -160,10 +198,11 @@ When touching those screens:
 
 ## 5. Correct interpretation of current work
 
-- Releases 1 to 4 are closed and preserved.
-- Release 5 is next, but must begin with an audit of existing code.
-- Do not add new Treatments/Quotes functionality until the audit identifies a concrete accepted-scope gap.
-- Do not reopen Clinical Records or Odontogram through incidental linkage.
+- Releases 1 to 5 are closed and preserved.
+- Release 6 is next, but must begin with an audit of existing Billing code.
+- Do not add new Billing functionality until the audit identifies a concrete accepted-scope gap.
+- Do not reopen Clinical Records, Odontogram or Treatments/Quotes through incidental linkage.
+- Existing permission-gated navigation from Quote to Billing does not accept Billing behavior.
 - Visual-only work remains allowed on accepted modules when bounded and non-breaking.
 - Phase 2 is not active.
 - Phase 2.1 Patient Intake and Portal is planned, not implemented.
@@ -190,7 +229,7 @@ When touching those screens:
 ### Patients
 - preserve fast search and registration;
 - keep identity/status/alerts visible;
-- maintain permission-aware links to accepted clinical and Odontogram contexts.
+- maintain permission-aware links to accepted clinical, Odontogram and Treatments contexts.
 
 ### Scheduling
 - keep branch context visible;
@@ -212,20 +251,29 @@ When touching those screens:
 - do not introduce treatment linkage as a visual shortcut.
 
 ### Treatments/Quotes
-- audit functionality before visual expansion;
+- preserve explicit creation and snapshot semantics;
 - keep plan/quote state and next action visible;
-- do not imply accepted pricing, billing or execution behavior before formal Release 5 reconciliation.
+- keep accepted plans/quotes visibly read-only;
+- replace internal release/slice copy;
+- do not imply execution, payment or tax behavior;
+- keep Billing navigation visibly separate from accepted quote behavior.
 
-### Billing/Documents/Dashboard
+### Billing
+- audit functionality before visual expansion;
+- keep source quote, issue state, monetary totals and next action visible;
+- do not imply payments, balances, receipts, tax/CFDI or cancellation behavior before Release 6 reconciliation;
+- never visually suggest that Billing edits the accepted quote snapshot.
+
+### Documents/Dashboard
 - preserve existing code as unaccepted until module audit;
 - avoid presenting advanced deferred behavior;
 - use visual-only slices only when contracts and scope stay unchanged.
 
 ## 8. Recommended sequence
 
-1. Preserve Release 4 closure documents and canonical state.
-2. Audit existing Release 5 Treatments/Quotes code.
-3. Classify each planned 5.x slice as:
+1. Preserve Release 5 closure documents and canonical state.
+2. Audit existing Release 6 Billing code.
+3. Classify each Billing behavior as:
    - satisfied and acceptable;
    - partially satisfied with a bounded gap;
    - out of accepted scope.
@@ -262,6 +310,9 @@ Mitigation: never change tenant/auth paths as incidental UX work; run backend/in
 ### Closed-scope leakage
 Mitigation: defer cross-module linkage and advanced features to dedicated slices.
 
+### Commercial-state confusion
+Mitigation: preserve TreatmentPlan/TreatmentQuote snapshots and document any Billing/payment transition explicitly rather than inferring it in UI.
+
 ### Operational friction
 Mitigation: review common clinic workflows, not only visual appearance.
 
@@ -269,6 +320,6 @@ Mitigation: review common clinic workflows, not only visual appearance.
 
 **Context:** Repository code is ahead of formal state in several modules, and the client also requested progressive visual improvement.
 
-**Decision:** Accept Release 4 only after its specific audit; keep later modules unaccepted until equivalent evidence exists; continue visual work as bounded non-functional slices.
+**Decision:** Accept Release 4 and Release 5 only after their specific audits; keep later modules unaccepted until equivalent evidence exists; continue visual work as bounded non-functional slices.
 
-**Consequence:** Release 5 becomes the next audit target, while Odontogram visual debt remains valid follow-up without reopening the accepted functional boundary.
+**Consequence:** Release 6 becomes the next audit target, while Odontogram and Treatments/Quotes visual debt remains valid follow-up without reopening accepted functional boundaries.

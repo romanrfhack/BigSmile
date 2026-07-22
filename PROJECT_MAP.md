@@ -62,18 +62,24 @@ Canonical project status:
 * **Release 2 — Scheduling:** completed
 * **Release 3 — Clinical Records:** completed as the foundational clinical release through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, **Release 3.4 — Clinical Snapshot Change History**, **Release 3.5 — Medical Questionnaire Backend**, and **Release 3.6 — Clinical Encounter / Vitals Backend**
 * **Release 4 — Odontogram:** completed as the foundational odontogram release through accepted slices **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, and **Release 4.4 — Dental Findings Change History**
-* **Next planned functional phase:** **Release 5 — Treatments and Quotes**
+* **Release 5 — Treatments and Quotes:** completed as the foundational treatment-planning and quote release through accepted slices **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Foundation**
+* **Next planned functional phase:** **Release 6 — Billing**
 
 ### Release 4 closure evidence
 
 * `docs/release-4-odontogram-audit-and-closure.md`
 * ADR 007 — `docs/decisions/007-release-4-odontogram-closure.md`
 
+### Release 5 closure evidence
+
+* `docs/release-5-treatments-and-quotes-audit-and-closure.md`
+* ADR 008 — `docs/decisions/008-release-5-treatments-and-quotes-closure.md`
+
 ### UX / existing-code reconciliation
 
-Odontogram is now `Accepted / preserved` after a module-specific audit of its domain, application, API, persistence, permissions, frontend, migrations and tests.
+Odontogram and Treatments/Quotes are now `Accepted / preserved` after module-specific audits of domain, application, API, persistence, permissions, frontend, migrations and tests.
 
-The repository still contains functional code in later roadmap modules, including Treatments/Quotes, Billing, Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, migrations, or tests in those modules do not by themselves open, accept, or close Release 5, Release 6, Release 7, or Phase 2.
+The repository still contains functional code in later roadmap modules, including Billing, Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, migrations, or tests in those modules do not by themselves open, accept, or close Release 6, Release 7, or Phase 2.
 
 Until a module-specific audit and acceptance pass happens, those later modules are `implemented but not formally accepted/reconciled`.
 
@@ -81,14 +87,16 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 4 and audit the existing Treatments/Quotes implementation before accepting or adding functionality:
+Preserve Releases 1 through 5 and audit the existing Billing implementation before accepting or adding functionality:
 
 * preserve the accepted Release 3.1 to 3.6 clinical boundary
 * preserve the accepted Release 4.1 to 4.4 odontogram boundary
+* preserve the accepted Release 5.1 and 5.2 treatment-plan/quote boundary
 * keep advanced Odontogram scope deferred, including child/mixed dentition, full state history/versioning, restore, advanced charting, imaging and cross-module linkage
-* inspect Treatments/Quotes domain, application, API, persistence, permissions, migrations, frontend and tests against Release 5
-* do not treat existing TreatmentPlan/TreatmentQuote code as accepted solely because it exists
-* keep payments, balances, receipts, taxes, discounts, CFDI/PAC, multi-billing, OCR, document workflows, automated messaging/providers/jobs/queues/retries, online booking and advanced dashboards deferred until their owning phases are explicitly accepted
+* keep advanced Treatments/Quotes scope deferred, including catalog administration, multiple plans/quotes, versioning, taxes/discounts, execution/progress and Patient Portal access
+* inspect Billing domain, application, API, persistence, permissions, migrations, frontend and tests against Release 6
+* do not treat existing Billing code as accepted solely because it exists
+* keep payments, balances, receipts, taxes, discounts, CFDI/PAC, OCR, document workflows, automated messaging/providers/jobs/queues/retries, online booking and advanced dashboards deferred until their owning phases are explicitly accepted
 * keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 * preserve scope-aware authorization, explicit platform override behavior and centralized tenant safety
 * continue validation through CI, tests, logging, auditing and architectural guardrails
@@ -145,6 +153,7 @@ Expected layout:
 
 * `docs/release-3-clinical-records-form-mapping.md`
 * `docs/release-4-odontogram-audit-and-closure.md`
+* `docs/release-5-treatments-and-quotes-audit-and-closure.md`
 * `docs/patient-intake-and-portal-plan.md`
 
 ### Documentation ownership rules
@@ -501,15 +510,19 @@ Future treatment/diagnosis/document linkage, complete dental history/versioning,
 
 ### 7.7 Treatments
 
-Owns:
+Accepted Release 5 ownership:
 
-* treatment catalog
-* treatment plans
-* quotes
-* acceptance
-* future treatment progress
+* tenant-owned/patient-owned treatment-plan aggregate
+* bounded treatment-plan items
+* optional permanent-adult FDI tooth/surface references
+* treatment-plan `Draft / Proposed / Accepted` lifecycle
+* tenant-owned/patient-owned quote aggregate
+* snapshot-only quote lines
+* bounded line pricing and calculated totals
+* quote `Draft / Proposed / Accepted` lifecycle
+* patient-context Angular plan and quote workflows
 
-Existing code is the next audit target and is not formally accepted until Release 5 reconciliation.
+Treatment catalog administration, multiple/archived plans, quote versioning/negotiation, execution/progress, taxes/discounts, Billing linkage and Patient Portal access remain deferred.
 
 ### 7.8 Billing
 
@@ -522,7 +535,7 @@ Owns:
 * cash sessions
 * future invoicing integration
 
-Existing code remains unaccepted until Release 6 audit.
+Existing code is the next audit target and remains unaccepted until Release 6 reconciliation.
 
 ### 7.9 Documents
 
@@ -589,6 +602,8 @@ Examples:
 * clinical record -> tenant, patient-owned context
 * odontogram -> tenant, patient-owned context
 * treatment plan -> tenant, patient-owned context
+* treatment quote -> tenant, patient-owned and treatment-plan-owned context
+* billing record -> tenant, patient-owned and quote-linked where the accepted Billing model requires it
 
 ### Child-table rule
 
@@ -600,6 +615,7 @@ If a child table does not carry `TenantId` and is queried directly rather than t
 * users can jump tenant boundaries
 * platform operations can bypass tenant safety silently
 * a route/body `PatientId` or `TenantId` is an authority source
+* downstream Billing may silently mutate an accepted TreatmentQuote
 
 ---
 
@@ -654,7 +670,8 @@ Examples:
 * new patient registration use case -> `Application/Patients/...`
 * new appointment rules -> Scheduling domain/application
 * new Odontogram rule -> Odontogram domain/application, not Clinical or Treatments for convenience
-* new TreatmentPlan rule -> Treatments domain/application after Release 5 audit identifies an accepted gap
+* new TreatmentPlan/TreatmentQuote rule -> Treatments domain/application only when it fits the accepted Release 5 boundary or an explicit future slice
+* new Billing rule -> Billing domain/application after the Release 6 audit identifies an accepted gap
 * new payment persistence adapter -> Infrastructure
 * new endpoint -> Api
 
@@ -669,6 +686,7 @@ Examples:
 * patient facade -> `features/patients/facades`
 * odontogram API calls -> `features/odontogram/data-access`
 * treatment API calls -> `features/treatments/data-access`
+* billing API calls -> `features/billing/data-access`
 
 ### Documentation
 
@@ -689,7 +707,7 @@ These should be treated as stable unless formally changed:
 * multi-tenancy as foundational
 * backend layered structure
 * frontend feature structure
-* accepted Release 1 through Release 4 boundaries
+* accepted Release 1 through Release 5 boundaries
 * roadmap order
 * security-first posture
 
@@ -698,7 +716,7 @@ These should be treated as stable unless formally changed:
 These may still evolve through implementation and ADRs:
 
 * exact future permission catalog
-* Release 5+ formal scope acceptance
+* Release 6+ formal scope acceptance
 * patient-facing identity implementation
 * storage/notification provider choices
 * reporting depth
@@ -738,11 +756,11 @@ Odontogram — completed through slices 4.1 to 4.4.
 
 ### Release 5
 
-Treatments and Quotes — next; existing code must be audited before acceptance.
+Treatments and Quotes — completed through slices 5.1 and 5.2.
 
 ### Release 6
 
-Billing — planned after Release 5.
+Billing — next; existing code must be audited before acceptance.
 
 ### Release 7
 
@@ -772,7 +790,7 @@ Changes in these areas require extra care:
 * patient records
 * clinical records
 * odontogram aggregate/child access
-* treatments and quotes
+* treatment plans and quotes
 * payments/billing
 * document access
 * platform bypass logic
@@ -815,7 +833,7 @@ When working in this repo:
 
 #### Agent Workflow Guidance note
 
-For Release 5, audit existing Treatments/Quotes code before adding new behavior. Reuse valid implementation rather than rebuilding it. If a specific area is sparse, prefer local foundations and minimal vertical slices rather than broad expansion.
+For Release 6, audit existing Billing code before adding new behavior. Reuse valid implementation rather than rebuilding it. Preserve accepted TreatmentPlan/TreatmentQuote snapshots and keep payment, receipt, tax and cancellation behavior outside the accepted scope until the audit proves otherwise.
 
 ---
 
@@ -830,7 +848,8 @@ For Release 5, audit existing Treatments/Quotes code before adding new behavior.
 * documentation drifting far behind implementation
 * code presence treated as automatic release acceptance
 * advanced features added before the core workflow is stable
-* closed Clinical/Odontogram boundaries reopened incidentally for Treatments
+* closed Clinical/Odontogram/Treatments boundaries reopened incidentally for Billing
+* accepted quote snapshots silently rewritten by downstream modules
 
 ---
 
@@ -882,6 +901,17 @@ Look at:
 
 * Release 5 roadmap section
 * TreatmentPlans/TreatmentQuotes code and tests
+* `docs/release-5-treatments-and-quotes-audit-and-closure.md`
+* ADR 008
+* accepted deferred-scope list before proposing execution, Billing linkage or advanced pricing
+
+### If working on Billing
+
+Look at:
+
+* Release 6 roadmap section
+* Billing domain/application/API/persistence and tests
+* accepted TreatmentQuote contracts and immutability rules
 * tenant/permission behavior
 * existing code as audit evidence, not automatic acceptance
 

@@ -29,10 +29,10 @@ The bounded capability is placed in **Phase 2.1 — Patient Intake and Portal Fo
 Current accepted roadmap frontier:
 
 - Release 4 — Odontogram: completed.
-- Release 5 — Treatments and Quotes: next planned functional phase.
-- Release 6 — Billing: pending.
+- Release 5 — Treatments and Quotes: completed.
+- Release 6 — Billing: next planned functional phase.
 - Release 7 — Documents and Dashboard: pending.
-- Phase 2.1: planned after those remaining MVP releases are accepted and stable.
+- Phase 2.1: planned after the remaining MVP releases are accepted and stable.
 
 This placement is deliberate:
 
@@ -52,6 +52,7 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Internal staff questionnaire UI | Completed | Clinical Records frontend |
 | Familiar `Sí / No / Sin respuesta` redesign | Completed and merged | PR #1 |
 | Release 4 Odontogram foundation | Completed | ADR 007 / Release 4 audit |
+| Release 5 Treatments and Quotes foundation | Completed | ADR 008 / Release 5 audit |
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Planned; not implemented | Issue #4 |
@@ -364,7 +365,7 @@ It is complete only when:
 
 ## 12. Current next action
 
-The current repository is positioned at **Release 5 — Treatments and Quotes** as the next planned functional phase.
+The current repository is positioned at **Release 6 — Billing** as the next planned functional phase.
 
 For Patient Intake and Portal:
 
@@ -379,4 +380,4 @@ For Patient Intake and Portal:
 
 **Decision:** Plan the bounded self-service capability as Phase 2.1 after the initial MVP, using separate patient identity, staged clinic review and append-only audit.
 
-**Consequence:** The requirement stays visible, decomposed, testable and traceable while Release 5 remains the current product frontier.
+**Consequence:** The requirement stays visible, decomposed, testable and traceable while Release 6 remains the current product frontier and Release 7 remains pending before the Phase 2.1 gate.

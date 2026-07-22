@@ -137,13 +137,13 @@ Phase 2.1 requires:
 
 Phase 2.1 starts only after the initial MVP is formally accepted and stable unless a future explicit decision reprioritizes it.
 
-Current roadmap frontier after Release 4 closure:
+Current roadmap frontier after Release 5 closure:
 
 ```text
-Release 5 -> Release 6 -> Release 7 -> Phase 2.1
+Release 6 -> Release 7 -> Phase 2.1
 ```
 
-The current next planned functional phase is Release 5 — Treatments and Quotes.
+The current next planned functional phase is Release 6 — Billing.
 
 The broader patient portal remains Phase 4 work. Phase 2.1 is limited to activation, self-service intake/update, clinic review/application and audit.
 
@@ -209,7 +209,7 @@ The broader patient portal remains Phase 4 work. Phase 2.1 is limited to activat
 
 ### Implement before remaining MVP releases
 
-**Not selected.** The client confirmed the need but did not reprioritize it ahead of Release 5 to Release 7.
+**Not selected.** The client confirmed the need but did not reprioritize it ahead of the remaining operational MVP releases.
 
 ## Consequences
 

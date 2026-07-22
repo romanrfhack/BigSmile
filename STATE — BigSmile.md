@@ -26,6 +26,8 @@
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
+**Release 5 — Treatments and Quotes** — [Hecho] ADR 008 acepta el cierre fundacional de planes de tratamiento y cotizaciones mediante Release 5.1 y 5.2, preservando Billing, ejecución de tratamientos y pricing avanzado como scopes posteriores.
+
 ## 3. Fases completadas
 
 [Hecho] Foundation / Release 0 base — completada.
@@ -44,33 +46,37 @@
 
 [Hecho] Release 4 — Odontogram — completada como release fundacional mediante Release 4.1, 4.2, 4.3 y 4.4.
 
+[Hecho] Release 5 — Treatments and Quotes — completada como release fundacional mediante Release 5.1 y Release 5.2.
+
 [Hecho] El cierre formal de Release 2 cubre calendario diario/semanal branch-aware, creación/edición/reprogramación/cancelación, appointment notes, blocked slots y estados `Attended` / `NoShow`. `doctor-based views` permanece diferido porque requiere provider/doctor assignment.
 
 [Hecho] El cierre formal de Release 3 cubre creación explícita de expediente clínico, snapshot base, alergias actuales, notas append-only, diagnósticos básicos, timeline clínica acotada, snapshot history, cuestionario médico fijo, consulta/signos vitales, atribución por usuario y protección con `clinical.read` / `clinical.write`.
 
 [Hecho] El cierre formal de Release 4 se apoya en auditoría de dominio, aplicación, API, persistencia, permisos, frontend y pruebas para odontograma explícito, 32 dientes FDI permanentes adultos, estados de diente, superficies `O/M/D/B/L`, hallazgos básicos y change history append-only de hallazgos.
 
+[Hecho] El cierre formal de Release 5 se apoya en auditoría de dominio, aplicación, API, persistencia, permisos, frontend y pruebas para plan de tratamiento explícito, items básicos con referencia dental opcional, lifecycle `Draft / Proposed / Accepted`, cotización snapshot explícita, pricing por línea, total calculado y gates de precio positivo.
+
 ## 4. Fase actual
 
-[Hecho] La última fase funcional marcada como completada es Release 4 — Odontogram.
+[Hecho] La última fase funcional marcada como completada es Release 5 — Treatments and Quotes.
 
-[Hecho] Release 4 queda cerrada y preservada como release odontológica fundacional. Los slices Release 4.1 a Release 4.4 permanecen como evidencia aceptada de cierre.
+[Hecho] Release 5 queda cerrada y preservada como release fundacional de planeación y cotización. Release 5.1 y Release 5.2 permanecen como evidencia aceptada de cierre.
 
-[Hecho] La siguiente fase funcional prevista por el roadmap es Release 5 — Treatments and Quotes.
+[Hecho] La siguiente fase funcional prevista por el roadmap es Release 6 — Billing.
 
-[Hecho] Release 5 no queda abierta por el cierre de Release 4. Cualquier aceptación debe realizarse mediante auditoría/slice explícito, con alcance, pruebas y documentación propios.
+[Hecho] Release 6 no queda abierta por el cierre de Release 5. Cualquier aceptación debe realizarse mediante auditoría/slice explícito, con alcance, pruebas y documentación propios.
 
-[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe abrirse antes de completar y aceptar Release 5, Release 6 y Release 7, salvo repriorización futura explícita y documentada.
+[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe abrirse antes de completar y aceptar Release 6 y Release 7, salvo repriorización futura explícita y documentada.
 
 [Hecho] Phase 2.1 — Patient Intake and Portal Foundation permanece planificada dentro de Phase 2. Su arquitectura y plan general están aceptados, pero PI-1 a PI-4 no están implementados ni abiertos como fase activa.
 
 ## 4.1 Nota de reconciliación UX / código existente
 
-[Hecho] El repositorio contiene código funcional en módulos posteriores al estado formal, incluyendo Treatments/Quotes, Billing, Documents, Dashboard y recordatorios/manual reminders.
+[Hecho] El repositorio contiene código funcional en módulos posteriores al estado formal, incluyendo Billing, Documents, Dashboard y recordatorios/manual reminders.
 
 [Hecho] La presencia de código, rutas, permisos, migrations o tests no implica por sí misma aceptación o cierre. Hasta una auditoría específica, esos módulos se clasifican como `implemented but not formally accepted/reconciled`.
 
-[Hecho] Odontogram deja esa clasificación porque recibió auditoría específica y cierre formal mediante ADR 007 y `docs/release-4-odontogram-audit-and-closure.md`.
+[Hecho] Odontogram y Treatments/Quotes dejan esa clasificación porque recibieron auditorías específicas y cierres formales mediante ADR 007/008 y sus documentos de evidencia.
 
 [Hecho] Los slices visuales pueden mejorar presentación, organización, copy, color, microinteracciones, modales/drawers/tabs/sticky action bars y deuda UX sin cambiar backend, APIs, permissions, auth, tenant context, branch context, migrations ni alcance funcional.
 
@@ -80,7 +86,7 @@
 
 **Estado** — [Hecho] decisión aceptada y trabajo planificado; implementación no iniciada.
 
-**Ubicación** — [Hecho] primer capability acotado de Phase 2 — Modern Operations después del MVP inicial; no desplaza Release 5 como siguiente fase funcional actual.
+**Ubicación** — [Hecho] primer capability acotado de Phase 2 — Modern Operations después del MVP inicial; no desplaza Release 6 como siguiente fase funcional actual.
 
 **Tracking** — [Hecho]
 
@@ -139,8 +145,6 @@
 
 ## 6. Release 4 — Odontogram
 
-**Nombre exacto** — [Hecho] Release 4 — Odontogram.
-
 **Estado operativo actual** — [Hecho] completada como release odontológica fundacional.
 
 **Evidencia de cierre** — [Hecho]
@@ -154,68 +158,109 @@
 
 **Alcance cerrado** — [Hecho]
 
-- `Odontogram` tenant-owned y patient-owned.
-- Exactamente uno por `TenantId + PatientId`.
+- `Odontogram` tenant-owned y patient-owned, exactamente uno por `TenantId + PatientId`.
 - Creación explícita; `GET` devuelve `404` cuando falta; sin autocreación.
 - 32 dientes permanentes adultos mediante FDI `11-18`, `21-28`, `31-38`, `41-48`.
-- Estado de diente `Unknown` / `Healthy` / `Missing` / `Restored` / `Caries`.
+- Estados acotados de diente y superficie.
 - Cinco superficies `O/M/D/B/L` por diente.
-- Estado de superficie `Unknown` / `Healthy` / `Restored` / `Caries`.
 - Hallazgos básicos `Caries` / `Restoration` / `MissingStructure` / `Sealant`.
-- Add/remove explícito de hallazgos y rechazo de duplicados exactos.
-- Finding history append-only para add/remove, newest-first y separada de current findings.
-- Metadata UTC y actor en agregado, dientes, superficies, hallazgos e historial.
+- Add/remove explícito de hallazgos y finding history append-only, newest-first.
 - `odontogram.read` / `odontogram.write`; `TenantUser` sin permisos de Odontogram.
 - UI Angular en contexto de paciente, con HTTP en data-access y orquestación en facade.
-- Pruebas de contratos, validaciones, no autocreación, cross-tenant y frontend.
 
 **Tenant safety** — [Hecho] El agregado raíz tiene filtro tenant-aware y writes centralizados. Las tablas hijas se consumen mediante `Odontogram`; cualquier query directa futura debe usar join tenant-aware o modelar ownership explícito.
 
 **Fuera del cierre** — [Hecho]
 
-- Dentición infantil o mixta.
-- Bulk editing.
+- Dentición infantil o mixta y bulk editing.
 - Catálogo complejo/configurable de hallazgos.
 - Linkage con diagnósticos, tratamientos, documentos o imágenes.
-- Timeline dental completa.
-- Historial completo de estados de diente/superficie.
+- Timeline dental completa e historial completo de estados.
 - Restore/revert y versionado completo.
 - Ortodoncia, periodoncia, overlays de imagen o AI-assisted detection.
 - Acceso del patient portal al odontograma.
 
+## 7. Release 5 — Treatments and Quotes
+
+**Estado operativo actual** — [Hecho] completada como release fundacional de planeación y cotización.
+
+**Evidencia de cierre** — [Hecho]
+
+- Release 5.1 — Treatment Plan Foundation.
+- Release 5.2 — Quote Foundation.
+- Auditoría — `docs/release-5-treatments-and-quotes-audit-and-closure.md`.
+- Decisión — ADR 008 `docs/decisions/008-release-5-treatments-and-quotes-closure.md`.
+
+**Alcance cerrado del plan** — [Hecho]
+
+- `TreatmentPlan` tenant-owned y patient-owned.
+- Exactamente un plan por `TenantId + PatientId` en el slice actual; múltiples/archivados permanecen diferidos.
+- Creación explícita; `GET` devuelve `404` cuando falta; sin autocreación.
+- Items con title obligatorio, category opcional, quantity positiva, notes acotadas y referencia FDI/surface opcional.
+- Add/remove explícito de items.
+- Lifecycle `Draft -> Proposed -> Accepted`, con retorno `Proposed -> Draft`.
+- Plan aceptado read-only.
+- Metadata UTC/actor.
+
+**Alcance cerrado de la cotización** — [Hecho]
+
+- Creación explícita desde un plan existente con al menos un item.
+- Exactamente una cotización por TreatmentPlan; sin autocreación.
+- Items snapshot-only del plan al momento de creación.
+- Path público acotado a `MXN`.
+- `UnitPrice`, `LineTotal` y total calculado.
+- Precios positivos obligatorios para `Proposed` y revalidados para `Accepted`.
+- Cotización aceptada read-only.
+- Sin regenerate/versioning ni negociación multi-cotización.
+
+**Acceso** — [Hecho] `treatmentplan.read/write` y `treatmentquote.read/write` se conceden a `PlatformAdmin` y `TenantAdmin`; `TenantUser` no recibe esos permisos. El cierre no expande roles ni platform override.
+
+**Tenant safety** — [Hecho] Plan y cotización son aggregate roots tenant-owned con filtros globales y write enforcement. Items se consumen mediante los agregados; cualquier query directa futura requiere join tenant-aware u ownership explícito.
+
+**Fuera del cierre** — [Hecho]
+
+- Treatment catalog administration.
+- Múltiples planes, archive o versionado.
+- Quote regenerate/versioning, múltiples cotizaciones o negociación.
+- Taxes, discounts, Billing/payments o scheduling linkage.
+- Treatment execution/progress y sincronización automática de estados.
+- Insurance, financing y advanced approvals.
+- Automated treatment follow-up.
+- Patient Portal access a planes/cotizaciones.
+
 **Deuda UX no bloqueante** — [Hecho]
 
-- Reemplazar copy interno como `Release 4.4` por lenguaje clínico.
+- Reemplazar copy interno `Release 5.1/5.2`, `foundation` y `slice` por lenguaje operativo.
 - Migrar colores hardcodeados residuales a tokens `--bsm-*`.
-- Seguir dividiendo componentes grandes solo mediante slices visuales acotados.
+- Mantener la navegación existente a Billing como capability no aceptada de Release 6.
 
-## 7. Releases previos cerrados
+## 8. Releases previos cerrados
 
 **Release 1 — Patients** — [Hecho] registro, actualización, búsqueda tenant-scoped, perfil, responsible party, estatus, alertas clínicas básicas y permisos `patient.read` / `patient.write`.
 
 **Release 2 — Scheduling** — [Hecho] citas tenant-owned/branch-aware, calendario day/week, create/edit/reschedule/cancel, notes, blocked slots, `Attended` / `NoShow` y permisos `scheduling.read` / `scheduling.write`.
 
-## 8. Backlog inmediato
+## 9. Backlog inmediato
 
 Lista priorizada:
 
-1. Preservar Releases 1 a 4 ya cerrados sin debilitar la fundación tenant-aware.
+1. Preservar Releases 1 a 5 ya cerrados sin debilitar la fundación tenant-aware.
 
-2. Auditar el código existente de `Release 5 — Treatments and Quotes` contra el roadmap y abrir/aceptar únicamente slices con evidencia explícita.
+2. Auditar el código existente de `Release 6 — Billing` contra el roadmap y abrir/aceptar únicamente slices con evidencia explícita.
 
-3. No tratar Treatments/Quotes como aceptado solo porque existen código, endpoints, permissions, migrations o tests.
+3. No tratar Billing como aceptado solo porque existen código, endpoints, permissions, migrations o tests.
 
 4. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
 
 5. Mantener fuera de los agregados cerrados cualquier linkage cross-module no aceptado.
 
-6. Si se consultan directamente tablas hijas de Clinical u Odontogram, usar join tenant-aware o modelarlas como tenant-owned.
+6. Si se consultan directamente tablas hijas de Clinical, Odontogram, TreatmentPlan o TreatmentQuote, usar join tenant-aware o modelarlas como tenant-owned.
 
 7. Mantener Phase 2.1 visible mediante ADR 006, su plan e issues #2/#4/#5/#6/#7, sin iniciar PI-1 antes del gate de MVP o repriorización explícita.
 
-8. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS y product-roadmap cuando cambie el estado de Release 5 o Phase 2.1.
+8. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS y product-roadmap cuando cambie el estado de Release 6 o Phase 2.1.
 
-## 9. Riesgos y temas a vigilar
+## 10. Riesgos y temas a vigilar
 
 **Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal.
 
@@ -225,7 +270,9 @@ Lista priorizada:
 
 **Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
 
-**Clinical/Odontogram child tables** — [Hecho] Los accesos directos futuros necesitan tenant-aware joins u ownership explícito.
+**Child tables** — [Hecho] Los accesos directos futuros a hijos de Clinical, Odontogram, TreatmentPlan o TreatmentQuote necesitan tenant-aware joins u ownership explícito.
+
+**Pricing y estados comerciales** — [Hecho] Billing no debe alterar silenciosamente la inmutabilidad de cotizaciones aceptadas ni asumir sincronización automática no definida entre plan, cotización, cargos o pagos.
 
 **Privileged/platform paths** — [Hecho] Toda operación fuera de tenant scope normal debe ser explícita, mínima y auditable.
 
@@ -235,7 +282,7 @@ Lista priorizada:
 
 **Alineación documental futura** — [Hecho] Cada apertura/cierre debe actualizar código, pruebas y documentación en el mismo cambio.
 
-## 10. Criterios para no perder el rumbo
+## 11. Criterios para no perder el rumbo
 
 [Hecho] BigSmile es un producto SaaS multi-tenant; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewability rompe el rumbo.
 
@@ -245,12 +292,12 @@ Lista priorizada:
 
 [Hecho] Restricciones a preservar: modular monolith, ownership explícito, `TenantId` como boundary primario, `BranchId` subordinado, shared DB/schema, sin bypass oculto y sin autorización crítica solo en UI.
 
-## 11. Nota tipo ADR resumida
+## 12. Nota tipo ADR resumida
 
-**Estado:** Nota canónica actualizada con ADR 006 y ADR 007.
+**Estado:** Nota canónica actualizada con ADR 006, ADR 007 y ADR 008.
 
-**Contexto:** El código de Odontogram estaba implementado pero clasificado correctamente como no reconciliado hasta una auditoría específica.
+**Contexto:** El código de Treatments/Quotes estaba implementado pero correctamente clasificado como no reconciliado hasta una auditoría específica.
 
-**Decisión:** Cerrar Release 4 mediante slices 4.1 a 4.4, preservar su alcance fundacional y mover la frontera del roadmap a Release 5. Mantener Patient Intake and Portal como Phase 2.1 posterior al MVP mediante ADR 006.
+**Decisión:** Cerrar Release 5 mediante Release 5.1 y 5.2, preservar el alcance fundacional del plan y la cotización, y mover la frontera del roadmap a Release 6. Mantener Patient Intake and Portal como Phase 2.1 posterior al MVP.
 
-**Consecuencias:** Treatments and Quotes es el siguiente módulo a auditar; no se acepta automáticamente. El alcance avanzado de Odontogram permanece diferido y la deuda visual se atiende mediante slices UX separados.
+**Consecuencias:** Billing es el siguiente módulo a auditar; no se acepta automáticamente. Ejecución de tratamientos, pricing avanzado y enlaces comerciales posteriores permanecen diferidos, y la deuda visual se atiende mediante slices UX separados.

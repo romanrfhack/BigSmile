@@ -100,11 +100,16 @@ Canonical project status:
 - `Release 2 — Scheduling`: completed
 - `Release 3 — Clinical Records`: completed through accepted slices 3.1 to 3.6
 - `Release 4 — Odontogram`: completed through accepted slices 4.1 to 4.4
-- Next planned functional phase: `Release 5 — Treatments and Quotes`
+- `Release 5 — Treatments and Quotes`: completed through accepted slices 5.1 and 5.2
+- Next planned functional phase: `Release 6 — Billing`
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
 - ADR 007 — `docs/decisions/007-release-4-odontogram-closure.md`
+
+Release 5 closure evidence:
+- `docs/release-5-treatments-and-quotes-audit-and-closure.md`
+- ADR 008 — `docs/decisions/008-release-5-treatments-and-quotes-closure.md`
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -117,7 +122,19 @@ Treat Release 4 as the accepted foundational Odontogram boundary:
 
 Do not reopen advanced Odontogram scope incidentally. Child/mixed dentition, bulk editing, full dental timeline/history, restore/versioning, treatment/diagnosis/document linkage, advanced charting, imaging overlays and AI detection remain future bounded work.
 
-Repository code also exists in later modules, including Treatments/Quotes, Billing, Documents, Dashboard and reminders. Until each module receives a specific audit and acceptance pass, classify it as `implemented but not formally accepted/reconciled`.
+Treat Release 5 as the accepted foundational Treatments/Quotes boundary:
+- explicit treatment-plan creation and `404` when missing
+- one tenant-owned/patient-owned plan per patient/tenant in the current slice
+- basic items with optional adult FDI tooth/surface references
+- `Draft` / `Proposed` / `Accepted` lifecycle and accepted-plan immutability
+- explicit quote snapshot creation from a non-empty plan
+- one quote per plan, fixed `MXN` public path and calculated line/quote totals
+- positive pricing gates and accepted-quote immutability
+- tenant-aware access with explicit treatment-plan/quote permissions
+
+Do not reopen advanced Treatments/Quotes scope incidentally. Treatment catalog administration, multiple/archived plans, quote regeneration/versioning, multiple quotes, negotiation, taxes, discounts, Billing linkage, scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access remain future bounded work.
+
+Repository code also exists in later modules, including Billing, Documents, Dashboard and reminders. Until each module receives a specific audit and acceptance pass, classify it as `implemented but not formally accepted/reconciled`.
 
 Phase 2.1 — Patient Intake and Portal Foundation is planned after the initial MVP:
 - architecture accepted in ADR 006
@@ -126,14 +143,14 @@ Phase 2.1 — Patient Intake and Portal Foundation is planned after the initial 
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve Releases 1 to 4 and audit the existing `Release 5 — Treatments and Quotes` implementation against the bounded roadmap before accepting or changing it.
+Preserve Releases 1 to 5 and audit the existing `Release 6 — Billing` implementation against the bounded roadmap before accepting or changing it.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
-- preserve completed Patients, Scheduling, Clinical Records and Odontogram behavior
-- audit Treatments/Quotes domain, application, API, persistence, permissions, frontend, migrations and tests
-- distinguish code presence from accepted Release 5 scope
-- avoid reopening Odontogram or Clinical Records through incidental linkage
+- preserve completed Patients, Scheduling, Clinical Records, Odontogram and Treatments/Quotes behavior
+- audit Billing domain, application, API, persistence, permissions, frontend, migrations and tests
+- distinguish code presence from accepted Release 6 scope
+- avoid reopening TreatmentPlan, TreatmentQuote, Odontogram or Clinical Records through incidental linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep Phase 2.1 planned and inactive until the MVP gate or explicit reprioritization
 - keep privileged/platform paths explicit and auditable
