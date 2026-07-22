@@ -4,27 +4,29 @@
 Bigsmile
 
 # Purpose of this file
-This file gives agents and contributors a fast operational map of the repository.
+This file gives contributors and agents a fast operational map of the repository.
 
-It exists to answer:
+It answers:
 - what this repository is for
 - how it is organized
 - which module owns what
 - which dependencies are allowed
 - where new code should go
-- which areas are stable vs evolving
+- which areas are stable, accepted, planned or still unreconciled
 - how to avoid architectural drift
 
 This file complements:
-- README.md
-- docs/architecture.md
-- docs/tenant-model.md
-- docs/product-roadmap.md
-- docs/contributing.md
-- docs/decisions/*.md
-- AGENTS.md
+- `STATE — BigSmile.md`
+- `README.md`
+- `AGENTS.md`
+- `REVIEW_RULES.md`
+- `docs/architecture.md`
+- `docs/tenant-model.md`
+- `docs/product-roadmap.md`
+- `docs/contributing.md`
+- `docs/decisions/*.md`
 
-If there is any conflict, follow the architecture and ADR documents first, then use this file as an operational guide.
+If there is a conflict, start with `STATE — BigSmile.md`, then accepted ADRs and architecture/tenant documents.
 
 ---
 
@@ -32,24 +34,24 @@ If there is any conflict, follow the architecture and ADR documents first, then 
 
 Bigsmile is a SaaS platform for managing dental clinics and private practices.
 
-Core business definitions:
+Core definitions:
 - **Tenant** = clinic or private practice customer
 - **Branch** = internal location belonging to a tenant
 
-The system is designed as a **multi-tenant SaaS product from day one**.
+The system is a multi-tenant SaaS product from day one.
 
-Initial product direction:
-- start with a strong operational MVP
+Product direction:
+- build a strong operational MVP
 - protect tenant isolation
 - preserve maintainability
-- optimize for operational UX
-- grow through clearly defined business modules
+- optimize operational UX
+- grow through explicit bounded contexts and accepted release slices
 
 ---
 
 ## 2. Current Repository State
 
-This repository is beyond the early foundation / bootstrap stage.
+This repository is beyond early foundation/bootstrap.
 
 Canonical project status:
 
@@ -59,47 +61,61 @@ Canonical project status:
 * **Tenant-Aware Authorization Foundation:** completed
 * **Release 1 — Patients:** completed
 * **Release 2 — Scheduling:** completed
-* **Release 3 — Clinical Records:** completed as the foundational clinical release through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, **Release 3.4 — Clinical Snapshot Change History**, **Release 3.5 — Medical Questionnaire Backend**, and **Release 3.6 — Clinical Encounter / Vitals Backend**
-* **Next planned functional phase:** **Release 4 — Odontogram**
+* **Release 3 — Clinical Records:** completed through accepted slices 3.1 to 3.6
+* **Release 4 — Odontogram:** completed through accepted slices 4.1 to 4.4
+* **Next planned functional phase:** **Release 5 — Treatments and Quotes**
 
-### UX / existing-code reconciliation
+### Release 4 closure evidence
 
-After Release 3 closure, active work should be treated as a `client-driven UX redesign / visual organization pass`.
+- Audit: `docs/release-4-odontogram-audit-and-closure.md`
+- ADR 007: `docs/decisions/007-release-4-odontogram-closure.md`
 
-The repository contains functional code in later roadmap modules, including Odontogram, Treatments/Quotes, Billing, Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, migrations, or tests in those modules do not by themselves open, accept, or close Release 4, Release 5, Release 6, Release 7, or Phase 2.
+Accepted Odontogram foundation:
+- explicit creation and `404` when missing
+- exactly one odontogram per patient/tenant
+- 32 permanent adult FDI teeth
+- bounded tooth states
+- five `O/M/D/B/L` surfaces and bounded surface states
+- basic surface findings
+- append-only finding add/remove history
+- `odontogram.read` / `odontogram.write`
+- tenant-aware aggregate access and automated coverage
 
-Until a module-specific audit and acceptance pass happens, those later modules are `implemented but not formally accepted/reconciled`.
+### Existing-code reconciliation
 
-Visual slices may improve presentation, organization, copy, color, microinteractions, modals/drawers/tabs/sticky action bars, and UX debt without changing backend, APIs, permissions, auth, tenant context, branch context, migrations, or functional scope.
+Functional code also exists in later roadmap modules:
+- Treatments/Quotes
+- Billing
+- Documents
+- Dashboard
+- reminders/manual reminders
+
+Those modules remain `implemented but not formally accepted/reconciled` until a specific audit and acceptance pass occurs. Code, routes, permissions, migrations and tests are evidence to inspect, not automatic release closure.
+
+### Phase 2.1
+
+Patient Intake and Portal Foundation is planned after the initial MVP:
+- ADR 006 accepted
+- parent issue #2
+- PI-1 to PI-4 tracked in #4 to #7
+- no patient-facing implementation opened
+- no displacement of Release 5
 
 ### Current expected priority
 
-Preserve the completed Release 3 clinical foundation and prepare the next planned functional phase only when explicitly opened:
-
-* preserving the completed Release 3.1, Release 3.2, Release 3.3, Release 3.4, Release 3.5, and Release 3.6 clinical slices as the accepted closure evidence
-* preserving the accepted Release 3.5 scope: fixed medical questionnaire on an existing clinical record, `ClinicalMedicalAnswer` tenant-owned/patient-owned records, allowed `QuestionKey` catalog, `Unknown` / `Yes` / `No` answers, optional bounded details, `GET` / `PUT /api/patients/{patientId}/clinical-record/questionnaire`, bounded frontend UI integration inside the existing clinical record screen, no request-provided `TenantId`, no permissions beyond `clinical.read` / `clinical.write`, and no form builder or cross-module side effects
-* preserving the accepted Release 3.6 scope: tenant-owned/patient-owned `ClinicalEncounter` records under an existing clinical record, `GET` / `POST /api/patients/{patientId}/clinical-record/encounters`, bounded `Treatment` / `Urgency` / `Other` consultation type, optional bounded vitals, optional append-only linked `ClinicalNote`, server-derived `TenantId` and `CreatedByUserId`, no permissions beyond `clinical.read` / `clinical.write`, bounded frontend UI integration inside the existing clinical record screen through feature data-access/facade, no PUT/DELETE, no new timeline event model, and no cross-module side effects
-* deriving Patient age in the Clinical Records UI from `Patient.DateOfBirth` without persisting age or adding `Age` to backend/API contracts
-* keeping Release 4, Treatments, Billing, Documents/Dashboard, Phase 2 automations and all later roadmap scope unopened until a dedicated slice intentionally starts them
-* keeping payments, balances, receipts, taxes, discounts, cancellations, CFDI/PAC, multi-billing, OCR, document workflows, WhatsApp/email/SMS sending, external providers, automatic reminders, jobs, queues, webhooks, retry automation, online booking, patient portal and advanced dashboard behavior deferred beyond the current Release 3 closure
-* preserving the current clinical access restriction where `clinical.read` / `clinical.write` are granted to `PlatformAdmin` and `TenantAdmin`, and `TenantUser` does not receive clinical permissions in this phase
-* preserving the completed Scheduling release covering appointment foundation, blocked slots, appointment notes, explicit attended/no-show completion states, and branch-aware day/week calendar views
-* keeping doctor-based views explicitly deferred to a future bounded slice that introduces provider/doctor assignment
-* only on top of the completed tenant-aware authorization and tenant enforcement baseline
-* while preserving scope-aware authorization, explicit platform override behavior, and centralized tenant safety
-* with continued validation through CI, tests, logging, auditing, and architectural guardrails
-* building forward from the completed Patients and Scheduling releases without reopening closed release scope casually
-
-Do not treat the repository as feature-complete unless the actual codebase clearly proves it. No functional roadmap release should be treated as closed without explicit code and documentation evidence.
+1. Preserve Releases 1 to 4.
+2. Audit existing Treatments/Quotes code against the bounded Release 5 roadmap.
+3. Open or accept only slices supported by domain, API, persistence, authorization, frontend and tests.
+4. Keep advanced Odontogram and cross-module linkage deferred.
+5. Keep Phase 2.1 inactive until its roadmap gate or explicit reprioritization.
 
 ---
 
 ## 3. High-Level Repository Layout
 
-Expected layout:
-
 ```text
 /
+  STATE — BigSmile.md
   README.md
   AGENTS.md
   PROJECT_MAP.md
@@ -110,62 +126,54 @@ Expected layout:
   .github/
 ```
 
-### Root-level intent
-
-* `README.md` -> product and repo overview
-* `AGENTS.md` -> how the agent should behave
-* `PROJECT_MAP.md` -> operational repo map
-* `REVIEW_RULES.md` -> review and validation checklist
-* `docs/` -> architectural and product documentation
-* `backend/` -> .NET backend
-* `frontend/` -> Angular frontend
-* `.github/` -> CI/CD and repo automation
+Root intent:
+- `STATE — BigSmile.md` -> canonical current state
+- `README.md` -> product/repository overview
+- `AGENTS.md` -> operating rules for agents/contributors
+- `PROJECT_MAP.md` -> operational repository map
+- `REVIEW_RULES.md` -> review and validation standard
+- `docs/` -> architecture, product, release and operational decisions
+- `backend/` -> .NET backend
+- `frontend/` -> Angular frontend
+- `.github/` -> CI/CD and repository automation
 
 ---
 
 ## 4. Documentation Map
 
-### Core documents
+Core documents:
+- `docs/architecture.md`
+- `docs/tenant-model.md`
+- `docs/product-roadmap.md`
+- `docs/frontend-ux-guidelines.md`
+- `docs/contributing.md`
+- `docs/decisions/*.md`
 
-* `README.md`
-* `docs/architecture.md`
-* `docs/tenant-model.md`
-* `docs/product-roadmap.md`
-* `docs/frontend-ux-guidelines.md`
-* `docs/contributing.md`
-* `docs/decisions/*.md`
-
-### Documentation ownership rules
+Release-specific evidence:
+- Release 3 physical-form mapping: `docs/release-3-clinical-records-form-mapping.md`
+- Release 4 audit/closure: `docs/release-4-odontogram-audit-and-closure.md`
+- Patient Intake plan: `docs/patient-intake-and-portal-plan.md`
 
 Update documentation when changes affect:
+- project state
+- architecture or module boundaries
+- tenant model
+- auth/session or authorization
+- roadmap priority
+- public/clinical workflows
+- operational/deployment conventions
 
-* architecture
-* module boundaries
-* tenant model
-* auth/session model
-* authorization model
-* roadmap priorities
-* repository conventions
-* important workflows
-
-### ADR expectation
-
-Create or update an ADR when changing:
-
-* architecture style
-* tenant resolution model
-* database tenancy strategy
-* authentication/session strategy
-* authorization model
-* module ownership
-* major integration patterns
-* major frontend state strategy
+Create or update an ADR for:
+- architecture style
+- tenant resolution/database tenancy
+- auth/session/authorization
+- major module ownership
+- major integration/state patterns
+- formal release-scope reconciliation when ambiguity exists
 
 ---
 
 ## 5. Backend Map
-
-Expected backend layout:
 
 ```text
 backend/
@@ -181,189 +189,102 @@ backend/
     BigSmile.ArchitectureTests/
 ```
 
-### 5.1 BigSmile.Api
-
+### BigSmile.Api
 Owns:
-
-* HTTP endpoints
-* API contracts
-* middleware registration
-* authentication wiring
-* authorization entry points
-* API versioning
-* transport concerns
-* app composition
+- HTTP endpoints and transport contracts
+- middleware/composition
+- authentication and authorization entry points
+- API versioning/transport concerns
 
 Must not own:
+- core business rules
+- persistence logic
+- domain invariants
 
-* core business rules
-* persistence logic
-* domain invariants
-
-### 5.2 BigSmile.Application
-
+### BigSmile.Application
 Owns:
-
-* use cases
-* commands
-* queries
-* handlers
-* validators
-* application orchestration
-* transaction boundaries
-* authorization orchestration
-* tenant-aware execution flow
+- use cases
+- commands/queries
+- validation/orchestration
+- transaction boundaries
+- tenant-aware execution
 
 Must not become:
+- a generic-service dumping ground
+- infrastructure-specific logic
+- a substitute for domain invariants
 
-* a dumping ground for generic services
-* a place for infrastructure-specific hacks
-* a replacement for domain rules
-
-### 5.3 BigSmile.Domain
-
+### BigSmile.Domain
 Owns:
+- aggregates/entities/value objects
+- invariants and lifecycle rules
+- domain events where appropriate
 
-* aggregates
-* entities
-* value objects
-* domain invariants
-* domain events
-* business lifecycle rules
+Important aggregates currently include:
+- `Patient`
+- `Appointment`
+- `ClinicalRecord`
+- `Odontogram`
+- `TreatmentPlan`
+- `TreatmentQuote`
+- `BillingDocument`
 
-Expected important aggregates:
+Must not depend on Infrastructure, Api or UI concerns.
 
-* Patient
-* Appointment
-* ClinicalRecord
-* Odontogram
-* TreatmentPlan
-* Payment
-
-Must not depend on:
-
-* infrastructure
-* transport
-* UI concerns
-
-### 5.4 BigSmile.Infrastructure
-
+### BigSmile.Infrastructure
 Owns:
+- EF Core/DbContext
+- repositories
+- migrations/configuration
+- file storage/integrations
+- auditing persistence
+- tenant-resolution infrastructure
 
-* EF Core
-* DbContext
-* repositories
-* query/specification support
-* migrations
-* external integrations
-* file storage providers
-* notification providers
-* auditing persistence
-* tenant resolution infrastructure
+Must not hide tenant bypasses or absorb application logic.
 
-Must not:
+### BigSmile.SharedKernel
+Owns intentionally small cross-cutting primitives and contracts.
 
-* redefine business ownership rules
-* hide tenant bypass logic casually
-* absorb application logic
-
-### 5.5 BigSmile.SharedKernel
-
-Owns:
-
-* shared abstractions
-* base types
-* common primitives
-* cross-cutting contracts
-* common exceptions where appropriate
-
-Must stay small and intentional.
-
-### 5.6 Backend Test Projects
-
-* `BigSmile.UnitTests` -> isolated logic tests
-* `BigSmile.IntegrationTests` -> infra/API/DB validation
-* `BigSmile.ArchitectureTests` -> structural rule enforcement
+### Tests
+- UnitTests -> isolated domain/application/controller behavior
+- IntegrationTests -> persistence, tenant and service behavior
+- ArchitectureTests -> structural rules
 
 ---
 
 ## 6. Frontend Map
 
-Expected frontend layout:
-
 ```text
-frontend/
-  src/app/
-    core/
-    shell/
-    shared/
-    features/
-      auth/
-      platform/
-      dashboard/
-      patients/
-      scheduling/
-      clinical-records/
-      odontogram/
-      treatments/
-      billing/
-      documents/
-      reporting/
-      settings/
+frontend/src/app/
+  core/
+  shell/
+  shared/
+  features/
+    auth/
+    platform/
+    dashboard/
+    patients/
+    scheduling/
+    clinical-records/
+    odontogram/
+    treatments/
+    billing/
+    documents/
+    reporting/
+    settings/
 ```
 
-### 6.1 core/
+### core/
+Owns auth/session, HTTP infrastructure, interceptors, guards, tenant context, global error handling and localization state.
 
-Owns:
+### shell/
+Owns authenticated layout, navigation, header, branch selector and layout composition.
 
-* auth infrastructure
-* session handling
-* HTTP configuration
-* interceptors
-* guards
-* tenant context
-* global error handling
-* app-level services
-* frontend localization state and dictionaries
+### shared/
+Owns genuinely reusable UI, directives, pipes and generic form/helper primitives.
 
-Must not contain:
-
-* module-specific business UI
-* feature-specific orchestration
-
-### 6.2 shell/
-
-Owns:
-
-* authenticated app shell
-* main layout
-* navigation
-* header
-* side menu
-* global branch selector
-* layout composition
-
-### 6.3 shared/
-
-Owns:
-
-* reusable UI components
-* directives
-* pipes
-* app-wide translation/date pipes and language selector components
-* generic helpers
-* shared form utilities
-
-Must not become:
-
-* an unstructured dumping ground
-* a place for module-specific code pretending to be shared
-
-### 6.4 features/
-
-Owns business features by bounded context.
-
-Each feature should prefer this layout:
+### features/
+Each business feature should prefer:
 
 ```text
 features/<feature>/
@@ -374,515 +295,271 @@ features/<feature>/
   models/
 ```
 
-#### pages/
-
-Route-level containers.
-
-#### components/
-
-Reusable feature UI pieces.
-
-#### facades/
-
-Feature orchestration and UI-facing coordination.
-
-#### data-access/
-
-HTTP/API integration and feature-specific data retrieval.
-
-#### models/
-
-Feature-local types and view contracts.
-
-### Frontend anti-drift rules
-
-* no direct HTTP calls scattered across pages/components
-* no giant page components
-* no feature logic hidden in shared unless truly shared
-* no business-critical authorization only in UI
+Rules:
+- pages coordinate route-level work
+- facades orchestrate feature state
+- data-access owns HTTP
+- components prefer inputs/outputs
+- shared must not absorb feature business logic
+- critical authorization remains backend-enforced
 
 ---
 
 ## 7. Business Module Map
 
-Bigsmile grows through bounded contexts.
+### Platform
+Tenants, branches, plans, feature flags, branding, tenant settings and platform administration.
 
-### 7.1 Platform
+### Identity
+Staff users, roles, permissions, memberships, sessions and access policies.
 
-Owns:
+Future patient identity is a separate Phase 2.1 boundary under ADR 006; it must not reuse staff membership semantics.
 
-* tenants
-* branches
-* plans
-* feature flags
-* branding
-* tenant settings
-* platform administration
+### Patients
+Patient registration/profile, contact, responsible party, search and basic clinical alerts.
 
-### 7.2 Identity
+### Scheduling
+Appointments, calendar views, blocked slots, states, rescheduling and no-show tracking. Doctor-based views remain deferred until provider assignment exists.
 
-Owns:
+### Clinical
+Clinical records, snapshot, allergies, notes, diagnoses, bounded timeline/history, medical questionnaire and encounters/vitals.
 
-* users
-* roles
-* permissions
-* memberships
-* sessions
-* access policies
+### Odontogram
+Accepted foundation:
+- chart aggregate
+- tooth/surface state
+- basic surface findings
+- bounded finding history
 
-### 7.3 Patients
+Future advanced charting/linkage remains outside Release 4.
 
-Owns:
+### Treatments
+Treatment plans and quotes. Code exists but Release 5 still requires formal audit/acceptance.
 
-* patient registration
-* patient profile
-* responsible party
-* patient alerts
-* patient search
+### Billing
+Billing documents and future financial workflows. Formal Release 6 acceptance remains pending.
 
-### 7.4 Scheduling
+### Documents
+Patient attachments and authorized storage/access. Formal Release 7 acceptance remains pending.
 
-Owns:
+### Notifications
+Manual reminders/templates exist inside Scheduling, but automated providers/jobs/retry workflows are not accepted Phase 2 behavior.
 
-* appointments
-* calendar views
-* appointment states
-* blocked slots
-* rescheduling
-* no-shows
-
-### 7.5 Clinical
-
-Owns:
-
-* clinical record
-* clinical notes
-* medical background
-* allergies
-* diagnoses
-* fixed medical questionnaire backend and bounded frontend integration
-* clinical encounters and vitals backend and bounded frontend integration
-
-### 7.6 Odontogram
-
-Owns:
-
-* odontogram
-* tooth state
-* surface state
-* findings
-* dental visual status
-
-### 7.7 Treatments
-
-Owns:
-
-* treatment catalog
-* treatment plans
-* quotes
-* acceptance
-* treatment progress
-
-### 7.8 Billing
-
-Owns:
-
-* charges
-* payments
-* balances
-* receipts
-* cash sessions
-* future invoicing integration
-
-### 7.9 Documents
-
-Owns:
-
-* file attachments
-* patient documents
-* radiographies
-* consent-related file storage
-
-### 7.10 Notifications
-
-Owns:
-
-* reminders
-* confirmations
-* delivery status
-* templates
-* future WhatsApp/email flows
-
-### 7.11 Reporting
-
-Owns:
-
-* dashboards
-* operational metrics
-* treatment metrics
-* scheduling metrics
-* billing summaries
+### Reporting
+Dashboard/read models and future metrics. Advanced reporting remains deferred.
 
 ---
 
 ## 8. Tenant and Branch Map
 
-### Tenant rules
+Primary security boundary:
+- `TenantId`
 
-All tenant-owned records must belong to a tenant.
+Secondary operational scope:
+- `BranchId` only when business meaning requires it
 
-Security boundary:
-
-* primary boundary = `TenantId`
-
-### Branch rules
-
-Branch is operational scope only.
-
-Operational boundary:
-
-* secondary boundary = `BranchId` where the business requires it
-
-### Practical rule
-
-If a record has `BranchId`, it must still be tenant-bound.
+Rules:
+- every tenant-owned root is tenant-bound
+- Branch never replaces Tenant
+- records with both values must remain tenant-consistent
+- client input does not choose arbitrary tenant scope
+- platform bypass is explicit and auditable
+- direct queries against non-tenant-owned child tables require a tenant-aware join
 
 Examples:
-
-* appointment -> tenant + branch
-* payment -> tenant + sometimes branch
-* patient -> tenant, not necessarily branch-owned
-* clinical record -> tenant, patient-owned context
-* treatment plan -> tenant, patient-owned context
-
-### Never assume
-
-* branch alone is enough for security
-* users can jump tenant boundaries
-* platform operations can bypass tenant safety silently
+- Appointment -> tenant + branch
+- Patient -> tenant, branch-neutral ownership
+- ClinicalRecord -> tenant + patient
+- Odontogram -> tenant + patient
+- TreatmentPlan -> tenant + patient
 
 ---
 
 ## 9. Dependency Direction Rules
 
-### Backend dependency direction
-
-Allowed direction:
+Backend:
 
 ```text
 Api -> Application
 Application -> Domain
-Infrastructure -> Domain / Application abstractions
-SharedKernel -> shared by others where justified
+Infrastructure -> Domain + Application abstractions
+SharedKernel -> only intentional shared primitives
 ```
 
 Avoid:
+- Domain -> Infrastructure/Api
+- Application -> Api
+- feature internals coupled without explicit design
 
-* Domain -> Infrastructure
-* Domain -> Api
-* Application -> Api
-* feature logic depending on unrelated module internals without explicit design
-
-### Frontend dependency direction
-
-Preferred direction:
+Frontend:
 
 ```text
 pages -> facades -> data-access
-components -> inputs/outputs only where possible
-core/shared -> reusable foundations
-features -> isolated by module
+components -> inputs/outputs
+core/shared -> foundations
+features -> bounded ownership
 ```
 
-Avoid:
-
-* pages directly calling HTTP everywhere
-* shared depending on specific features
-* shell owning feature business logic
-* one feature casually reaching deep into another without explicit boundary
+Avoid direct HTTP in pages/components and feature-specific business logic in shared/shell.
 
 ---
 
 ## 10. Where New Code Should Go
 
-### Backend
-
-Add new behavior according to module ownership.
-
 Examples:
+- Patient use case -> Application/Patients and owning domain entity
+- Appointment rule -> Scheduling domain/application
+- Odontogram rule -> Odontogram domain/application; do not place in Clinical or Treatments for convenience
+- Treatment-plan audit/opening work -> Treatments feature and Release 5 documents
+- Persistence adapter -> Infrastructure
+- Endpoint -> Api
+- Patient search UI -> features/patients
+- Treatment API calls -> features/treatments/data-access
 
-* new patient registration use case -> `Application/Patients/...`
-* new appointment rules -> `Domain/Scheduling` or equivalent module structure
-* new payment persistence adapter -> `Infrastructure/...`
-* new endpoint -> `Api/...`
-
-### Frontend
-
-Place code in the owning feature.
-
-Examples:
-
-* patient search screen -> `features/patients/pages`
-* appointment calendar widget -> `features/scheduling/components`
-* patient facade -> `features/patients/facades`
-* treatment API calls -> `features/treatments/data-access`
-
-### Documentation
-
-If a structural rule changes, also update docs and possibly ADRs.
+Structural changes also require documentation/ADR updates.
 
 ---
 
-## 11. What Is Stable vs Evolving
+## 11. Stable vs Evolving
 
-### Stable by intention
+Stable by accepted decision:
+- product vision
+- Tenant/Branch definitions
+- modular monolith
+- shared DB/schema with TenantId discriminator
+- layered backend and feature-based frontend
+- Releases 1 to 4 accepted boundaries
+- no hidden platform bypass
+- roadmap discipline
 
-These should be treated as stable unless formally changed:
-
-* product vision
-* tenant = clinic/practice
-* branch = tenant location
-* modular monolith direction
-* multi-tenancy as foundational
-* backend layered structure
-* frontend feature structure
-* roadmap order
-* security-first posture
-
-### Evolving areas
-
-These may still evolve through implementation and ADRs:
-
-* exact auth/session implementation
-* exact permission catalog
-* exact frontend state pattern details
-* storage provider choice
-* notification provider choice
-* reporting depth
-* invoicing integration details
-* onboarding automation details
-
-### Rule
-
-Do not casually change stable areas without explicit documentation and review.
+Evolving through bounded slices:
+- exact future role/permission catalog
+- Release 5+ formal acceptance
+- patient-facing identity implementation
+- provider/doctor assignment
+- advanced integrations and reporting
+- visual debt and component decomposition
 
 ---
 
 ## 12. Release-Oriented Map
 
-The project should grow in this order unless docs explicitly change:
-
-### Release 0
-
-Foundation:
-
-* solution structure
-* tenant model implementation base
-* auth/authz
-* auditing
-* error handling
-* logging
-* architecture tests
-* CI baseline
-
-### Release 1
-
-Patients
-
-### Release 2
-
-Scheduling
-
-### Release 3
-
-Clinical Records
-
-### Release 4
-
-Odontogram
-
-### Release 5
-
-Treatments and Quotes
-
-### Release 6
-
-Billing
-
-### Release 7
-
-Documents and Dashboard
-
-### Later phases
-
-* reminders
-* online booking
-* electronic invoicing
-* advanced SaaS platform features
-* patient portal
-* advanced analytics
-* automations
+- Release 0 — Foundation: completed
+- Release 1 — Patients: completed
+- Release 2 — Scheduling: completed
+- Release 3 — Clinical Records: completed
+- Release 4 — Odontogram: completed
+- Release 5 — Treatments and Quotes: next; audit required
+- Release 6 — Billing: planned after Release 5
+- Release 7 — Documents and Dashboard: planned after Release 6
+- Phase 2.1 — Patient Intake and Portal Foundation: planned after initial MVP
+- Phase 3 — SaaS Growth
+- Phase 4 — Advanced Product Capabilities/full portal
 
 ---
 
 ## 13. Review Hotspots
 
-Changes in these areas require extra care:
+High-risk backend:
+- tenant resolution/filters
+- authorization and platform bypass
+- patient/clinical/odontogram records
+- treatment/billing/document access
+- public patient-facing endpoints
 
-### High-risk backend areas
+High-risk frontend:
+- auth/session/guards
+- tenant/branch context
+- patient/clinical/odontogram screens
+- treatment/billing workflows
+- cross-feature dependencies
+- large page/component growth
 
-* tenant resolution
-* query filtering
-* authorization
-* patient records
-* clinical records
-* payments
-* document access
-* platform bypass logic
-
-### High-risk frontend areas
-
-* auth/session handling
-* tenant/branch context switching
-* route guards
-* patient data screens
-* payment flows
-* clinical note entry
-* large page growth
-* cross-feature dependencies
-
-### High-risk documentation areas
-
-* architecture changes
-* roadmap changes
-* tenant model changes
-* permission model changes
+High-risk documentation:
+- release state
+- roadmap
+- tenant/auth/permission model
+- module ownership
 
 ---
 
 ## 14. Agent Workflow Guidance
 
-When working in this repo:
+1. Read canonical docs.
+2. Inspect actual code, migrations and tests.
+3. Identify ownership and drift.
+4. Choose the smallest safe step.
+5. Reuse existing valid behavior instead of rebuilding it.
+6. Validate tenant/security explicitly.
+7. Run CI-relevant validation.
+8. Reconcile docs when state changes.
+9. Report completed and pending scope.
 
-1. Read the core docs first
-2. Inspect current code and file structure
-3. Determine the owning module
-4. Choose the smallest correct implementation step
-5. Keep changes auditable and reversible
-6. Validate as much as possible
-7. Update docs if structure or rules changed
-8. Leave a clear summary for human/CODEX review
-
-#### Agent Workflow Guidance note
-
-If a specific area is still sparse or scaffold-only, prefer:
-
-* finishing its local foundation
-* conventions
-* architecture guardrails
-* minimal vertical slice examples
-
-Do not expand many business features at once from a still-sparse area.
+For Release 5, start with an audit of existing code. Do not add functionality until the audit identifies a concrete gap within the bounded roadmap.
 
 ---
 
 ## 15. What Must Never Happen
 
-* platform and tenant concerns mixed carelessly
-* tenant safety implemented only by manual discipline
-* giant mixed-purpose diffs
-* business rules hidden in controllers or UI
-* secrets committed to repo
-* feature code placed in unrelated modules
-* documentation drifting far behind implementation
-* advanced features added before the core workflow is stable
+- platform and tenant concerns mixed casually
+- tenant safety based only on manual discipline
+- giant mixed-purpose diffs
+- business rules hidden in controllers/UI
+- secrets committed
+- feature code placed in unrelated modules
+- release acceptance inferred only from code presence
+- advanced features added before the core boundary is accepted
+- closed Release 4 scope reopened incidentally from Treatments
 
 ---
 
-## 16. Quick Navigation Cheatsheet
+## 16. Quick Navigation
 
-### If working on patient registration
+Patient registration:
+- Patients module
+- tenant model
+- Release 1 docs
 
-Look at:
+Scheduling:
+- Scheduling module
+- branch-aware rules
+- ADR 003
 
-* docs/product-roadmap.md
-* docs/architecture.md
-* docs/tenant-model.md
-* backend Application/Patients
-* backend Domain/Patients
-* frontend features/patients
+Clinical:
+- Clinical Records feature
+- Release 3 mapping/closure evidence
 
-### If working on appointment scheduling
+Odontogram:
+- `features/odontogram`
+- backend Odontograms application/domain
+- Release 4 audit
+- ADR 007
 
-Look at:
+Treatments/Quotes:
+- current Treatments code
+- Release 5 roadmap
+- audit before acceptance
 
-* Scheduling module
-* branch-aware rules
-* tenant/branch context
-* frontend scheduling feature
-* reporting implications later
-
-### If working on auth or permissions
-
-Look at:
-
-* Identity module
-* tenant model
-* ADRs
-* security rules
-* contribution rules
-* tenant/platform scope separation
-
-### If working on platform admin functions
-
-Look at:
-
-* Platform module
-* platform bypass rules
-* audit requirements
-* tenant safety rules
-* roadmap fit
+Patient Intake/Portal:
+- ADR 006
+- general plan
+- issues #2 and #4 to #7
+- no implementation yet
 
 ---
 
 ## 17. Final Rule
 
-Use this map to stay oriented, but do not use it as an excuse to ignore the architecture documents.
-
 When in doubt, follow this order:
 
 1. security
 2. tenant isolation
-3. module ownership
-4. maintainability
-5. operational UX
-6. speed of delivery
+3. accepted release boundary
+4. module ownership
+5. maintainability
+6. operational UX
+7. speed of delivery
 
-### Guiding question
-
-For any new file, feature, or change, ask:
+Guiding question:
 
 **Does this belong in the right place and preserve Bigsmile as a secure, maintainable, multi-tenant SaaS product?**
-
----
-
-## Manual VPS Deployment Note
-
-BigSmile has a first accepted manual VPS deployment foundation.
-
-Operational deployment baseline:
-
-- domain: https://bigsmile.com.mx
-- API local binding: 127.0.0.1:5010
-- systemd service: bigsmile-api.service
-- release root: /var/www/bigsmile
-- active symlink: /var/www/bigsmile/current
-- private environment file: /etc/bigsmile/bigsmile-api.env
-- private appsettings file: /var/www/bigsmile/shared/appsettings.Production.json
-- SQL Server target: 127.0.0.1,14330
-- database: BigSmile
-- pilot protection: Nginx Basic Auth
-
-This is documented in docs/decisions/004-manual-vps-deployment-foundation.md.
-
-GitHub Actions deployment should automate the same release/rollback flow and must not introduce a different deployment model without a new decision.
