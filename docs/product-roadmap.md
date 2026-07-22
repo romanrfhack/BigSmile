@@ -75,8 +75,11 @@ The initial roadmap is divided into the following phases:
 - **Release 6 — Billing**
 - **Release 7 — Documents and Dashboard**
 - **Phase 2 Expansion — Modern Operations**
+  - **Phase 2.1 — Patient Intake and Portal Foundation**
 - **Phase 3 Expansion — SaaS Growth**
 - **Phase 4 Expansion — Advanced Product Capabilities**
+
+Phase 2.1 is a bounded patient-facing intake and self-service foundation. It does not replace the full patient portal planned for Phase 4.
 
 ---
 
@@ -306,6 +309,7 @@ A user operating under the current clinical permissions can consult and update t
 - AI note generation
 - electronic consent flows
 - advanced forms intake
+- patient self-service and portal workflows
 
 ---
 
@@ -565,15 +569,74 @@ Once the MVP is stable, the next phase focuses on modernizing clinic workflows.
 ## Current status
 - Phase 2 is a later roadmap phase after the MVP is stable
 - Phase 2 is not the next phase after Release 3 closure
-- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain deferred
+- Phase 2.1 — Patient Intake and Portal Foundation is planned and architecturally accepted through ADR 004, but implementation is not opened
+- WhatsApp, email, SMS sending, automatic reminders, provider integrations, jobs, queues, webhooks, online booking, full patient portal, external delivery templates, campaigns, retry automation, real reminder scheduler, delivery status, and advanced dashboard behavior remain deferred
 
-## Candidate features
+### Phase 2.1 — Patient Intake and Portal Foundation
+
+#### Goal
+
+Allow new and existing patients to provide or complement their information through a least-privilege, self-only workflow while keeping canonical patient and clinical data under clinic review.
+
+#### Roadmap position
+
+Phase 2.1 is the first bounded capability planned inside Phase 2 after the initial MVP is formally accepted and stable. It does not displace Release 4 through Release 7 unless a future explicit roadmap decision reprioritizes it.
+
+#### Accepted architecture
+
+- Patient identity is separate from staff `UserTenantMembership`, roles, and permissions.
+- Existing patients activate access through staff-issued, single-use, expirable invitations.
+- New patients use a short-lived clinic-generated QR/link that creates a tenant-owned intake draft, not a canonical Patient or ClinicalRecord directly.
+- Patient-originated data follows `Draft -> Submitted -> Reviewed -> Applied/Rejected`.
+- Clinic review is required before canonical application.
+- Effective saves and lifecycle transitions create append-only revisions/audit entries.
+- Patient-facing access is self-scoped and has no platform override.
+
+#### Implementation slices
+
+1. **PI-1 — Access and Invitation Foundation** — issue #4.
+2. **PI-2 — Intake Draft and Self-Service Capture** — issue #5.
+3. **PI-3 — Submit, Clinic Review, and Canonical Apply** — issue #6.
+4. **PI-4 — Audit Visibility and Security Hardening** — issue #7.
+
+The slices are sequential. Later slices may not bypass identity, tenant, provenance, review, or audit gates established by earlier slices.
+
+#### Included scope
+
+- `PatientPortalAccount` and `PatientPortalInvitation` foundations.
+- Dedicated patient auth/session boundary and self-only policies.
+- Waiting-room registration/intake link.
+- Existing-patient activation.
+- Demographic/contact proposals and the existing fixed medical-question catalog.
+- Intake draft, immutable submission, staff review, duplicate/link/create decision, and explicit apply.
+- Append-only intake revisions and audit visibility.
+- Rate limiting, anti-enumeration, replay protection, lockout/recovery, revocation, and e2e validation required by the bounded capability.
+
+#### Out of scope
+
+- Patient access to diagnoses, professional notes, encounters, vital signs, odontogram, treatments, quotes, billing, payments, or documents.
+- Online booking.
+- Automated email, SMS, or WhatsApp delivery.
+- Family/dependent accounts or multiple Patient records per account.
+- Configurable form builder.
+- Automatic allergy/alert synchronization or automatic clinical interpretation.
+- Advanced electronic consent/signature.
+
+#### Completion rule
+
+Phase 2.1 is complete only when PI-1 through PI-4 have accepted code, tests, documentation, operational runbook, tenant/IDOR/replay/concurrency coverage, clinic review before canonical application, and full provenance/audit evidence.
+
+#### Tracking
+
+- ADR 004 — `docs/decisions/004-patient-intake-and-portal-foundation.md`.
+- General plan — `docs/patient-intake-and-portal-plan.md`.
+- Parent issue — #2.
+
+## Other candidate features
 - WhatsApp reminders
 - email reminders
-- expanded appointment confirmation workflows beyond Phase 2.1
+- expanded appointment confirmation workflows beyond the current bounded foundations
 - online booking
-- intake forms
-- digital patient updates before appointments
 - branch-level refinements
 - improved dashboard metrics
 - better treatment follow-up visibility
@@ -614,7 +677,8 @@ A product can work for one clinic and still fail as a SaaS if platform-level cap
 This phase focuses on premium and advanced capabilities.
 
 ## Candidate features
-- patient portal
+- full patient portal beyond the bounded Phase 2.1 intake/update capability
+- patient access to selected approved records or documents through future explicit slices
 - advanced analytics
 - conversion metrics
 - treatment recall workflows
@@ -628,7 +692,7 @@ This phase focuses on premium and advanced capabilities.
 Increase product value, differentiation, and retention.
 
 ## Important note
-These features should be added only after the product foundation and core workflows are operationally strong.
+These features should be added only after the product foundation and core workflows are operationally strong. Phase 2.1 does not imply that the broader Phase 4 patient portal is implemented or accepted.
 
 ---
 
@@ -647,6 +711,9 @@ The roadmap is intentionally sequential because some releases depend on earlier 
 - Billing depends on Treatments or at least patient financial records
 - Documents depend on Patients and security rules
 - Dashboard depends on data produced by all prior releases
+- Phase 2.1 depends on stable Patients and Clinical Records behavior plus a formally accepted operational MVP
+- Phase 2.1 clinic review/apply depends on canonical operational modules remaining authoritative
+- Full patient portal capabilities remain separate future dependencies in Phase 4
 
 This dependency chain should guide implementation order.
 
@@ -680,12 +747,15 @@ The roadmap should validate these questions as early as possible:
 - Is the odontogram easy enough to use?
 - Does treatment planning support real conversations with patients?
 - Is billing simple enough for front desk staff?
+- When Phase 2.1 opens, can patients complete intake without confusing declarations with clinic-reviewed canonical data?
+- Can clinic staff review and apply patient submissions without excessive operational friction?
 
 ### SaaS validation
 - Is tenant isolation working correctly?
 - Is branch segmentation sufficient for real operations?
 - Is the permission model practical?
 - Is the product structure sustainable for future modules?
+- Can the future patient-facing identity remain strictly self-scoped and isolated from staff authorization?
 
 ---
 
@@ -698,6 +768,10 @@ The roadmap must actively control these risks:
 - mixing platform features with tenant operational features
 - weakening tenant isolation for convenience
 - building UX-heavy features without validating operational workflows first
+- reusing staff identity or tenant-wide permissions for patients
+- exposing patient enumeration, IDOR, token replay, or cross-tenant access through future public endpoints
+- allowing patient-originated data to overwrite canonical clinical data without clinic review, provenance, and conflict handling
+- calling a login/form implementation a complete patient portal without audit, recovery, revocation, and operational readiness
 
 ---
 
@@ -712,6 +786,14 @@ The roadmap must actively control these risks:
 - a clinic can operate core workflows inside Bigsmile
 - the core product feels usable and coherent
 - the system is ready for real pilot validation
+
+### Phase 2.1 success
+- new and existing patients can use the bounded intake/update workflows
+- patients receive no staff or tenant-wide permissions
+- clinic review precedes canonical application
+- duplicate, conflict, expiry, revocation, and recovery paths are operationally usable
+- every effective patient-originated change is traceable
+- public patient-facing security controls and automated coverage are complete
 
 ### SaaS success
 - multiple tenants can operate safely
