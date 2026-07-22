@@ -137,7 +137,7 @@ Treat Release 5 as the accepted foundational Treatments/Quotes boundary:
 - positive pricing gates and accepted-quote immutability
 - tenant-aware access with explicit treatment-plan/quote permissions
 
-Do not reopen advanced Treatments/Quotes scope incidentally. Treatment catalog administration, multiple/archived plans, quote regeneration/versioning, multiple quotes, negotiation, taxes, discounts, Billing linkage, scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access remain future bounded work.
+Do not reopen advanced Treatments/Quotes scope incidentally. Treatment catalog administration, multiple/archived plans, quote regeneration/versioning, multiple quotes, negotiation, taxes, discounts, scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access remain future bounded work. Billing is accepted separately through Release 6.1; payments remain deferred.
 
 Treat Release 6 as the accepted foundational Billing boundary:
 - explicit Billing creation from an existing accepted quote

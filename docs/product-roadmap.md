@@ -326,7 +326,7 @@ Connect patient/clinical/odontogram context to an operational treatment proposal
 - quote regenerate/versioning
 - multiple quotes/negotiation
 - taxes and discounts
-- Billing/payment linkage
+- Billing behavior is outside Release 5 and accepted separately through Release 6.1; payment linkage remains deferred
 - scheduling linkage
 - treatment execution/progress
 - automatic plan/quote/Billing status synchronization

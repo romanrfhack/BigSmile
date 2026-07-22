@@ -202,7 +202,7 @@ These require dedicated future decisions and slices.
 - accepted quote and Billing remain separate snapshots;
 - tenant ownership and least-privilege permissions remain explicit;
 - the clinic gains a bounded issue step without pretending payments exist;
-- Release 7 can become the next audit target after formal acceptance;
+- Release 7 becomes the next audit target after formal acceptance;
 - future Payment work can receive its own aggregate and audit rules.
 
 ### Trade-offs

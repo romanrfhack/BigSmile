@@ -16,7 +16,7 @@ The audit distinguishes:
 2. satisfaction of a bounded contract;
 3. formal release acceptance and documentation alignment.
 
-The repository already contains domain, application, API, persistence, authorization, Angular and automated-test coverage for a `BillingDocument` capability. Until this audit and the pending canonical reconciliation are merged, Billing remains `implemented but not formally accepted/reconciled`.
+The repository already contained domain, application, API, persistence, authorization, Angular and automated-test coverage for a `BillingDocument` capability. Before this audit and closure reconciliation, Billing remained correctly classified as `implemented but not formally accepted/reconciled`.
 
 ## 2. Reconciliation result
 

@@ -529,7 +529,7 @@ Accepted Release 5 ownership:
 * quote `Draft / Proposed / Accepted` lifecycle
 * patient-context Angular plan and quote workflows
 
-Treatment catalog administration, multiple/archived plans, quote versioning/negotiation, execution/progress, taxes/discounts, Billing linkage and Patient Portal access remain deferred.
+Treatment catalog administration, multiple/archived plans, quote versioning/negotiation, execution/progress, taxes/discounts and Patient Portal access remain deferred. Billing is accepted separately through Release 6.1; payments remain deferred.
 
 ### 7.8 Billing
 

@@ -316,7 +316,7 @@ The accepted Quote boundary includes explicit snapshot creation from an existing
 
 Treatment and quote reads/writes use `treatmentplan.*` and `treatmentquote.*`. `TenantUser` does not receive those permissions. Treatment/quote items remain child records accessed through tenant-owned aggregate roots.
 
-Advanced commercial and execution capabilities remain deferred: treatment catalog administration, multiple or archived plans, regenerate/versioning, multiple quotes or negotiation, taxes, discounts, Billing/Scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access.
+Advanced commercial and execution capabilities remain deferred: treatment catalog administration, multiple or archived plans, regenerate/versioning, multiple quotes or negotiation, taxes, discounts, Scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access. Billing is accepted separately through Release 6.1; payments remain deferred.
 
 Release 5 closure evidence:
 
@@ -406,7 +406,7 @@ The repository remains established but not functionally complete. Documents/Dash
 * Explicit quote snapshot creation from a non-empty plan
 * One quote per plan, fixed `MXN`, line pricing and calculated totals
 * Positive pricing gates and accepted-quote immutability
-* Treatment execution, taxes/discounts, Billing/Scheduling linkage, versioning and negotiation remain deferred
+* Treatment execution, taxes/discounts, Scheduling linkage, versioning and negotiation remain deferred; Billing is accepted separately through Release 6.1
 
 ### Release 6 — Billing
 

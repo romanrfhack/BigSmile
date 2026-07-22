@@ -228,7 +228,7 @@
 - Treatment catalog administration.
 - Múltiples planes, archive o versionado.
 - Quote regenerate/versioning, múltiples cotizaciones o negociación.
-- Taxes, discounts, Billing/payments o scheduling linkage.
+- Billing queda fuera de Release 5 y se acepta por separado en Release 6.1; payments y scheduling linkage permanecen diferidos.
 - Treatment execution/progress y sincronización automática de estados.
 - Insurance, financing y advanced approvals.
 - Automated treatment follow-up.
@@ -238,7 +238,7 @@
 
 - Reemplazar copy interno `Release 5.1/5.2`, `foundation` y `slice` por lenguaje operativo.
 - Migrar colores hardcodeados residuales a tokens `--bsm-*`.
-- Mantener la navegación existente a Billing como capability no aceptada de Release 6.
+- Mantener la navegación hacia Billing alineada con Release 6.1, sin implicar payments, balances o fiscalización.
 
 ## 8. Release 6 — Billing
 

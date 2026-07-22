@@ -163,7 +163,7 @@ This does not accept:
 - multiple/archived plans;
 - quote versioning or negotiation;
 - taxes/discounts;
-- Billing or payment behavior;
+- Billing behavior as part of Release 5; Billing is accepted separately through Release 6.1, while payments remain deferred;
 - Patient Portal access.
 
 ### Resolved drift: Billing
