@@ -13,6 +13,29 @@ env:
   NODE_VERSION: '22.x'
 
 jobs:
+  compile_diagnostics:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore backend dependencies
+      run: dotnet restore backend/BigSmile.slnx > /dev/null
+
+    - name: Compile backend with concise errors
+      run: |
+        if ! dotnet build backend/BigSmile.slnx --configuration Release --no-restore > backend-build.log 2>&1; then
+          grep -E "error (CS|NETSDK|NU|MSB)[0-9]+|: error " backend-build.log || tail -n 100 backend-build.log
+          exit 1
+        fi
+        echo "Backend compilation succeeded."
+
   build:
     runs-on: ubuntu-latest
 
@@ -34,12 +57,7 @@ jobs:
       run: dotnet restore backend/BigSmile.slnx
 
     - name: Build backend
-      run: |
-        if ! dotnet build backend/BigSmile.slnx --configuration Release --no-restore > backend-build.log 2>&1; then
-          grep -E "error (CS|NETSDK|NU|MSB)[0-9]+|: error " backend-build.log || tail -n 100 backend-build.log
-          exit 1
-        fi
-        cat backend-build.log
+      run: dotnet build backend/BigSmile.slnx --configuration Release --no-restore
 
     - name: Validate architecture
       run: python3 backend/scripts/validate_architecture.py
