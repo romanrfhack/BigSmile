@@ -56,3 +56,37 @@ jobs:
     - name: Run frontend tests
       run: npm run test -- --watch=false
       working-directory: frontend
+
+  finalize_release6_wording:
+    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout Release 6 branch
+      uses: actions/checkout@v4
+      with:
+        ref: docs/release-6-billing-audit
+        fetch-depth: 1
+        show-progress: false
+
+    - name: Apply wording cleanup
+      run: python scripts/finalize_release6_wording.py
+
+    - name: Commit wording cleanup
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add \
+          "STATE — BigSmile.md" \
+          README.md \
+          AGENTS.md \
+          PROJECT_MAP.md \
+          docs/product-roadmap.md \
+          docs/ux-redesign-reconciliation-and-plan.md \
+          docs/release-6-billing-audit-and-closure.md \
+          docs/decisions/009-release-6-billing-document-foundation.md
+        git diff --cached --check
+        git commit -m "docs: clarify Release 5 and Release 6 boundaries"
+        git push origin HEAD:docs/release-6-billing-audit
