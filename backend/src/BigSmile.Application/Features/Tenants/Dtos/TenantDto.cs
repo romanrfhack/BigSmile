@@ -4,6 +4,7 @@ namespace BigSmile.Application.Features.Tenants.Dtos
         Guid Id,
         string Name,
         string? Subdomain,
+        string TimeZoneId,
         bool IsActive,
         DateTime CreatedAt,
         DateTime? UpdatedAt);
