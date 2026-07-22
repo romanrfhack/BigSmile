@@ -34,7 +34,12 @@ jobs:
       run: dotnet restore backend/BigSmile.slnx
 
     - name: Build backend
-      run: dotnet build backend/BigSmile.slnx --configuration Release --no-restore
+      run: |
+        if ! dotnet build backend/BigSmile.slnx --configuration Release --no-restore > backend-build.log 2>&1; then
+          grep -E "error (CS|NETSDK|NU|MSB)[0-9]+|: error " backend-build.log || tail -n 100 backend-build.log
+          exit 1
+        fi
+        cat backend-build.log
 
     - name: Validate architecture
       run: python3 backend/scripts/validate_architecture.py
@@ -56,29 +61,3 @@ jobs:
     - name: Run frontend tests
       run: npm run test -- --watch=false
       working-directory: frontend
-
-  patch_document_test_fixtures:
-    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-    - name: Checkout document-hardening branch
-      uses: actions/checkout@v4
-      with:
-        ref: release-7.1/document-upload-hardening
-        fetch-depth: 1
-        show-progress: false
-
-    - name: Patch document test fixtures
-      run: python scripts/patch_patient_document_tests.py
-
-    - name: Commit patched tests
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git add backend/tests/BigSmile.IntegrationTests/PatientDocuments/PatientDocumentServicesTests.cs
-        git diff --cached --check
-        git commit -m "test: use valid signatures in patient document service tests"
-        git push origin HEAD:release-7.1/document-upload-hardening
