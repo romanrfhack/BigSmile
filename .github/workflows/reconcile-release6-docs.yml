@@ -29,7 +29,9 @@ jobs:
           show-progress: false
 
       - name: Reconcile canonical documentation
-        run: python scripts/reconcile_release6_docs.py > reconcile-release6.log 2>&1
+        run: |
+          python scripts/patch_reconcile_release6_script.py
+          python scripts/reconcile_release6_docs.py > reconcile-release6.log 2>&1
 
       - name: Upload reconciliation error
         if: failure()
