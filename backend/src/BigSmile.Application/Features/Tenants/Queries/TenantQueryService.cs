@@ -1,5 +1,6 @@
 using BigSmile.Application.Features.Tenants.Dtos;
 using BigSmile.Application.Interfaces.Repositories;
+using BigSmile.Domain.Entities;
 
 namespace BigSmile.Application.Features.Tenants.Queries
 {
@@ -35,7 +36,7 @@ namespace BigSmile.Application.Features.Tenants.Queries
                 .ToList();
         }
 
-        private static TenantDto Map(Domain.Entities.Tenant tenant)
+        private static TenantDto Map(Tenant tenant)
         {
             return new TenantDto(
                 tenant.Id,
