@@ -24,27 +24,27 @@ namespace BigSmile.Application.Features.Tenants.Queries
             if (tenant == null)
                 return null;
 
-            return new TenantDto(
-                tenant.Id,
-                tenant.Name,
-                tenant.Subdomain,
-                tenant.IsActive,
-                tenant.CreatedAt,
-                tenant.UpdatedAt);
+            return Map(tenant);
         }
 
         public async Task<IReadOnlyList<TenantDto>> GetAllTenantsAsync(CancellationToken cancellationToken = default)
         {
             var tenants = await _tenantRepository.GetAllAsync(cancellationToken);
             return tenants
-                .Select(tenant => new TenantDto(
-                    tenant.Id,
-                    tenant.Name,
-                    tenant.Subdomain,
-                    tenant.IsActive,
-                    tenant.CreatedAt,
-                    tenant.UpdatedAt))
+                .Select(Map)
                 .ToList();
+        }
+
+        private static TenantDto Map(Domain.Entities.Tenant tenant)
+        {
+            return new TenantDto(
+                tenant.Id,
+                tenant.Name,
+                tenant.Subdomain,
+                tenant.TimeZoneId,
+                tenant.IsActive,
+                tenant.CreatedAt,
+                tenant.UpdatedAt);
         }
     }
 }
