@@ -50,8 +50,8 @@ A module is not complete merely because entities, endpoints, UI, migrations or t
 - **Release 2 — Scheduling** — completed
 - **Release 3 — Clinical Records** — completed
 - **Release 4 — Odontogram** — completed
-- **Release 5 — Treatments and Quotes** — next planned functional phase
-- **Release 6 — Billing** — planned after Release 5
+- **Release 5 — Treatments and Quotes** — completed
+- **Release 6 — Billing** — next planned functional phase
 - **Release 7 — Documents and Dashboard** — planned after Release 6
 - **Phase 2 Expansion — Modern Operations**
   - **Phase 2.1 — Patient Intake and Portal Foundation**
@@ -270,84 +270,117 @@ Provide a bounded visual dental chart in patient context.
 ## 9. Release 5 — Treatments and Quotes
 
 ### Status
-Next planned functional phase; not formally opened or accepted.
+Completed as the foundational treatment-planning and quote release.
 
-The repository contains Treatments/Quotes code, but it remains `implemented but not formally accepted/reconciled` until a dedicated audit verifies the bounded contract.
+### Closure evidence
+- Release 5.1 — Treatment Plan Foundation
+- Release 5.2 — Quote Foundation
+- Audit: `docs/release-5-treatments-and-quotes-audit-and-closure.md`
+- ADR 008: `docs/decisions/008-release-5-treatments-and-quotes-closure.md`
 
 ### Goal
-Connect patient/clinical/odontogram context to an operational treatment proposal and bounded quote workflow.
+Connect patient/clinical/odontogram context to an operational treatment proposal and bounded commercial quote workflow.
 
-### Planned bounded sequence
-
-#### Release 5.1 — Treatment Plan Foundation
-- explicit treatment-plan creation
-- `GET` returns `404` when missing
-- no autocreation
-- exactly one active treatment plan per patient/tenant
+### Release 5.1 accepted scope
+- tenant-owned/patient-owned `TreatmentPlan`
+- exactly one plan per patient/tenant in the current slice
+- explicit creation; `GET` returns `404` when missing
+- no autocreation from reads/items/status operations
 - basic items:
-  - required title
+  - required normalized title
   - optional category
-  - positive simple quantity
-  - short optional note
-  - optional adult FDI tooth reference
+  - positive integer quantity
+  - optional short notes
+  - optional permanent-adult FDI tooth reference
   - optional `O/M/D/B/L` surface requiring a tooth
 - explicit add/remove items
-- minimal lifecycle `Draft` / `Proposed` / `Accepted`
+- lifecycle `Draft` / `Proposed` / `Accepted`
+- `Proposed -> Draft` allowed
+- accepted plan read-only
 - tenant/actor metadata
 - bounded Angular patient-context UI
 
-#### Release 5.2 — Quote Foundation
-Only after 5.1 is accepted:
-- explicit quote creation from an existing treatment plan
-- no autocreation
-- bounded line snapshot
-- `MXN` initial currency unless audit proves an accepted compatible contract
-- line unit price/line total/quote total
+### Release 5.2 accepted scope
+- explicit quote creation from an existing non-empty treatment plan
+- one quote per treatment plan
+- no autocreation of plan or quote
+- snapshot-only quote lines
+- fixed `MXN` public application/API path
+- line unit price, line total and quote total
+- SQL decimal precision `18,2`
 - lifecycle `Draft` / `Proposed` / `Accepted`
-- explicit validation before proposal/acceptance
+- positive price required before Proposed and Accepted
+- proposed quote cannot retain non-positive pricing
+- accepted quote read-only
+- bounded Angular quote/pricing UI
 
-### Deferred from initial Release 5 acceptance
+### Current access
+- `PlatformAdmin` and `TenantAdmin`: treatment-plan/quote read/write permissions
+- `TenantUser`: no treatment-plan or quote permissions
+- patient-scoped operations require resolved tenant context
+
+### Deferred
+- treatment catalog administration
+- multiple or archived treatment plans
+- plan archive/versioning
+- quote regenerate/versioning
+- multiple quotes/negotiation
 - taxes and discounts
-- billing linkage
+- Billing/payment linkage
 - scheduling linkage
 - treatment execution/progress
-- regenerate/versioning
-- multiple quotes/negotiation
+- automatic plan/quote/Billing status synchronization
 - insurance and financing
 - advanced approval workflows
-- automated follow-up
+- automated treatment follow-up
+- patient-portal access
 
-### Opening rule
-Start with a module-specific audit of existing code. Do not add new functionality until the audit identifies a concrete roadmap gap.
+### Non-blocking hardening/UX debt
+- normalize concurrent-create uniqueness conflicts if demonstrated in real usage
+- introduce a shared dental-location primitive only if cross-module reuse grows
+- replace internal `Release 5.1/5.2`, `foundation` and `slice` copy with clinic-facing language
+- migrate residual hardcoded colors to `--bsm-*` tokens
 
 ---
 
 ## 10. Release 6 — Billing
 
 ### Status
-Planned after accepted Treatments/Quotes scope.
+Next planned functional phase; not formally opened or accepted.
+
+The repository contains Billing code, but it remains `implemented but not formally accepted/reconciled` until a dedicated audit verifies the bounded contract.
 
 ### Goal
-Support basic operational financial tracking linked to accepted upstream records.
+Support basic operational financial tracking linked to accepted upstream treatment-plan and quote records.
 
-### Planned scope
-- charges/billing records
-- payment registration
-- partial/total payments
-- balances
-- payment methods
+### Planned bounded audit scope
+- explicit tenant-owned/patient-owned Billing root
+- relationship to an accepted TreatmentQuote without changing the quote snapshot
+- explicit creation and `404` when missing
+- no autocreation from reads or downstream operations
+- bounded issue/status lifecycle
+- line-level snapshot or charge semantics
+- totals and currency consistency
+- clear separation from payments, receipts and full cash management unless existing code is explicitly audited and accepted
+- `billing.read` / `billing.write`
+- tenant/cross-tenant protection
+- bounded Angular patient-context workflow
+
+### Deferred unless the audit proves a coherent accepted slice
+- payment registration and allocation
+- partial/total payment lifecycle
+- balance ledger
 - receipts
-- basic cash visibility
-- branch context when business meaning requires it
-
-### Deferred
-- full accounting
-- taxes/CFDI/PAC
+- refunds/reversals/cancellations
+- cash sessions
+- taxes, discounts and CFDI/PAC
 - insurance claims
-- refunds/reversals without explicit rules
-- ERP-level workflows
+- multi-currency
+- accounting/ERP workflows
+- automatic synchronization that mutates accepted TreatmentQuote state
 
-Existing Billing code requires its own audit before formal acceptance.
+### Opening rule
+Start with a module-specific audit of existing Billing code. Do not add new functionality until the audit identifies a concrete roadmap gap.
 
 ---
 
@@ -372,8 +405,8 @@ Planned after Release 6.
 - today/pending appointments
 - active documents
 - active treatment plans
-- accepted quotes when Release 5 is accepted
-- issued billing when Release 6 is accepted
+- accepted quotes
+- issued billing records after Release 6 acceptance
 
 ### Deferred
 - OCR/rich preview/versioning
@@ -400,9 +433,9 @@ The initial operational MVP is complete only after formal acceptance of:
 - Roles and Permissions
 - Basic Dashboard
 
-Current accepted frontier: **Release 4**.
+Current accepted frontier: **Release 5**.
 
-Remaining MVP release acceptance: **Release 5, Release 6 and Release 7**.
+Remaining MVP release acceptance: **Release 6 and Release 7**.
 
 ---
 
@@ -506,7 +539,7 @@ Phase 2.1 does not imply the broader Phase 4 portal is implemented or accepted.
 - Clinical depends on Patients.
 - Odontogram depends on Patients and the clinical context foundation.
 - Treatments/Quotes depends on stable patient/clinical/odontogram context.
-- Billing depends on accepted commercial records.
+- Billing depends on accepted TreatmentPlan/TreatmentQuote contracts.
 - Documents depend on Patients and secure storage/access.
 - Dashboard depends on accepted upstream read models.
 - Phase 2.1 depends on stable Patients/Clinical behavior and the accepted MVP.
@@ -536,8 +569,8 @@ This dependency chain guides order unless an explicit documented reprioritizatio
 - Does scheduling work daily?
 - Does Clinical feel natural and safe?
 - Is the accepted Odontogram understandable and efficient?
-- Can Release 5 support real treatment conversations?
-- Can Billing remain simple for front desk?
+- Do treatment plans and quotes support real patient conversations without implying execution or Billing?
+- Can Billing remain simple and traceable for front desk?
 - When Phase 2.1 opens, can patients complete intake without confusing declarations with reviewed canonical data?
 
 ### SaaS/security
@@ -545,6 +578,7 @@ This dependency chain guides order unless an explicit documented reprioritizatio
 - Is Branch used only as subordinate operational scope?
 - Are permissions practical and explicit?
 - Are module boundaries sustainable?
+- Are accepted commercial snapshots protected from silent downstream mutation?
 - Are public/patient-facing identities strictly self-scoped?
 
 ---
@@ -556,6 +590,7 @@ This dependency chain guides order unless an explicit documented reprioritizatio
 - hidden cross-module ownership
 - weakening tenant isolation
 - branch used as tenant replacement
+- silent synchronization between treatment, quote, Billing and payment states
 - staff permissions reused for patients
 - public enumeration/IDOR/replay
 - silent canonical overwrite of patient/clinical data
@@ -570,10 +605,10 @@ This dependency chain guides order unless an explicit documented reprioritizatio
 - stable architecture/auth/tenant model
 - CI and tests operational
 
-### Release 4 closure
-- bounded chart behavior accepted
-- tenant/cross-tenant evidence
-- advanced Odontogram scope explicitly deferred
+### Release 5 closure
+- bounded plan and quote behavior accepted
+- tenant/cross-tenant and pricing evidence
+- Billing and execution explicitly deferred
 - base documentation aligned
 
 ### MVP
