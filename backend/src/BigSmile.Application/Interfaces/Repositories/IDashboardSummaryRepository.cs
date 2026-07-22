@@ -13,8 +13,8 @@ namespace BigSmile.Application.Interfaces.Repositories
     {
         Task<DashboardSummaryCounts> GetSummaryCountsAsync(
             Guid tenantId,
-            DateTime todayStartUtc,
-            DateTime tomorrowStartUtc,
+            DateTime todayStart,
+            DateTime tomorrowStart,
             CancellationToken cancellationToken = default);
     }
 }
