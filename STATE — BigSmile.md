@@ -28,6 +28,8 @@
 
 **Release 5 — Treatments and Quotes** — [Hecho] ADR 008 acepta el cierre fundacional de planes de tratamiento y cotizaciones mediante Release 5.1 y 5.2, preservando Billing, ejecución de tratamientos y pricing avanzado como scopes posteriores.
 
+**Release 6 — Billing** — [Hecho] ADR 009 acepta el cierre fundacional de Billing mediante Release 6.1 — Billing Document Foundation, preservando payments, balances, receipts, cash management y CFDI como scopes posteriores.
+
 ## 3. Fases completadas
 
 [Hecho] Foundation / Release 0 base — completada.
@@ -48,6 +50,8 @@
 
 [Hecho] Release 5 — Treatments and Quotes — completada como release fundacional mediante Release 5.1 y Release 5.2.
 
+[Hecho] Release 6 — Billing — completada como release fundacional mediante Release 6.1 — Billing Document Foundation.
+
 [Hecho] El cierre formal de Release 2 cubre calendario diario/semanal branch-aware, creación/edición/reprogramación/cancelación, appointment notes, blocked slots y estados `Attended` / `NoShow`. `doctor-based views` permanece diferido porque requiere provider/doctor assignment.
 
 [Hecho] El cierre formal de Release 3 cubre creación explícita de expediente clínico, snapshot base, alergias actuales, notas append-only, diagnósticos básicos, timeline clínica acotada, snapshot history, cuestionario médico fijo, consulta/signos vitales, atribución por usuario y protección con `clinical.read` / `clinical.write`.
@@ -56,27 +60,29 @@
 
 [Hecho] El cierre formal de Release 5 se apoya en auditoría de dominio, aplicación, API, persistencia, permisos, frontend y pruebas para plan de tratamiento explícito, items básicos con referencia dental opcional, lifecycle `Draft / Proposed / Accepted`, cotización snapshot explícita, pricing por línea, total calculado y gates de precio positivo.
 
+[Hecho] El cierre formal de Release 6 se apoya en auditoría de dominio, aplicación, API, persistencia, permisos, frontend y pruebas para `BillingDocument` explícito desde una cotización aceptada, líneas snapshot, moneda/totales preservados, lifecycle `Draft -> Issued` y documento emitido read-only.
+
 ## 4. Fase actual
 
-[Hecho] La última fase funcional marcada como completada es Release 5 — Treatments and Quotes.
+[Hecho] La última fase funcional marcada como completada es Release 6 — Billing.
 
-[Hecho] Release 5 queda cerrada y preservada como release fundacional de planeación y cotización. Release 5.1 y Release 5.2 permanecen como evidencia aceptada de cierre.
+[Hecho] Release 6 queda cerrada y preservada como release fundacional de documento comercial mediante Release 6.1 — Billing Document Foundation.
 
-[Hecho] La siguiente fase funcional prevista por el roadmap es Release 6 — Billing.
+[Hecho] La siguiente fase funcional prevista por el roadmap es Release 7 — Documents and Dashboard.
 
-[Hecho] Release 6 no queda abierta por el cierre de Release 5. Cualquier aceptación debe realizarse mediante auditoría/slice explícito, con alcance, pruebas y documentación propios.
+[Hecho] Release 7 no queda abierta por el cierre de Release 6. Cualquier aceptación debe realizarse mediante auditoría/slices explícitos, con alcance, pruebas y documentación propios.
 
-[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe abrirse antes de completar y aceptar Release 6 y Release 7, salvo repriorización futura explícita y documentada.
+[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe abrirse antes de completar y aceptar Release 7, salvo repriorización futura explícita y documentada.
 
 [Hecho] Phase 2.1 — Patient Intake and Portal Foundation permanece planificada dentro de Phase 2. Su arquitectura y plan general están aceptados, pero PI-1 a PI-4 no están implementados ni abiertos como fase activa.
 
 ## 4.1 Nota de reconciliación UX / código existente
 
-[Hecho] El repositorio contiene código funcional en módulos posteriores al estado formal, incluyendo Billing, Documents, Dashboard y recordatorios/manual reminders.
+[Hecho] El repositorio contiene código funcional en módulos posteriores al estado formal, incluyendo Documents, Dashboard y recordatorios/manual reminders.
 
 [Hecho] La presencia de código, rutas, permisos, migrations o tests no implica por sí misma aceptación o cierre. Hasta una auditoría específica, esos módulos se clasifican como `implemented but not formally accepted/reconciled`.
 
-[Hecho] Odontogram y Treatments/Quotes dejan esa clasificación porque recibieron auditorías específicas y cierres formales mediante ADR 007/008 y sus documentos de evidencia.
+[Hecho] Odontogram, Treatments/Quotes y Billing dejan esa clasificación porque recibieron auditorías específicas y cierres formales mediante ADR 007/008/009 y sus documentos de evidencia.
 
 [Hecho] Los slices visuales pueden mejorar presentación, organización, copy, color, microinteracciones, modales/drawers/tabs/sticky action bars y deuda UX sin cambiar backend, APIs, permissions, auth, tenant context, branch context, migrations ni alcance funcional.
 
@@ -86,7 +92,7 @@
 
 **Estado** — [Hecho] decisión aceptada y trabajo planificado; implementación no iniciada.
 
-**Ubicación** — [Hecho] primer capability acotado de Phase 2 — Modern Operations después del MVP inicial; no desplaza Release 6 como siguiente fase funcional actual.
+**Ubicación** — [Hecho] primer capability acotado de Phase 2 — Modern Operations después del MVP inicial; no desplaza Release 7 como siguiente fase funcional actual.
 
 **Tracking** — [Hecho]
 
@@ -234,33 +240,77 @@
 - Migrar colores hardcodeados residuales a tokens `--bsm-*`.
 - Mantener la navegación existente a Billing como capability no aceptada de Release 6.
 
-## 8. Releases previos cerrados
+## 8. Release 6 — Billing
+
+**Estado operativo actual** — [Hecho] completada como release fundacional de documento comercial.
+
+**Evidencia de cierre** — [Hecho]
+
+- Release 6.1 — Billing Document Foundation.
+- Auditoría — `docs/release-6-billing-audit-and-closure.md`.
+- Decisión — ADR 009 `docs/decisions/009-release-6-billing-document-foundation.md`.
+
+**Alcance cerrado** — [Hecho]
+
+- `BillingDocument` tenant-owned y patient-owned.
+- Creación explícita desde una `TreatmentQuote` existente, `Accepted`, con líneas y precios positivos.
+- `GET` devuelve `404` cuando falta; reads/status no autocrean Billing.
+- Exactamente un Billing document por TreatmentQuote en este slice.
+- Líneas snapshot-only con source quote item, datos descriptivos, referencia dental opcional, `UnitPrice` y `LineTotal`.
+- Currency y total preservados con precisión SQL `decimal(18,2)`.
+- Lifecycle `Draft -> Issued`.
+- Emisión con timestamp UTC y actor; documento emitido read-only.
+- `billing.read` / `billing.write`; `TenantUser` sin permisos de Billing.
+- UI Angular patient-scoped con prerrequisitos, create, líneas/totales, issue y read-only.
+
+**Tenant safety** — [Hecho] El aggregate root usa filtro global tenant-aware y write enforcement. `BillingDocumentItem` se consume mediante el root; cualquier query directa futura requiere join tenant-aware u ownership explícito.
+
+**Fuera del cierre** — [Hecho]
+
+- Payments, allocations, partial/total payments y balance ledger.
+- Receipts, refunds, reversals, cancellations y cash sessions.
+- Taxes, discounts, CFDI/PAC, insurance y accounting/ERP.
+- Multi-currency, múltiples Billing documents por quote y regeneration/versioning.
+- Sincronización automática que modifique una TreatmentQuote aceptada.
+- Patient Portal access a Billing.
+
+**Hardening/UX no bloqueante** — [Hecho]
+
+- Normalizar carreras de unique constraint en create cuando el uso concurrente lo requiera.
+- Añadir optimistic concurrency antes de ampliar roles operativos de emisión.
+- Decidir idempotencia de repeated issue explícitamente.
+- Incorporar cobertura relacional SQL Server de índices/precision cuando CI lo soporte.
+- Reemplazar copy interno y actor/source ids crudos por lenguaje y affordances operativas.
+
+## 9. Releases previos cerrados
 
 **Release 1 — Patients** — [Hecho] registro, actualización, búsqueda tenant-scoped, perfil, responsible party, estatus, alertas clínicas básicas y permisos `patient.read` / `patient.write`.
 
 **Release 2 — Scheduling** — [Hecho] citas tenant-owned/branch-aware, calendario day/week, create/edit/reschedule/cancel, notes, blocked slots, `Attended` / `NoShow` y permisos `scheduling.read` / `scheduling.write`.
 
-## 9. Backlog inmediato
+## 10. Backlog inmediato
 
 Lista priorizada:
 
-1. Preservar Releases 1 a 5 ya cerrados sin debilitar la fundación tenant-aware.
+1. Preservar Releases 1 a 6 ya cerrados sin debilitar la fundación tenant-aware.
 
-2. Auditar el código existente de `Release 6 — Billing` contra el roadmap y abrir/aceptar únicamente slices con evidencia explícita.
+2. Auditar el código existente de `Release 7 — Documents and Dashboard` contra el roadmap y aceptar únicamente slices con evidencia explícita.
 
-3. No tratar Billing como aceptado solo porque existen código, endpoints, permissions, migrations o tests.
+3. No tratar Documents o Dashboard como aceptados solo porque existen código, endpoints, permissions, storage/read models o tests.
 
-4. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
+4. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera de Release 6.1 hasta slices dedicados.
 
-5. Mantener fuera de los agregados cerrados cualquier linkage cross-module no aceptado.
+5. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
 
-6. Si se consultan directamente tablas hijas de Clinical, Odontogram, TreatmentPlan o TreatmentQuote, usar join tenant-aware o modelarlas como tenant-owned.
+6. Mantener fuera de los agregados cerrados cualquier linkage cross-module no aceptado.
 
-7. Mantener Phase 2.1 visible mediante ADR 006, su plan e issues #2/#4/#5/#6/#7, sin iniciar PI-1 antes del gate de MVP o repriorización explícita.
+7. Si se consultan directamente tablas hijas de Clinical, Odontogram, TreatmentPlan, TreatmentQuote o BillingDocument, usar join tenant-aware o modelarlas como tenant-owned.
 
-8. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS y product-roadmap cuando cambie el estado de Release 6 o Phase 2.1.
+8. Mantener Phase 2.1 visible mediante ADR 006, su plan e issues #2/#4/#5/#6/#7, sin iniciar PI-1 antes del gate de MVP o repriorización explícita.
 
-## 10. Riesgos y temas a vigilar
+9. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS y product-roadmap cuando cambie el estado de Release 7 o Phase 2.1.
+
+## 11. Riesgos y temas a vigilar
 
 **Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal.
 
@@ -270,9 +320,9 @@ Lista priorizada:
 
 **Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
 
-**Child tables** — [Hecho] Los accesos directos futuros a hijos de Clinical, Odontogram, TreatmentPlan o TreatmentQuote necesitan tenant-aware joins u ownership explícito.
+**Child tables** — [Hecho] Los accesos directos futuros a hijos de Clinical, Odontogram, TreatmentPlan, TreatmentQuote o BillingDocument necesitan tenant-aware joins u ownership explícito.
 
-**Pricing y estados comerciales** — [Hecho] Billing no debe alterar silenciosamente la inmutabilidad de cotizaciones aceptadas ni asumir sincronización automática no definida entre plan, cotización, cargos o pagos.
+**Pricing y estados comerciales** — [Hecho] BillingDocument preserva la cotización aceptada como snapshot separado. Payments, balances, receipts y fiscalización requieren agregados/slices explícitos y no deben añadirse como campos mutables incidentales del documento emitido.
 
 **Privileged/platform paths** — [Hecho] Toda operación fuera de tenant scope normal debe ser explícita, mínima y auditable.
 
@@ -282,7 +332,7 @@ Lista priorizada:
 
 **Alineación documental futura** — [Hecho] Cada apertura/cierre debe actualizar código, pruebas y documentación en el mismo cambio.
 
-## 11. Criterios para no perder el rumbo
+## 12. Criterios para no perder el rumbo
 
 [Hecho] BigSmile es un producto SaaS multi-tenant; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewability rompe el rumbo.
 
@@ -292,12 +342,12 @@ Lista priorizada:
 
 [Hecho] Restricciones a preservar: modular monolith, ownership explícito, `TenantId` como boundary primario, `BranchId` subordinado, shared DB/schema, sin bypass oculto y sin autorización crítica solo en UI.
 
-## 12. Nota tipo ADR resumida
+## 13. Nota tipo ADR resumida
 
-**Estado:** Nota canónica actualizada con ADR 006, ADR 007 y ADR 008.
+**Estado:** Nota canónica actualizada con ADR 006, ADR 007, ADR 008 y ADR 009.
 
-**Contexto:** El código de Treatments/Quotes estaba implementado pero correctamente clasificado como no reconciliado hasta una auditoría específica.
+**Contexto:** El código de Billing estaba implementado pero correctamente clasificado como no reconciliado hasta una auditoría específica.
 
-**Decisión:** Cerrar Release 5 mediante Release 5.1 y 5.2, preservar el alcance fundacional del plan y la cotización, y mover la frontera del roadmap a Release 6. Mantener Patient Intake and Portal como Phase 2.1 posterior al MVP.
+**Decisión:** Cerrar Release 6 mediante Release 6.1 — Billing Document Foundation, preservar el documento emitido como snapshot separado de TreatmentQuote y de futuros Payment/Receipt/Cash/Fiscal aggregates, y mover la frontera del roadmap a Release 7. Mantener Patient Intake and Portal como Phase 2.1 posterior al MVP.
 
-**Consecuencias:** Billing es el siguiente módulo a auditar; no se acepta automáticamente. Ejecución de tratamientos, pricing avanzado y enlaces comerciales posteriores permanecen diferidos, y la deuda visual se atiende mediante slices UX separados.
+**Consecuencias:** Documents and Dashboard es el siguiente módulo a auditar; no se acepta automáticamente. Payments, balances, receipts, cash management y CFDI permanecen diferidos, y la deuda visual/hardening se atiende mediante slices separados.

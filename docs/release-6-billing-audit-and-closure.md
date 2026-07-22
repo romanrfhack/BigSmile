@@ -1,11 +1,10 @@
 # Release 6 — Billing Audit and Closure
 
-- **Status:** Closure candidate; canonical release-state reconciliation pending
+- **Status:** Accepted closure evidence
 - **Audit date:** 2026-07-22
 - **Scope:** Release 6.1 — Billing Document Foundation
-- **Result:** Existing code satisfies the bounded Billing Document foundation
-- **Current canonical frontier before closure:** Release 5 — Treatments and Quotes
-- **Proposed next planned functional phase after closure:** Release 7 — Documents and Dashboard
+- **Result:** Release 6 closes through the bounded Billing Document foundation
+- **Next planned functional phase:** Release 7 — Documents and Dashboard
 
 ## 1. Objective
 
@@ -27,7 +26,7 @@ The current implementation satisfies one bounded slice:
 
 No new runtime behavior, API contract, migration, permission or frontend feature is required to satisfy this bounded slice.
 
-Formal Release 6 closure still requires the release-state documents to be updated in the same accepted change. This audit therefore records a closure candidate rather than silently advancing `STATE — BigSmile.md` by code presence alone.
+The canonical release-state documents are reconciled in the same accepted closure change. No runtime behavior is added or rewritten by the closure.
 
 ## 3. Release 6.1 — Billing Document Foundation
 
@@ -302,7 +301,7 @@ The closure change must also pass repository-wide CI:
 - Angular build;
 - frontend tests.
 
-## 11. Accepted Release 6 boundary proposed by the audit
+## 11. Accepted Release 6 boundary
 
 Release 6 can close with:
 
@@ -348,15 +347,13 @@ The audit identified bounded improvements that do not justify delaying the curre
 
 Current automated integration tests use the repository's existing in-memory strategy and therefore do not prove SQL Server race behavior. The migration and EF model still provide the intended unique and precision constraints.
 
-## 14. Closure decision candidate
+## 14. Closure decision
 
-**Candidate decision:** Close Release 6 — Billing through Release 6.1 — Billing Document Foundation.
+**Decision:** Close Release 6 — Billing through Release 6.1 — Billing Document Foundation.
 
 **Reason:** The bounded roadmap contract is implemented across domain, application, API, persistence, authorization, frontend and automated tests. Remaining work belongs to payments, cash, fiscal or hardening slices.
 
-**Condition:** Update `STATE — BigSmile.md`, roadmap and base repository documentation in the same accepted closure PR before marking Release 6 completed.
-
-**Consequence after acceptance:** Release 7 — Documents and Dashboard becomes the next planned functional phase. Patient Intake and Portal remains planned after MVP completion under ADR 006.
+**Consequence:** Release 7 — Documents and Dashboard becomes the next planned functional phase. Patient Intake and Portal remains planned after MVP completion under ADR 006.
 
 ## 15. Review packet
 
@@ -388,4 +385,4 @@ Existing targeted tests plus repository-wide CI for this documentation PR.
 
 ### Recommendation
 
-Accept the Release 6.1 foundation only with aligned canonical documentation, preserve all deferred financial scope, and open Release 7 through a separate audit rather than extending Billing opportunistically.
+Preserve the accepted Release 6.1 foundation and all deferred financial scope, and open Release 7 through a separate audit rather than extending Billing opportunistically.

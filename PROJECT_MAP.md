@@ -63,7 +63,8 @@ Canonical project status:
 * **Release 3 — Clinical Records:** completed as the foundational clinical release through accepted slices **Release 3.1 — Clinical Record Foundation**, **Release 3.2 — Basic Diagnoses Foundation**, **Release 3.3 — Clinical Timeline Read Model**, **Release 3.4 — Clinical Snapshot Change History**, **Release 3.5 — Medical Questionnaire Backend**, and **Release 3.6 — Clinical Encounter / Vitals Backend**
 * **Release 4 — Odontogram:** completed as the foundational odontogram release through accepted slices **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, and **Release 4.4 — Dental Findings Change History**
 * **Release 5 — Treatments and Quotes:** completed as the foundational treatment-planning and quote release through accepted slices **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Foundation**
-* **Next planned functional phase:** **Release 6 — Billing**
+* **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
+* **Next planned functional phase:** **Release 7 — Documents and Dashboard**
 
 ### Release 4 closure evidence
 
@@ -75,11 +76,16 @@ Canonical project status:
 * `docs/release-5-treatments-and-quotes-audit-and-closure.md`
 * ADR 008 — `docs/decisions/008-release-5-treatments-and-quotes-closure.md`
 
+### Release 6 closure evidence
+
+* `docs/release-6-billing-audit-and-closure.md`
+* ADR 009 — `docs/decisions/009-release-6-billing-document-foundation.md`
+
 ### UX / existing-code reconciliation
 
-Odontogram and Treatments/Quotes are now `Accepted / preserved` after module-specific audits of domain, application, API, persistence, permissions, frontend, migrations and tests.
+Odontogram, Treatments/Quotes and Billing are now `Accepted / preserved` after module-specific audits of domain, application, API, persistence, permissions, frontend, migrations and tests.
 
-The repository still contains functional code in later roadmap modules, including Billing, Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, migrations, or tests in those modules do not by themselves open, accept, or close Release 6, Release 7, or Phase 2.
+The repository still contains functional code in later roadmap modules, including Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, storage/read models, or tests in those modules do not by themselves open, accept, or close Release 7 or Phase 2.
 
 Until a module-specific audit and acceptance pass happens, those later modules are `implemented but not formally accepted/reconciled`.
 
@@ -87,16 +93,17 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 5 and audit the existing Billing implementation before accepting or adding functionality:
+Preserve Releases 1 through 6 and audit the existing Documents/Dashboard implementation before accepting or adding functionality:
 
 * preserve the accepted Release 3.1 to 3.6 clinical boundary
 * preserve the accepted Release 4.1 to 4.4 odontogram boundary
 * preserve the accepted Release 5.1 and 5.2 treatment-plan/quote boundary
-* keep advanced Odontogram scope deferred, including child/mixed dentition, full state history/versioning, restore, advanced charting, imaging and cross-module linkage
-* keep advanced Treatments/Quotes scope deferred, including catalog administration, multiple plans/quotes, versioning, taxes/discounts, execution/progress and Patient Portal access
-* inspect Billing domain, application, API, persistence, permissions, migrations, frontend and tests against Release 6
-* do not treat existing Billing code as accepted solely because it exists
-* keep payments, balances, receipts, taxes, discounts, CFDI/PAC, OCR, document workflows, automated messaging/providers/jobs/queues/retries, online booking and advanced dashboards deferred until their owning phases are explicitly accepted
+* preserve the accepted Release 6.1 BillingDocument boundary
+* keep advanced Odontogram and Treatments/Quotes scope deferred
+* keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
+* inspect Documents and Dashboard ownership, API/storage/read models, permissions, migrations, frontend and tests against Release 7
+* do not treat existing Documents/Dashboard code as accepted solely because it exists
+* keep automated messaging/providers/jobs/queues/retries, online booking and advanced dashboards deferred until their owning phases are explicitly accepted
 * keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 * preserve scope-aware authorization, explicit platform override behavior and centralized tenant safety
 * continue validation through CI, tests, logging, auditing and architectural guardrails
@@ -526,16 +533,17 @@ Treatment catalog administration, multiple/archived plans, quote versioning/nego
 
 ### 7.8 Billing
 
-Owns:
+Accepted Release 6 ownership:
 
-* charges
-* payments
-* balances
-* receipts
-* cash sessions
-* future invoicing integration
+* tenant-owned/patient-owned `BillingDocument` aggregate
+* explicit snapshot creation from an accepted TreatmentQuote
+* snapshot-only Billing lines with currency, unit price, line total and total
+* bounded `Draft -> Issued` lifecycle
+* issue timestamp/actor metadata
+* issued-document read-only behavior
+* patient-context Angular Billing workflow
 
-Existing code is the next audit target and remains unaccepted until Release 6 reconciliation.
+Payments, allocations, balances, receipts, cash sessions, refunds/reversals, taxes/discounts, CFDI/PAC, multi-currency and accounting remain deferred and must not be modeled as incidental mutable fields on `BillingDocument`.
 
 ### 7.9 Documents
 
@@ -707,7 +715,7 @@ These should be treated as stable unless formally changed:
 * multi-tenancy as foundational
 * backend layered structure
 * frontend feature structure
-* accepted Release 1 through Release 5 boundaries
+* accepted Release 1 through Release 6 boundaries
 * roadmap order
 * security-first posture
 
@@ -716,7 +724,7 @@ These should be treated as stable unless formally changed:
 These may still evolve through implementation and ADRs:
 
 * exact future permission catalog
-* Release 6+ formal scope acceptance
+* Release 7+ formal scope acceptance
 * patient-facing identity implementation
 * storage/notification provider choices
 * reporting depth
@@ -760,11 +768,11 @@ Treatments and Quotes — completed through slices 5.1 and 5.2.
 
 ### Release 6
 
-Billing — next; existing code must be audited before acceptance.
+Billing — completed through Release 6.1 — Billing Document Foundation.
 
 ### Release 7
 
-Documents and Dashboard — planned after Release 6.
+Documents and Dashboard — next; existing code must be audited before acceptance.
 
 ### Later phases
 

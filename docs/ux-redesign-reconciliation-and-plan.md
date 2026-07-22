@@ -26,6 +26,7 @@ Visual work does not automatically open or close releases and must not change ba
 - Release 3 — Clinical Records through slices 3.1 to 3.6.
 - Release 4 — Odontogram through slices 4.1 to 4.4.
 - Release 5 — Treatments and Quotes through slices 5.1 and 5.2.
+- Release 6 — Billing through Release 6.1.
 
 ### Release 4 reconciliation
 
@@ -69,11 +70,32 @@ Accepted Release 5 slices:
 1. Treatment Plan Foundation.
 2. Quote Foundation.
 
+### Release 6 reconciliation
+
+Billing is no longer only `implemented but not formally accepted/reconciled`.
+
+The module-specific audit accepted:
+
+- explicit Billing creation from an accepted quote;
+- one Billing document per quote and no autocreation;
+- snapshot-only lines with preserved currency and totals;
+- `Draft -> Issued` lifecycle and issue metadata;
+- issued-document immutability;
+- tenant/permission protection;
+- patient-context Angular create/read/issue flows.
+
+Closure evidence:
+
+- `docs/release-6-billing-audit-and-closure.md`;
+- ADR 009 — `docs/decisions/009-release-6-billing-document-foundation.md`.
+
+Payments, balances, receipts, cash sessions, fiscal/CFDI behavior and Patient Portal access remain outside Release 6.1.
+
 ### Current roadmap frontier
 
-The next planned functional phase is **Release 6 — Billing**.
+The next planned functional phase is **Release 7 — Documents and Dashboard**.
 
-Billing code exists, but it remains `implemented but not formally accepted/reconciled` until its own module audit occurs.
+Documents and Dashboard code exists, but remains `implemented but not formally accepted/reconciled` until module-specific audits occur.
 
 ### Phase 2.1
 
@@ -101,7 +123,7 @@ Legend:
 | Clinical Records | yes | yes | record, questionnaire, encounters, notes, diagnoses | `clinical.read/write` | yes | yes | Accepted / preserved | partially redesigned |
 | Odontogram | yes | yes | chart, teeth, surfaces, findings | `odontogram.read/write` | yes | yes | Accepted / preserved through Release 4.4 | partially redesigned; debt remains |
 | Treatments/Quotes | yes | yes | plan, items, status, quote, pricing | treatment permissions | yes | yes | Accepted / preserved through Release 5.2 | partially redesigned; debt remains |
-| Billing | yes | yes | quote/billing paths | `billing.read/write` | yes | yes | Implemented but not reconciled; next audit target | partially redesigned |
+| Billing | yes | yes | quote/billing paths | `billing.read/write` | yes | yes | Accepted / preserved through Release 6.1 | partially redesigned; debt remains |
 | Documents | yes | yes | upload/list/download/retire | `document.read/write` | yes | yes | Implemented but not reconciled | partially redesigned |
 | Dashboard | yes | yes | summary | `dashboard.read` | read-model based | yes | Implemented but not reconciled | partially redesigned |
 | Patient Intake/Portal | no | no | none accepted | none | none | none | Planned Phase 2.1 | not implemented |
@@ -144,9 +166,13 @@ This does not accept:
 - Billing or payment behavior;
 - Patient Portal access.
 
+### Resolved drift: Billing
+
+The Release 6 audit proved the bounded BillingDocument snapshot/issue foundation without accepting payments or fiscal behavior.
+
 ### Remaining drift: later modules
 
-Billing, Documents, Dashboard and reminder helpers contain real code beyond the formal release frontier.
+Documents, Dashboard and reminder helpers contain real code beyond the formal release frontier.
 
 They must remain unaccepted until their own audit verifies:
 
@@ -198,9 +224,9 @@ When touching those screens:
 
 ## 5. Correct interpretation of current work
 
-- Releases 1 to 5 are closed and preserved.
-- Release 6 is next, but must begin with an audit of existing Billing code.
-- Do not add new Billing functionality until the audit identifies a concrete accepted-scope gap.
+- Releases 1 to 6 are closed and preserved.
+- Release 7 is next, but must begin with audits of existing Documents and Dashboard code.
+- Do not add new Release 7 functionality until the audits identify a concrete accepted-scope gap.
 - Do not reopen Clinical Records, Odontogram or Treatments/Quotes through incidental linkage.
 - Existing permission-gated navigation from Quote to Billing does not accept Billing behavior.
 - Visual-only work remains allowed on accepted modules when bounded and non-breaking.
@@ -259,10 +285,12 @@ When touching those screens:
 - keep Billing navigation visibly separate from accepted quote behavior.
 
 ### Billing
-- audit functionality before visual expansion;
+- preserve explicit snapshot creation and issue semantics;
 - keep source quote, issue state, monetary totals and next action visible;
-- do not imply payments, balances, receipts, tax/CFDI or cancellation behavior before Release 6 reconciliation;
-- never visually suggest that Billing edits the accepted quote snapshot.
+- keep issued documents visibly read-only;
+- do not imply payments, balances, receipts, tax/CFDI or cancellation behavior;
+- never visually suggest that Billing edits the accepted quote snapshot;
+- replace internal release/slice copy and raw ids through bounded UX work.
 
 ### Documents/Dashboard
 - preserve existing code as unaccepted until module audit;
@@ -271,16 +299,14 @@ When touching those screens:
 
 ## 8. Recommended sequence
 
-1. Preserve Release 5 closure documents and canonical state.
-2. Audit existing Release 6 Billing code.
-3. Classify each Billing behavior as:
-   - satisfied and acceptable;
-   - partially satisfied with a bounded gap;
-   - out of accepted scope.
-4. Make only the smallest necessary implementation changes.
-5. Run repository-wide CI.
-6. Reconcile STATE and base docs before advancing the release frontier.
-7. Continue visual debt separately from functional acceptance when possible.
+1. Preserve Release 6 closure documents and canonical state.
+2. Audit existing Release 7 Documents code as a bounded storage/access slice.
+3. Audit existing Release 7 Dashboard code as a separate read-model slice.
+4. Classify each behavior as satisfied, bounded gap or out of accepted scope.
+5. Make only the smallest necessary implementation changes.
+6. Run repository-wide CI.
+7. Reconcile STATE and base docs before advancing the release frontier.
+8. Continue visual debt separately from functional acceptance when possible.
 
 ## 9. Visual acceptance criteria
 
@@ -320,6 +346,6 @@ Mitigation: review common clinic workflows, not only visual appearance.
 
 **Context:** Repository code is ahead of formal state in several modules, and the client also requested progressive visual improvement.
 
-**Decision:** Accept Release 4 and Release 5 only after their specific audits; keep later modules unaccepted until equivalent evidence exists; continue visual work as bounded non-functional slices.
+**Decision:** Accept Releases 4, 5 and 6 only after their specific audits; keep later modules unaccepted until equivalent evidence exists; continue visual work as bounded non-functional slices.
 
-**Consequence:** Release 6 becomes the next audit target, while Odontogram and Treatments/Quotes visual debt remains valid follow-up without reopening accepted functional boundaries.
+**Consequence:** Release 7 becomes the next audit target, while Odontogram, Treatments/Quotes and Billing visual debt remains valid follow-up without reopening accepted functional boundaries.

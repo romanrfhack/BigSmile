@@ -1,6 +1,6 @@
 # ADR 009 — Release 6 Billing Document Foundation
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-07-22
 - **Decision Type:** Release-scope reconciliation
 - **Scope:** Billing commercial-record foundation
@@ -27,13 +27,13 @@ Billing had not been formally accepted because code presence alone does not clos
 
 The module-specific audit concludes that the existing bounded implementation satisfies a Release 6.1 foundation without requiring new runtime behavior.
 
-## Proposed decision
+## Decision
 
 Accept **Release 6 — Billing** through one bounded slice:
 
 - **Release 6.1 — Billing Document Foundation**.
 
-The ADR becomes `Accepted` only when canonical state, roadmap and base documentation are reconciled in the accepted closure change.
+This ADR is accepted together with the canonical state, roadmap and base-document reconciliation in the Release 6 closure change.
 
 ## 1. BillingDocument boundary
 
@@ -226,19 +226,19 @@ Non-blocking follow-ups include:
 - consider an issue confirmation interaction as a bounded UX slice;
 - design Payment separately before introducing balances or receipts.
 
-## 12. Acceptance condition
+## 12. Acceptance evidence
 
-Change this ADR from `Proposed` to `Accepted` only when the same closure change:
+The Release 6 closure change satisfies the acceptance condition by:
 
-- updates `STATE — BigSmile.md`;
-- updates `docs/product-roadmap.md`;
-- reconciles README, AGENTS and PROJECT_MAP;
-- records Release 6.1 as completed;
-- identifies Release 7 as the next planned functional phase;
-- preserves Phase 2.1 after the remaining MVP gate;
-- passes repository-wide CI.
+- updating `STATE — BigSmile.md`;
+- updating `docs/product-roadmap.md`;
+- reconciling README, AGENTS and PROJECT_MAP;
+- recording Release 6.1 as completed;
+- identifying Release 7 as the next planned functional phase;
+- preserving Phase 2.1 after the remaining MVP gate;
+- passing repository-wide CI.
 
-## 13. Proposed consequence after acceptance
+## 13. Consequence
 
 - Latest completed functional release: Release 6 — Billing.
 - Next planned functional phase: Release 7 — Documents and Dashboard.
