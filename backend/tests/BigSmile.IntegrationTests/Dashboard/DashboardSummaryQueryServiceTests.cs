@@ -11,18 +11,22 @@ namespace BigSmile.IntegrationTests.Dashboard
 {
     public sealed class DashboardSummaryQueryServiceTests
     {
+        private static readonly DateTimeOffset FixedUtcNow = new(2026, 7, 23, 2, 0, 0, TimeSpan.Zero);
+        private static readonly DateTime TenantALocalDay = new(2026, 7, 22);
+        private static readonly DateTime TenantBLocalDay = new(2026, 7, 23);
+
         [Fact]
         public async Task GetSummaryAsync_ReturnsTenantScopedOperationalCounts()
         {
             var databaseName = Guid.NewGuid().ToString();
             var actorUserId = Guid.NewGuid();
             var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
-            await SeedTenantADashboardDataAsync(databaseName, tenantA, actorUserId);
-            await SeedTenantBDashboardDataAsync(databaseName, tenantB, actorUserId);
+            await SeedTenantADashboardDataAsync(databaseName, tenantA, actorUserId, TenantALocalDay);
+            await SeedTenantBDashboardDataAsync(databaseName, tenantB, actorUserId, TenantBLocalDay);
             var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
 
             await using var context = CreateContext(databaseName, tenantContext);
-            var queryService = CreateQueryService(context, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext, FixedUtcNow);
 
             var summary = await queryService.GetSummaryAsync();
 
@@ -33,25 +37,36 @@ namespace BigSmile.IntegrationTests.Dashboard
             Assert.Equal(3, summary.ActiveTreatmentPlansCount);
             Assert.Equal(2, summary.AcceptedQuotesCount);
             Assert.Equal(1, summary.IssuedBillingDocumentsCount);
-            Assert.True(summary.GeneratedAtUtc <= DateTime.UtcNow);
+            Assert.Equal(FixedUtcNow.UtcDateTime, summary.GeneratedAtUtc);
         }
 
         [Fact]
-        public async Task GetSummaryAsync_UsesTodayByAppointmentStartDate()
+        public async Task GetSummaryAsync_UsesTenantLocalDate_WhenUtcDateDiffers()
         {
             var databaseName = Guid.NewGuid().ToString();
             var actorUserId = Guid.NewGuid();
             var (tenantA, _) = await SeedTenantsAsync(databaseName);
             var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
-            var today = DateTime.UtcNow.Date;
+            var branchId = tenantA.Branches.Single().Id;
 
-            await SeedAppointmentAsync(databaseName, tenantA.Id, tenantA.Branches.Single().Id, patient.Id, today.AddHours(9), AppointmentStatus.Scheduled);
-            await SeedAppointmentAsync(databaseName, tenantA.Id, tenantA.Branches.Single().Id, patient.Id, today.AddDays(-1).AddHours(9), AppointmentStatus.Scheduled);
-            await SeedAppointmentAsync(databaseName, tenantA.Id, tenantA.Branches.Single().Id, patient.Id, today.AddDays(1).AddHours(9), AppointmentStatus.Scheduled);
+            await SeedAppointmentAsync(
+                databaseName,
+                tenantA.Id,
+                branchId,
+                patient.Id,
+                TenantALocalDay.AddHours(9),
+                AppointmentStatus.Scheduled);
+            await SeedAppointmentAsync(
+                databaseName,
+                tenantA.Id,
+                branchId,
+                patient.Id,
+                TenantALocalDay.AddDays(1).AddHours(9),
+                AppointmentStatus.Scheduled);
 
             var tenantContext = CreateTenantContext(actorUserId, tenantA.Id);
             await using var context = CreateContext(databaseName, tenantContext);
-            var queryService = CreateQueryService(context, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext, FixedUtcNow);
 
             var summary = await queryService.GetSummaryAsync();
 
@@ -60,17 +75,69 @@ namespace BigSmile.IntegrationTests.Dashboard
         }
 
         [Fact]
+        public async Task GetSummaryAsync_UsesEachTenantTimeZoneWithoutCrossTenantLeakage()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var actorUserId = Guid.NewGuid();
+            var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
+            var patientA = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var patientB = await SeedPatientAsync(databaseName, tenantB.Id, "Bruno", "Garcia");
+
+            await SeedAppointmentAsync(
+                databaseName,
+                tenantA.Id,
+                tenantA.Branches.Single().Id,
+                patientA.Id,
+                TenantALocalDay.AddHours(9),
+                AppointmentStatus.Scheduled);
+            await SeedAppointmentAsync(
+                databaseName,
+                tenantA.Id,
+                tenantA.Branches.Single().Id,
+                patientA.Id,
+                TenantBLocalDay.AddHours(9),
+                AppointmentStatus.Scheduled);
+            await SeedAppointmentAsync(
+                databaseName,
+                tenantB.Id,
+                tenantB.Branches.Single().Id,
+                patientB.Id,
+                TenantBLocalDay.AddHours(10),
+                AppointmentStatus.Scheduled);
+            await SeedAppointmentAsync(
+                databaseName,
+                tenantB.Id,
+                tenantB.Branches.Single().Id,
+                patientB.Id,
+                TenantALocalDay.AddHours(10),
+                AppointmentStatus.Scheduled);
+
+            var tenantAContext = CreateTenantContext(actorUserId, tenantA.Id);
+            await using var contextA = CreateContext(databaseName, tenantAContext);
+            var tenantASummary = await CreateQueryService(contextA, tenantAContext, FixedUtcNow).GetSummaryAsync();
+
+            var tenantBContext = CreateTenantContext(actorUserId, tenantB.Id);
+            await using var contextB = CreateContext(databaseName, tenantBContext);
+            var tenantBSummary = await CreateQueryService(contextB, tenantBContext, FixedUtcNow).GetSummaryAsync();
+
+            Assert.Equal(1, tenantASummary.TodayAppointmentsCount);
+            Assert.Equal(1, tenantASummary.TodayPendingAppointmentsCount);
+            Assert.Equal(1, tenantBSummary.TodayAppointmentsCount);
+            Assert.Equal(1, tenantBSummary.TodayPendingAppointmentsCount);
+        }
+
+        [Fact]
         public async Task GetSummaryAsync_BlocksPlatformScopeWithoutResolvedTenant()
         {
             var databaseName = Guid.NewGuid().ToString();
             var actorUserId = Guid.NewGuid();
             var (tenantA, _) = await SeedTenantsAsync(databaseName);
-            await SeedTenantADashboardDataAsync(databaseName, tenantA, actorUserId);
+            await SeedTenantADashboardDataAsync(databaseName, tenantA, actorUserId, TenantALocalDay);
             var tenantContext = new TenantContext();
             tenantContext.SetRequestContext(actorUserId.ToString(), AccessScope.Platform, isAuthenticated: true);
 
             await using var context = CreateContext(databaseName, tenantContext);
-            var queryService = CreateQueryService(context, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext, FixedUtcNow);
 
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => queryService.GetSummaryAsync());
 
@@ -83,25 +150,30 @@ namespace BigSmile.IntegrationTests.Dashboard
             var databaseName = Guid.NewGuid().ToString();
             var actorUserId = Guid.NewGuid();
             var (tenantA, tenantB) = await SeedTenantsAsync(databaseName);
-            await SeedTenantADashboardDataAsync(databaseName, tenantA, actorUserId);
-            await SeedTenantBDashboardDataAsync(databaseName, tenantB, actorUserId);
+            await SeedTenantADashboardDataAsync(databaseName, tenantA, actorUserId, TenantALocalDay);
+            await SeedTenantBDashboardDataAsync(databaseName, tenantB, actorUserId, TenantBLocalDay);
             var tenantContext = new TenantContext();
             tenantContext.SetRequestContext(actorUserId.ToString(), AccessScope.Platform, isAuthenticated: true);
             tenantContext.EnablePlatformOverride();
 
             await using var context = CreateContext(databaseName, tenantContext);
-            var queryService = CreateQueryService(context, tenantContext);
+            var queryService = CreateQueryService(context, tenantContext, FixedUtcNow);
 
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => queryService.GetSummaryAsync());
 
             Assert.Contains("resolved tenant context", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static DashboardSummaryQueryService CreateQueryService(AppDbContext context, TenantContext tenantContext)
+        private static DashboardSummaryQueryService CreateQueryService(
+            AppDbContext context,
+            TenantContext tenantContext,
+            DateTimeOffset utcNow)
         {
             return new DashboardSummaryQueryService(
                 new EfDashboardSummaryRepository(context),
-                tenantContext);
+                new EfTenantRepository(context),
+                tenantContext,
+                new FixedTimeProvider(utcNow));
         }
 
         private static TenantContext CreateTenantContext(Guid userId, Guid tenantId)
@@ -114,9 +186,9 @@ namespace BigSmile.IntegrationTests.Dashboard
         private static async Task<(Tenant TenantA, Tenant TenantB)> SeedTenantsAsync(string databaseName)
         {
             await using var context = CreateContext(databaseName, new TenantContext());
-            var tenantA = new Tenant("Tenant A", "tenant-a");
+            var tenantA = new Tenant("Tenant A", "tenant-a", "America/Mexico_City");
             tenantA.AddBranch("Branch A");
-            var tenantB = new Tenant("Tenant B", "tenant-b");
+            var tenantB = new Tenant("Tenant B", "tenant-b", "UTC");
             tenantB.AddBranch("Branch B");
 
             context.Tenants.AddRange(tenantA, tenantB);
@@ -125,10 +197,14 @@ namespace BigSmile.IntegrationTests.Dashboard
             return (tenantA, tenantB);
         }
 
-        private static async Task SeedTenantADashboardDataAsync(string databaseName, Tenant tenant, Guid actorUserId)
+        private static async Task SeedTenantADashboardDataAsync(
+            string databaseName,
+            Tenant tenant,
+            Guid actorUserId,
+            DateTime localDay)
         {
             var branchId = tenant.Branches.Single().Id;
-            var today = DateTime.UtcNow.Date;
+            var today = localDay.Date;
             var activePatientA = await SeedPatientAsync(databaseName, tenant.Id, "Ana", "Lopez");
             var activePatientB = await SeedPatientAsync(databaseName, tenant.Id, "Carla", "Ruiz");
             var inactivePatient = await SeedPatientAsync(databaseName, tenant.Id, "Inactive", "Patient", isActive: false);
@@ -150,10 +226,14 @@ namespace BigSmile.IntegrationTests.Dashboard
             await SeedBillingDocumentAsync(databaseName, tenant.Id, activePatientB.Id, acceptedQuoteB, actorUserId, BillingDocumentStatus.Draft);
         }
 
-        private static async Task SeedTenantBDashboardDataAsync(string databaseName, Tenant tenant, Guid actorUserId)
+        private static async Task SeedTenantBDashboardDataAsync(
+            string databaseName,
+            Tenant tenant,
+            Guid actorUserId,
+            DateTime localDay)
         {
             var branchId = tenant.Branches.Single().Id;
-            var today = DateTime.UtcNow.Date;
+            var today = localDay.Date;
             var patient = await SeedPatientAsync(databaseName, tenant.Id, "Bruno", "Garcia");
             await SeedAppointmentAsync(databaseName, tenant.Id, branchId, patient.Id, today.AddHours(13), AppointmentStatus.Scheduled);
             await SeedPatientDocumentAsync(databaseName, tenant.Id, patient.Id, actorUserId, retire: false);
@@ -313,6 +393,18 @@ namespace BigSmile.IntegrationTests.Dashboard
 
             var configuration = new ConfigurationBuilder().Build();
             return new AppDbContext(options, configuration, tenantContext);
+        }
+
+        private sealed class FixedTimeProvider : TimeProvider
+        {
+            private readonly DateTimeOffset _utcNow;
+
+            public FixedTimeProvider(DateTimeOffset utcNow)
+            {
+                _utcNow = utcNow;
+            }
+
+            public override DateTimeOffset GetUtcNow() => _utcNow;
         }
     }
 }
