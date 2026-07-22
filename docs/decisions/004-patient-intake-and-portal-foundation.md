@@ -1,11 +1,12 @@
 # ADR 004 — Patient Intake and Portal Foundation
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-07-22
 - **Decision Type:** Product scope, authentication boundary, clinical-data workflow
 - **Scope:** Patient self-registration, existing-patient activation, medical-history intake, audit trail
 - **Applies To:** Identity, Patients, Clinical Records, API, frontend, persistence, security, roadmap
-- **Tracking:** GitHub issue #2
+- **Roadmap Placement:** Phase 2.1 — Patient Intake and Portal Foundation, after the initial MVP
+- **Tracking:** GitHub issue #2; implementation issues #4, #5, #6, and #7
 
 ## Context
 
@@ -19,7 +20,7 @@ The current authentication model is staff-oriented. `User` authenticates through
 
 The current clinical questionnaire stores the latest `Unknown` / `Yes` / `No` answer and updater metadata, but it does not preserve a complete immutable history of patient-originated revisions. The current `Patient` aggregate is canonical tenant-owned operational data and should not be created or modified directly by an anonymous public endpoint without duplicate resolution and clinic review.
 
-This requirement pulls forward a bounded subset of the later patient-intake / patient-portal roadmap. It does not open the full portal, online booking, messaging, billing, documents, or clinical-record browsing.
+This requirement formalizes a bounded patient-intake and self-service foundation for Phase 2 — Modern Operations. It does not open the full patient portal, online booking, messaging, billing, documents, or professional clinical-record browsing.
 
 ## Decision
 
@@ -121,7 +122,7 @@ It will use:
 - mobile/tablet-first forms suitable for waiting-room use;
 - the same fixed medical-question catalog, without duplicating backend ownership rules;
 - explicit save and submit states;
-- clear messaging that clinic review may be required before changes appear in the clinical record.
+- clear messaging that clinic review is required before changes appear in the canonical patient or clinical record.
 
 The existing staff clinical-record questionnaire remains unchanged as the internal operational view.
 
@@ -140,9 +141,24 @@ The foundation requires:
 - no platform override behavior in patient-portal policies;
 - tests for IDOR, replay, cross-tenant access, duplicate consumption, expiry, revocation, and concurrency.
 
+### 8. Roadmap placement and implementation gate
+
+This capability is planned as **Phase 2.1 — Patient Intake and Portal Foundation**, the first bounded capability inside **Phase 2 Expansion — Modern Operations** after the initial MVP is formally accepted and stable.
+
+This placement is intentional because:
+
+- the requirement directly supports intake forms and digital patient updates;
+- it depends on stable Patients and Clinical Records behavior;
+- clinic review/application depends on the operational MVP remaining authoritative;
+- a public authentication boundary should not interrupt the current Release 4 → Release 7 dependency chain without an explicit future reprioritization decision.
+
+The accepted ADR does **not** open Phase 2.1 implementation now. The current next planned functional phase remains Release 4 — Odontogram.
+
+The broader patient portal remains in Phase 4. Phase 2.1 is limited to account activation, self-service intake/update, clinic review/application, and audit. It does not include professional clinical-record browsing, booking, billing, documents, treatments, or messaging.
+
 ## Implementation slices
 
-### PI-1 — Access and Invitation Foundation
+### PI-1 — Access and Invitation Foundation — issue #4
 
 - `PatientPortalAccount` and `PatientPortalInvitation` entities;
 - persistence configuration, indexes, migration, and tenant filters;
@@ -151,7 +167,7 @@ The foundation requires:
 - dedicated JWT claims, auth scheme, policies, rate limiting, and integration tests;
 - no medical questionnaire writes yet.
 
-### PI-2 — Intake Draft
+### PI-2 — Intake Draft — issue #5
 
 - `PatientIntake` aggregate and fixed questionnaire draft answers;
 - new-patient tenant intake session;
@@ -160,7 +176,7 @@ The foundation requires:
 - mobile/tablet frontend capture;
 - append-only effective-save revisions.
 
-### PI-3 — Submit, Review, and Apply
+### PI-3 — Submit, Review, and Apply — issue #6
 
 - immutable submitted revisions;
 - staff review worklist;
@@ -168,7 +184,7 @@ The foundation requires:
 - application to canonical Patient and Clinical Records through explicit use cases;
 - conflict detection and concurrency handling.
 
-### PI-4 — Audit Visibility and Hardening
+### PI-4 — Audit Visibility and Hardening — issue #7
 
 - staff-visible audit timeline;
 - account recovery and session revocation;
@@ -198,6 +214,10 @@ The foundation requires:
 
 **Not sufficient by itself.** Infrastructure audit events may be added later, but patient intake requires domain-level revisions that preserve clinical provenance and review/application lifecycle.
 
+### Implement before Release 4
+
+**Not selected.** The client confirmed the capability is desired but did not assign it a higher priority than the existing roadmap. Placing the bounded foundation after the initial MVP preserves dependency order and avoids destabilizing the current operational-core sequence.
+
 ## Consequences
 
 ### Positive
@@ -208,6 +228,7 @@ The foundation requires:
 - Existing patients can be linked securely without public record search.
 - Every patient-originated update has explicit provenance and immutable history.
 - The implementation can progress in small, testable slices.
+- The capability is visible in the roadmap without displacing the current operational-core releases.
 
 ### Trade-offs
 
@@ -216,6 +237,7 @@ The foundation requires:
 - Invitation issuance is required before existing-patient activation.
 - Remote activation eventually needs a delivery/recovery channel; automated email/SMS/WhatsApp remains outside PI-1 unless separately approved.
 - Supporting dependents or multiple patient records per account is deferred.
+- The capability remains planned until the initial MVP is formally accepted or the roadmap is explicitly reprioritized.
 
 ## Non-goals
 
@@ -227,11 +249,23 @@ The foundation requires:
 - configurable form builder;
 - automatic clinical interpretation of patient responses.
 
-## Acceptance conditions for this ADR
+## Decision confirmation
 
-This ADR can move to **Accepted** when product confirms:
+Product confirmed on 2026-07-22 that:
 
-1. Patient changes are staged for clinic review before canonical application.
+1. Patient changes must be staged for clinic review before canonical application.
 2. Existing-patient access begins through staff-issued, single-use invitations.
 3. The initial waiting-room flow may use a clinic-generated QR/link without an external messaging provider.
-4. The bounded intake slice is intentionally prioritized before Release 4 without opening the rest of the patient portal roadmap.
+4. The client has not assigned this capability a priority that should displace the current roadmap.
+5. The capability is therefore accepted as Phase 2.1 after the initial MVP, while the full patient portal remains deferred to Phase 4.
+
+## Implementation status at acceptance
+
+- Architecture decision: accepted.
+- General implementation plan: tracked in `docs/patient-intake-and-portal-plan.md`.
+- Parent tracking: issue #2.
+- PI-1: planned in issue #4; not implemented.
+- PI-2: planned in issue #5; not implemented.
+- PI-3: planned in issue #6; not implemented.
+- PI-4: planned in issue #7; not implemented.
+- Backend/API/database/frontend implementation: not started by this ADR.
