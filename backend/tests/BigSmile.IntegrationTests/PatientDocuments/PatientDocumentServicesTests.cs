@@ -34,7 +34,7 @@ namespace BigSmile.IntegrationTests.PatientDocuments
                 await using var context = CreateContext(databaseName, tenantContext);
                 var commandService = CreateCommandService(context, tenantContext, storageRootPath);
                 var queryService = CreateQueryService(context, tenantContext, storageRootPath);
-                var fileBytes = Encoding.UTF8.GetBytes("pdf-binary");
+                var fileBytes = Encoding.UTF8.GetBytes("%PDF-1.7\npdf-binary");
 
                 using var uploadStream = new MemoryStream(fileBytes);
                 var created = await commandService.UploadAsync(
@@ -111,6 +111,40 @@ namespace BigSmile.IntegrationTests.PatientDocuments
         }
 
         [Fact]
+        public async Task UploadAsync_Fails_WhenContentDoesNotMatchDeclaredType()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var storageRootPath = CreateStorageRootPath();
+            var (tenantA, _) = await SeedTenantsAsync(databaseName);
+            var patient = await SeedPatientAsync(databaseName, tenantA.Id, "Ana", "Lopez");
+            var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
+
+            try
+            {
+                await using var context = CreateContext(databaseName, tenantContext);
+                var commandService = CreateCommandService(context, tenantContext, storageRootPath);
+                var bytes = Encoding.UTF8.GetBytes("<html>not a PDF</html>");
+                using var stream = new MemoryStream(bytes);
+
+                var exception = await Assert.ThrowsAsync<ArgumentException>(() => commandService.UploadAsync(
+                    patient.Id,
+                    new UploadPatientDocumentCommand(
+                        "spoofed.pdf",
+                        "application/pdf",
+                        bytes.LongLength,
+                        stream)));
+
+                Assert.Contains("does not match declared content type", exception.Message, StringComparison.OrdinalIgnoreCase);
+                Assert.Empty(context.PatientDocuments);
+                Assert.Empty(Directory.GetFiles(storageRootPath, "*", SearchOption.AllDirectories));
+            }
+            finally
+            {
+                DeleteStorageRootPath(storageRootPath);
+            }
+        }
+
+        [Fact]
         public async Task UploadAsync_Fails_WhenFileSizeExceedsTheSliceLimit()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -154,7 +188,7 @@ namespace BigSmile.IntegrationTests.PatientDocuments
             {
                 await using var context = CreateContext(databaseName, tenantContext);
                 var commandService = CreateCommandService(context, tenantContext, storageRootPath);
-                var fileBytes = Encoding.UTF8.GetBytes("pdf");
+                var fileBytes = Encoding.UTF8.GetBytes("%PDF-1.7\npdf");
                 using var stream = new MemoryStream(fileBytes);
 
                 var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UploadAsync(
@@ -190,7 +224,7 @@ namespace BigSmile.IntegrationTests.PatientDocuments
                 await using (var writerContext = CreateContext(databaseName, writerTenantContext))
                 {
                     var commandService = CreateCommandService(writerContext, writerTenantContext, storageRootPath);
-                    var fileBytes = Encoding.UTF8.GetBytes("pdf");
+                    var fileBytes = Encoding.UTF8.GetBytes("%PDF-1.7\npdf");
                     using var uploadStream = new MemoryStream(fileBytes);
                     var created = await commandService.UploadAsync(
                         patientA.Id,
@@ -232,7 +266,7 @@ namespace BigSmile.IntegrationTests.PatientDocuments
                 await using (var writerContext = CreateContext(databaseName, writerTenantContext))
                 {
                     var writerCommandService = CreateCommandService(writerContext, writerTenantContext, storageRootPath);
-                    var fileBytes = Encoding.UTF8.GetBytes("pdf");
+                    var fileBytes = Encoding.UTF8.GetBytes("%PDF-1.7\npdf");
                     using var uploadStream = new MemoryStream(fileBytes);
                     var created = await writerCommandService.UploadAsync(
                         patientB.Id,
@@ -248,7 +282,7 @@ namespace BigSmile.IntegrationTests.PatientDocuments
                 var tenantContext = CreateTenantContext(Guid.NewGuid(), tenantA.Id);
                 await using var context = CreateContext(databaseName, tenantContext);
                 var commandService = CreateCommandService(context, tenantContext, storageRootPath);
-                var bytes = Encoding.UTF8.GetBytes("pdf");
+                var bytes = Encoding.UTF8.GetBytes("%PDF-1.7\npdf");
                 using var writeStream = new MemoryStream(bytes);
 
                 var uploadException = await Assert.ThrowsAsync<InvalidOperationException>(() => commandService.UploadAsync(
@@ -286,7 +320,7 @@ namespace BigSmile.IntegrationTests.PatientDocuments
                 await using var context = CreateContext(databaseName, tenantContext);
                 var commandService = CreateCommandService(context, tenantContext, storageRootPath);
                 var queryService = CreateQueryService(context, tenantContext, storageRootPath);
-                var fileBytes = Encoding.UTF8.GetBytes("platform-pdf");
+                var fileBytes = Encoding.UTF8.GetBytes("%PDF-1.7\nplatform-pdf");
 
                 using var uploadStream = new MemoryStream(fileBytes);
                 var created = await commandService.UploadAsync(
