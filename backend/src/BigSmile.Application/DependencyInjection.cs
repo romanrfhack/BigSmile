@@ -28,6 +28,7 @@ namespace BigSmile.Application
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             // Register application services (query handlers, command handlers, etc.)
+            services.AddSingleton(TimeProvider.System);
             services.AddSingleton<IRolePermissionCatalog, RolePermissionCatalog>();
             services.AddScoped<IBillingDocumentCommandService, BillingDocumentCommandService>();
             services.AddScoped<IBillingDocumentQueryService, BillingDocumentQueryService>();
