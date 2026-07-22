@@ -3,6 +3,7 @@ using BigSmile.Api.Authorization;
 using BigSmile.Application.Features.PatientDocuments.Commands;
 using BigSmile.Application.Features.PatientDocuments.Dtos;
 using BigSmile.Application.Features.PatientDocuments.Queries;
+using BigSmile.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,8 @@ namespace BigSmile.Api.Controllers
     [Route("api/patients/{patientId:guid}/documents")]
     public class PatientDocumentsController : ControllerBase
     {
+        private const long UploadRequestLimitBytes = PatientDocument.MaxFileSizeBytes + (1024 * 1024);
+
         private readonly IPatientDocumentCommandService _patientDocumentCommandService;
         private readonly IPatientDocumentQueryService _patientDocumentQueryService;
 
@@ -48,6 +51,8 @@ namespace BigSmile.Api.Controllers
 
         [HttpPost]
         [Authorize(Policy = AuthorizationPolicies.DocumentWrite)]
+        [RequestSizeLimit(UploadRequestLimitBytes)]
+        [RequestFormLimits(MultipartBodyLengthLimit = UploadRequestLimitBytes)]
         public async Task<ActionResult<PatientDocumentSummaryDto>> Upload(
             Guid patientId,
             [FromForm] UploadPatientDocumentRequest request,
