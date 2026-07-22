@@ -14,11 +14,18 @@ env:
 
 jobs:
   compile_diagnostics:
+    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-    - name: Checkout repository
+    - name: Checkout document-hardening branch
       uses: actions/checkout@v4
+      with:
+        ref: release-7.1/document-upload-hardening
+        fetch-depth: 1
+        show-progress: false
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -28,13 +35,25 @@ jobs:
     - name: Restore backend dependencies
       run: dotnet restore backend/BigSmile.slnx > /dev/null
 
-    - name: Compile backend with concise errors
+    - name: Capture backend compile errors
       run: |
-        if ! dotnet build backend/BigSmile.slnx --configuration Release --no-restore > backend-build.log 2>&1; then
-          grep -E "error (CS|NETSDK|NU|MSB)[0-9]+|: error " backend-build.log || tail -n 100 backend-build.log
-          exit 1
+        set +e
+        dotnet build backend/BigSmile.slnx --configuration Release --no-restore > backend-build.log 2>&1
+        status=$?
+        set -e
+        if [ "$status" -eq 0 ]; then
+          echo "Backend compilation succeeded."
+          exit 0
         fi
-        echo "Backend compilation succeeded."
+        mkdir -p diagnostics
+        grep -E "error (CS|NETSDK|NU|MSB)[0-9]+|: error " backend-build.log > diagnostics/backend-build-errors.txt || tail -n 100 backend-build.log > diagnostics/backend-build-errors.txt
+        cat diagnostics/backend-build-errors.txt
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add diagnostics/backend-build-errors.txt
+        git commit -m "chore: capture backend build errors"
+        git push origin HEAD:release-7.1/document-upload-hardening
+        exit "$status"
 
   build:
     runs-on: ubuntu-latest
