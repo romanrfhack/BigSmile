@@ -75,9 +75,9 @@ Future phases will expand into:
 
 ### UX / Existing Code Reconciliation
 
-Release 4 — Odontogram is now formally accepted after a module-specific audit of its domain, API, persistence, permissions, frontend and automated tests.
+Release 4 — Odontogram and Release 5 — Treatments and Quotes are now formally accepted after module-specific audits of their domain, API, persistence, permissions, frontend and automated tests.
 
-The repository still contains functional code in modules later than the formal roadmap frontier, including Treatments/Quotes, Billing, Documents, Dashboard and reminders/manual reminders. Code, routes, permissions, migrations or tests in those modules do not by themselves mean Release 5, Release 6, Release 7 or Phase 2 are open, accepted or closed.
+The repository still contains functional code in modules later than the formal roadmap frontier, including Billing, Documents, Dashboard and reminders/manual reminders. Code, routes, permissions, migrations or tests in those modules do not by themselves mean Release 6, Release 7 or Phase 2 are open, accepted or closed.
 
 Until each later module receives its own audit and acceptance pass, it remains `implemented but not formally accepted/reconciled`. Visual slices may improve presentation, copy, color, microinteractions, modals, drawers, tabs, sticky action bars and UX debt without changing backend behavior, APIs, permissions, auth, tenant context, branch context, migrations or functional scope.
 
@@ -268,11 +268,12 @@ Completed foundation and functional milestones:
 * **Release 2 — Scheduling**
 * **Release 3 — Clinical Records**
 * **Release 4 — Odontogram**
+* **Release 5 — Treatments and Quotes**
 
 Current roadmap position:
 
-* **Latest completed delivery phase:** **Release 4 — Odontogram**
-* **Next planned functional phase:** **Release 5 — Treatments and Quotes**
+* **Latest completed delivery phase:** **Release 5 — Treatments and Quotes**
+* **Next planned functional phase:** **Release 6 — Billing**
 * **Phase 2.1 — Patient Intake and Portal Foundation:** planned after the initial MVP; architecture accepted in ADR 006; implementation not opened
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
@@ -298,14 +299,32 @@ Odontogram reads/writes use `odontogram.read` / `odontogram.write`. `TenantUser`
 
 Advanced Odontogram capabilities remain deferred: child/mixed dentition, bulk editing, full tooth/surface history, restore/versioning, treatment/diagnosis/document linkage, advanced orthodontic/periodontal charting, imaging overlays and AI detection.
 
-Closure evidence:
+Release 4 closure evidence:
 
 * `docs/release-4-odontogram-audit-and-closure.md`
 * ADR 007 — `docs/decisions/007-release-4-odontogram-closure.md`
 
+Release 5 is formally complete as the foundational Treatments and Quotes release through:
+
+* **Release 5.1 — Treatment Plan Foundation**
+* **Release 5.2 — Quote Foundation**
+
+The accepted Treatment Plan boundary includes explicit creation and `404` when missing, one tenant-owned/patient-owned plan per patient/tenant in the current slice, basic items with optional permanent-adult FDI tooth/surface references, explicit item add/remove, a bounded `Draft / Proposed / Accepted` lifecycle and accepted-plan immutability.
+
+The accepted Quote boundary includes explicit snapshot creation from an existing non-empty plan, one quote per plan, no autocreation, fixed `MXN` in the public application/API path, line-level pricing, calculated line/quote totals, positive-price gates for `Proposed`/`Accepted` and accepted-quote immutability.
+
+Treatment and quote reads/writes use `treatmentplan.*` and `treatmentquote.*`. `TenantUser` does not receive those permissions. Treatment/quote items remain child records accessed through tenant-owned aggregate roots.
+
+Advanced commercial and execution capabilities remain deferred: treatment catalog administration, multiple or archived plans, regenerate/versioning, multiple quotes or negotiation, taxes, discounts, Billing/Scheduling linkage, treatment execution/progress, insurance, financing, advanced approvals and Patient Portal access.
+
+Release 5 closure evidence:
+
+* `docs/release-5-treatments-and-quotes-audit-and-closure.md`
+* ADR 008 — `docs/decisions/008-release-5-treatments-and-quotes-closure.md`
+
 The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The repository remains established but not functionally complete. Treatments/Quotes, Billing, Documents/Dashboard and Phase 2 work must not be assumed accepted until code and documentation explicitly prove it.
+The repository remains established but not functionally complete. Billing, Documents/Dashboard and Phase 2 work must not be assumed accepted until code and documentation explicitly prove it.
 
 ---
 
@@ -363,19 +382,22 @@ The repository remains established but not functionally complete. Treatments/Quo
 
 ### Release 5 — Treatments and Quotes
 
-* Next planned functional phase after Release 4 closure
-* Existing code is `implemented but not formally accepted/reconciled` until a dedicated audit
-* Planned bounded scope starts with explicit treatment-plan creation and one active plan per patient/tenant
+* Completed foundational Treatments and Quotes release through slices 5.1 and 5.2
+* Explicit treatment-plan creation with `GET` returning `404` when missing and no autocreation
+* One plan per patient/tenant in the current slice
 * Basic items with optional adult FDI tooth/surface references
-* Minimal plan lifecycle `Draft` / `Proposed` / `Accepted`
-* Quotes and pricing must open only in explicit later slices
-* Taxes, discounts, billing/scheduling linkage, treatment execution, versioning and negotiation remain deferred until accepted
+* `Draft / Proposed / Accepted` lifecycle and accepted-plan immutability
+* Explicit quote snapshot creation from a non-empty plan
+* One quote per plan, fixed `MXN`, line pricing and calculated totals
+* Positive pricing gates and accepted-quote immutability
+* Treatment execution, taxes/discounts, Billing/Scheduling linkage, versioning and negotiation remain deferred
 
 ### Release 6 — Billing
 
-* Planned after Release 5
-* Billing should start only after treatment/quote foundations are accepted
-* Payments, balances, receipts, taxes, discounts, CFDI, cancellations and advanced workflows remain deferred
+* Next planned functional phase after Release 5 closure
+* Existing code remains `implemented but not formally accepted/reconciled` until a dedicated audit
+* Billing should build only on accepted treatment-plan/quote contracts
+* Payments, balances, receipts, taxes, discounts, CFDI, cancellations and advanced workflows remain unaccepted until explicitly reconciled
 
 ### Release 7 — Documents and Dashboard
 
