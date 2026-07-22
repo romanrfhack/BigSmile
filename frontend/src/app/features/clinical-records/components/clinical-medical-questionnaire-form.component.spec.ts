@@ -52,7 +52,7 @@ describe('ClinicalMedicalQuestionnaireFormComponent', () => {
     expect(yesRadio).not.toBeNull();
     expect(noRadio).not.toBeNull();
     expect(unknownRadio).not.toBeNull();
-    expect(unknownRadio.checked).toBeTrue();
+    expect(unknownRadio.checked).toBe(true);
     expect(unknownRadio.parentElement?.textContent).toContain('No answer');
 
     yesRadio.click();
