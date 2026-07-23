@@ -15,8 +15,8 @@ namespace BigSmile.Infrastructure.Data.Repositories
 
         public async Task<DashboardSummaryCounts> GetSummaryCountsAsync(
             Guid tenantId,
-            DateTime todayStartUtc,
-            DateTime tomorrowStartUtc,
+            DateTime todayStart,
+            DateTime tomorrowStart,
             CancellationToken cancellationToken = default)
         {
             var activePatientsCount = await _dbContext.Patients
@@ -25,15 +25,15 @@ namespace BigSmile.Infrastructure.Data.Repositories
             var todayAppointmentsCount = await _dbContext.Appointments
                 .CountAsync(appointment =>
                     appointment.TenantId == tenantId &&
-                    appointment.StartsAt >= todayStartUtc &&
-                    appointment.StartsAt < tomorrowStartUtc,
+                    appointment.StartsAt >= todayStart &&
+                    appointment.StartsAt < tomorrowStart,
                     cancellationToken);
 
             var todayPendingAppointmentsCount = await _dbContext.Appointments
                 .CountAsync(appointment =>
                     appointment.TenantId == tenantId &&
-                    appointment.StartsAt >= todayStartUtc &&
-                    appointment.StartsAt < tomorrowStartUtc &&
+                    appointment.StartsAt >= todayStart &&
+                    appointment.StartsAt < tomorrowStart &&
                     appointment.Status == AppointmentStatus.Scheduled,
                     cancellationToken);
 
