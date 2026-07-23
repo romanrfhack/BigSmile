@@ -1,0 +1,81 @@
+name: Reconcile tenant time zone documentation
+
+on:
+  push:
+    branches:
+      - release-7.2/tenant-time-zone
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: release-7.2/tenant-time-zone
+          fetch-depth: 0
+
+      - name: Patch tenant model
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("docs/tenant-model.md")
+          text = path.read_text(encoding="utf-8")
+          anchor = """### 14.3 Initial Defaults
+          Suggested tenant defaults:
+          - one active branch
+          - one tenant admin
+          - baseline permissions
+          - default timezone
+          - default branding placeholders
+          - initial module enablement according to plan or stage
+
+          ---
+          """
+          replacement = """### 14.3 Initial Defaults
+          Suggested tenant defaults:
+          - one active branch
+          - one tenant admin
+          - baseline permissions
+          - default timezone
+          - default branding placeholders
+          - initial module enablement according to plan or stage
+
+          ### 14.4 Tenant Time Zone Foundation
+
+          Tenant owns the server-authoritative time zone used to interpret clinic-level operational dates.
+
+          Current bounded rules:
+          - `Tenant.TimeZoneId` is required and validated through the platform time-zone database
+          - the persisted identifier, not browser input, determines the tenant-local operational day
+          - existing and bootstrap tenants default to `America/Mexico_City` for the current Mexican pilot context
+          - the default is not global behavior; every tenant owns its own persisted value
+          - Branch remains subordinate and does not have a separate time zone in the current slice
+          - Dashboard uses the tenant-local date while keeping generation metadata in UTC
+          - existing Appointment values remain clinic wall-clock `DateTime` values; this foundation does not rewrite historical scheduling data
+
+          Detailed rationale and trade-offs are recorded in ADR 010 — `docs/decisions/010-tenant-time-zone-foundation.md`.
+
+          ---
+          """
+
+          if text.count(anchor) != 1:
+              raise RuntimeError("Tenant model initial-defaults anchor was not found exactly once")
+
+          path.write_text(text.replace(anchor, replacement, 1), encoding="utf-8")
+
+      - name: Commit documentation and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-tenant-time-zone-docs.yml
+          git add docs/tenant-model.md
+          git diff --cached --check
+          git commit -m "docs: document tenant time zone ownership"
+          git push origin HEAD:release-7.2/tenant-time-zone
