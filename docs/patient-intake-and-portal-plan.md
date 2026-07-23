@@ -2,12 +2,12 @@
 
 - **Status:** Planned; implementation not opened
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
-- **Start gate:** After the initial MVP is formally accepted and stable, unless a future explicit decision reprioritizes it
+- **Start gate:** Initial MVP accepted; explicit Phase 2.1 opening and issue #2 access/bootstrap decisions still required
 - **Architecture decision:** ADR 006
 - **Canonical ADR:** `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - **Parent tracking:** GitHub issue #2
 - **Implementation tracking:** issues #4, #5, #6 and #7
-- **Last updated:** 2026-07-22
+- **Last updated:** 2026-07-23
 
 ## 1. Purpose
 
@@ -31,8 +31,9 @@ Current accepted roadmap frontier:
 - Release 4 — Odontogram: completed.
 - Release 5 — Treatments and Quotes: completed.
 - Release 6 — Billing: completed through Release 6.1.
-- Release 7 — Documents and Dashboard: next planned functional phase.
-- Phase 2.1: planned after the remaining MVP release is accepted and stable.
+- Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
+- Initial operational MVP: formally accepted under ADR 011.
+- Phase 2.1: next planned phase; explicit opening and PI-1 implementation still pending.
 
 This placement is deliberate:
 
@@ -54,6 +55,7 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Release 4 Odontogram foundation | Completed | ADR 007 / Release 4 audit |
 | Release 5 Treatments and Quotes foundation | Completed | ADR 008 / Release 5 audit |
 | Release 6 Billing foundation | Completed | ADR 009 / Release 6 audit |
+| Release 7 Documents/Dashboard foundations | Completed; MVP accepted | ADR 010/011 / Release 7 audit |
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Planned; not implemented | Issue #4 |
@@ -366,14 +368,15 @@ It is complete only when:
 
 ## 12. Current next action
 
-The current repository is positioned at **Release 7 — Documents and Dashboard** as the next planned functional phase.
+The current repository has an accepted initial operational MVP. **Phase 2.1 — Patient Intake and Portal Foundation** is the next planned phase, but is not yet opened for implementation.
 
 For Patient Intake and Portal:
 
 1. Keep issues #4 through #7 open and ordered.
-2. Do not start PI-1 until Phase 2.1 is explicitly opened after MVP acceptance or documented reprioritization.
-3. When Phase 2.1 opens, start only with issue #4.
-4. Update canonical state in the same PR that opens PI-1.
+2. Resolve issue #2 choices for patient identifier, password vs magic link, TTL, pilot delivery and lockout/recovery baseline.
+3. Record an explicit Phase 2.1 opening decision before implementation.
+4. When Phase 2.1 opens, start only with issue #4.
+5. Update canonical state in the same PR that opens PI-1.
 
 ## 13. Decision note
 
@@ -381,4 +384,4 @@ For Patient Intake and Portal:
 
 **Decision:** Plan the bounded self-service capability as Phase 2.1 after the initial MVP, using separate patient identity, staged clinic review and append-only audit.
 
-**Consequence:** The requirement stays visible, decomposed, testable and traceable while Release 7 remains the final pending MVP release before the normal Phase 2.1 gate.
+**Consequence:** The MVP gate is satisfied and the requirement remains visible, decomposed, testable and traceable. Phase 2.1 still requires an explicit opening decision; PI-1 to PI-4 remain unimplemented.

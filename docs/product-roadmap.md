@@ -52,8 +52,8 @@ A module is not complete merely because entities, endpoints, UI, migrations or t
 - **Release 4 — Odontogram** — completed
 - **Release 5 — Treatments and Quotes** — completed
 - **Release 6 — Billing** — completed
-- **Release 7 — Documents and Dashboard** — next planned functional phase
-- **Phase 2 Expansion — Modern Operations**
+- **Release 7 — Documents and Dashboard** — completed; initial operational MVP accepted
+- **Phase 2 Expansion — Modern Operations** — next planned phase, not opened
   - **Phase 2.1 — Patient Intake and Portal Foundation**
 - **Phase 3 Expansion — SaaS Growth**
 - **Phase 4 Expansion — Advanced Product Capabilities**
@@ -400,67 +400,76 @@ Provide a bounded commercial record created from an accepted treatment quote whi
 ## 11. Release 7 — Documents and Dashboard
 
 ### Status
-Next planned functional phase; not formally opened or accepted.
+Completed through Release 7.1 and Release 7.2. This closure formally accepts the initial operational MVP.
 
-### Documents planned scope
-- tenant-owned/patient-owned document records
-- explicit authorized upload
-- private storage
-- allowlisted PDF/JPG/PNG
-- size limits
-- active list
-- authorized download
-- logical retire
+### Closure evidence
+- Release 7.1 — Patient Documents Foundation
+- Release 7.2 — Dashboard Read Model Foundation
+- Audit: `docs/release-7-documents-and-dashboard-audit-and-closure.md`
+- ADR 010: `docs/decisions/010-tenant-time-zone-foundation.md`
+- ADR 011: `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`
 
-### Dashboard planned scope
-- tenant-scoped read model
+### Release 7.1 accepted scope
+- tenant-owned/patient-owned `PatientDocument`
+- explicit authorized upload/list/download/logical retire
+- private storage outside public web roots
+- server-generated root-contained storage keys
+- PDF/JPEG/PNG declared-type plus binary-signature validation
+- 10 MB authoritative file limit and bounded multipart overhead
+- UTC/actor metadata
+- `document.read` / `document.write`
+- bounded Angular patient-context Documents workflow
+
+### Release 7.2 accepted scope
+- read-only tenant-scoped Dashboard summary
 - active patients
-- today/pending appointments
+- tenant-local today/pending appointments
 - active documents
-- active treatment plans
+- existing treatment plans
 - accepted quotes
 - issued Billing documents from accepted Release 6.1
+- `Tenant.TimeZoneId` as server-authoritative operational-day source
+- `GeneratedAtUtc` preserved in UTC
+- `dashboard.read` and bounded Angular summary cards
 
 ### Deferred
-- OCR/rich preview/versioning
-- public/external sharing
-- generated PDFs/templates
+- OCR/rich preview/versioning and public/external sharing
+- generated PDFs/templates, advanced consent/e-signature and antivirus providers
+- retention/physical-delete automation and Patient Portal document access
+- revenue/payment/balance metrics
 - advanced analytics/charts/exports
-- branch/doctor dashboards
-- BI-level reporting
-
-Existing Documents/Dashboard code requires module-specific audit before acceptance.
+- branch/doctor dashboards, real-time, BI and AI recommendations
 
 ---
 
 ## 12. MVP Definition
 
-The initial operational MVP is complete only after formal acceptance of:
+The initial operational MVP is formally accepted through:
 - Patients
 - Scheduling
 - Clinical Records
 - Odontogram
 - Treatments and Quotes
-- Billing
-- Documents
+- Billing Document Foundation
+- Patient Documents Foundation
 - Roles and Permissions
-- Basic Dashboard
+- Dashboard Read Model Foundation
 
-Current accepted frontier: **Release 6**.
+Current accepted frontier: **Release 7**.
 
-Remaining MVP release acceptance: **Release 7**.
+MVP status: **accepted**. This bounded milestone does not include payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics or full Patient Portal.
 
 ---
 
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Later phase after the initial MVP is accepted and stable.
+Next planned phase after formal initial MVP acceptance; implementation not opened automatically.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Architecturally accepted in ADR 006; implementation not opened.
+Architecturally accepted in ADR 006; MVP gate satisfied; explicit phase opening and PI-1 implementation still pending.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
