@@ -135,15 +135,15 @@ Phase 2.1 requires:
 
 ### 8. Roadmap placement and gate
 
-Phase 2.1 starts only after the initial MVP is formally accepted and stable unless a future explicit decision reprioritizes it.
+The initial MVP is formally accepted through Release 7 under ADR 011.
 
-Current roadmap frontier after Release 6 closure:
+Current roadmap frontier after MVP closure:
 
 ```text
-Release 7 -> Phase 2.1
+Phase 2.1 — planned, explicit opening pending
 ```
 
-The current next planned functional phase is Release 7 — Documents and Dashboard.
+Phase 2.1 is the next planned phase, but this ADR and the MVP gate do not automatically open PI-1. The access/bootstrap choices tracked in issue #2 must be resolved and canonical state updated when the phase is explicitly opened.
 
 The broader patient portal remains Phase 4 work. Phase 2.1 is limited to activation, self-service intake/update, clinic review/application and audit.
 
