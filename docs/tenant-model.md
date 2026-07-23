@@ -525,6 +525,21 @@ Suggested tenant defaults:
 - default branding placeholders
 - initial module enablement according to plan or stage
 
+### 14.4 Tenant Time Zone Foundation
+
+Tenant owns the server-authoritative time zone used to interpret clinic-level operational dates.
+
+Current bounded rules:
+- `Tenant.TimeZoneId` is required and validated through the platform time-zone database
+- the persisted identifier, not browser input, determines the tenant-local operational day
+- existing and bootstrap tenants default to `America/Mexico_City` for the current Mexican pilot context
+- the default is not global behavior; every tenant owns its own persisted value
+- Branch remains subordinate and does not have a separate time zone in the current slice
+- Dashboard uses the tenant-local date while keeping generation metadata in UTC
+- existing Appointment values remain clinic wall-clock `DateTime` values; this foundation does not rewrite historical scheduling data
+
+Detailed rationale and trade-offs are recorded in ADR 010 — `docs/decisions/010-tenant-time-zone-foundation.md`.
+
 ---
 
 ## 15. Reporting Scope
