@@ -24,6 +24,7 @@ namespace BigSmile.UnitTests.PatientPortal
             Assert.Equal(patient.Id, invitation.PatientId);
             Assert.Equal(PatientPortalInvitationPurpose.ExistingPatientActivation, invitation.Purpose);
             Assert.Equal(actorId, invitation.CreatedByUserId);
+            Assert.False(invitation.CanBeConsumedAt(CreatedAtUtc.AddTicks(-1)));
             Assert.True(invitation.CanBeConsumedAt(CreatedAtUtc.AddHours(1)));
         }
 
