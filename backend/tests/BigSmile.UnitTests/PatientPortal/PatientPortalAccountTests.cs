@@ -79,6 +79,32 @@ namespace BigSmile.UnitTests.PatientPortal
         }
 
         [Fact]
+        public void RegisterFailedLogin_AfterExpiredLockoutStartsANewAttemptWindow()
+        {
+            var account = CreateAccount();
+            var occurredAtUtc = new DateTime(2026, 7, 24, 12, 0, 0, DateTimeKind.Utc);
+
+            for (var attempt = 1; attempt <= 5; attempt++)
+            {
+                account.RegisterFailedLogin(
+                    occurredAtUtc.AddSeconds(attempt),
+                    maxFailedAttempts: 5,
+                    lockoutDuration: TimeSpan.FromMinutes(15));
+            }
+
+            var afterExpiryUtc = occurredAtUtc.AddMinutes(16);
+            var locked = account.RegisterFailedLogin(
+                afterExpiryUtc,
+                maxFailedAttempts: 5,
+                lockoutDuration: TimeSpan.FromMinutes(15));
+
+            Assert.False(locked);
+            Assert.Equal(1, account.FailedLoginAttempts);
+            Assert.Null(account.LockoutEndUtc);
+            Assert.Equal(afterExpiryUtc, account.LastFailedLoginAtUtc);
+        }
+
+        [Fact]
         public void RegisterSuccessfulLogin_ClearsFailedAttemptsAndLockout()
         {
             var account = CreateAccount();
