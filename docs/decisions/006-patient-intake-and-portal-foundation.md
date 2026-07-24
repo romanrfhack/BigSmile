@@ -6,7 +6,8 @@
 - **Scope:** Patient self-registration, existing-patient activation, medical-history intake and audit
 - **Applies To:** Identity, Patients, Clinical Records, API, frontend, persistence, security and roadmap
 - **Roadmap Placement:** Phase 2.1 after the initial MVP
-- **Tracking:** issue #2; implementation issues #4, #5, #6 and #7
+- **Tracking:** issue #2; PI-1 #4; PI-1A–PI-1D #22–#25; PI-2–PI-4 #5–#7
+- **Access baseline/opening:** ADR 012
 
 ## Context
 
@@ -143,7 +144,7 @@ Current roadmap frontier after MVP closure:
 Phase 2.1 — planned, explicit opening pending
 ```
 
-Phase 2.1 is the next planned phase, but this ADR and the MVP gate do not automatically open PI-1. The access/bootstrap choices tracked in issue #2 must be resolved and canonical state updated when the phase is explicitly opened.
+Phase 2.1 was explicitly opened on 2026-07-24 after the access/bootstrap choices were approved in ADR 012. PI-1 is active and begins with PI-1A; later slices remain gated and no public patient runtime is accepted by the opening alone.
 
 The broader patient portal remains Phase 4 work. Phase 2.1 is limited to activation, self-service intake/update, clinic review/application and audit.
 
@@ -229,7 +230,7 @@ The broader patient portal remains Phase 4 work. Phase 2.1 is limited to activat
 - existing-patient activation requires invitation;
 - remote activation eventually requires delivery/recovery decisions;
 - dependents/multiple patients per account are deferred;
-- capability remains planned until the MVP gate or reprioritization.
+- Phase 2.1 is active, but the runtime remains incomplete until PI-1 through PI-4 are accepted.
 
 ## Non-goals
 
@@ -252,10 +253,14 @@ Product confirmed on 2026-07-22 that:
 4. the capability does not displace the current MVP roadmap;
 5. full patient portal remains separate future scope.
 
+On 2026-07-24 the client additionally approved the ADR 012 baseline: password after single-use activation, tenant-scoped `LoginName`, 24 h/30 min TTL defaults, reception delivery, 5/15 lockout and assisted recovery.
+
 ## Implementation status
 
 - Decision: accepted.
 - General plan: `docs/patient-intake-and-portal-plan.md`.
 - Parent: issue #2.
-- PI-1 to PI-4: planned, not implemented.
-- Backend/API/database/frontend patient-facing implementation: not started.
+- Phase 2.1: opened.
+- PI-1: active; PI-1A domain/persistence in implementation.
+- PI-1B–PI-1D and PI-2–PI-4: not implemented.
+- Public patient API/auth/frontend and intake: not started.

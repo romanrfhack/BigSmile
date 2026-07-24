@@ -151,6 +151,7 @@ These belong to a tenant and must always include `TenantId`.
 Examples:
 - tenant
 - tenant settings
+- patient portal accounts and invitations
 - tenant users
 - patient
 - clinical record
@@ -229,6 +230,20 @@ Examples:
 - `Assistant` -> tenant scope
 
 A role alone is not enough; it must be evaluated together with its scope and membership.
+
+### 7.4 Patient-Facing Identity Boundary
+
+Patient-facing identity is separate from staff identity under ADR 006 and ADR 012.
+
+Current rules:
+- `PatientPortalAccount` and `PatientPortalInvitation` are tenant-owned records
+- `LoginName` uniqueness is scoped by `TenantId`
+- a portal account links to at most one canonical Patient in Phase 2.1
+- patient accounts do not use `UserTenantMembership`, staff roles or tenant-wide permissions
+- patient policies have no platform override
+- `TenantId`, portal account and linked Patient come from verified server context
+- phone, date of birth and contact data cannot be used to claim a record publicly
+- Phase 2.1 proceeds through PI-1A to PI-1D before intake is opened
 
 ---
 

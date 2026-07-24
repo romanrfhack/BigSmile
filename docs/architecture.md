@@ -495,6 +495,18 @@ Responsible for:
 * billing metrics
 * treatment conversion metrics
 
+### 9.12 Patient Intake and Portal
+
+Responsible for the bounded Phase 2.1 patient-facing boundary:
+
+* patient portal account and invitation ownership
+* separate patient authentication/session policy
+* waiting-room and existing-patient intake drafts
+* patient-originated revisions and audit
+* clinic review before canonical application
+
+It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary and ADR 012 defines the approved pilot access baseline.
+
 ---
 
 ## 10. Domain Design Direction
