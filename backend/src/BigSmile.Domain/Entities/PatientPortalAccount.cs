@@ -32,9 +32,9 @@ namespace BigSmile.Domain.Entities
         {
         }
 
-        public PatientPortalAccount(
+        private PatientPortalAccount(
             Guid tenantId,
-            Guid? patientId,
+            Patient? patient,
             string loginName,
             string passwordHash)
         {
@@ -43,9 +43,11 @@ namespace BigSmile.Domain.Entities
                 throw new ArgumentException("Patient portal account tenant ownership is required.", nameof(tenantId));
             }
 
-            if (patientId == Guid.Empty)
+            if (patient is not null && patient.TenantId != tenantId)
             {
-                throw new ArgumentException("Patient portal account patient reference cannot be empty.", nameof(patientId));
+                throw new ArgumentException(
+                    "Patient portal account patient must belong to the same tenant.",
+                    nameof(patient));
             }
 
             var normalizedLoginName = NormalizeLoginName(loginName);
@@ -53,7 +55,8 @@ namespace BigSmile.Domain.Entities
 
             Id = Guid.NewGuid();
             TenantId = tenantId;
-            PatientId = patientId;
+            PatientId = patient?.Id;
+            Patient = patient;
             LoginName = normalizedLoginName;
             NormalizedLoginName = normalizedLoginName.ToUpperInvariant();
             PasswordHash = NormalizePasswordHash(passwordHash);
@@ -61,24 +64,44 @@ namespace BigSmile.Domain.Entities
             LastUpdatedAtUtc = now;
         }
 
-        public void LinkPatient(Guid patientId)
+        public static PatientPortalAccount CreateForExistingPatient(
+            Patient patient,
+            string loginName,
+            string passwordHash)
         {
-            if (patientId == Guid.Empty)
+            ArgumentNullException.ThrowIfNull(patient);
+            return new PatientPortalAccount(patient.TenantId, patient, loginName, passwordHash);
+        }
+
+        public static PatientPortalAccount CreateUnlinked(
+            Guid tenantId,
+            string loginName,
+            string passwordHash)
+        {
+            return new PatientPortalAccount(tenantId, null, loginName, passwordHash);
+        }
+
+        public void LinkPatient(Patient patient)
+        {
+            ArgumentNullException.ThrowIfNull(patient);
+
+            if (patient.TenantId != TenantId)
             {
-                throw new ArgumentException("Patient portal account patient reference is required.", nameof(patientId));
+                throw new InvalidOperationException("Patient portal account cannot link a patient from another tenant.");
             }
 
-            if (PatientId.HasValue && PatientId.Value != patientId)
+            if (PatientId.HasValue && PatientId.Value != patient.Id)
             {
                 throw new InvalidOperationException("Patient portal account is already linked to another patient.");
             }
 
-            if (PatientId == patientId)
+            if (PatientId == patient.Id)
             {
                 return;
             }
 
-            PatientId = patientId;
+            PatientId = patient.Id;
+            Patient = patient;
             LastUpdatedAtUtc = DateTime.UtcNow;
         }
 
