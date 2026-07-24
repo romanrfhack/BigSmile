@@ -243,8 +243,8 @@ replace_once(
 )
 replace_once(
     "docs/tenant-model.md",
-    "- tenant settings",
-    "- tenant settings\n- patient portal accounts and invitations",
+    "- tenant settings\n- tenant users",
+    "- tenant settings\n- patient portal accounts and invitations\n- tenant users",
 )
 replace_once(
     "docs/architecture.md",
