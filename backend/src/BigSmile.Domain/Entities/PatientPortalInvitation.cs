@@ -64,7 +64,10 @@ namespace BigSmile.Domain.Entities
         public bool CanBeConsumedAt(DateTime utcNow)
         {
             EnsureUtc(utcNow, nameof(utcNow));
-            return !RevokedAtUtc.HasValue && !ConsumedAtUtc.HasValue && utcNow < ExpiresAtUtc;
+            return utcNow >= CreatedAtUtc &&
+                   utcNow < ExpiresAtUtc &&
+                   !RevokedAtUtc.HasValue &&
+                   !ConsumedAtUtc.HasValue;
         }
 
         public bool IsExpiredAt(DateTime utcNow)
