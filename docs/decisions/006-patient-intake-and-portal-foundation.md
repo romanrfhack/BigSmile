@@ -261,6 +261,7 @@ On 2026-07-24 the client additionally approved the ADR 012 baseline: password af
 - General plan: `docs/patient-intake-and-portal-plan.md`.
 - Parent: issue #2.
 - Phase 2.1: opened.
-- PI-1: active; PI-1A domain/persistence in implementation.
-- PI-1B–PI-1D and PI-2–PI-4: not implemented.
+- PI-1: active; PI-1A domain/persistence completed through PR #26.
+- PI-1B is next and awaits its staff-authorization decision.
+- PI-1C–PI-1D and PI-2–PI-4: not implemented.
 - Public patient API/auth/frontend and intake: not started.

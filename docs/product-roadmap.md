@@ -53,7 +53,7 @@ A module is not complete merely because entities, endpoints, UI, migrations or t
 - **Release 5 — Treatments and Quotes** — completed
 - **Release 6 — Billing** — completed
 - **Release 7 — Documents and Dashboard** — completed; initial operational MVP accepted
-- **Phase 2 Expansion — Modern Operations** — active through Phase 2.1 / PI-1A
+- **Phase 2 Expansion — Modern Operations** — active; PI-1A completed, PI-1B next
   - **Phase 2.1 — Patient Intake and Portal Foundation**
 - **Phase 3 Expansion — SaaS Growth**
 - **Phase 4 Expansion — Advanced Product Capabilities**
@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. Phase 2.1 is opened and PI-1A is the current implementation slice.
+Active after formal MVP acceptance. PI-1A is completed; PI-1B is next and awaits the explicit staff-permission decision.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006 and ADR 012. PI-1 is active; PI-1A (#22) is in implementation. No public patient runtime is accepted yet.
+Active under ADR 006 and ADR 012. PI-1A (#22) is completed; PI-1B (#23) is next but not opened. No public patient runtime is accepted yet.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -485,8 +485,8 @@ Allow new and existing patients to propose or complement information through lea
 
 #### Sequential implementation
 1. PI-1 — Access and Invitation Foundation — issue #4
-   1. PI-1A domain/persistence — #22 — current
-   2. PI-1B staff invitation lifecycle — #23
+   1. PI-1A domain/persistence — #22 — completed
+   2. PI-1B staff invitation lifecycle — #23 — next, permission decision pending
    3. PI-1C activation/login/self-session — #24
    4. PI-1D patient auth frontend/security closure — #25
 2. PI-2 — Intake Draft and Self-Service Capture — issue #5
