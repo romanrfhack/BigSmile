@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/home/runner/work/BigSmile/BigSmile/scripts/patch_phase21_opening_docs.py", line 244, in <module>
+    replace_once(
+  File "/home/runner/work/BigSmile/BigSmile/scripts/patch_phase21_opening_docs.py", line 11, in replace_once
+    raise RuntimeError(
+RuntimeError: Expected exactly one occurrence in docs/tenant-model.md, found 2: '- tenant settings'
