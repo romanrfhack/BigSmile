@@ -32,24 +32,14 @@ namespace BigSmile.Domain.Entities
         }
 
         public PatientPortalInvitation(
-            Guid tenantId,
-            Guid patientId,
+            Patient patient,
             PatientPortalInvitationPurpose purpose,
             string tokenHash,
             DateTime createdAtUtc,
             DateTime expiresAtUtc,
             Guid createdByUserId)
         {
-            if (tenantId == Guid.Empty)
-            {
-                throw new ArgumentException("Patient portal invitation tenant ownership is required.", nameof(tenantId));
-            }
-
-            if (patientId == Guid.Empty)
-            {
-                throw new ArgumentException("Patient portal invitation patient reference is required.", nameof(patientId));
-            }
-
+            ArgumentNullException.ThrowIfNull(patient);
             EnsureDefinedPurpose(purpose);
             EnsureActor(createdByUserId, nameof(createdByUserId));
             EnsureUtc(createdAtUtc, nameof(createdAtUtc));
@@ -61,8 +51,9 @@ namespace BigSmile.Domain.Entities
             }
 
             Id = Guid.NewGuid();
-            TenantId = tenantId;
-            PatientId = patientId;
+            TenantId = patient.TenantId;
+            PatientId = patient.Id;
+            Patient = patient;
             Purpose = purpose;
             TokenHash = NormalizeTokenHash(tokenHash);
             CreatedAtUtc = createdAtUtc;
@@ -82,14 +73,16 @@ namespace BigSmile.Domain.Entities
             return utcNow >= ExpiresAtUtc;
         }
 
-        public void Consume(Guid patientPortalAccountId, DateTime consumedAtUtc)
+        public void Consume(PatientPortalAccount account, DateTime consumedAtUtc)
         {
-            if (patientPortalAccountId == Guid.Empty)
-            {
-                throw new ArgumentException("Patient portal invitation consumer account is required.", nameof(patientPortalAccountId));
-            }
-
+            ArgumentNullException.ThrowIfNull(account);
             EnsureUtc(consumedAtUtc, nameof(consumedAtUtc));
+
+            if (account.TenantId != TenantId || account.PatientId != PatientId)
+            {
+                throw new InvalidOperationException(
+                    "Patient portal invitation can only be consumed by an account linked to the same tenant and patient.");
+            }
 
             if (RevokedAtUtc.HasValue)
             {
@@ -112,7 +105,8 @@ namespace BigSmile.Domain.Entities
             }
 
             ConsumedAtUtc = consumedAtUtc;
-            ConsumedByPatientPortalAccountId = patientPortalAccountId;
+            ConsumedByPatientPortalAccountId = account.Id;
+            ConsumedByPatientPortalAccount = account;
         }
 
         public void Revoke(Guid revokedByUserId, DateTime revokedAtUtc)
