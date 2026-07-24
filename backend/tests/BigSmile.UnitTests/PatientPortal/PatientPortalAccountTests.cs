@@ -5,19 +5,17 @@ namespace BigSmile.UnitTests.PatientPortal
     public sealed class PatientPortalAccountTests
     {
         [Fact]
-        public void Constructor_NormalizesLoginAndPreservesOwnership()
+        public void CreateForExistingPatient_NormalizesLoginAndPreservesOwnership()
         {
-            var tenantId = Guid.NewGuid();
-            var patientId = Guid.NewGuid();
+            var patient = CreatePatient(Guid.NewGuid());
 
-            var account = new PatientPortalAccount(
-                tenantId,
-                patientId,
+            var account = PatientPortalAccount.CreateForExistingPatient(
+                patient,
                 "  Patient.Name@example.com  ",
                 "versioned-password-hash");
 
-            Assert.Equal(tenantId, account.TenantId);
-            Assert.Equal(patientId, account.PatientId);
+            Assert.Equal(patient.TenantId, account.TenantId);
+            Assert.Equal(patient.Id, account.PatientId);
             Assert.Equal("Patient.Name@example.com", account.LoginName);
             Assert.Equal("PATIENT.NAME@EXAMPLE.COM", account.NormalizedLoginName);
             Assert.True(account.IsActive);
@@ -29,30 +27,30 @@ namespace BigSmile.UnitTests.PatientPortal
         [InlineData("")]
         [InlineData("ab")]
         [InlineData("patient name")]
-        public void Constructor_RejectsInvalidLoginName(string loginName)
+        public void CreateUnlinked_RejectsInvalidLoginName(string loginName)
         {
-            Assert.Throws<ArgumentException>(() => new PatientPortalAccount(
+            Assert.Throws<ArgumentException>(() => PatientPortalAccount.CreateUnlinked(
                 Guid.NewGuid(),
-                null,
                 loginName,
                 "versioned-password-hash"));
         }
 
         [Fact]
-        public void LinkPatient_AllowsOneCanonicalPatientOnly()
+        public void LinkPatient_AllowsOneCanonicalPatientInTheSameTenantOnly()
         {
-            var account = new PatientPortalAccount(
-                Guid.NewGuid(),
-                null,
+            var tenantId = Guid.NewGuid();
+            var account = PatientPortalAccount.CreateUnlinked(
+                tenantId,
                 "patient-login",
                 "versioned-password-hash");
-            var patientId = Guid.NewGuid();
+            var patient = CreatePatient(tenantId);
 
-            account.LinkPatient(patientId);
-            account.LinkPatient(patientId);
+            account.LinkPatient(patient);
+            account.LinkPatient(patient);
 
-            Assert.Equal(patientId, account.PatientId);
-            Assert.Throws<InvalidOperationException>(() => account.LinkPatient(Guid.NewGuid()));
+            Assert.Equal(patient.Id, account.PatientId);
+            Assert.Throws<InvalidOperationException>(() => account.LinkPatient(CreatePatient(tenantId)));
+            Assert.Throws<InvalidOperationException>(() => account.LinkPatient(CreatePatient(Guid.NewGuid())));
         }
 
         [Fact]
@@ -128,11 +126,19 @@ namespace BigSmile.UnitTests.PatientPortal
 
         private static PatientPortalAccount CreateAccount()
         {
-            return new PatientPortalAccount(
-                Guid.NewGuid(),
-                Guid.NewGuid(),
+            return PatientPortalAccount.CreateForExistingPatient(
+                CreatePatient(Guid.NewGuid()),
                 "patient-login",
                 "versioned-password-hash");
+        }
+
+        private static Patient CreatePatient(Guid tenantId)
+        {
+            return new Patient(
+                tenantId,
+                "Ana",
+                "Lopez",
+                new DateOnly(1991, 2, 14));
         }
     }
 }
