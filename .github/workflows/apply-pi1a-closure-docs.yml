@@ -1,0 +1,33 @@
+name: Apply PI-1A Closure Docs
+
+on:
+  push:
+    branches:
+      - docs/pi-1a-closure
+
+jobs:
+  patch_docs:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout closure branch
+      uses: actions/checkout@v4
+      with:
+        ref: docs/pi-1a-closure
+        fetch-depth: 1
+        show-progress: false
+
+    - name: Patch canonical docs
+      run: python scripts/patch_pi1a_closure_docs.py
+
+    - name: Commit docs
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add "STATE — BigSmile.md" README.md AGENTS.md PROJECT_MAP.md docs
+        git diff --cached --check
+        git commit -m "docs: close PI-1A and gate PI-1B authorization"
+        git push origin HEAD:docs/pi-1a-closure
