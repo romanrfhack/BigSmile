@@ -27,6 +27,7 @@ namespace BigSmile.IntegrationTests.PatientPortal
                     "versioned-hash-b");
                 var createdAtUtc = new DateTime(2026, 7, 24, 12, 0, 0, DateTimeKind.Utc);
 
+                seedContext.AttachRange(patientA, patientB);
                 seedContext.PatientPortalAccounts.AddRange(accountA, accountB);
                 seedContext.PatientPortalInvitations.AddRange(
                     new PatientPortalInvitation(
@@ -80,6 +81,7 @@ namespace BigSmile.IntegrationTests.PatientPortal
 
             await using (var context = CreateContext(databaseName, tenantAContext))
             {
+                context.Attach(patientB);
                 context.PatientPortalAccounts.Add(PatientPortalAccount.CreateForExistingPatient(
                     patientB,
                     "foreign-account",
@@ -92,6 +94,7 @@ namespace BigSmile.IntegrationTests.PatientPortal
             await using (var context = CreateContext(databaseName, tenantAContext))
             {
                 var createdAtUtc = new DateTime(2026, 7, 24, 12, 0, 0, DateTimeKind.Utc);
+                context.Attach(patientB);
                 context.PatientPortalInvitations.Add(new PatientPortalInvitation(
                     patientB,
                     PatientPortalInvitationPurpose.ExistingPatientActivation,
