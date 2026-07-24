@@ -7,23 +7,21 @@ namespace BigSmile.UnitTests.PatientPortal
         private static readonly DateTime CreatedAtUtc = new(2026, 7, 24, 12, 0, 0, DateTimeKind.Utc);
 
         [Fact]
-        public void Constructor_PreservesTenantPatientPurposeAndHashedToken()
+        public void Constructor_DerivesTenantAndPatientFromCanonicalPatient()
         {
-            var tenantId = Guid.NewGuid();
-            var patientId = Guid.NewGuid();
+            var patient = CreatePatient(Guid.NewGuid());
             var actorId = Guid.NewGuid();
 
             var invitation = new PatientPortalInvitation(
-                tenantId,
-                patientId,
+                patient,
                 PatientPortalInvitationPurpose.ExistingPatientActivation,
                 CreateTokenHash(),
                 CreatedAtUtc,
                 CreatedAtUtc.AddHours(24),
                 actorId);
 
-            Assert.Equal(tenantId, invitation.TenantId);
-            Assert.Equal(patientId, invitation.PatientId);
+            Assert.Equal(patient.TenantId, invitation.TenantId);
+            Assert.Equal(patient.Id, invitation.PatientId);
             Assert.Equal(PatientPortalInvitationPurpose.ExistingPatientActivation, invitation.Purpose);
             Assert.Equal(actorId, invitation.CreatedByUserId);
             Assert.True(invitation.CanBeConsumedAt(CreatedAtUtc.AddHours(1)));
@@ -33,8 +31,7 @@ namespace BigSmile.UnitTests.PatientPortal
         public void Constructor_RejectsExpiryAtOrBeforeCreation()
         {
             Assert.Throws<ArgumentException>(() => new PatientPortalInvitation(
-                Guid.NewGuid(),
-                Guid.NewGuid(),
+                CreatePatient(Guid.NewGuid()),
                 PatientPortalInvitationPurpose.ExistingPatientActivation,
                 CreateTokenHash(),
                 CreatedAtUtc,
@@ -43,35 +40,63 @@ namespace BigSmile.UnitTests.PatientPortal
         }
 
         [Fact]
-        public void Consume_RecordsAccountAndRejectsReplay()
+        public void Consume_RecordsMatchingAccountAndRejectsReplay()
         {
-            var invitation = CreateInvitation();
-            var accountId = Guid.NewGuid();
+            var patient = CreatePatient(Guid.NewGuid());
+            var invitation = CreateInvitation(patient);
+            var account = PatientPortalAccount.CreateForExistingPatient(
+                patient,
+                "patient-login",
+                "versioned-password-hash");
             var consumedAtUtc = CreatedAtUtc.AddHours(1);
 
-            invitation.Consume(accountId, consumedAtUtc);
+            invitation.Consume(account, consumedAtUtc);
 
-            Assert.Equal(accountId, invitation.ConsumedByPatientPortalAccountId);
+            Assert.Equal(account.Id, invitation.ConsumedByPatientPortalAccountId);
             Assert.Equal(consumedAtUtc, invitation.ConsumedAtUtc);
             Assert.False(invitation.CanBeConsumedAt(consumedAtUtc.AddMinutes(1)));
             Assert.Throws<InvalidOperationException>(() =>
-                invitation.Consume(Guid.NewGuid(), consumedAtUtc.AddMinutes(1)));
+                invitation.Consume(account, consumedAtUtc.AddMinutes(1)));
+        }
+
+        [Fact]
+        public void Consume_RejectsAccountFromAnotherTenantOrPatient()
+        {
+            var patient = CreatePatient(Guid.NewGuid());
+            var invitation = CreateInvitation(patient);
+            var foreignAccount = PatientPortalAccount.CreateForExistingPatient(
+                CreatePatient(Guid.NewGuid()),
+                "foreign-login",
+                "versioned-password-hash");
+
+            Assert.Throws<InvalidOperationException>(() =>
+                invitation.Consume(foreignAccount, CreatedAtUtc.AddMinutes(10)));
         }
 
         [Fact]
         public void Consume_RejectsExpiredInvitation()
         {
-            var invitation = CreateInvitation();
+            var patient = CreatePatient(Guid.NewGuid());
+            var invitation = CreateInvitation(patient);
+            var account = PatientPortalAccount.CreateForExistingPatient(
+                patient,
+                "patient-login",
+                "versioned-password-hash");
 
             Assert.True(invitation.IsExpiredAt(CreatedAtUtc.AddHours(24)));
             Assert.Throws<InvalidOperationException>(() =>
-                invitation.Consume(Guid.NewGuid(), CreatedAtUtc.AddHours(24)));
+                invitation.Consume(account, CreatedAtUtc.AddHours(24)));
         }
 
         [Fact]
         public void Revoke_RecordsActorAndBlocksConsumption()
         {
-            var invitation = CreateInvitation();
+            var patient = CreatePatient(Guid.NewGuid());
+            var invitation = CreateInvitation(patient);
+            var account = PatientPortalAccount.CreateForExistingPatient(
+                patient,
+                "patient-login",
+                "versioned-password-hash");
             var actorId = Guid.NewGuid();
             var revokedAtUtc = CreatedAtUtc.AddMinutes(30);
 
@@ -81,29 +106,42 @@ namespace BigSmile.UnitTests.PatientPortal
             Assert.Equal(revokedAtUtc, invitation.RevokedAtUtc);
             Assert.False(invitation.CanBeConsumedAt(revokedAtUtc.AddMinutes(1)));
             Assert.Throws<InvalidOperationException>(() =>
-                invitation.Consume(Guid.NewGuid(), revokedAtUtc.AddMinutes(1)));
+                invitation.Consume(account, revokedAtUtc.AddMinutes(1)));
         }
 
         [Fact]
         public void Revoke_RejectsConsumedInvitation()
         {
-            var invitation = CreateInvitation();
-            invitation.Consume(Guid.NewGuid(), CreatedAtUtc.AddMinutes(10));
+            var patient = CreatePatient(Guid.NewGuid());
+            var invitation = CreateInvitation(patient);
+            var account = PatientPortalAccount.CreateForExistingPatient(
+                patient,
+                "patient-login",
+                "versioned-password-hash");
+            invitation.Consume(account, CreatedAtUtc.AddMinutes(10));
 
             Assert.Throws<InvalidOperationException>(() =>
                 invitation.Revoke(Guid.NewGuid(), CreatedAtUtc.AddMinutes(20)));
         }
 
-        private static PatientPortalInvitation CreateInvitation()
+        private static PatientPortalInvitation CreateInvitation(Patient patient)
         {
             return new PatientPortalInvitation(
-                Guid.NewGuid(),
-                Guid.NewGuid(),
+                patient,
                 PatientPortalInvitationPurpose.ExistingPatientActivation,
                 CreateTokenHash(),
                 CreatedAtUtc,
                 CreatedAtUtc.AddHours(24),
                 Guid.NewGuid());
+        }
+
+        private static Patient CreatePatient(Guid tenantId)
+        {
+            return new Patient(
+                tenantId,
+                "Ana",
+                "Lopez",
+                new DateOnly(1991, 2, 14));
         }
 
         private static string CreateTokenHash()
