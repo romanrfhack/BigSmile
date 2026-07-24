@@ -27,6 +27,8 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<OdontogramSurfaceFinding> OdontogramSurfaceFindings => Set<OdontogramSurfaceFinding>();
         public DbSet<OdontogramSurfaceFindingHistoryEntry> OdontogramSurfaceFindingHistoryEntries => Set<OdontogramSurfaceFindingHistoryEntry>();
         public DbSet<PatientDocument> PatientDocuments => Set<PatientDocument>();
+        public DbSet<PatientPortalAccount> PatientPortalAccounts => Set<PatientPortalAccount>();
+        public DbSet<PatientPortalInvitation> PatientPortalInvitations => Set<PatientPortalInvitation>();
         public DbSet<BillingDocument> BillingDocuments => Set<BillingDocument>();
         public DbSet<BillingDocumentItem> BillingDocumentItems => Set<BillingDocumentItem>();
         public DbSet<TreatmentPlan> TreatmentPlans => Set<TreatmentPlan>();
@@ -81,6 +83,12 @@ namespace BigSmile.Infrastructure.Data
 
             modelBuilder.Entity<PatientDocument>().HasQueryFilter(patientDocument =>
                 !ShouldApplyTenantFilter || patientDocument.TenantId == ResolvedTenantId);
+
+            modelBuilder.Entity<PatientPortalAccount>().HasQueryFilter(account =>
+                !ShouldApplyTenantFilter || account.TenantId == ResolvedTenantId);
+
+            modelBuilder.Entity<PatientPortalInvitation>().HasQueryFilter(invitation =>
+                !ShouldApplyTenantFilter || invitation.TenantId == ResolvedTenantId);
 
             modelBuilder.Entity<BillingDocument>().HasQueryFilter(billingDocument =>
                 !ShouldApplyTenantFilter || billingDocument.TenantId == ResolvedTenantId);
@@ -169,7 +177,6 @@ namespace BigSmile.Infrastructure.Data
                     case Tenant tenant when tenant.Id != CurrentTenantId.Value:
                         throw new InvalidOperationException(
                             $"Tenant write '{entry.State}' was blocked because the target tenant does not match the current tenant context.");
-
                     case ITenantOwnedEntity tenantOwnedEntity when tenantOwnedEntity.TenantId != CurrentTenantId.Value:
                         throw new InvalidOperationException(
                             $"Tenant-owned write '{entry.State}' was blocked because the target tenant does not match the current tenant context.");
