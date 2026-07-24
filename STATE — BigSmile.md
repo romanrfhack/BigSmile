@@ -22,7 +22,7 @@
 
 **Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 006 queda aceptado como decisión futura: identidad de paciente separada del acceso interno; sin `TenantUser`, `UserTenantMembership` ni permisos tenant-wide; invitaciones single-use para pacientes existentes; enlace/QR tenant-scoped para pacientes nuevos; flujo `Draft -> Submitted -> Reviewed -> Applied/Rejected`; revisión clínica antes de aplicación canónica; y bitácora append-only. Se ubica en Phase 2.1 después del MVP inicial y no abre implementación actual.
+**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake y ADR 012 fija el baseline de acceso aprobado: activación single-use + password, `LoginName` tenant-scoped, TTL 24 h/30 min, entrega piloto por recepción, lockout 5 intentos/15 min y recovery asistido. Phase 2.1 queda abierta explícitamente; PI-1 está activa y PI-1A introduce solo dominio/persistencia, sin endpoints públicos ni captura de intake.
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
@@ -74,17 +74,17 @@
 
 ## 4. Fase actual
 
-[Hecho] La última fase funcional marcada como completada es Release 7 — Documents and Dashboard.
+[Hecho] La última fase funcional completada es Release 7 — Documents and Dashboard y el MVP operativo inicial permanece formalmente aceptado.
 
-[Hecho] Release 7 queda cerrada y preservada mediante Release 7.1 — Patient Documents Foundation y Release 7.2 — Dashboard Read Model Foundation.
+[Hecho] Phase 2.1 — Patient Intake and Portal Foundation es la fase funcional actual; fue abierta explícitamente el 2026-07-24 después de aprobar su baseline de acceso.
 
-[Hecho] El MVP operativo inicial queda formalmente aceptado. Esta aceptación cubre los boundaries fundacionales documentados y no implica payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
+[Hecho] PI-1 — Access and Invitation Foundation está activa. El sub-slice actual es PI-1A — Account and Invitation Domain/Persistence, issue #22.
 
-[Hecho] La siguiente fase prevista por el roadmap es Phase 2.1 — Patient Intake and Portal Foundation.
+[Hecho] PI-1A agrega únicamente entidades tenant-owned, invariantes, índices, filtros, write enforcement, concurrencia, migración y pruebas. No expone activación/login, no crea un JWT de paciente y no captura cuestionario/intake.
 
-[Hecho] El gate normal de MVP para Phase 2.1 ya está satisfecho, pero la fase no se abre ni implementa automáticamente. Antes de PI-1 se requiere decisión explícita de apertura y resolver los choices de acceso/bootstrap registrados en issue #2.
+[Hecho] PI-1B (#23), PI-1C (#24) y PI-1D (#25) permanecen pendientes y deben ejecutarse en ese orden. PI-2 a PI-4 continúan no iniciados.
 
-[Hecho] PI-1 a PI-4 permanecen no implementados. Cuando Phase 2.1 se abra explícitamente, el primer slice será PI-1 — Access and Invitation Foundation, issue #4.
+[Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
 ## 4.1 Nota de reconciliación UX / código existente
 
@@ -98,21 +98,35 @@
 
 [Hecho] El ajuste UX del cuestionario médico solicitado por el cliente quedó integrado mediante PR #1: opciones visibles `Sí / No / Sin respuesta`, avance de captura y preservación de `Unknown` como estado seguro.
 
-## 4.2 Plan futuro — Phase 2.1 Patient Intake and Portal Foundation
+## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] decisión aceptada y trabajo planificado; implementación no iniciada.
+**Estado** — [Hecho] fase abierta; PI-1 activa; PI-1A en implementación; sin superficie pública todavía.
 
-**Ubicación** — [Hecho] siguiente fase prevista después del MVP aceptado; permanece planificada y no desplaza la necesidad de una apertura explícita antes de implementar PI-1.
+**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; se implementa mediante PI-1A → PI-1B → PI-1C → PI-1D antes de abrir PI-2.
 
 **Tracking** — [Hecho]
 
 - ADR 006 — `docs/decisions/006-patient-intake-and-portal-foundation.md`.
+- ADR 012 — `docs/decisions/012-patient-portal-access-baseline-and-phase-opening.md`.
 - Plan general — `docs/patient-intake-and-portal-plan.md`.
 - Parent issue — #2.
 - PI-1 Access and Invitation Foundation — issue #4.
+- PI-1A Domain/Persistence — issue #22.
+- PI-1B Staff Invitation Lifecycle — issue #23.
+- PI-1C Patient Activation/Login — issue #24.
+- PI-1D Patient Auth Frontend/Closure — issue #25.
 - PI-2 Intake Draft — issue #5.
 - PI-3 Submit, Review and Apply — issue #6.
 - PI-4 Audit Visibility and Hardening — issue #7.
+
+**Baseline de acceso aprobado** — [Hecho]
+
+- Activación single-use y password para accesos posteriores.
+- `LoginName` único por tenant; teléfono/fecha de nacimiento/contacto no prueban ownership.
+- TTL configurable: 24 horas para invitación existente y 30 minutos para link de sala de espera.
+- Entrega piloto por recepción, sin proveedor automático.
+- Lockout configurable de 5 intentos / 15 minutos.
+- Recovery asistido mediante revocación de sesiones y reemisión de invitación.
 
 **Reglas cerradas** — [Hecho]
 
@@ -342,23 +356,25 @@
 
 Lista priorizada:
 
-1. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
+1. Completar PI-1A (#22) con dominio/persistencia tenant-aware, migración, pruebas y CI verde, sin endpoints.
 
-2. Tratar Phase 2.1 — Patient Intake and Portal Foundation como la siguiente fase prevista, no como implementación ya abierta.
+2. Abrir PI-1B (#23) solo después del cierre de PI-1A para emisión/revocación staff con token hash-at-rest y auditoría.
 
-3. Resolver explícitamente en issue #2 el identificador de acceso, password vs magic link, TTL, entrega piloto y baseline de lockout/recovery antes de abrir PI-1.
+3. Mantener PI-1C (#24) y PI-1D (#25) bloqueados hasta sus gates previos; no exponer auth pública antes de hashing versionado, anti-enumeración, rate limiting y concurrencia.
 
-4. Cuando Phase 2.1 se abra, iniciar únicamente PI-1 — Access and Invitation Foundation, issue #4, y actualizar STATE en el mismo PR.
+4. Mantener PI-2, PI-3 y PI-4 no iniciados hasta el cierre formal de PI-1.
 
-5. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
+5. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
 
-6. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
+6. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
 
-7. Mantener fuera de agregados cerrados cualquier linkage cross-module no aceptado y preservar joins tenant-aware para accesos directos a tablas hijas.
+7. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
 
-8. Mantener recordatorios/providers/jobs/queues, online booking, advanced analytics y full Patient Portal como capabilities futuras no aceptadas.
+8. Mantener fuera de agregados cerrados cualquier linkage cross-module no aceptado y preservar joins tenant-aware para accesos directos a tablas hijas.
 
-9. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap y ADRs cuando se abra Phase 2.1 o cambie el estado del producto.
+9. Mantener recordatorios/providers/jobs/queues, online booking, advanced analytics y full Patient Portal como capabilities futuras no aceptadas.
+
+10. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap, tenant model y ADRs en cada gate de PI-1.
 
 ## 12. Riesgos y temas a vigilar
 
@@ -366,7 +382,7 @@ Lista priorizada:
 
 **Authorization model** — [Hecho] Permisos nuevos deben evolucionar junto con módulos reales, sin cambiar silenciosamente scopes o roles.
 
-**Patient-facing identity** — [Hecho] La futura frontera pública no debe reutilizar staff membership, aceptar `PatientId`/`TenantId` como autoridad, permitir platform override ni aplicar cambios canónicos sin revisión.
+**Patient-facing identity** — [Hecho] La frontera ya está abierta de forma acotada en PI-1A, pero todavía no es pública. No reutiliza staff membership, no acepta `PatientId`/`TenantId` como autoridad, no permite platform override y no aplica cambios canónicos.
 
 **Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
 
@@ -390,7 +406,7 @@ Lista priorizada:
 
 [Hecho] BigSmile es un producto SaaS multi-tenant; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewability rompe el rumbo.
 
-[Hecho] El orden completado del MVP es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. La siguiente fase prevista es Phase 2.1 Patient Intake and Portal Foundation; el portal amplio permanece en Phase 4.
+[Hecho] El orden completado del MVP es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. Phase 2.1 Patient Intake and Portal Foundation está activa mediante PI-1; el portal amplio permanece en Phase 4.
 
 [Hecho] Ningún release funcional ni Phase 2.1 se considera completado sin evidencia explícita en código, pruebas y documentación alineada.
 
@@ -398,10 +414,10 @@ Lista priorizada:
 
 ## 14. Nota tipo ADR resumida
 
-**Estado:** Nota canónica actualizada con ADR 006, ADR 007, ADR 008, ADR 009, ADR 010 y ADR 011.
+**Estado:** Nota canónica actualizada con ADR 006 a ADR 012; Phase 2.1 abierta y PI-1A activa.
 
-**Contexto:** Documents y Dashboard tenían implementación coherente, pero la auditoría detectó una allowlist de upload spoofable y una fecha `Today` basada en UTC. Ambos gaps se corrigieron mediante PR #19 y PR #20 con CI verde.
+**Contexto:** El MVP ya estaba aceptado. El cliente aprobó el baseline de acceso necesario para iniciar la identidad de paciente sin reutilizar staff auth ni introducir un proveedor externo.
 
-**Decisión:** Cerrar Release 7 mediante Release 7.1 — Patient Documents Foundation y Release 7.2 — Dashboard Read Model Foundation; aceptar el MVP operativo inicial; preservar Documents como attachment foundation privada y Dashboard como read model tenant-scoped; mover la siguiente fase prevista a Phase 2.1 sin abrir PI-1 automáticamente.
+**Decisión:** Abrir Phase 2.1; fijar mediante ADR 012 activación single-use + password, `LoginName` tenant-scoped, TTL 24 h/30 min, entrega por recepción, lockout 5/15 y recovery asistido; ejecutar PI-1 en cuatro sub-slices y comenzar únicamente por PI-1A.
 
-**Consecuencias:** El MVP queda listo para validación piloto bajo su scope acotado. Phase 2.1 requiere una decisión explícita de apertura y resolver los choices de issue #2; payments/cash/CFDI, doctor views, automatizaciones, advanced analytics y full Patient Portal permanecen diferidos.
+**Consecuencias:** El repositorio incorpora primero dominio/persistencia tenant-aware sin superficie pública. Activación, JWT, endpoints, frontend e intake permanecen bloqueados por los gates de PI-1B a PI-2. Payments/cash/CFDI, doctor views, automatizaciones, advanced analytics y full Patient Portal siguen diferidos.

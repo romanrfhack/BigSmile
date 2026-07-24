@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Next planned phase:** **Phase 2.1 — Patient Intake and Portal Foundation**, not yet opened
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**, opened through active PI-1A
 
 ### Release 4 closure evidence
 
@@ -101,14 +101,15 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7 and prepare the explicit Phase 2.1 opening decision:
+Preserve Releases 1 through 7 while executing PI-1A as the first Phase 2.1 runtime slice:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
+* implement only tenant-owned patient portal account/invitation domain and persistence in PI-1A
+* keep staff/public endpoints, JWTs, frontend auth and intake outside PI-1A
+* preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
+* move to PI-1B only after PI-1A is accepted with migration, tests, docs and CI
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
-* preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* resolve the patient access/bootstrap choices tracked in issue #2 before starting PI-1
-* start only PI-1 / issue #4 after an explicit Phase 2.1 opening and update STATE in the same PR
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
 * keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 * preserve scope-aware authorization, explicit platform override behavior and centralized tenant safety
@@ -472,7 +473,7 @@ Owns:
 * sessions
 * access policies
 
-Patient-facing identity is a separate future boundary under ADR 006 and must not reuse staff membership semantics.
+Patient-facing identity is an active bounded boundary under ADR 006/012. PI-1A owns `PatientPortalAccount` and `PatientPortalInvitation` persistence and must not reuse staff membership semantics.
 
 ### 7.3 Patients
 
@@ -631,6 +632,7 @@ Examples:
 * billing record -> tenant, patient-owned and quote-linked where the accepted Billing model requires it
 * patient document -> tenant + patient; binary access follows authorized metadata lookup
 * dashboard summary -> tenant-scoped read model; operational day derives from tenant-owned `TimeZoneId`
+* patient portal account/invitation -> tenant-owned identity/bootstrap records; patient linkage and login uniqueness remain tenant-scoped
 
 ### Child-table rule
 
@@ -798,7 +800,7 @@ Documents and Dashboard — completed through Release 7.1 and 7.2; initial opera
 
 ### Later phases
 
-* Phase 2.1 Patient Intake and Portal Foundation under ADR 006 — next planned, not opened
+* Phase 2.1 Patient Intake and Portal Foundation under ADR 006/012 — active through PI-1A; later PI slices gated
 * reminders/providers/online booking
 * electronic invoicing
 * advanced SaaS platform features
