@@ -58,7 +58,7 @@ The first functional stage of Bigsmile focuses on the operational core of a dent
 - Odontogram
 - Treatment plans
 - Quotes
-- Billing / cash management
+- Billing document issuance
 - Documents
 - Roles and permissions
 - Basic dashboard
@@ -75,11 +75,11 @@ Future phases will expand into:
 
 ### UX / Existing Code Reconciliation
 
-Release 4 — Odontogram, Release 5 — Treatments and Quotes, and Release 6 — Billing are now formally accepted after module-specific audits of their domain, API, persistence, permissions, frontend and automated tests.
+Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 — Documents and Dashboard are formally accepted after module-specific audits of domain, application/API, persistence, permissions, frontend and automated tests.
 
-The repository still contains functional code in modules later than the formal roadmap frontier, including Documents, Dashboard and reminders/manual reminders. Code, routes, permissions, storage/read models or tests in those modules do not by themselves mean Release 7 or Phase 2 are open, accepted or closed.
+Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Until each later module receives its own audit and acceptance pass, it remains `implemented but not formally accepted/reconciled`. Visual slices may improve presentation, copy, color, microinteractions, modals, drawers, tabs, sticky action bars and UX debt without changing backend behavior, APIs, permissions, auth, tenant context, branch context, migrations or functional scope.
+Code in later capabilities such as reminders/manual reminders, providers, jobs, online booking, Phase 2 patient intake or advanced analytics does not imply acceptance. Visual slices may improve presentation and UX debt without changing backend behavior, APIs, permissions, auth, tenant context, branch context, migrations or functional scope.
 
 ---
 
@@ -270,12 +270,14 @@ Completed foundation and functional milestones:
 * **Release 4 — Odontogram**
 * **Release 5 — Treatments and Quotes**
 * **Release 6 — Billing**
+* **Release 7 — Documents and Dashboard**
 
 Current roadmap position:
 
-* **Latest completed delivery phase:** **Release 6 — Billing**
-* **Next planned functional phase:** **Release 7 — Documents and Dashboard**
-* **Phase 2.1 — Patient Intake and Portal Foundation:** planned after the initial MVP; architecture accepted in ADR 006; implementation not opened
+* **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
+* **Initial operational MVP:** **formally accepted**
+* **Next planned phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
+* **Phase 2.1 runtime status:** architecture accepted in ADR 006; PI-1 to PI-4 not implemented or automatically opened
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
@@ -338,9 +340,24 @@ Release 6 closure evidence:
 * `docs/release-6-billing-audit-and-closure.md`
 * ADR 009 — `docs/decisions/009-release-6-billing-document-foundation.md`
 
+Release 7 is formally complete through:
+
+* **Release 7.1 — Patient Documents Foundation**
+* **Release 7.2 — Dashboard Read Model Foundation**
+
+The accepted Documents boundary includes tenant/patient-owned metadata, explicit authorized upload/list/download/logical retire, private root-contained storage, PDF/JPEG/PNG type-plus-signature validation, bounded upload size and tenant/cross-tenant protection.
+
+The accepted Dashboard boundary is read-only and tenant-scoped, with active patients, tenant-local today/pending appointments, active documents, treatment plans, accepted quotes and issued Billing documents. ADR 010 makes `Tenant.TimeZoneId` the server-authoritative source of the clinic operational day.
+
+Release 7 closure evidence:
+
+* `docs/release-7-documents-and-dashboard-audit-and-closure.md`
+* ADR 010 — `docs/decisions/010-tenant-time-zone-foundation.md`
+* ADR 011 — `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`
+
 The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The repository remains established but not functionally complete. Documents/Dashboard and Phase 2 work must not be assumed accepted until code and documentation explicitly prove it.
+The initial operational MVP is accepted, but Bigsmile is not feature-complete. Payments/cash/CFDI, provider views, automated messaging, online booking, Phase 2.1 implementation, advanced analytics and the full Patient Portal remain future bounded work.
 
 ---
 
@@ -419,16 +436,16 @@ The repository remains established but not functionally complete. Documents/Dash
 
 ### Release 7 — Documents and Dashboard
 
-* Next planned functional phase after Release 6 closure
-* Existing code remains `implemented but not formally accepted/reconciled` until module-specific audits
-* Tenant-owned/patient-owned documents with authorized upload/download/retire
-* Basic dashboard remains read-model oriented
-* OCR, external sharing, generated PDFs, advanced analytics and reporting remain deferred
+* Completed through Release 7.1 — Patient Documents Foundation and Release 7.2 — Dashboard Read Model Foundation
+* Private tenant/patient-owned documents with explicit upload/list/download/logical retire
+* PDF/JPEG/PNG declared-type plus binary-signature validation, 10 MB file limit and root-contained storage
+* Read-only tenant-scoped Dashboard with tenant-local operational day from `Tenant.TimeZoneId`
+* OCR, public sharing, generated PDFs, payments/revenue metrics, charts, exports and branch/doctor dashboards remain deferred
 
 ### Phase 2 Expansion — Modern Operations
 
-* Later roadmap phase after the MVP is stable
-* **Phase 2.1 — Patient Intake and Portal Foundation** is planned and architecturally accepted in ADR 006, but PI-1 to PI-4 are not implemented
+* Next planned phase after formal MVP acceptance; not automatically opened
+* **Phase 2.1 — Patient Intake and Portal Foundation** is architecturally accepted in ADR 006, but PI-1 to PI-4 are not implemented
 * The bounded capability includes patient activation, intake/update, clinic review/application and append-only audit
 * The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred
 

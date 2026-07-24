@@ -30,6 +30,10 @@
 
 **Release 6 — Billing** — [Hecho] ADR 009 acepta el cierre fundacional de Billing mediante Release 6.1 — Billing Document Foundation, preservando payments, balances, receipts, cash management y CFDI como scopes posteriores.
 
+**Tenant Time Zone Foundation** — [Hecho] ADR 010 fija `Tenant.TimeZoneId` como fuente server-authoritative de la fecha operativa local, con default de migración `America/Mexico_City` para el piloto actual, sin convertir Branch en boundary temporal independiente ni reescribir Appointment.
+
+**Release 7 — Documents and Dashboard** — [Hecho] ADR 011 acepta Release 7 mediante Release 7.1 — Patient Documents Foundation y Release 7.2 — Dashboard Read Model Foundation, y formaliza el cierre del MVP operativo inicial.
+
 ## 3. Fases completadas
 
 [Hecho] Foundation / Release 0 base — completada.
@@ -52,6 +56,10 @@
 
 [Hecho] Release 6 — Billing — completada como release fundacional mediante Release 6.1 — Billing Document Foundation.
 
+[Hecho] Release 7 — Documents and Dashboard — completada mediante Release 7.1 — Patient Documents Foundation y Release 7.2 — Dashboard Read Model Foundation.
+
+[Hecho] El MVP operativo inicial queda formalmente aceptado con Releases 1 a 7 y la fundación de roles/permisos cerradas mediante evidencia de código, pruebas y documentación alineada.
+
 [Hecho] El cierre formal de Release 2 cubre calendario diario/semanal branch-aware, creación/edición/reprogramación/cancelación, appointment notes, blocked slots y estados `Attended` / `NoShow`. `doctor-based views` permanece diferido porque requiere provider/doctor assignment.
 
 [Hecho] El cierre formal de Release 3 cubre creación explícita de expediente clínico, snapshot base, alergias actuales, notas append-only, diagnósticos básicos, timeline clínica acotada, snapshot history, cuestionario médico fijo, consulta/signos vitales, atribución por usuario y protección con `clinical.read` / `clinical.write`.
@@ -62,27 +70,29 @@
 
 [Hecho] El cierre formal de Release 6 se apoya en auditoría de dominio, aplicación, API, persistencia, permisos, frontend y pruebas para `BillingDocument` explícito desde una cotización aceptada, líneas snapshot, moneda/totales preservados, lifecycle `Draft -> Issued` y documento emitido read-only.
 
+[Hecho] El cierre formal de Release 7 se apoya en la auditoría de Documents/Dashboard, el hardening de upload binario de PR #19, la fundación tenant-owned de zona horaria de PR #20, CI completas y ADR 010/011.
+
 ## 4. Fase actual
 
-[Hecho] La última fase funcional marcada como completada es Release 6 — Billing.
+[Hecho] La última fase funcional marcada como completada es Release 7 — Documents and Dashboard.
 
-[Hecho] Release 6 queda cerrada y preservada como release fundacional de documento comercial mediante Release 6.1 — Billing Document Foundation.
+[Hecho] Release 7 queda cerrada y preservada mediante Release 7.1 — Patient Documents Foundation y Release 7.2 — Dashboard Read Model Foundation.
 
-[Hecho] La siguiente fase funcional prevista por el roadmap es Release 7 — Documents and Dashboard.
+[Hecho] El MVP operativo inicial queda formalmente aceptado. Esta aceptación cubre los boundaries fundacionales documentados y no implica payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
-[Hecho] Release 7 no queda abierta por el cierre de Release 6. Cualquier aceptación debe realizarse mediante auditoría/slices explícitos, con alcance, pruebas y documentación propios.
+[Hecho] La siguiente fase prevista por el roadmap es Phase 2.1 — Patient Intake and Portal Foundation.
 
-[Hecho] Phase 2 Expansion — Modern Operations pertenece al roadmap posterior al MVP operativo inicial. No debe abrirse antes de completar y aceptar Release 7, salvo repriorización futura explícita y documentada.
+[Hecho] El gate normal de MVP para Phase 2.1 ya está satisfecho, pero la fase no se abre ni implementa automáticamente. Antes de PI-1 se requiere decisión explícita de apertura y resolver los choices de acceso/bootstrap registrados en issue #2.
 
-[Hecho] Phase 2.1 — Patient Intake and Portal Foundation permanece planificada dentro de Phase 2. Su arquitectura y plan general están aceptados, pero PI-1 a PI-4 no están implementados ni abiertos como fase activa.
+[Hecho] PI-1 a PI-4 permanecen no implementados. Cuando Phase 2.1 se abra explícitamente, el primer slice será PI-1 — Access and Invitation Foundation, issue #4.
 
 ## 4.1 Nota de reconciliación UX / código existente
 
-[Hecho] El repositorio contiene código funcional en módulos posteriores al estado formal, incluyendo Documents, Dashboard y recordatorios/manual reminders.
+[Hecho] El repositorio contiene código funcional posterior o lateral al MVP aceptado, incluyendo recordatorios/manual reminders.
 
-[Hecho] La presencia de código, rutas, permisos, migrations o tests no implica por sí misma aceptación o cierre. Hasta una auditoría específica, esos módulos se clasifican como `implemented but not formally accepted/reconciled`.
+[Hecho] La presencia de código, rutas, permisos, migrations o tests sigue sin implicar por sí misma aceptación de una fase futura. Cada capability posterior requiere auditoría, alcance y documentación explícitos.
 
-[Hecho] Odontogram, Treatments/Quotes y Billing dejan esa clasificación porque recibieron auditorías específicas y cierres formales mediante ADR 007/008/009 y sus documentos de evidencia.
+[Hecho] Odontogram, Treatments/Quotes, Billing, Documents y Dashboard dejan la clasificación `implemented but not formally accepted/reconciled` porque recibieron auditorías específicas y cierres formales mediante ADR 007/008/009/011 y sus documentos de evidencia.
 
 [Hecho] Los slices visuales pueden mejorar presentación, organización, copy, color, microinteracciones, modales/drawers/tabs/sticky action bars y deuda UX sin cambiar backend, APIs, permissions, auth, tenant context, branch context, migrations ni alcance funcional.
 
@@ -92,7 +102,7 @@
 
 **Estado** — [Hecho] decisión aceptada y trabajo planificado; implementación no iniciada.
 
-**Ubicación** — [Hecho] primer capability acotado de Phase 2 — Modern Operations después del MVP inicial; no desplaza Release 7 como siguiente fase funcional actual.
+**Ubicación** — [Hecho] siguiente fase prevista después del MVP aceptado; permanece planificada y no desplaza la necesidad de una apertura explícita antes de implementar PI-1.
 
 **Tracking** — [Hecho]
 
@@ -282,35 +292,75 @@
 - Incorporar cobertura relacional SQL Server de índices/precision cuando CI lo soporte.
 - Reemplazar copy interno y actor/source ids crudos por lenguaje y affordances operativas.
 
-## 9. Releases previos cerrados
+## 9. Release 7 — Documents and Dashboard
+
+**Estado operativo actual** — [Hecho] completada como la última release del MVP operativo inicial.
+
+**Evidencia de cierre** — [Hecho]
+
+- Release 7.1 — Patient Documents Foundation.
+- Release 7.2 — Dashboard Read Model Foundation.
+- Auditoría/cierre — `docs/release-7-documents-and-dashboard-audit-and-closure.md`.
+- Decisión de release/MVP — ADR 011 `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`.
+- Decisión temporal — ADR 010 `docs/decisions/010-tenant-time-zone-foundation.md`.
+- Hardening Documents — PR #19 / CI #149.
+- Tenant time zone y Dashboard local day — PR #20 / CI #151.
+
+**Alcance cerrado de Documents** — [Hecho]
+
+- `PatientDocument` tenant-owned y patient-owned.
+- Upload/list/download/logical retire explícitos y autorizados.
+- Storage privado, storage keys server-generated y root containment.
+- PDF/JPEG/PNG con declared-type allowlist y matching binary signature.
+- Límite de archivo 10 MB y multipart acotado.
+- `document.read` / `document.write`, sin ampliar `TenantUser`.
+- Flujos cross-tenant bloqueados y platform support explícito.
+- UI Angular patient-scoped con loading/error/upload/list/download/retire.
+
+**Alcance cerrado de Dashboard** — [Hecho]
+
+- `GET /api/dashboard/summary` read-only y tenant-scoped.
+- Active patients, tenant-local today/pending appointments, active documents, treatment plans, accepted quotes e issued Billing documents.
+- `Tenant.TimeZoneId` server-authoritative para el día operativo; `GeneratedAtUtc` permanece UTC.
+- `dashboard.read` bajo el mapeo conservador actual de `TenantAdmin`; sin acceso oculto de plataforma ni ampliación de `TenantUser`.
+- UI Angular acotada con loading/error/empty/summary cards.
+
+**Fuera del cierre** — [Hecho]
+
+- OCR, rich preview, versioning, public sharing, generated PDFs, e-signatures y Patient Portal document access.
+- Revenue/balance metrics, charts/trends, exports, branch/doctor dashboards, BI, real-time y AI recommendations.
+- External antivirus provider, retention/physical-delete automation y platform dashboard impersonation.
+- Payments, receipts, cash management y fiscalización.
+
+## 10. Releases previos cerrados
 
 **Release 1 — Patients** — [Hecho] registro, actualización, búsqueda tenant-scoped, perfil, responsible party, estatus, alertas clínicas básicas y permisos `patient.read` / `patient.write`.
 
 **Release 2 — Scheduling** — [Hecho] citas tenant-owned/branch-aware, calendario day/week, create/edit/reschedule/cancel, notes, blocked slots, `Attended` / `NoShow` y permisos `scheduling.read` / `scheduling.write`.
 
-## 10. Backlog inmediato
+## 11. Backlog inmediato
 
 Lista priorizada:
 
-1. Preservar Releases 1 a 6 ya cerrados sin debilitar la fundación tenant-aware.
+1. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
 
-2. Auditar el código existente de `Release 7 — Documents and Dashboard` contra el roadmap y aceptar únicamente slices con evidencia explícita.
+2. Tratar Phase 2.1 — Patient Intake and Portal Foundation como la siguiente fase prevista, no como implementación ya abierta.
 
-3. No tratar Documents o Dashboard como aceptados solo porque existen código, endpoints, permissions, storage/read models o tests.
+3. Resolver explícitamente en issue #2 el identificador de acceso, password vs magic link, TTL, entrega piloto y baseline de lockout/recovery antes de abrir PI-1.
 
-4. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera de Release 6.1 hasta slices dedicados.
+4. Cuando Phase 2.1 se abra, iniciar únicamente PI-1 — Access and Invitation Foundation, issue #4, y actualizar STATE en el mismo PR.
 
-5. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
+5. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
 
-6. Mantener fuera de los agregados cerrados cualquier linkage cross-module no aceptado.
+6. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
 
-7. Si se consultan directamente tablas hijas de Clinical, Odontogram, TreatmentPlan, TreatmentQuote o BillingDocument, usar join tenant-aware o modelarlas como tenant-owned.
+7. Mantener fuera de agregados cerrados cualquier linkage cross-module no aceptado y preservar joins tenant-aware para accesos directos a tablas hijas.
 
-8. Mantener Phase 2.1 visible mediante ADR 006, su plan e issues #2/#4/#5/#6/#7, sin iniciar PI-1 antes del gate de MVP o repriorización explícita.
+8. Mantener recordatorios/providers/jobs/queues, online booking, advanced analytics y full Patient Portal como capabilities futuras no aceptadas.
 
-9. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS y product-roadmap cuando cambie el estado de Release 7 o Phase 2.1.
+9. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap y ADRs cuando se abra Phase 2.1 o cambie el estado del producto.
 
-## 11. Riesgos y temas a vigilar
+## 12. Riesgos y temas a vigilar
 
 **Tenant isolation** — [Hecho] Sigue siendo el riesgo estructural principal.
 
@@ -319,6 +369,10 @@ Lista priorizada:
 **Patient-facing identity** — [Hecho] La futura frontera pública no debe reutilizar staff membership, aceptar `PatientId`/`TenantId` como autoridad, permitir platform override ni aplicar cambios canónicos sin revisión.
 
 **Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
+
+**Tenant operational time** — [Hecho] `Tenant.TimeZoneId` es la fuente server-side del día operativo; no confiar en fecha/timezone del browser ni introducir una timezone global que rompa el modelo multi-tenant.
+
+**Binary document input** — [Hecho] La allowlist de documentos requiere matching binary signature, límites de transporte y storage containment; no debe presentarse como antivirus o malware scanning.
 
 **Child tables** — [Hecho] Los accesos directos futuros a hijos de Clinical, Odontogram, TreatmentPlan, TreatmentQuote o BillingDocument necesitan tenant-aware joins u ownership explícito.
 
@@ -332,22 +386,22 @@ Lista priorizada:
 
 **Alineación documental futura** — [Hecho] Cada apertura/cierre debe actualizar código, pruebas y documentación en el mismo cambio.
 
-## 12. Criterios para no perder el rumbo
+## 13. Criterios para no perder el rumbo
 
 [Hecho] BigSmile es un producto SaaS multi-tenant; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewability rompe el rumbo.
 
-[Hecho] El orden actual es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. Después del MVP, Phase 2.1 cubre el bounded Patient Intake and Portal Foundation; el portal amplio permanece en Phase 4.
+[Hecho] El orden completado del MVP es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. La siguiente fase prevista es Phase 2.1 Patient Intake and Portal Foundation; el portal amplio permanece en Phase 4.
 
 [Hecho] Ningún release funcional ni Phase 2.1 se considera completado sin evidencia explícita en código, pruebas y documentación alineada.
 
 [Hecho] Restricciones a preservar: modular monolith, ownership explícito, `TenantId` como boundary primario, `BranchId` subordinado, shared DB/schema, sin bypass oculto y sin autorización crítica solo en UI.
 
-## 13. Nota tipo ADR resumida
+## 14. Nota tipo ADR resumida
 
-**Estado:** Nota canónica actualizada con ADR 006, ADR 007, ADR 008 y ADR 009.
+**Estado:** Nota canónica actualizada con ADR 006, ADR 007, ADR 008, ADR 009, ADR 010 y ADR 011.
 
-**Contexto:** El código de Billing estaba implementado pero correctamente clasificado como no reconciliado hasta una auditoría específica.
+**Contexto:** Documents y Dashboard tenían implementación coherente, pero la auditoría detectó una allowlist de upload spoofable y una fecha `Today` basada en UTC. Ambos gaps se corrigieron mediante PR #19 y PR #20 con CI verde.
 
-**Decisión:** Cerrar Release 6 mediante Release 6.1 — Billing Document Foundation, preservar el documento emitido como snapshot separado de TreatmentQuote y de futuros Payment/Receipt/Cash/Fiscal aggregates, y mover la frontera del roadmap a Release 7. Mantener Patient Intake and Portal como Phase 2.1 posterior al MVP.
+**Decisión:** Cerrar Release 7 mediante Release 7.1 — Patient Documents Foundation y Release 7.2 — Dashboard Read Model Foundation; aceptar el MVP operativo inicial; preservar Documents como attachment foundation privada y Dashboard como read model tenant-scoped; mover la siguiente fase prevista a Phase 2.1 sin abrir PI-1 automáticamente.
 
-**Consecuencias:** Documents and Dashboard es el siguiente módulo a auditar; no se acepta automáticamente. Payments, balances, receipts, cash management y CFDI permanecen diferidos, y la deuda visual/hardening se atiende mediante slices separados.
+**Consecuencias:** El MVP queda listo para validación piloto bajo su scope acotado. Phase 2.1 requiere una decisión explícita de apertura y resolver los choices de issue #2; payments/cash/CFDI, doctor views, automatizaciones, advanced analytics y full Patient Portal permanecen diferidos.

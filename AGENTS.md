@@ -102,7 +102,9 @@ Canonical project status:
 - `Release 4 — Odontogram`: completed through accepted slices 4.1 to 4.4
 - `Release 5 — Treatments and Quotes`: completed through accepted slices 5.1 and 5.2
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
-- Next planned functional phase: `Release 7 — Documents and Dashboard`
+- `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
+- Initial operational MVP: formally accepted
+- Next planned phase: `Phase 2.1 — Patient Intake and Portal Foundation`; implementation not opened
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -115,6 +117,11 @@ Release 5 closure evidence:
 Release 6 closure evidence:
 - `docs/release-6-billing-audit-and-closure.md`
 - ADR 009 — `docs/decisions/009-release-6-billing-document-foundation.md`
+
+Release 7 / MVP closure evidence:
+- `docs/release-7-documents-and-dashboard-audit-and-closure.md`
+- ADR 010 — `docs/decisions/010-tenant-time-zone-foundation.md`
+- ADR 011 — `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -149,28 +156,40 @@ Treat Release 6 as the accepted foundational Billing boundary:
 
 Do not reopen advanced Billing scope incidentally. Payments, allocations, balances, receipts, cash sessions, refunds/reversals, taxes/discounts, CFDI/PAC, multi-currency, accounting and Patient Portal access remain future bounded work. Payment must be designed as a separate aggregate rather than mutable fields on `BillingDocument`.
 
-Repository code also exists in later modules, including Documents, Dashboard and reminders. Until each module receives a specific audit and acceptance pass, classify it as `implemented but not formally accepted/reconciled`.
+Treat Release 7 as the accepted bounded Documents/Dashboard boundary:
+- tenant-owned/patient-owned PatientDocument metadata
+- explicit authorized upload/list/download/logical retire
+- private root-contained storage and server-generated storage keys
+- PDF/JPEG/PNG declared-type plus binary-signature validation and bounded upload size
+- read-only tenant-scoped Dashboard over accepted aggregate roots
+- tenant-local operational day from server-authoritative `Tenant.TimeZoneId`
+- explicit `document.*` and `dashboard.read` permissions under the current conservative mapping
 
-Phase 2.1 — Patient Intake and Portal Foundation is planned after the initial MVP:
+Do not reopen advanced Release 7 scope incidentally. OCR, sharing, generated PDFs, antivirus providers, retention automation, revenue/balance metrics, charts, exports, branch/doctor dashboards, BI, real-time and Patient Portal access remain future bounded work.
+
+Repository code also exists in later capabilities, including reminders/manual reminders. Code presence alone does not accept providers, jobs, online booking, Phase 2 or advanced analytics.
+
+Phase 2.1 — Patient Intake and Portal Foundation is the next planned phase after the accepted MVP:
 - architecture accepted in ADR 006
 - implementation issues #4 to #7 remain open
 - PI-1 to PI-4 are not implemented or active
+- opening PI-1 requires an explicit phase-opening decision and resolution of the pending access/bootstrap choices in issue #2
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve Releases 1 to 6 and audit the existing `Release 7 — Documents and Dashboard` implementation against the bounded roadmap before accepting or changing it.
+Preserve Releases 1 to 7 and the accepted MVP while preparing the explicit opening decision for `Phase 2.1 — Patient Intake and Portal Foundation`.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
-- preserve completed Patients, Scheduling, Clinical Records, Odontogram, Treatments/Quotes and Billing behavior
-- audit Documents and Dashboard domain/application/API/persistence/storage/read models, permissions, frontend, migrations and tests
-- distinguish code presence from accepted Release 7 scope
-- avoid reopening Billing, TreatmentPlan, TreatmentQuote, Odontogram or Clinical Records through incidental linkage
+- preserve completed Patients, Scheduling, Clinical Records, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard behavior
+- keep Documents upload validation, storage containment and tenant-local Dashboard dates intact
+- resolve issue #2 choices before opening PI-1: patient identifier, password vs magic link, TTL, pilot delivery and lockout/recovery baseline
+- when explicitly opened, start only with PI-1 / issue #4 and update canonical state in the same PR
+- avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
-- keep Phase 2.1 planned and inactive until the MVP gate or explicit reprioritization
-- keep privileged/platform paths explicit and auditable
-- maintain automated coverage for cross-tenant, branch-aware and allowed platform scenarios
-- update canonical documentation whenever a release or architectural decision changes
+- keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override
+- maintain automated coverage for cross-tenant, IDOR, replay, expiry, revocation, concurrency and existing staff regression scenarios
+- update canonical documentation whenever the phase is opened or an architectural decision changes
 
 If a task touches later modules, keep the change bounded and do not assume the module is accepted merely because implementation exists.
 

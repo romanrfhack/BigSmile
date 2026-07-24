@@ -27,6 +27,7 @@ Visual work does not automatically open or close releases and must not change ba
 - Release 4 — Odontogram through slices 4.1 to 4.4.
 - Release 5 — Treatments and Quotes through slices 5.1 and 5.2.
 - Release 6 — Billing through Release 6.1.
+- Release 7 — Documents and Dashboard through Release 7.1 and 7.2; initial operational MVP accepted.
 
 ### Release 4 reconciliation
 
@@ -91,11 +92,31 @@ Closure evidence:
 
 Payments, balances, receipts, cash sessions, fiscal/CFDI behavior and Patient Portal access remain outside Release 6.1.
 
+### Release 7 reconciliation
+
+Documents and Dashboard are no longer only `implemented but not formally accepted/reconciled`.
+
+The module-specific audit and bounded corrections accepted:
+
+- private tenant/patient-owned Documents upload/list/download/logical retire;
+- PDF/JPEG/PNG binary-signature validation and bounded multipart input;
+- root-contained private storage;
+- read-only tenant-scoped Dashboard metrics;
+- tenant-local `Today` through `Tenant.TimeZoneId`;
+- conservative permissions and cross-tenant tests;
+- bounded Angular Documents and Dashboard flows.
+
+Closure evidence:
+
+- `docs/release-7-documents-and-dashboard-audit-and-closure.md`;
+- ADR 010 — `docs/decisions/010-tenant-time-zone-foundation.md`;
+- ADR 011 — `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`.
+
+OCR/sharing/versioning, payments/revenue metrics, charts/exports, branch/doctor dashboards and Patient Portal access remain outside Release 7.
+
 ### Current roadmap frontier
 
-The next planned functional phase is **Release 7 — Documents and Dashboard**.
-
-Documents and Dashboard code exists, but remains `implemented but not formally accepted/reconciled` until module-specific audits occur.
+The initial operational MVP is accepted. The next planned phase is **Phase 2.1 — Patient Intake and Portal Foundation**, but implementation is not opened automatically.
 
 ### Phase 2.1
 
@@ -124,8 +145,8 @@ Legend:
 | Odontogram | yes | yes | chart, teeth, surfaces, findings | `odontogram.read/write` | yes | yes | Accepted / preserved through Release 4.4 | partially redesigned; debt remains |
 | Treatments/Quotes | yes | yes | plan, items, status, quote, pricing | treatment permissions | yes | yes | Accepted / preserved through Release 5.2 | partially redesigned; debt remains |
 | Billing | yes | yes | quote/billing paths | `billing.read/write` | yes | yes | Accepted / preserved through Release 6.1 | partially redesigned; debt remains |
-| Documents | yes | yes | upload/list/download/retire | `document.read/write` | yes | yes | Implemented but not reconciled | partially redesigned |
-| Dashboard | yes | yes | summary | `dashboard.read` | read-model based | yes | Implemented but not reconciled | partially redesigned |
+| Documents | yes | yes | upload/list/download/retire | `document.read/write` | yes | yes | Accepted / preserved through Release 7.1 | partially redesigned; debt remains |
+| Dashboard | yes | yes | summary | `dashboard.read` | read-model + tenant timezone migration | yes | Accepted / preserved through Release 7.2 | partially redesigned; debt remains |
 | Patient Intake/Portal | no | no | none accepted | none | none | none | Planned Phase 2.1 | not implemented |
 
 ## 4. Drift and resolution
@@ -170,9 +191,9 @@ This does not accept:
 
 The Release 6 audit proved the bounded BillingDocument snapshot/issue foundation without accepting payments or fiscal behavior.
 
-### Remaining drift: later modules
+### Remaining drift: later capabilities
 
-Documents, Dashboard and reminder helpers contain real code beyond the formal release frontier.
+Reminder helpers and other future capabilities contain real code beyond the accepted MVP frontier.
 
 They must remain unaccepted until their own audit verifies:
 
@@ -224,14 +245,11 @@ When touching those screens:
 
 ## 5. Correct interpretation of current work
 
-- Releases 1 to 6 are closed and preserved.
-- Release 7 is next, but must begin with audits of existing Documents and Dashboard code.
-- Do not add new Release 7 functionality until the audits identify a concrete accepted-scope gap.
-- Do not reopen Clinical Records, Odontogram or Treatments/Quotes through incidental linkage.
-- Existing permission-gated navigation from Quote to Billing does not accept Billing behavior.
+- Releases 1 to 7 are closed and preserved; the initial operational MVP is accepted.
+- Documents and Dashboard are accepted only within their bounded Release 7.1/7.2 contracts.
+- Do not reopen Clinical Records, Odontogram, Treatments/Quotes or Billing through incidental linkage.
 - Visual-only work remains allowed on accepted modules when bounded and non-breaking.
-- Phase 2 is not active.
-- Phase 2.1 Patient Intake and Portal is planned, not implemented.
+- Phase 2.1 Patient Intake and Portal is the next planned phase, but remains not implemented and requires explicit opening before PI-1.
 - Manual reminders/templates do not imply real email/SMS/WhatsApp delivery, jobs, queues, retries or campaigns.
 - Doctor-based views remain deferred until provider/doctor assignment is intentionally modeled.
 
@@ -293,20 +311,20 @@ When touching those screens:
 - replace internal release/slice copy and raw ids through bounded UX work.
 
 ### Documents/Dashboard
-- preserve existing code as unaccepted until module audit;
-- avoid presenting advanced deferred behavior;
+- preserve the accepted upload/list/download/retire and read-only summary contracts;
+- keep tenant/patient context, signature validation, upload limits and tenant-local dates clear;
+- avoid presenting OCR, sharing, payments/revenue metrics, advanced analytics or doctor dashboards as implemented;
+- replace internal release/slice copy and raw actor ids through bounded UX work;
 - use visual-only slices only when contracts and scope stay unchanged.
 
 ## 8. Recommended sequence
 
-1. Preserve Release 6 closure documents and canonical state.
-2. Audit existing Release 7 Documents code as a bounded storage/access slice.
-3. Audit existing Release 7 Dashboard code as a separate read-model slice.
-4. Classify each behavior as satisfied, bounded gap or out of accepted scope.
-5. Make only the smallest necessary implementation changes.
-6. Run repository-wide CI.
-7. Reconcile STATE and base docs before advancing the release frontier.
-8. Continue visual debt separately from functional acceptance when possible.
+1. Preserve Release 7/MVP closure documents and canonical state.
+2. Keep Phase 2.1 planned until an explicit opening decision resolves issue #2 access/bootstrap choices.
+3. When opened, start only PI-1 / issue #4 and preserve staff auth backward compatibility.
+4. Keep visual debt separate from functional/security changes.
+5. Continue bounded UX cleanup on accepted modules without reopening scope.
+6. Run repository-wide CI for every phase-opening or cross-cutting change.
 
 ## 9. Visual acceptance criteria
 
@@ -346,6 +364,6 @@ Mitigation: review common clinic workflows, not only visual appearance.
 
 **Context:** Repository code is ahead of formal state in several modules, and the client also requested progressive visual improvement.
 
-**Decision:** Accept Releases 4, 5 and 6 only after their specific audits; keep later modules unaccepted until equivalent evidence exists; continue visual work as bounded non-functional slices.
+**Decision:** Accept Releases 4 through 7 only after their specific audits and bounded corrections; accept the initial operational MVP; continue visual work as bounded non-functional slices.
 
-**Consequence:** Release 7 becomes the next audit target, while Odontogram, Treatments/Quotes and Billing visual debt remains valid follow-up without reopening accepted functional boundaries.
+**Consequence:** Phase 2.1 becomes the next planned phase without automatic implementation. Visual debt in Odontogram, Treatments/Quotes, Billing, Documents and Dashboard remains valid follow-up without reopening accepted functional boundaries.

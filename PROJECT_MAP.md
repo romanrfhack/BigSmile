@@ -64,7 +64,9 @@ Canonical project status:
 * **Release 4 — Odontogram:** completed as the foundational odontogram release through accepted slices **Release 4.1 — Odontogram Foundation**, **Release 4.2 — Odontogram Surface Foundation**, **Release 4.3 — Basic Dental Findings Foundation**, and **Release 4.4 — Dental Findings Change History**
 * **Release 5 — Treatments and Quotes:** completed as the foundational treatment-planning and quote release through accepted slices **Release 5.1 — Treatment Plan Foundation** and **Release 5.2 — Quote Foundation**
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
-* **Next planned functional phase:** **Release 7 — Documents and Dashboard**
+* **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
+* **Initial operational MVP:** formally accepted
+* **Next planned phase:** **Phase 2.1 — Patient Intake and Portal Foundation**, not yet opened
 
 ### Release 4 closure evidence
 
@@ -81,33 +83,36 @@ Canonical project status:
 * `docs/release-6-billing-audit-and-closure.md`
 * ADR 009 — `docs/decisions/009-release-6-billing-document-foundation.md`
 
+### Release 7 / MVP closure evidence
+
+* `docs/release-7-documents-and-dashboard-audit-and-closure.md`
+* ADR 010 — `docs/decisions/010-tenant-time-zone-foundation.md`
+* ADR 011 — `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`
+
 ### UX / existing-code reconciliation
 
-Odontogram, Treatments/Quotes and Billing are now `Accepted / preserved` after module-specific audits of domain, application, API, persistence, permissions, frontend, migrations and tests.
+Odontogram, Treatments/Quotes, Billing, Documents and Dashboard are `Accepted / preserved` after module-specific audits of domain/application, API, persistence/storage/read models, permissions, frontend, migrations and tests.
 
-The repository still contains functional code in later roadmap modules, including Documents, Dashboard, and reminders/manual reminders. Code, routes, permissions, storage/read models, or tests in those modules do not by themselves open, accept, or close Release 7 or Phase 2.
+The initial operational MVP is formally accepted. The repository still contains later capabilities such as reminders/manual reminders, but code presence does not open or accept providers, jobs, online booking, Phase 2 or advanced analytics.
 
-Until a module-specific audit and acceptance pass happens, those later modules are `implemented but not formally accepted/reconciled`.
+Every later capability still requires an explicit bounded audit and acceptance pass.
 
 Visual slices may improve presentation, organization, copy, color, microinteractions, modals/drawers/tabs/sticky action bars, and UX debt without changing backend, APIs, permissions, auth, tenant context, branch context, migrations, or functional scope.
 
 ### Current expected priority
 
-Preserve Releases 1 through 6 and audit the existing Documents/Dashboard implementation before accepting or adding functionality:
+Preserve Releases 1 through 7 and prepare the explicit Phase 2.1 opening decision:
 
-* preserve the accepted Release 3.1 to 3.6 clinical boundary
-* preserve the accepted Release 4.1 to 4.4 odontogram boundary
-* preserve the accepted Release 5.1 and 5.2 treatment-plan/quote boundary
-* preserve the accepted Release 6.1 BillingDocument boundary
-* keep advanced Odontogram and Treatments/Quotes scope deferred
+* preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
-* inspect Documents and Dashboard ownership, API/storage/read models, permissions, migrations, frontend and tests against Release 7
-* do not treat existing Documents/Dashboard code as accepted solely because it exists
-* keep automated messaging/providers/jobs/queues/retries, online booking and advanced dashboards deferred until their owning phases are explicitly accepted
+* keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
+* preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
+* resolve the patient access/bootstrap choices tracked in issue #2 before starting PI-1
+* start only PI-1 / issue #4 after an explicit Phase 2.1 opening and update STATE in the same PR
+* keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
 * keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 * preserve scope-aware authorization, explicit platform override behavior and centralized tenant safety
 * continue validation through CI, tests, logging, auditing and architectural guardrails
-* keep Phase 2.1 Patient Intake and Portal planned under ADR 006 without opening PI-1 to PI-4 before the MVP gate or an explicit reprioritization
 
 Do not treat the repository as feature-complete unless actual code and aligned documentation clearly prove it. No functional roadmap release should be treated as closed without explicit audit, tests and documentation evidence.
 
@@ -161,6 +166,10 @@ Expected layout:
 * `docs/release-3-clinical-records-form-mapping.md`
 * `docs/release-4-odontogram-audit-and-closure.md`
 * `docs/release-5-treatments-and-quotes-audit-and-closure.md`
+* `docs/release-6-billing-audit-and-closure.md`
+* `docs/release-7-documents-and-dashboard-audit-and-closure.md`
+* `docs/decisions/010-tenant-time-zone-foundation.md`
+* `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`
 * `docs/patient-intake-and-portal-plan.md`
 
 ### Documentation ownership rules
@@ -449,7 +458,7 @@ Owns:
 * plans
 * feature flags
 * branding
-* tenant settings
+* tenant settings, including server-authoritative `TimeZoneId`
 * platform administration
 
 ### 7.2 Identity
@@ -547,14 +556,17 @@ Payments, allocations, balances, receipts, cash sessions, refunds/reversals, tax
 
 ### 7.9 Documents
 
-Owns:
+Accepted Release 7.1 ownership:
 
-* file attachments
-* patient documents
-* radiographies
-* consent-related file storage
+* tenant-owned/patient-owned `PatientDocument` metadata
+* explicit authorized upload/list/download/logical retire
+* private root-contained binary storage
+* server-generated storage keys
+* PDF/JPEG/PNG declared-type and binary-signature validation
+* bounded upload limits and UTC/actor metadata
+* patient-context Angular Documents workflow
 
-Existing code remains unaccepted until Release 7 audit.
+OCR, rich preview, versioning, public sharing, generated PDFs, advanced consent/e-signature, antivirus providers, retention automation and Patient Portal access remain deferred.
 
 ### 7.10 Notifications
 
@@ -570,13 +582,18 @@ Manual reminder helpers/templates do not imply automated provider delivery, jobs
 
 ### 7.11 Reporting
 
-Owns:
+Accepted Release 7.2 Dashboard ownership:
 
-* dashboards
-* operational metrics
-* treatment metrics
-* scheduling metrics
-* billing summaries
+* tenant-scoped read-only operational summary
+* active patients
+* tenant-local today/pending appointments
+* active documents
+* treatment-plan and accepted-quote counts
+* issued Billing-document count
+* generated-at UTC
+* Angular summary-card workflow
+
+Future Reporting owns deeper treatment/scheduling/billing metrics, charts, exports and analytics. Revenue/balance metrics, branch/doctor dashboards, BI, real-time and AI recommendations remain deferred.
 
 ---
 
@@ -612,6 +629,8 @@ Examples:
 * treatment plan -> tenant, patient-owned context
 * treatment quote -> tenant, patient-owned and treatment-plan-owned context
 * billing record -> tenant, patient-owned and quote-linked where the accepted Billing model requires it
+* patient document -> tenant + patient; binary access follows authorized metadata lookup
+* dashboard summary -> tenant-scoped read model; operational day derives from tenant-owned `TimeZoneId`
 
 ### Child-table rule
 
@@ -679,8 +698,11 @@ Examples:
 * new appointment rules -> Scheduling domain/application
 * new Odontogram rule -> Odontogram domain/application, not Clinical or Treatments for convenience
 * new TreatmentPlan/TreatmentQuote rule -> Treatments domain/application only when it fits the accepted Release 5 boundary or an explicit future slice
-* new Billing rule -> Billing domain/application after the Release 6 audit identifies an accepted gap
-* new payment persistence adapter -> Infrastructure
+* new Billing-document rule -> Billing domain/application only when it preserves the accepted Release 6.1 boundary
+* new Payment/Receipt/Cash behavior -> a separate future aggregate/slice, not incidental BillingDocument fields
+* new Documents rule -> Documents domain/application/storage only within an explicit accepted or future slice
+* new Dashboard metric -> Reporting read model over accepted tenant-owned roots with explicit metric semantics
+* new payment persistence adapter -> Infrastructure after its owning aggregate is accepted
 * new endpoint -> Api
 
 ### Frontend
@@ -715,7 +737,7 @@ These should be treated as stable unless formally changed:
 * multi-tenancy as foundational
 * backend layered structure
 * frontend feature structure
-* accepted Release 1 through Release 6 boundaries
+* accepted Release 1 through Release 7 boundaries and MVP scope
 * roadmap order
 * security-first posture
 
@@ -724,7 +746,7 @@ These should be treated as stable unless formally changed:
 These may still evolve through implementation and ADRs:
 
 * exact future permission catalog
-* Release 7+ formal scope acceptance
+* Phase 2.1+ formal scope acceptance
 * patient-facing identity implementation
 * storage/notification provider choices
 * reporting depth
@@ -772,11 +794,11 @@ Billing — completed through Release 6.1 — Billing Document Foundation.
 
 ### Release 7
 
-Documents and Dashboard — next; existing code must be audited before acceptance.
+Documents and Dashboard — completed through Release 7.1 and 7.2; initial operational MVP accepted.
 
 ### Later phases
 
-* Phase 2.1 Patient Intake and Portal Foundation under ADR 006
+* Phase 2.1 Patient Intake and Portal Foundation under ADR 006 — next planned, not opened
 * reminders/providers/online booking
 * electronic invoicing
 * advanced SaaS platform features
