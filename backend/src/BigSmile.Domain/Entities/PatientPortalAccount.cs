@@ -127,6 +127,12 @@ namespace BigSmile.Domain.Entities
                 return true;
             }
 
+            if (LockoutEndUtc.HasValue && LockoutEndUtc.Value <= occurredAtUtc)
+            {
+                FailedLoginAttempts = 0;
+                LockoutEndUtc = null;
+            }
+
             FailedLoginAttempts = Math.Min(maxFailedAttempts, FailedLoginAttempts + 1);
             LastFailedLoginAtUtc = occurredAtUtc;
             LastUpdatedAtUtc = occurredAtUtc;
