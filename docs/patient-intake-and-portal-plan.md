@@ -1,6 +1,6 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1 active; PI-1A current
+- **Status:** In progress; PI-1 active; PI-1A completed; PI-1B next and permission-gated
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
 - **Architecture decisions:** ADR 006 and ADR 012
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1 opened; PI-1A domain/persistence is the current slice.
+- Phase 2.1: active; PI-1A domain/persistence completed; PI-1B is the next gated slice.
 
 This placement is deliberate:
 
@@ -58,7 +58,7 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Release 7 Documents/Dashboard foundations | Completed; MVP accepted | ADR 010/011 / Release 7 audit |
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
-| PI-1 access/invitations | Active; PI-1A in implementation | Issues #4 and #22–#25 |
+| PI-1 access/invitations | Active; PI-1A completed; PI-1B next | Issues #4 and #22–#25 |
 | PI-2 intake draft | Planned; not implemented | Issue #5 |
 | PI-3 submit/review/apply | Planned; not implemented | Issue #6 |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
@@ -374,9 +374,9 @@ The current repository has an accepted MVP and an explicitly opened **Phase 2.1 
 
 For Patient Intake and Portal:
 
-1. Complete PI-1A / issue #22 with migration, tenant tests, ADR 012, canonical docs and CI.
-2. Do not add endpoints, JWTs, frontend auth or intake to PI-1A.
-3. After PI-1A acceptance, continue with PI-1B / issue #23 only.
+1. Preserve PI-1A / issue #22 as completed through PR #26.
+2. Approve the PI-1B staff permission before implementation; recommendation: dedicated `patientportal.invitation.manage`, initially `TenantAdmin` only, no platform override.
+3. After approval, open only PI-1B / issue #23.
 4. Keep PI-1C/#24 and PI-1D/#25 sequentially gated.
 5. Keep PI-2 through PI-4 pending until formal PI-1 closure.
 

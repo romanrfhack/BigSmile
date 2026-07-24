@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**, opened through active PI-1A
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1A completed, PI-1B next and permission-gated
 
 ### Release 4 closure evidence
 
@@ -101,13 +101,14 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7 while executing PI-1A as the first Phase 2.1 runtime slice:
+Preserve Releases 1 through 7 and completed PI-1A while preparing the permission-gated PI-1B slice:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
-* implement only tenant-owned patient portal account/invitation domain and persistence in PI-1A
-* keep staff/public endpoints, JWTs, frontend auth and intake outside PI-1A
+* preserve tenant-owned patient portal account/invitation domain and persistence completed in PI-1A
+* approve PI-1B staff authorization explicitly before adding invitation endpoints
+* keep public endpoints, JWTs, frontend auth and intake outside PI-1B
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* move to PI-1B only after PI-1A is accepted with migration, tests, docs and CI
+* PI-1A is accepted with migration, tests, docs and CI; PI-1B is the next gated step
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
@@ -800,7 +801,7 @@ Documents and Dashboard — completed through Release 7.1 and 7.2; initial opera
 
 ### Later phases
 
-* Phase 2.1 Patient Intake and Portal Foundation under ADR 006/012 — active through PI-1A; later PI slices gated
+* Phase 2.1 Patient Intake and Portal Foundation under ADR 006/012 — PI-1A completed; PI-1B next and permission-gated
 * reminders/providers/online booking
 * electronic invoicing
 * advanced SaaS platform features

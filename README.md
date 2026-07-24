@@ -277,7 +277,8 @@ Current roadmap position:
 * **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
-* **Current slice:** **PI-1A — Patient portal account and invitation domain/persistence**
+* **Latest Phase 2.1 slice completed:** **PI-1A — Patient portal account and invitation domain/persistence**
+* **Next slice:** **PI-1B — Staff invitation lifecycle**, pending explicit staff-permission approval
 * **Public patient runtime:** not exposed; activation/login/frontend/intake remain pending
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
@@ -358,7 +359,7 @@ Release 7 closure evidence:
 
 The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The initial operational MVP is accepted, but Bigsmile is not feature-complete. Phase 2.1 is active only through PI-1A; public activation/login, intake, review/apply and audit hardening remain pending. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
+The initial operational MVP is accepted, but Bigsmile is not feature-complete. PI-1A is completed; PI-1B is the next gated slice. Public activation/login, intake, review/apply and audit hardening remain pending. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
 
 ---
 
@@ -446,7 +447,7 @@ The initial operational MVP is accepted, but Bigsmile is not feature-complete. P
 ### Phase 2 Expansion — Modern Operations
 
 * **Phase 2.1 — Patient Intake and Portal Foundation** is the active phase under ADR 006 and ADR 012
-* PI-1A introduces account/invitation domain and persistence only; it does not expose patient endpoints
+* PI-1A completed account/invitation domain and persistence only; it exposes no patient endpoint
 * PI-1 proceeds through PI-1A (#22), PI-1B (#23), PI-1C (#24) and PI-1D (#25) before intake begins
 * PI-2 to PI-4 remain pending for intake, clinic review/application and audit hardening
 * The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred

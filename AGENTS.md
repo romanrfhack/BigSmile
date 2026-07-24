@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 active and PI-1A in implementation
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 active, PI-1A completed, PI-1B pending authorization decision
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -176,21 +176,22 @@ Repository code also exists in later capabilities, including reminders/manual re
 
 Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted MVP:
 - architecture accepted in ADR 006 and access baseline/opening accepted in ADR 012
-- PI-1 is active; PI-1A (#22) is the current sub-slice
-- PI-1B (#23), PI-1C (#24) and PI-1D (#25) remain sequentially gated
+- PI-1 is active; PI-1A (#22) is completed through PR #26
+- PI-1B (#23) is next but requires explicit staff-permission approval
+- PI-1C (#24) and PI-1D (#25) remain sequentially gated
 - PI-2 to PI-4 remain not started
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Complete `PI-1A — Patient portal account and invitation domain/persistence` without exposing patient authentication or intake before its security gates.
+Preserve completed PI-1A and resolve the explicit authorization decision required before opening `PI-1B — Staff-issued patient portal invitation lifecycle`.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
 - preserve completed Patients, Scheduling, Clinical Records, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard behavior
 - keep Documents upload validation, storage containment and tenant-local Dashboard dates intact
-- enforce tenant ownership, tenant-scoped login uniqueness, one-patient linkage, hash-only invitation persistence and rowversion concurrency in PI-1A
-- do not add staff/public endpoints, patient JWTs, frontend auth or intake to PI-1A
-- move to PI-1B only after PI-1A migration/tests/docs/CI are accepted
+- preserve PI-1A tenant ownership, tenant-scoped login uniqueness, one-patient linkage, hash-only invitation persistence and rowversion concurrency
+- do not add activation/login, patient JWTs, frontend auth or intake to PI-1B
+- approve a dedicated invitation-management permission before PI-1B; do not reuse broad `patient.write` silently
 - avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override
