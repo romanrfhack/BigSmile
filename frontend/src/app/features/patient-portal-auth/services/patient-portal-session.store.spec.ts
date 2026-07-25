@@ -2,8 +2,15 @@ import { PatientPortalAuthenticationResponse } from '../models/patient-portal-au
 import { PatientPortalSessionStore } from './patient-portal-session.store';
 
 describe('PatientPortalSessionStore', () => {
-  beforeEach(() => window.localStorage.clear());
-  afterEach(() => window.localStorage.clear());
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
 
   it('keeps the patient token and session in memory only', () => {
     const store = new PatientPortalSessionStore();
