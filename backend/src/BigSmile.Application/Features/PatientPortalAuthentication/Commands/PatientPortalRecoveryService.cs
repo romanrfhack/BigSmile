@@ -50,7 +50,7 @@ namespace BigSmile.Application.Features.PatientPortalAuthentication.Commands
         {
             var (tenantId, actorUserId) = GetRequiredStaffContext();
             var patient = await _patientRepository.GetByIdAsync(patientId, cancellationToken);
-            if (patient is null)
+            if (patient is null || !patient.IsActive)
             {
                 return null;
             }
