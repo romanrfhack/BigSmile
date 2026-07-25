@@ -10,6 +10,7 @@ using BigSmile.Application.Features.Odontograms.Commands;
 using BigSmile.Application.Features.Odontograms.Queries;
 using BigSmile.Application.Features.PatientDocuments.Commands;
 using BigSmile.Application.Features.PatientDocuments.Queries;
+using BigSmile.Application.Features.PatientPortalAuthentication.Commands;
 using BigSmile.Application.Features.PatientPortalInvitations.Commands;
 using BigSmile.Application.Features.PatientPortalInvitations.Queries;
 using BigSmile.Application.Features.Patients.Commands;
@@ -29,7 +30,6 @@ namespace BigSmile.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-            // Register application services (query handlers, command handlers, etc.)
             services.AddSingleton(TimeProvider.System);
             services.AddSingleton<IRolePermissionCatalog, RolePermissionCatalog>();
             services.AddScoped<IBillingDocumentCommandService, BillingDocumentCommandService>();
@@ -43,6 +43,9 @@ namespace BigSmile.Application
             services.AddScoped<IOdontogramQueryService, OdontogramQueryService>();
             services.AddScoped<IPatientDocumentCommandService, PatientDocumentCommandService>();
             services.AddScoped<IPatientDocumentQueryService, PatientDocumentQueryService>();
+            services.AddScoped<IPatientPortalPublicAuthenticationService, PatientPortalPublicAuthenticationService>();
+            services.AddScoped<IPatientPortalSessionService, PatientPortalSessionService>();
+            services.AddScoped<IPatientPortalRecoveryService, PatientPortalRecoveryService>();
             services.AddScoped<IPatientPortalInvitationCommandService, PatientPortalInvitationCommandService>();
             services.AddScoped<IPatientPortalInvitationQueryService, PatientPortalInvitationQueryService>();
             services.AddScoped<IPatientCommandService, PatientCommandService>();
