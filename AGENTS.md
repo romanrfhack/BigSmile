@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 and PI-2A completed, PI-2B next
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A and PI-2B completed, PI-2C active
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -130,6 +130,7 @@ Phase 2.1 opening evidence:
 - ADR 014 — `docs/decisions/014-patient-portal-authentication-and-session-boundary.md`
 - ADR 015 — `docs/decisions/015-patient-portal-frontend-session-boundary.md`
 - ADR 016 — `docs/decisions/016-patient-intake-draft-baseline.md`
+- ADR 017 — `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`
 - PI-1 closure — `docs/pi-1-patient-portal-access-and-security-closure.md`
 - PI-1 runbook — `docs/patient-portal-assisted-recovery-runbook.md`
 - PI-1A — issue #22 / PR #26
@@ -137,6 +138,8 @@ Phase 2.1 opening evidence:
 - PI-1C — issue #24 / PR #29
 - PI-1D — issue #25 / PR #30
 - PI-2A — issue #31 / PR #32
+- PI-2B — issue #33 / PR #34
+- PI-2C — issue #35; sub-slices #36, #37 and #38
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -187,13 +190,13 @@ Repository code also exists in later capabilities, including reminders/manual re
 Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted MVP:
 - architecture accepted in ADR 006; PI-1 access decisions are accepted in ADR 012 through ADR 015; PI-2 baseline is accepted in ADR 016
 - PI-1 (#4) is completed through PI-1A to PI-1D
-- PI-2 (#5) is active; PI-2A (#31) domain/persistence is completed and PI-2B is next
-- PI-2C retains waiting-room link, dedicated staff permission and `patient_intake` scope; PI-2D retains Angular capture
+- PI-2 (#5) is active; PI-2A (#31) and PI-2B (#33) are completed
+- PI-2C (#35) is active only through #36 → #37 → #38 for waiting-room credential, dedicated staff permission, `patient_intake` scope and minimal staff handoff UI; PI-2D retains patient Angular capture
 - PI-3 and PI-4 remain not started
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve completed PI-1 and PI-2A, and open only `PI-2B — Existing-Patient Self-Service Draft` before waiting-room bootstrap or Angular intake capture.
+Preserve completed PI-1, PI-2A and PI-2B, and implement only `PI-2C1 — Waiting-Room Credential Foundation and TenantAdmin Management API` before anonymous consume, intake-only JWT or Angular handoff UI.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -204,8 +207,8 @@ Immediate priorities:
 - preserve PI-1C separate patient bearer scheme/secret/audience, fixed-time token verification, `SessionVersion`, generic errors, rate limiting, lockout and assisted recovery
 - preserve PI-1D route/shell/interceptor separation, activation fragment cleanup and memory-only patient session
 - preserve ADR 016 fields, typed-phone proposal ownership, 30-day effective-save expiry, explicit save and append-only revisions
-- keep PI-2B limited to linked existing-patient self-only create/get/save with no canonical Patient/Clinical writes
-- keep waiting-room link, `patientportal.intake.manage` and `patient_intake` scope in PI-2C; keep Angular intake capture in PI-2D
+- preserve PI-2B as linked existing-patient self-only create/get/save with id-less ownership, no-store, optimistic concurrency and no canonical Patient/Clinical writes
+- implement PI-2C sequentially: #36 credential/staff API, #37 transactional activation/`patient_intake`, #38 staff copy/print/local-QR UI; keep patient Angular intake capture in PI-2D
 - avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override

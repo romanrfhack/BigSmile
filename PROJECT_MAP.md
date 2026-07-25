@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1 and PI-2A completed, PI-2B next
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A and PI-2B completed, PI-2C active
 
 ### Release 4 closure evidence
 
@@ -101,7 +101,7 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7, completed PI-1 and completed PI-2A while preparing PI-2B:
+Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B while implementing only PI-2C:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
 * preserve PI-1A tenant-owned account/invitation persistence
@@ -109,10 +109,10 @@ Preserve Releases 1 through 7, completed PI-1 and completed PI-2A while preparin
 * preserve PI-1C separate patient bearer/session boundary, `SessionVersion`, rate limits, lockout and recovery permission
 * preserve PI-1D separate Angular route/shell/interceptors, fragment cleanup and memory-only session
 * preserve PI-2A tenant-owned draft, fixed-answer, immutable-revision, expiry and concurrency semantics
-* keep PI-2B limited to linked-account current-intake create/get/save and keep canonical writes prohibited
-* reserve waiting-room link/permission/scope for PI-2C and Angular capture for PI-2D
+* preserve PI-2B id-less self-only create/get/save, GET without side effects, no-store and canonical-write prohibition
+* implement PI-2C only as #36 credential/staff API → #37 intake-only session → #38 staff handoff UI; reserve patient capture for PI-2D
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* PI-1 and PI-2A are accepted with migrations, tests and ADR evidence; PI-2B is the next bounded step
+* PI-1, PI-2A and PI-2B are accepted with tests/ADR evidence; PI-2C1 is the next bounded step
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
@@ -483,7 +483,7 @@ Owns:
 * sessions
 * access policies
 
-Patient-facing identity is an active bounded boundary under ADR 006/012/013/014/015. PI-1A owns account/invitation persistence; PI-1B owns tenant-admin-only invitation management; PI-1C owns the separate patient activation/login/self-session backend; and PI-1D owns the separate Angular route/shell/session/interceptor boundary plus operational recovery runbook. ADR 016 and PI-2A add a separate tenant-owned intake draft/revision model without changing staff identity or canonical Patient/Clinical ownership.
+Patient-facing identity is an active bounded boundary under ADR 006 and ADR 012–017. PI-1 owns linked-patient access; PI-2A owns tenant-owned intake persistence; PI-2B owns linked-patient self-only create/get/save; PI-2C owns the separate waiting-room credential and intake-only trust mode. Staff identity remains unchanged, waiting-room management is TenantAdmin-only, and canonical Patient/Clinical ownership is not transferred to patient endpoints.
 
 ### 7.3 Patients
 
@@ -608,17 +608,18 @@ Future Reporting owns deeper treatment/scheduling/billing metrics, charts, expor
 
 ### 7.12 Patient Intake and Portal
 
-Accepted PI-1 and PI-2A ownership:
+Accepted PI-1, PI-2A and PI-2B ownership:
 
-* tenant-owned portal accounts and invitations separate from staff identity
-* patient-only authentication/session and Angular boundary
+* tenant-owned portal accounts and existing-patient invitations separate from staff identity
+* patient-only authentication/session and Angular auth boundary
 * tenant-owned `PatientIntake` current draft
 * separate fixed questionnaire answer rows using the existing 39-key catalog
 * immutable effective-save revisions with changed-field ids and versioned snapshot JSON
 * optional same-tenant Branch operational context
 * `Draft / Expired`, 30-day effective-save expiry and `RowVersion`
+* id-less self-only create/get/save for linked patients with no-store and optimistic concurrency
 
-PI-2A exposes no endpoint and never modifies canonical Patient or ClinicalRecord. PI-2B owns existing-patient self-service endpoints; PI-2C owns waiting-room links and intake-only scope; PI-2D owns capture UI.
+PI-2C owns a separate no-Patient waiting-room credential, `patient_intake` session and minimal staff handoff UI; PI-2D owns patient capture UI. No PI-2 endpoint applies canonical Patient or ClinicalRecord data.
 
 ---
 
@@ -657,6 +658,7 @@ Examples:
 * patient document -> tenant + patient; binary access follows authorized metadata lookup
 * dashboard summary -> tenant-scoped read model; operational day derives from tenant-owned `TimeZoneId`
 * patient portal account/invitation -> tenant-owned identity/bootstrap records; patient linkage and login uniqueness remain tenant-scoped
+* waiting-room intake credential -> tenant-owned, optional same-tenant Branch context, no PatientId, hash-only and single-use
 * patient intake/answer/revision -> tenant-owned proposal records; optional Branch is operational only and revisions are append-only
 
 ### Child-table rule

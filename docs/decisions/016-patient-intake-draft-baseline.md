@@ -5,7 +5,7 @@
 - **Decision Type:** Sensitive patient-input domain, draft lifecycle, future public bootstrap and authorization scope
 - **Scope:** Phase 2.1 / PI-2 — Patient Intake Draft and Self-Service Capture
 - **Applies To:** Domain, persistence, API, patient authentication, staff authorization, Angular, audit and operations
-- **Tracking:** epic #2; PI-2 #5; PI-2A #31; PR #32
+- **Tracking:** epic #2; PI-2 #5; PI-2A #31 / PR #32; PI-2B #33 / PR #34; PI-2C #35–#38; ADR 017
 
 ## Context
 
@@ -306,6 +306,21 @@ PI-2A adds no endpoint, public token, staff permission, JWT claim, Angular intak
 - no endpoint or canonical write added;
 - repository CI green;
 - canonical docs distinguish PI-2A completed from PI-2B pending.
+
+### PI-2B
+
+- accepted through PR #34 / `7325a73e7f86ae0e6f0557574fe9d9756a89293f`;
+- linked-patient `POST / GET / PUT /api/patient-portal/intake`;
+- id-less ownership from validated patient session;
+- GET without side effects and no-store responses;
+- optimistic concurrency, no-op semantics and atomic effective-save revision;
+- no canonical write; CI #315 green.
+
+### PI-2C
+
+- active under ADR 017 and issue #35;
+- delivered only through PI-2C1 #36 → PI-2C2 #37 → PI-2C3 #38;
+- patient questionnaire UI remains PI-2D.
 
 ### PI-2 overall
 
