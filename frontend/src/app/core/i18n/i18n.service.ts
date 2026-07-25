@@ -7,6 +7,7 @@ import {
   UI_LANGUAGE_STORAGE_KEY,
   normalizeLanguageCode
 } from './i18n.model';
+import { PATIENT_PORTAL_TRANSLATIONS } from './patient-portal-translations';
 import { TRANSLATIONS, TranslationParams } from './translations';
 
 @Injectable({
@@ -31,9 +32,11 @@ export class I18nService {
     }
 
     const language = this.currentLanguageSignal();
-    const template = language === DEFAULT_LANGUAGE
-      ? TRANSLATIONS[DEFAULT_LANGUAGE][key] ?? key
-      : TRANSLATIONS[language][key] ?? key;
+    const featureTemplate = PATIENT_PORTAL_TRANSLATIONS[language][key];
+    const sharedTemplate = language === DEFAULT_LANGUAGE
+      ? TRANSLATIONS[DEFAULT_LANGUAGE][key]
+      : TRANSLATIONS[language][key];
+    const template = featureTemplate ?? sharedTemplate ?? key;
 
     return interpolate(template, params);
   }

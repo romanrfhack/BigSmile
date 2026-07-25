@@ -230,7 +230,7 @@ PI-1C does not expose Patient, Clinical, Odontogram, Treatment, Billing, Documen
 - no refresh token means the patient must log in again after access-token expiry;
 - reception/TenantAdmin remains involved in recovery;
 - reverse-proxy IP handling requires an explicit deployment configuration;
-- the patient-facing Angular experience remains unavailable until PI-1D.
+- the patient-facing Angular experience is governed separately by ADR 015 and remains memory-only without refresh tokens.
 
 ## Non-goals
 
@@ -253,4 +253,4 @@ PI-1C is accepted only after:
 - security-focused activation, replay, tenant realm, lockout, recovery and session-revocation coverage exists;
 - canonical STATE and project documentation are reconciled.
 
-PI-1 remains open after PI-1C. PI-1D must deliver the separate Angular patient-auth area, e2e coverage and the assisted-recovery runbook before PI-1 can close.
+PI-1D is accepted through ADR 015 and PR #30 with the separate Angular patient-auth area, token-boundary tests and assisted-recovery runbook. PI-1 is complete; PI-2 remains separately gated.

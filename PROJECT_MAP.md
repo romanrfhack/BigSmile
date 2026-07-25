@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1A through PI-1C completed, PI-1D next
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1 completed through PI-1A to PI-1D, PI-2 next and decision-gated
 
 ### Release 4 closure evidence
 
@@ -101,15 +101,16 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7 and completed PI-1A through PI-1C while preparing PI-1D:
+Preserve Releases 1 through 7 and completed PI-1 while preparing decision-gated PI-2:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
-* preserve tenant-owned patient portal account/invitation persistence completed in PI-1A
-* preserve PI-1B staff invitation endpoints, `TenantAdmin`-only permission, no platform override, token hash-at-rest and append-only audit
-* preserve PI-1C activation/login/self-session backend, separate bearer scheme, `SessionVersion`, rate limits, lockout and recovery permission
-* keep intake and canonical module access outside PI-1D
+* preserve PI-1A tenant-owned account/invitation persistence
+* preserve PI-1B tenant-admin-only invitation lifecycle, no platform override, hash-at-rest and append-only audit
+* preserve PI-1C separate patient bearer/session boundary, `SessionVersion`, rate limits, lockout and recovery permission
+* preserve PI-1D separate Angular route/shell/interceptors, fragment cleanup and memory-only session
+* keep intake and canonical module access outside accepted PI-1
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* PI-1A through PI-1C are accepted with migrations, tests, docs and CI; PI-1D is the next gated step
+* PI-1 is accepted with migrations, backend/frontend tests, ADRs, closure evidence, runbook and CI; PI-2 is the next decision-gated step
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
@@ -173,6 +174,9 @@ Expected layout:
 * `docs/release-7-documents-and-dashboard-audit-and-closure.md`
 * `docs/decisions/010-tenant-time-zone-foundation.md`
 * `docs/decisions/011-release-7-documents-dashboard-and-mvp-closure.md`
+* `docs/decisions/015-patient-portal-frontend-session-boundary.md`
+* `docs/pi-1-patient-portal-access-and-security-closure.md`
+* `docs/patient-portal-assisted-recovery-runbook.md`
 * `docs/patient-intake-and-portal-plan.md`
 
 ### Documentation ownership rules
@@ -342,6 +346,7 @@ frontend/
     shared/
     features/
       auth/
+      patient-portal-auth/
       platform/
       dashboard/
       patients/
@@ -475,7 +480,7 @@ Owns:
 * sessions
 * access policies
 
-Patient-facing identity is an active bounded boundary under ADR 006/012/013/014. PI-1A owns account/invitation persistence; PI-1B owns tenant-admin-only invitation management; PI-1C owns the separate patient activation/login/self-session backend, password hashing, JWT scheme, lockout, rate limiting, session validation and assisted recovery. It never reuses staff membership semantics or staff permissions.
+Patient-facing identity is an active bounded boundary under ADR 006/012/013/014/015. PI-1A owns account/invitation persistence; PI-1B owns tenant-admin-only invitation management; PI-1C owns the separate patient activation/login/self-session backend; and PI-1D owns the separate Angular route/shell/session/interceptor boundary plus operational recovery runbook. PI-1 never reuses staff membership semantics or staff permissions.
 
 ### 7.3 Patients
 

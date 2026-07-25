@@ -199,6 +199,7 @@ frontend/
     shared/
     features/
       auth/
+      patient-portal-auth/
       platform/
       dashboard/
       patients/
@@ -505,7 +506,7 @@ Responsible for the bounded Phase 2.1 patient-facing boundary:
 * patient-originated revisions and audit
 * clinic review before canonical application
 
-It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary, ADR 012 defines the pilot access baseline, ADR 013 restricts invitation management, and ADR 014 establishes the separate patient bearer scheme, versioned password hashing, tenant realm, `SessionVersion`, abuse controls, recovery and authentication audit.
+It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary, ADR 012 defines the pilot access baseline, ADR 013 restricts invitation management, ADR 014 establishes the separate backend bearer/session boundary, and ADR 015 establishes the separate Angular route/shell/interceptor boundary with fragment activation and memory-only session state.
 
 ---
 

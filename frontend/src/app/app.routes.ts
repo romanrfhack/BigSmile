@@ -1,5 +1,9 @@
 import { Routes } from '@angular/router';
 import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
+import {
+  patientPortalAnonymousGuard,
+  patientPortalAuthGuard
+} from './features/patient-portal-auth/guards/patient-portal-auth.guard';
 
 const loadLoginComponent = () =>
   import('./features/auth/login/login.component').then((m) => m.LoginComponent);
@@ -39,9 +43,50 @@ const loadTreatmentPlanPage = () =>
   );
 const loadSchedulingPage = () =>
   import('./features/scheduling/pages/scheduling.page').then((m) => m.SchedulingPageComponent);
+const loadPatientPortalShell = () =>
+  import('./features/patient-portal-auth/components/patient-portal-shell.component').then(
+    (m) => m.PatientPortalShellComponent,
+  );
+const loadPatientPortalActivationPage = () =>
+  import('./features/patient-portal-auth/pages/patient-portal-activation.page').then(
+    (m) => m.PatientPortalActivationPageComponent,
+  );
+const loadPatientPortalLoginPage = () =>
+  import('./features/patient-portal-auth/pages/patient-portal-login.page').then(
+    (m) => m.PatientPortalLoginPageComponent,
+  );
+const loadPatientPortalHomePage = () =>
+  import('./features/patient-portal-auth/pages/patient-portal-home.page').then(
+    (m) => m.PatientPortalHomePageComponent,
+  );
 
 export const routes: Routes = [
   { path: 'login', loadComponent: loadLoginComponent, canActivate: [anonymousOnlyGuard] },
+  {
+    path: 'patient-portal',
+    loadComponent: loadPatientPortalShell,
+    children: [
+      {
+        path: 'activate',
+        loadComponent: loadPatientPortalActivationPage
+      },
+      {
+        path: ':tenantSubdomain/login',
+        loadComponent: loadPatientPortalLoginPage,
+        canActivate: [patientPortalAnonymousGuard]
+      },
+      {
+        path: ':tenantSubdomain/home',
+        loadComponent: loadPatientPortalHomePage,
+        canActivate: [patientPortalAuthGuard]
+      },
+      {
+        path: ':tenantSubdomain',
+        redirectTo: ':tenantSubdomain/login',
+        pathMatch: 'full'
+      }
+    ]
+  },
   {
     path: 'app',
     loadComponent: loadSessionHomeComponent,

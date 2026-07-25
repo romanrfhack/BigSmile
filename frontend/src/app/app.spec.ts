@@ -22,6 +22,8 @@ describe('App', () => {
       providers: [
         provideRouter([
           { path: 'login', component: RouteStubComponent },
+          { path: 'patient-portal/activate', component: RouteStubComponent },
+          { path: 'patient-portal/:tenantSubdomain/login', component: RouteStubComponent },
           { path: 'patients', component: RouteStubComponent }
         ]),
         {
@@ -100,6 +102,16 @@ describe('App', () => {
     expect(compiled.textContent).not.toContain('Agenda');
     expect(compiled.textContent).not.toContain('Contexto de acceso');
     expect(compiled.textContent).not.toContain('Idioma');
+  });
+
+  it('hides staff shell navigation on patient portal routes', async () => {
+    const compiled = await renderAppAt('/patient-portal/activate#token=secret');
+
+    expect(compiled.querySelector('.app-header')).toBeNull();
+    expect(compiled.querySelector('.app-footer')).toBeNull();
+    expect(compiled.textContent).not.toContain('Pacientes');
+    expect(compiled.textContent).not.toContain('Agenda');
+    expect(compiled.textContent).not.toContain('Contexto de acceso');
   });
 
   it('keeps shell navigation and language selector on non-login routes', async () => {

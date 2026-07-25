@@ -19,9 +19,20 @@ export class App {
   }
 
   isLoginRoute(): boolean {
-    const primaryRoute = this.router.parseUrl(this.router.url).root.children['primary'];
-    const pathSegments = primaryRoute?.segments ?? [];
+    const pathSegments = this.primaryPathSegments();
+    return pathSegments.length === 1 && pathSegments[0] === 'login';
+  }
 
-    return pathSegments.length === 1 && pathSegments[0].path === 'login';
+  isPatientPortalRoute(): boolean {
+    return this.primaryPathSegments()[0] === 'patient-portal';
+  }
+
+  isShelllessRoute(): boolean {
+    return this.isLoginRoute() || this.isPatientPortalRoute();
+  }
+
+  private primaryPathSegments(): string[] {
+    const primaryRoute = this.router.parseUrl(this.router.url).root.children['primary'];
+    return (primaryRoute?.segments ?? []).map(segment => segment.path);
   }
 }
