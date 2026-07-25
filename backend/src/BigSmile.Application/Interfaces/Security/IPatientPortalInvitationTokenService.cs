@@ -20,5 +20,6 @@ namespace BigSmile.Application.Interfaces.Security
     {
         GeneratedPatientPortalInvitationToken Generate();
         string ComputeHash(string rawToken);
+        bool VerifyHash(string rawToken, string expectedTokenHash);
     }
 }
