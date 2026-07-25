@@ -164,8 +164,7 @@ namespace BigSmile.Api.Controllers
             public string LoginName { get; set; } = string.Empty;
 
             [Required]
-            [MinLength(12)]
-            [MaxLength(128)]
+            [MaxLength(512)]
             public string Password { get; set; } = string.Empty;
         }
 
@@ -177,7 +176,7 @@ namespace BigSmile.Api.Controllers
             public string LoginName { get; set; } = string.Empty;
 
             [Required]
-            [MaxLength(128)]
+            [MaxLength(512)]
             public string Password { get; set; } = string.Empty;
         }
     }
