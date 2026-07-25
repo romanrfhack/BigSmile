@@ -236,7 +236,8 @@ A role alone is not enough; it must be evaluated together with its scope and mem
 Patient-facing identity is separate from staff identity under ADR 006 and ADR 012.
 
 Current rules:
-- `PatientPortalAccount` and `PatientPortalInvitation` are tenant-owned records
+- `PatientPortalAccount`, `PatientPortalInvitation` and patient-portal security audit entries are tenant-owned records
+- invitation management requires `patientportal.invitation.manage`, initially only for `TenantAdmin`, with no platform override
 - `LoginName` uniqueness is scoped by `TenantId`
 - a portal account links to at most one canonical Patient in Phase 2.1
 - patient accounts do not use `UserTenantMembership`, staff roles or tenant-wide permissions

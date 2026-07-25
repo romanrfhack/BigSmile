@@ -116,17 +116,16 @@ OCR/sharing/versioning, payments/revenue metrics, charts/exports, branch/doctor 
 
 ### Current roadmap frontier
 
-The initial operational MVP is accepted. **Phase 2.1 — Patient Intake and Portal Foundation** is active; PI-1A is completed and PI-1B is next.
+The initial operational MVP is accepted. **Phase 2.1 — Patient Intake and Portal Foundation** is active; PI-1A and PI-1B are completed and PI-1C is next.
 
 ### Phase 2.1
 
 Patient Intake and Portal Foundation is now being implemented in bounded gates:
 
-- architecture accepted in ADR 006 and access baseline/opening accepted in ADR 012;
-- PI-1A domain/persistence is completed;
-- PI-1B is permission-gated and not opened;
+- architecture accepted in ADR 006, access baseline/opening accepted in ADR 012 and invitation management accepted in ADR 013;
+- PI-1A domain/persistence and PI-1B staff invitation lifecycle are completed;
 - no public patient auth or intake UI is available yet;
-- PI-1B to PI-1D and PI-2 to PI-4 remain pending;
+- PI-1C to PI-1D and PI-2 to PI-4 remain pending;
 - full patient portal remains outside the bounded Phase 2.1 scope.
 
 ## 3. Current code by module

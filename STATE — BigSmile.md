@@ -22,7 +22,7 @@
 
 **Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake y ADR 012 fija el baseline de acceso aprobado: activación single-use + password, `LoginName` tenant-scoped, TTL 24 h/30 min, entrega piloto por recepción, lockout 5 intentos/15 min y recovery asistido. Phase 2.1 queda abierta explícitamente; PI-1 está activa y PI-1A introduce solo dominio/persistencia, sin endpoints públicos ni captura de intake.
+**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 fija el baseline de acceso; y ADR 013 fija la gestión de invitaciones staff mediante `patientportal.invitation.manage` solo para `TenantAdmin`, sin `TenantUser`, `PlatformAdmin` ni platform override. Phase 2.1 está activa; PI-1A y PI-1B quedan completados sin abrir todavía activación/login públicos ni captura de intake.
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
@@ -82,7 +82,7 @@
 
 [Hecho] PI-1A incorporó `PatientPortalAccount`, `PatientPortalInvitation`, tenant-scoped login uniqueness, one-patient linkage, hash-only invitation persistence, lockout/session metadata, rowversion, filtros/write enforcement, migración y pruebas. No expone activación/login, JWT de paciente ni captura de intake.
 
-[PENDIENTE POR DECISIÓN] PI-1B (#23) es el siguiente sub-slice, pero no se abre hasta aprobar el permiso staff que podrá emitir/revocar invitaciones. PI-1C (#24), PI-1D (#25) y PI-2 a PI-4 permanecen pendientes.
+[Hecho] PI-1B — Staff Invitation Lifecycle (#23) queda completado mediante PR #28: permiso dedicado solo para `TenantAdmin`, endpoints staff tenant-scoped de emisión/listado/revocación, token criptográfico one-time con hash-at-rest, TTL configurable de 24 horas, replacement explícito y bitácora append-only. PI-1C (#24) es el siguiente gate; PI-1D (#25) y PI-2 a PI-4 permanecen pendientes.
 
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
@@ -100,7 +100,7 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] fase abierta; PI-1 activa; PI-1A completado; PI-1B pendiente de decisión de autorización; sin superficie pública todavía.
+**Estado** — [Hecho] fase abierta; PI-1 activa; PI-1A y PI-1B completados; PI-1C es el siguiente gate; sin activación/login público, JWT de paciente, frontend paciente ni intake todavía.
 
 **Ubicación** — [Hecho] fase actual posterior al MVP aceptado; se implementa mediante PI-1A → PI-1B → PI-1C → PI-1D antes de abrir PI-2.
 
@@ -108,6 +108,7 @@
 
 - ADR 006 — `docs/decisions/006-patient-intake-and-portal-foundation.md`.
 - ADR 012 — `docs/decisions/012-patient-portal-access-baseline-and-phase-opening.md`.
+- ADR 013 — `docs/decisions/013-patient-portal-invitation-management.md`.
 - Plan general — `docs/patient-intake-and-portal-plan.md`.
 - Parent issue — #2.
 - PI-1 Access and Invitation Foundation — issue #4.
@@ -356,27 +357,25 @@
 
 Lista priorizada:
 
-1. Preservar PI-1A (#22) como dominio/persistencia completado, sin endpoints ni auth pública.
+1. Preservar PI-1A (#22) y PI-1B (#23) como foundations completados, sin activación/login público ni intake.
 
-2. Resolver explícitamente la autorización de PI-1B (#23). Recomendación técnica: permiso dedicado `patientportal.invitation.manage`, asignado inicialmente solo a `TenantAdmin`, sin platform override ni reutilizar `patient.write`.
+2. Preparar PI-1C (#24) únicamente después de decidir explícitamente el formato versionado de password hash, audience/scope y lifetime del JWT de paciente, comparación de token, rate limits y enforcement de `SessionVersion`.
 
-3. Abrir PI-1B únicamente después de aprobar esa decisión, limitado a emisión/revocación staff, token hash-at-rest y auditoría.
+3. Mantener PI-1D (#25) bloqueado hasta aceptar PI-1C; no construir frontend sobre contratos de auth no cerrados.
 
-4. Mantener PI-1C (#24) y PI-1D (#25) bloqueados hasta sus gates previos; no exponer auth pública antes de hashing versionado, anti-enumeración, rate limiting y concurrencia.
+4. Mantener PI-2, PI-3 y PI-4 no iniciados hasta el cierre formal de PI-1.
 
-5. Mantener PI-2, PI-3 y PI-4 no iniciados hasta el cierre formal de PI-1.
+5. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
 
-6. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
+6. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
 
-7. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
+7. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
 
-8. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
+8. Mantener fuera de agregados cerrados cualquier linkage cross-module no aceptado y preservar joins tenant-aware para accesos directos a tablas hijas.
 
-9. Mantener fuera de agregados cerrados cualquier linkage cross-module no aceptado y preservar joins tenant-aware para accesos directos a tablas hijas.
+9. Mantener recordatorios/providers/jobs/queues, online booking, advanced analytics y full Patient Portal como capabilities futuras no aceptadas.
 
-10. Mantener recordatorios/providers/jobs/queues, online booking, advanced analytics y full Patient Portal como capabilities futuras no aceptadas.
-
-11. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap, tenant model y ADRs en cada gate de PI-1.
+10. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap, tenant model y ADRs en cada gate de PI-1.
 
 ## 12. Riesgos y temas a vigilar
 
@@ -384,7 +383,7 @@ Lista priorizada:
 
 **Authorization model** — [Hecho] Permisos nuevos deben evolucionar junto con módulos reales, sin cambiar silenciosamente scopes o roles.
 
-**Patient-facing identity** — [Hecho] La frontera ya está abierta de forma acotada en PI-1A, pero todavía no es pública. No reutiliza staff membership, no acepta `PatientId`/`TenantId` como autoridad, no permite platform override y no aplica cambios canónicos.
+**Patient-facing identity** — [Hecho] PI-1A y PI-1B ya establecen persistencia e invitaciones staff, pero la frontera todavía no permite autenticación de pacientes. No reutiliza staff membership, no acepta `PatientId`/`TenantId` como autoridad, no permite platform override, guarda solo hashes de invitación y no aplica cambios canónicos.
 
 **Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
 
@@ -416,10 +415,10 @@ Lista priorizada:
 
 ## 14. Nota tipo ADR resumida
 
-**Estado:** Nota canónica actualizada con ADR 006 a ADR 012; Phase 2.1 abierta, PI-1A completado y PI-1B pendiente de decisión de autorización.
+**Estado:** Nota canónica actualizada con ADR 006 a ADR 013; Phase 2.1 abierta; PI-1A y PI-1B completados; PI-1C pendiente de decisión de auth/session.
 
-**Contexto:** El MVP ya estaba aceptado. El cliente aprobó el baseline de acceso necesario para iniciar la identidad de paciente sin reutilizar staff auth ni introducir un proveedor externo.
+**Contexto:** PI-1A ya establecía cuentas e invitaciones tenant-owned. El cliente autorizó explícitamente que la gestión de invitaciones use un permiso dedicado solo para `TenantAdmin`, sin `TenantUser`, `PlatformAdmin` ni platform override.
 
-**Decisión:** Abrir Phase 2.1; fijar mediante ADR 012 activación single-use + password, `LoginName` tenant-scoped, TTL 24 h/30 min, entrega por recepción, lockout 5/15 y recovery asistido; ejecutar PI-1 en cuatro sub-slices y comenzar únicamente por PI-1A.
+**Decisión:** Aceptar PI-1B mediante ADR 013 con emisión/listado/revocación staff tenant-scoped, token one-time de 256 bits, SHA-256 hash-at-rest, TTL configurable, replacement determinista y bitácora append-only.
 
-**Consecuencias:** El repositorio ya tiene dominio/persistencia tenant-aware sin superficie pública. El siguiente paso es aprobar quién puede gestionar invitaciones antes de abrir PI-1B. Activación, JWT, frontend e intake permanecen bloqueados por los gates posteriores. Payments/cash/CFDI, doctor views, automatizaciones, advanced analytics y full Patient Portal siguen diferidos.
+**Consecuencias:** El repositorio ya puede generar y entregar manualmente una invitación a un paciente existente, pero todavía no puede consumirla ni autenticar al paciente. PI-1C debe cerrar password hashing, JWT/audience/scope, comparación constante, consumo transaccional, anti-enumeración, rate limiting, lockout y session invalidation. Payments/cash/CFDI, doctor views, automatizaciones, advanced analytics y full Patient Portal siguen diferidos.

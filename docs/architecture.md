@@ -505,7 +505,7 @@ Responsible for the bounded Phase 2.1 patient-facing boundary:
 * patient-originated revisions and audit
 * clinic review before canonical application
 
-It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary and ADR 012 defines the approved pilot access baseline.
+It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary, ADR 012 defines the approved pilot access baseline, and ADR 013 restricts invitation management to tenant-scoped `TenantAdmin` with token hash-at-rest and append-only audit.
 
 ---
 

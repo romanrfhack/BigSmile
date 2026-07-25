@@ -37,6 +37,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IClinicalRecordRepository, EfClinicalRecordRepository>();
             services.AddScoped<IOdontogramRepository, EfOdontogramRepository>();
             services.AddScoped<IPatientDocumentRepository, EfPatientDocumentRepository>();
+            services.AddScoped<IPatientPortalInvitationRepository, EfPatientPortalInvitationRepository>();
             services.AddScoped<IDashboardSummaryRepository, EfDashboardSummaryRepository>();
             services.AddScoped<IBillingDocumentRepository, EfBillingDocumentRepository>();
             services.AddScoped<ITreatmentPlanRepository, EfTreatmentPlanRepository>();
@@ -58,8 +59,10 @@ namespace BigSmile.Infrastructure
             // Register JWT token service
             services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-            // Register password hasher
+            // Register security and storage services
             services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddSingleton<IPatientPortalInvitationTokenService, PatientPortalInvitationTokenService>();
+            services.AddSingleton<IPatientPortalInvitationSettings, PatientPortalInvitationSettings>();
             services.AddScoped<IPatientDocumentBinaryStore, LocalPatientDocumentBinaryStore>();
 
             return services;
