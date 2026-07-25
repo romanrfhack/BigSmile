@@ -1,5 +1,3 @@
-using BigSmile.Domain.Entities;
-
 namespace BigSmile.Application.Interfaces.Security
 {
     public enum PatientPortalPasswordVerificationStatus
@@ -11,10 +9,9 @@ namespace BigSmile.Application.Interfaces.Security
 
     public interface IPatientPortalPasswordHasher
     {
-        string HashPassword(PatientPortalAccount account, string password);
+        string HashPassword(string password);
 
         PatientPortalPasswordVerificationStatus VerifyHashedPassword(
-            PatientPortalAccount account,
             string passwordHash,
             string providedPassword);
 
