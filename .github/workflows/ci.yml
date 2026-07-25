@@ -29,7 +29,9 @@ jobs:
         fetch-depth: 0
 
     - name: Reconcile canonical documentation
-      run: python3 backend/scripts/reconcile_pi2a_docs.py
+      run: |
+        python3 backend/scripts/patch_pi2a_reconcile.py
+        python3 backend/scripts/reconcile_pi2a_docs.py
 
     - name: Commit documentation
       run: |
@@ -56,6 +58,7 @@ jobs:
       run: |
         mkdir -p diagnostics
         set +e
+        python3 backend/scripts/patch_pi2a_reconcile.py
         python3 backend/scripts/reconcile_pi2a_docs.py 2>&1 | tee diagnostics/pi2a-docs.log
         status=${PIPESTATUS[0]}
         echo "DOC_STATUS=$status" >> diagnostics/pi2a-docs.log
