@@ -34,7 +34,23 @@ jobs:
       run: dotnet restore backend/BigSmile.slnx
 
     - name: Build backend
-      run: dotnet build backend/BigSmile.slnx --configuration Release --no-restore
+      shell: bash
+      run: |
+        mkdir -p diagnostics
+        set +e
+        dotnet build backend/BigSmile.slnx --configuration Release --no-restore 2>&1 | tee diagnostics/pi1c-ci-build.log
+        status=${PIPESTATUS[0]}
+        echo "BUILD_STATUS=$status" >> diagnostics/pi1c-ci-build.log
+        exit "$status"
+
+    - name: Upload PI-1C build diagnostics
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pi1c-ci-build
+        path: diagnostics/pi1c-ci-build.log
+        if-no-files-found: ignore
+        retention-days: 1
 
     - name: Validate architecture
       run: python3 backend/scripts/validate_architecture.py
