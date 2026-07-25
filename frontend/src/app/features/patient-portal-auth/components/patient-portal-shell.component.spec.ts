@@ -4,6 +4,16 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { PatientPortalShellComponent } from './patient-portal-shell.component';
 
 describe('PatientPortalShellComponent', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
   it('clears any in-memory staff session when the patient surface opens', async () => {
     const staffAuth = { logout: vi.fn() };
 
