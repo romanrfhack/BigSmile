@@ -1058,6 +1058,60 @@ namespace BigSmile.Infrastructure.Data.Migrations
                     b.ToTable("PatientPortalAccounts", (string)null);
                 });
 
+            modelBuilder.Entity("BigSmile.Domain.Entities.PatientPortalAuthenticationAuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActorType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PatientPortalAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PatientPortalInvitationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("PatientPortalAccountId");
+
+                    b.HasIndex("PatientPortalInvitationId");
+
+                    b.HasIndex("TenantId", "PatientId", "OccurredAtUtc");
+
+                    b.HasIndex("TenantId", "PatientPortalAccountId", "OccurredAtUtc");
+
+                    b.ToTable("PatientPortalAuthenticationAuditEntries", (string)null);
+                });
+
             modelBuilder.Entity("BigSmile.Domain.Entities.PatientPortalInvitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1963,6 +2017,40 @@ namespace BigSmile.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Patient");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("BigSmile.Domain.Entities.PatientPortalAuthenticationAuditEntry", b =>
+                {
+                    b.HasOne("BigSmile.Domain.Entities.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BigSmile.Domain.Entities.PatientPortalAccount", "PatientPortalAccount")
+                        .WithMany()
+                        .HasForeignKey("PatientPortalAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BigSmile.Domain.Entities.PatientPortalInvitation", "PatientPortalInvitation")
+                        .WithMany()
+                        .HasForeignKey("PatientPortalInvitationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BigSmile.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("PatientPortalAccount");
+
+                    b.Navigation("PatientPortalInvitation");
 
                     b.Navigation("Tenant");
                 });

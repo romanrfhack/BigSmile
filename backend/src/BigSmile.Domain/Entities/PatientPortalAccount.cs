@@ -36,7 +36,8 @@ namespace BigSmile.Domain.Entities
             Guid tenantId,
             Patient? patient,
             string loginName,
-            string passwordHash)
+            string passwordHash,
+            DateTime createdAtUtc)
         {
             if (tenantId == Guid.Empty)
             {
@@ -50,18 +51,16 @@ namespace BigSmile.Domain.Entities
                     nameof(patient));
             }
 
-            var normalizedLoginName = NormalizeLoginName(loginName);
-            var now = DateTime.UtcNow;
+            EnsureUtc(createdAtUtc, nameof(createdAtUtc));
 
             Id = Guid.NewGuid();
             TenantId = tenantId;
             PatientId = patient?.Id;
             Patient = patient;
-            LoginName = normalizedLoginName;
-            NormalizedLoginName = normalizedLoginName.ToUpperInvariant();
+            SetLoginName(loginName);
             PasswordHash = NormalizePasswordHash(passwordHash);
-            CreatedAtUtc = now;
-            LastUpdatedAtUtc = now;
+            CreatedAtUtc = createdAtUtc;
+            LastUpdatedAtUtc = createdAtUtc;
         }
 
         public static PatientPortalAccount CreateForExistingPatient(
@@ -69,8 +68,17 @@ namespace BigSmile.Domain.Entities
             string loginName,
             string passwordHash)
         {
+            return CreateForExistingPatient(patient, loginName, passwordHash, DateTime.UtcNow);
+        }
+
+        public static PatientPortalAccount CreateForExistingPatient(
+            Patient patient,
+            string loginName,
+            string passwordHash,
+            DateTime createdAtUtc)
+        {
             ArgumentNullException.ThrowIfNull(patient);
-            return new PatientPortalAccount(patient.TenantId, patient, loginName, passwordHash);
+            return new PatientPortalAccount(patient.TenantId, patient, loginName, passwordHash, createdAtUtc);
         }
 
         public static PatientPortalAccount CreateUnlinked(
@@ -78,7 +86,7 @@ namespace BigSmile.Domain.Entities
             string loginName,
             string passwordHash)
         {
-            return new PatientPortalAccount(tenantId, null, loginName, passwordHash);
+            return new PatientPortalAccount(tenantId, null, loginName, passwordHash, DateTime.UtcNow);
         }
 
         public void LinkPatient(Patient patient)
@@ -162,6 +170,47 @@ namespace BigSmile.Domain.Entities
             return LockoutEndUtc.HasValue && LockoutEndUtc.Value > utcNow;
         }
 
+        public void BeginRecovery(DateTime occurredAtUtc)
+        {
+            EnsureUtc(occurredAtUtc, nameof(occurredAtUtc));
+
+            IsActive = false;
+            FailedLoginAttempts = 0;
+            LockoutEndUtc = null;
+            LastFailedLoginAtUtc = null;
+            SessionVersion = checked(SessionVersion + 1);
+            LastUpdatedAtUtc = occurredAtUtc;
+        }
+
+        public void CompleteRecovery(
+            string loginName,
+            string passwordHash,
+            DateTime occurredAtUtc)
+        {
+            EnsureUtc(occurredAtUtc, nameof(occurredAtUtc));
+
+            if (IsActive)
+            {
+                throw new InvalidOperationException("An active patient portal account cannot complete recovery through activation.");
+            }
+
+            SetLoginName(loginName);
+            PasswordHash = NormalizePasswordHash(passwordHash);
+            FailedLoginAttempts = 0;
+            LockoutEndUtc = null;
+            LastFailedLoginAtUtc = null;
+            IsActive = true;
+            SessionVersion = checked(SessionVersion + 1);
+            LastUpdatedAtUtc = occurredAtUtc;
+        }
+
+        public void UpdatePasswordHash(string passwordHash, DateTime occurredAtUtc)
+        {
+            EnsureUtc(occurredAtUtc, nameof(occurredAtUtc));
+            PasswordHash = NormalizePasswordHash(passwordHash);
+            LastUpdatedAtUtc = occurredAtUtc;
+        }
+
         public void RecoverAccess(string passwordHash, DateTime occurredAtUtc)
         {
             EnsureUtc(occurredAtUtc, nameof(occurredAtUtc));
@@ -194,6 +243,18 @@ namespace BigSmile.Domain.Entities
             IsActive = false;
             SessionVersion = checked(SessionVersion + 1);
             LastUpdatedAtUtc = occurredAtUtc;
+        }
+
+        public static string NormalizeLoginNameForLookup(string? loginName)
+        {
+            return NormalizeLoginName(loginName).ToUpperInvariant();
+        }
+
+        private void SetLoginName(string loginName)
+        {
+            var normalized = NormalizeLoginName(loginName);
+            LoginName = normalized;
+            NormalizedLoginName = normalized.ToUpperInvariant();
         }
 
         private static string NormalizeLoginName(string? loginName)

@@ -42,6 +42,7 @@ namespace BigSmile.Application.Authorization
                     Permissions.PatientRead,
                     Permissions.PatientWrite,
                     Permissions.PatientPortalInvitationManage,
+                    Permissions.PatientPortalAccountRecover,
                     Permissions.SchedulingRead,
                     Permissions.SchedulingWrite,
                     Permissions.ClinicalRead,

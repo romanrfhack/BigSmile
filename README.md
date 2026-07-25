@@ -79,7 +79,7 @@ Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 —
 
 Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Phase 2.1 is now explicitly opened through PI-1A, but only its account/invitation domain and persistence foundation is active. No public patient auth or intake capability is accepted yet. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.
+Phase 2.1 is active through PI-1C. Account/invitation persistence, tenant-admin invitation management and the separate patient activation/login/self-session backend are accepted. The patient Angular experience and intake remain unavailable until PI-1D and PI-2. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.
 
 ---
 
@@ -277,9 +277,9 @@ Current roadmap position:
 * **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
-* **Latest Phase 2.1 slice completed:** **PI-1B — Staff-issued patient portal invitation lifecycle**
-* **Next slice:** **PI-1C — Patient activation, login and self-session boundary**, pending auth/session decisions
-* **Public patient runtime:** not exposed; activation/login/JWT/frontend/intake remain pending
+* **Latest Phase 2.1 slice completed:** **PI-1C — Patient activation, login and self-session boundary**
+* **Next slice:** **PI-1D — Patient auth frontend and security closure**
+* **Public patient runtime:** backend activation/login/self-session accepted; Angular patient UI and intake remain pending
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
@@ -359,7 +359,7 @@ Release 7 closure evidence:
 
 The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The initial operational MVP is accepted, but Bigsmile is not feature-complete. PI-1A and PI-1B are completed; PI-1C is the next gated slice. Public activation/login, patient JWT/session, intake, review/apply and final audit hardening remain pending. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
+The initial operational MVP is accepted, but Bigsmile is not feature-complete. PI-1A through PI-1C are completed; PI-1D is the next gated slice. Patient activation/login and self-session exist only as backend contracts; Angular patient UX, intake, review/apply and final audit hardening remain pending. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
 
 ---
 
@@ -446,9 +446,9 @@ The initial operational MVP is accepted, but Bigsmile is not feature-complete. P
 
 ### Phase 2 Expansion — Modern Operations
 
-* **Phase 2.1 — Patient Intake and Portal Foundation** is the active phase under ADR 006, ADR 012 and ADR 013
-* PI-1A completed account/invitation domain and persistence; PI-1B completed tenant-admin invitation issuance/list/revoke with hash-at-rest and append-only audit
-* PI-1 proceeds next through PI-1C (#24) and PI-1D (#25) before intake begins
+* **Phase 2.1 — Patient Intake and Portal Foundation** is the active phase under ADR 006, ADR 012, ADR 013 and ADR 014
+* PI-1A completed account/invitation persistence; PI-1B completed tenant-admin invitation lifecycle; PI-1C completed the separate patient activation/login/self-session backend
+* PI-1 proceeds next through PI-1D (#25) for Angular patient auth, e2e and the assisted-recovery runbook before intake begins
 * PI-2 to PI-4 remain pending for intake, clinic review/application and audit hardening
 * The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred
 
@@ -488,15 +488,22 @@ npm run start
 
 ## Environment Configuration
 
-> Update this section to match the current environment contract of the repository; the base foundation is already established.
-
 Expected configuration includes:
 
 * SQL Server connection string
-* Authentication secrets
+* Existing staff JWT secret, issuer and audience
+* A **distinct** patient-portal JWT secret, issuer and audience:
+  * `PatientPortal__Jwt__Secret`
+  * `PatientPortal__Jwt__Issuer`
+  * `PatientPortal__Jwt__Audience`
+  * optional `PatientPortal__Jwt__AccessTokenLifetimeMinutes` (default `60`)
+* Optional bounded patient-auth settings under `PatientPortal__Authentication__*` for PBKDF2 iterations, password length, failed attempts and lockout duration
+* Optional bounded public rate-limit settings under `PatientPortal__RateLimits__*`
 * Tenant and platform configuration
 * File storage configuration
 * Notifications configuration
+
+Production must provide a patient-portal signing secret different from the staff JWT secret. The API fails fast when required patient JWT settings are absent or unsafe. Development placeholders are not production credentials.
 
 ---
 

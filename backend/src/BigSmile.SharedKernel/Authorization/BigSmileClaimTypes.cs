@@ -9,5 +9,7 @@ namespace BigSmile.SharedKernel.Authorization
         public const string TenantName = "tenant_name";
         public const string BranchId = "branch_id";
         public const string BranchName = "branch_name";
+        public const string PatientId = "patient_id";
+        public const string SessionVersion = "session_version";
     }
 }

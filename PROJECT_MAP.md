@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1A and PI-1B completed, PI-1C next and auth/session-gated
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1A through PI-1C completed, PI-1D next
 
 ### Release 4 closure evidence
 
@@ -101,14 +101,15 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7 and completed PI-1A/PI-1B while preparing the auth/session-gated PI-1C slice:
+Preserve Releases 1 through 7 and completed PI-1A through PI-1C while preparing PI-1D:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
 * preserve tenant-owned patient portal account/invitation persistence completed in PI-1A
 * preserve PI-1B staff invitation endpoints, `TenantAdmin`-only permission, no platform override, token hash-at-rest and append-only audit
-* keep activation/login, patient JWT, frontend auth and intake outside accepted PI-1B
+* preserve PI-1C activation/login/self-session backend, separate bearer scheme, `SessionVersion`, rate limits, lockout and recovery permission
+* keep intake and canonical module access outside PI-1D
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* PI-1A and PI-1B are accepted with migrations, tests, docs and CI; PI-1C is the next gated step
+* PI-1A through PI-1C are accepted with migrations, tests, docs and CI; PI-1D is the next gated step
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
@@ -474,7 +475,7 @@ Owns:
 * sessions
 * access policies
 
-Patient-facing identity is an active bounded boundary under ADR 006/012/013. PI-1A owns account/invitation persistence; PI-1B owns tenant-admin-only invitation issuance/list/revoke and security audit. Neither may reuse staff membership semantics for patient access.
+Patient-facing identity is an active bounded boundary under ADR 006/012/013/014. PI-1A owns account/invitation persistence; PI-1B owns tenant-admin-only invitation management; PI-1C owns the separate patient activation/login/self-session backend, password hashing, JWT scheme, lockout, rate limiting, session validation and assisted recovery. It never reuses staff membership semantics or staff permissions.
 
 ### 7.3 Patients
 

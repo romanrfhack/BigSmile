@@ -184,8 +184,8 @@ No later sub-slice may bypass an earlier exit gate.
 
 ### Deferred decisions
 
-- exact patient password hashing implementation and version marker — PI-1C;
-- staff permission for invitation management — PI-1B;
+- patient password hashing/JWT/session baseline — resolved in ADR 014 / PI-1C;
+- staff permission for invitation management — resolved in ADR 013 / PI-1B;
 - waiting-room token entity/runtime and draft ownership — PI-2;
 - remote recovery provider, retention and privacy policy — PI-4;
 - full patient portal access to records/documents/commercial modules — Phase 4.

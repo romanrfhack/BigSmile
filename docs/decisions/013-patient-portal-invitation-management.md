@@ -186,4 +186,4 @@ PI-1B must retain automated evidence for:
 
 ## Follow-up
 
-After PI-1B is accepted, the only next PI-1 slice is PI-1C (#24): patient activation, login and self-session boundary. PI-1C must separately decide and validate password-hash versioning, patient JWT audience/scope, token comparison, transactional single-use consumption, anti-enumeration, rate limiting, lockout enforcement and session invalidation.
+PI-1C (#24) is accepted through ADR 014 and PR #29. It implements password-hash versioning, separate patient JWT/scheme, fixed-time token verification, transactional single-use activation, anti-enumeration, rate limiting, lockout, server-side `SessionVersion` validation and assisted recovery. PI-1D (#25) is the only next PI-1 slice.

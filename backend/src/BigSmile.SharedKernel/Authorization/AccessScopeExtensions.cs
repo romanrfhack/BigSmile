@@ -9,6 +9,7 @@ namespace BigSmile.SharedKernel.Authorization
                 AccessScope.Tenant => "tenant",
                 AccessScope.Branch => "branch",
                 AccessScope.Platform => "platform",
+                AccessScope.Patient => "patient",
                 _ => "anonymous"
             };
         }
@@ -20,6 +21,7 @@ namespace BigSmile.SharedKernel.Authorization
                 "tenant" => AccessScope.Tenant,
                 "branch" => AccessScope.Branch,
                 "platform" => AccessScope.Platform,
+                "patient" => AccessScope.Patient,
                 _ => AccessScope.Anonymous
             };
         }

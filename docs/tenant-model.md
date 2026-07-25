@@ -233,14 +233,16 @@ A role alone is not enough; it must be evaluated together with its scope and mem
 
 ### 7.4 Patient-Facing Identity Boundary
 
-Patient-facing identity is separate from staff identity under ADR 006 and ADR 012.
+Patient-facing identity is separate from staff identity under ADR 006, ADR 012, ADR 013 and ADR 014.
 
 Current rules:
-- `PatientPortalAccount`, `PatientPortalInvitation` and patient-portal security audit entries are tenant-owned records
-- invitation management requires `patientportal.invitation.manage`, initially only for `TenantAdmin`, with no platform override
-- `LoginName` uniqueness is scoped by `TenantId`
+- `PatientPortalAccount`, `PatientPortalInvitation` and patient-portal security/authentication audit entries are tenant-owned records
+- invitation management requires `patientportal.invitation.manage`; assisted recovery requires `patientportal.account.recover`; both are initially `TenantAdmin`-only with no platform override
+- `LoginName` uniqueness is scoped by `TenantId`; recurrent public login selects the tenant by unique `Tenant.Subdomain`, never by internal `TenantId`
 - a portal account links to at most one canonical Patient in Phase 2.1
 - patient accounts do not use `UserTenantMembership`, staff roles or tenant-wide permissions
+- patient tokens use a distinct scheme/secret/issuer/audience and contain only account, Tenant, Patient, patient scope, session version and token id
+- every patient-authenticated request revalidates active Tenant/Patient/account plus `SessionVersion`
 - patient policies have no platform override
 - `TenantId`, portal account and linked Patient come from verified server context
 - phone, date of birth and contact data cannot be used to claim a record publicly

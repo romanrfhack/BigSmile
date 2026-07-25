@@ -122,10 +122,10 @@ The initial operational MVP is accepted. **Phase 2.1 — Patient Intake and Port
 
 Patient Intake and Portal Foundation is now being implemented in bounded gates:
 
-- architecture accepted in ADR 006, access baseline/opening accepted in ADR 012 and invitation management accepted in ADR 013;
-- PI-1A domain/persistence and PI-1B staff invitation lifecycle are completed;
-- no public patient auth or intake UI is available yet;
-- PI-1C to PI-1D and PI-2 to PI-4 remain pending;
+- architecture accepted in ADR 006, access baseline/opening in ADR 012, invitation management in ADR 013 and patient auth/session in ADR 014;
+- PI-1A domain/persistence, PI-1B staff invitations and PI-1C backend auth/session are completed;
+- no patient Angular UI or intake UI is available yet;
+- PI-1D and PI-2 to PI-4 remain pending;
 - full patient portal remains outside the bounded Phase 2.1 scope.
 
 ## 3. Current code by module
@@ -148,7 +148,7 @@ Legend:
 | Billing | yes | yes | quote/billing paths | `billing.read/write` | yes | yes | Accepted / preserved through Release 6.1 | partially redesigned; debt remains |
 | Documents | yes | yes | upload/list/download/retire | `document.read/write` | yes | yes | Accepted / preserved through Release 7.1 | partially redesigned; debt remains |
 | Dashboard | yes | yes | summary | `dashboard.read` | read-model + tenant timezone migration | yes | Accepted / preserved through Release 7.2 | partially redesigned; debt remains |
-| Patient Intake/Portal | no | no | none accepted | none | none | none | Planned Phase 2.1 | not implemented |
+| Patient Intake/Portal | auth backend yes | no | invitation management + activation/login/me/logout/recovery | dedicated invitation/recovery + patient self policy | yes | yes | PI-1A–PI-1C accepted; PI-1D/PI-2 pending | patient UI not implemented |
 
 ## 4. Drift and resolution
 

@@ -30,6 +30,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<PatientPortalAccount> PatientPortalAccounts => Set<PatientPortalAccount>();
         public DbSet<PatientPortalInvitation> PatientPortalInvitations => Set<PatientPortalInvitation>();
         public DbSet<PatientPortalSecurityAuditEntry> PatientPortalSecurityAuditEntries => Set<PatientPortalSecurityAuditEntry>();
+        public DbSet<PatientPortalAuthenticationAuditEntry> PatientPortalAuthenticationAuditEntries => Set<PatientPortalAuthenticationAuditEntry>();
         public DbSet<BillingDocument> BillingDocuments => Set<BillingDocument>();
         public DbSet<BillingDocumentItem> BillingDocumentItems => Set<BillingDocumentItem>();
         public DbSet<TreatmentPlan> TreatmentPlans => Set<TreatmentPlan>();
@@ -55,63 +56,46 @@ namespace BigSmile.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Apply configurations from the same assembly
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
             modelBuilder.Entity<Tenant>().HasQueryFilter(tenant =>
                 !ShouldApplyTenantFilter || tenant.Id == ResolvedTenantId);
-
             modelBuilder.Entity<Branch>().HasQueryFilter(branch =>
                 !ShouldApplyTenantFilter || branch.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<UserTenantMembership>().HasQueryFilter(membership =>
                 !ShouldApplyTenantFilter || membership.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<Patient>().HasQueryFilter(patient =>
                 !ShouldApplyTenantFilter || patient.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<ClinicalRecord>().HasQueryFilter(clinicalRecord =>
                 !ShouldApplyTenantFilter || clinicalRecord.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<ClinicalMedicalAnswer>().HasQueryFilter(answer =>
                 !ShouldApplyTenantFilter || answer.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<ClinicalEncounter>().HasQueryFilter(encounter =>
                 !ShouldApplyTenantFilter || encounter.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<Odontogram>().HasQueryFilter(odontogram =>
                 !ShouldApplyTenantFilter || odontogram.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<PatientDocument>().HasQueryFilter(patientDocument =>
                 !ShouldApplyTenantFilter || patientDocument.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<PatientPortalAccount>().HasQueryFilter(account =>
                 !ShouldApplyTenantFilter || account.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<PatientPortalInvitation>().HasQueryFilter(invitation =>
                 !ShouldApplyTenantFilter || invitation.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<PatientPortalSecurityAuditEntry>().HasQueryFilter(entry =>
                 !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
-
+            modelBuilder.Entity<PatientPortalAuthenticationAuditEntry>().HasQueryFilter(entry =>
+                !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
             modelBuilder.Entity<BillingDocument>().HasQueryFilter(billingDocument =>
                 !ShouldApplyTenantFilter || billingDocument.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<TreatmentPlan>().HasQueryFilter(treatmentPlan =>
                 !ShouldApplyTenantFilter || treatmentPlan.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<TreatmentQuote>().HasQueryFilter(treatmentQuote =>
                 !ShouldApplyTenantFilter || treatmentQuote.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<Appointment>().HasQueryFilter(appointment =>
                 !ShouldApplyTenantFilter || appointment.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<AppointmentBlock>().HasQueryFilter(appointmentBlock =>
                 !ShouldApplyTenantFilter || appointmentBlock.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<AppointmentReminderLogEntry>().HasQueryFilter(entry =>
                 !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
-
             modelBuilder.Entity<ReminderTemplate>().HasQueryFilter(template =>
                 !ShouldApplyTenantFilter || template.TenantId == ResolvedTenantId);
         }
@@ -120,7 +104,6 @@ namespace BigSmile.Infrastructure.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // Fallback configuration (only for design-time migrations)
                 var connectionString = _configuration.GetConnectionString("DefaultConnection")
                     ?? "Server=(localdb)\\mssqllocaldb;Database=BigSmile;Trusted_Connection=True;MultipleActiveResultSets=true";
                 optionsBuilder.UseSqlServer(connectionString);
@@ -167,12 +150,20 @@ namespace BigSmile.Infrastructure.Data
 
         private void ValidateAppendOnlyEntries()
         {
-            var invalidAuditEntry = ChangeTracker.Entries<PatientPortalSecurityAuditEntry>()
+            var invalidSecurityAuditEntry = ChangeTracker.Entries<PatientPortalSecurityAuditEntry>()
                 .FirstOrDefault(entry => entry.State is EntityState.Modified or EntityState.Deleted);
-
-            if (invalidAuditEntry is not null)
+            if (invalidSecurityAuditEntry is not null)
             {
-                throw new InvalidOperationException("Patient portal security audit entries are append-only and cannot be modified or deleted.");
+                throw new InvalidOperationException(
+                    "Patient portal security audit entries are append-only and cannot be modified or deleted.");
+            }
+
+            var invalidAuthenticationAuditEntry = ChangeTracker.Entries<PatientPortalAuthenticationAuditEntry>()
+                .FirstOrDefault(entry => entry.State is EntityState.Modified or EntityState.Deleted);
+            if (invalidAuthenticationAuditEntry is not null)
+            {
+                throw new InvalidOperationException(
+                    "Patient portal authentication audit entries are append-only and cannot be modified or deleted.");
             }
         }
 

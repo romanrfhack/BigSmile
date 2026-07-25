@@ -1,4 +1,5 @@
 using BigSmile.Application.Authorization;
+using BigSmile.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Authorization;
 
 namespace BigSmile.Api.Authorization
@@ -13,6 +14,7 @@ namespace BigSmile.Api.Authorization
         public const string PatientRead = "patient.read";
         public const string PatientWrite = "patient.write";
         public const string PatientPortalInvitationManage = "patientportal.invitation.manage";
+        public const string PatientPortalAccountRecover = "patientportal.account.recover";
         public const string SchedulingRead = "scheduling.read";
         public const string SchedulingWrite = "scheduling.write";
         public const string ClinicalRead = "clinical.read";
@@ -89,6 +91,24 @@ namespace BigSmile.Api.Authorization
                 policy.AddRequirements(new PermissionRequirement(
                     Permissions.PatientPortalInvitationManage,
                     requireResolvedTenantContext: true));
+            });
+
+            options.AddPolicy(PatientPortalAccountRecover, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(
+                    Permissions.PatientPortalAccountRecover,
+                    requireResolvedTenantContext: true));
+            });
+
+            options.AddPolicy(PatientPortalAuthenticationDefaults.PatientSelfPolicy, policy =>
+            {
+                policy.AuthenticationSchemes.Add(PatientPortalAuthenticationDefaults.PatientBearerScheme);
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim(BigSmileClaimTypes.Scope, AccessScope.Patient.ToClaimValue());
+                policy.RequireClaim(BigSmileClaimTypes.TenantId);
+                policy.RequireClaim(BigSmileClaimTypes.PatientId);
+                policy.RequireClaim(BigSmileClaimTypes.SessionVersion);
             });
 
             options.AddPolicy(SchedulingRead, policy =>
