@@ -152,6 +152,7 @@ Examples:
 - tenant
 - tenant settings
 - patient portal accounts and invitations
+- waiting-room intake credentials and append-only audit
 - patient intake drafts, fixed answers and immutable revisions
 - tenant users
 - patient
@@ -234,7 +235,7 @@ A role alone is not enough; it must be evaluated together with its scope and mem
 
 ### 7.4 Patient-Facing Identity Boundary
 
-Patient-facing identity and intake are separate from staff identity and canonical clinical ownership under ADR 006 and ADR 012–016.
+Patient-facing identity and intake are separate from staff identity and canonical clinical ownership under ADR 006 and ADR 012–017.
 
 Current rules:
 - `PatientPortalAccount`, `PatientPortalInvitation` and patient-portal security/authentication audit entries are tenant-owned records
@@ -250,8 +251,10 @@ Current rules:
 - `TenantId`, portal account and linked Patient come from verified server context
 - phone, date of birth and contact data cannot be used to claim a record publicly
 - `PatientIntake`, its medical answers and revisions carry `TenantId`; optional `BranchId` remains operational and same-tenant
-- PI-2A provides one active `Draft` per account, soft `Expired`, `RowVersion` and append-only effective-save revisions without endpoints or canonical writes
-- PI-2B is the next gate; waiting-room `patient_intake` scope remains PI-2C
+- PI-2A provides one active `Draft` per account, soft `Expired`, `RowVersion` and append-only effective-save revisions
+- PI-2B exposes id-less self-only create/get/save for linked accounts; Tenant/Patient/intake come from the validated session
+- PI-2C waiting-room credentials carry `TenantId`, optional same-tenant Branch and no PatientId; management is TenantAdmin-only with no platform override
+- unlinked accounts use an explicit `patient_intake` scope with `intake_id` and no `patient_id`
 
 ---
 
