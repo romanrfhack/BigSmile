@@ -1,18 +1,18 @@
   Determining projects to restore...
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Domain/BigSmile.Domain.csproj (in 445 ms).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Domain/BigSmile.Domain.csproj (in 281 ms).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/BigSmile.Application.csproj (in 3.14 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.SharedKernel/BigSmile.SharedKernel.csproj (in 2 ms).
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
-/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-23rf-6693-g89p [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
+  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj (in 4.4 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj (in 4.01 sec).
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
+/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-23rf-6693-g89p [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-8q5v-6pqq-x66h [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-g8r8-53c2-pm3f [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-mmjf-rqrv-855v [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
-  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj (in 3.68 sec).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.SharedKernel/BigSmile.SharedKernel.csproj (in 2 ms).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/BigSmile.Application.csproj (in 5 ms).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj (in 4.25 sec).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj (in 4.3 sec).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj (in 4.3 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj (in 388 ms).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj (in 4.68 sec).
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-23rf-6693-g89p
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-8q5v-6pqq-x66h
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q
@@ -22,7 +22,6 @@
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   BigSmile.SharedKernel -> /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.SharedKernel/bin/Debug/net10.0/BigSmile.SharedKernel.dll
   BigSmile.Domain -> /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Domain/bin/Debug/net10.0/BigSmile.Domain.dll
-/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/Features/PatientPortalAuthentication/Commands/PatientPortalPublicAuthenticationService.cs(246,73): warning CS8604: Possible null reference argument for parameter 'password' in 'string IPatientPortalPasswordHasher.HashPassword(string password)'. [/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/BigSmile.Application.csproj]
   BigSmile.Application -> /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/bin/Debug/net10.0/BigSmile.Application.dll
   BigSmile.Infrastructure -> /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/bin/Debug/net10.0/BigSmile.Infrastructure.dll
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/PatientPortal/PatientPortalPersistenceTests.cs(144,28): warning CS0618: 'IReadOnlyEntityType.GetQueryFilter()' is obsolete: 'Use GetDeclaredQueryFilters() instead.' [/home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj]
@@ -44,15 +43,14 @@ Build succeeded.
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-mmjf-rqrv-855v
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
-/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/Features/PatientPortalAuthentication/Commands/PatientPortalPublicAuthenticationService.cs(246,73): warning CS8604: Possible null reference argument for parameter 'password' in 'string IPatientPortalPasswordHasher.HashPassword(string password)'. [/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/BigSmile.Application.csproj]
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/PatientPortal/PatientPortalPersistenceTests.cs(144,28): warning CS0618: 'IReadOnlyEntityType.GetQueryFilter()' is obsolete: 'Use GetDeclaredQueryFilters() instead.' [/home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj]
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/PatientPortal/PatientPortalPersistenceTests.cs(145,28): warning CS0618: 'IReadOnlyEntityType.GetQueryFilter()' is obsolete: 'Use GetDeclaredQueryFilters() instead.' [/home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj]
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/PatientPortal/PatientPortalInvitationServicesTests.cs(258,28): warning CS0618: 'IReadOnlyEntityType.GetQueryFilter()' is obsolete: 'Use GetDeclaredQueryFilters() instead.' [/home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj]
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/PatientPortal/PatientPortalInvitationServicesTests.cs(104,17): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [/home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj]
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/PatientPortal/PatientPortalInvitationServicesTests.cs(155,17): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [/home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj]
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/PatientPortal/PatientPortalAuthenticationServicesTests.cs(144,17): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [/home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj]
-    14 Warning(s)
+    13 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:21.18
+Time Elapsed 00:00:25.47
 BUILD_STATUS=0
