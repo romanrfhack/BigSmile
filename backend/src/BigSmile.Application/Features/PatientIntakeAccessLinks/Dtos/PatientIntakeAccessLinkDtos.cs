@@ -6,7 +6,7 @@ namespace BigSmile.Application.Features.PatientIntakeAccessLinks.Dtos
         Guid AccessLinkId,
         Guid? BranchId,
         string? BranchName,
-        string AccessToken,
+        string BootstrapToken,
         DateTime CreatedAtUtc,
         DateTime ExpiresAtUtc);
 
@@ -46,7 +46,7 @@ namespace BigSmile.Application.Features.PatientIntakeAccessLinks.Dtos
                 accessLink.ExpiresAtUtc,
                 accessLink.RevokedAtUtc,
                 accessLink.ConsumedAtUtc,
-                !accessLink.RevokedAtUtc.HasValue && !accessLink.ConsumedAtUtc.HasValue);
+                string.Equals(status, "Active", StringComparison.Ordinal));
         }
     }
 }
