@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1A and PI-1B are completed; PI-1C is next and awaits explicit auth/session decisions.
+Active after formal MVP acceptance. PI-1A, PI-1B and PI-1C are completed; PI-1D is next.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006, ADR 012 and ADR 013. PI-1A (#22) and PI-1B (#23) are completed; PI-1C (#24) is next but not opened. No public patient runtime is accepted yet.
+Active under ADR 006, ADR 012, ADR 013 and ADR 014. PI-1A (#22), PI-1B (#23) and PI-1C (#24) are completed; PI-1D (#25) is next. The backend public auth boundary is accepted, but the patient Angular experience and intake are not.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -487,8 +487,8 @@ Allow new and existing patients to propose or complement information through lea
 1. PI-1 — Access and Invitation Foundation — issue #4
    1. PI-1A domain/persistence — #22 — completed
    2. PI-1B staff invitation lifecycle — #23 — completed
-   3. PI-1C activation/login/self-session — #24
-   4. PI-1D patient auth frontend/security closure — #25
+   3. PI-1C activation/login/self-session — #24 — completed
+   4. PI-1D patient auth frontend/security closure — #25 — next
 2. PI-2 — Intake Draft and Self-Service Capture — issue #5
 3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
 4. PI-4 — Audit Visibility and Security Hardening — issue #7
@@ -517,6 +517,7 @@ Allow new and existing patients to propose or complement information through lea
 - ADR 006: `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - ADR 012: `docs/decisions/012-patient-portal-access-baseline-and-phase-opening.md`
 - ADR 013: `docs/decisions/013-patient-portal-invitation-management.md`
+- ADR 014: `docs/decisions/014-patient-portal-authentication-and-session-boundary.md`
 - plan: `docs/patient-intake-and-portal-plan.md`
 - parent issue #2
 

@@ -1,13 +1,13 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1 active; PI-1A and PI-1B completed; PI-1C next and auth/session-gated
+- **Status:** In progress; PI-1 active; PI-1A through PI-1C completed; PI-1D next
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
-- **Architecture decisions:** ADR 006, ADR 012 and ADR 013
+- **Architecture decisions:** ADR 006, ADR 012, ADR 013 and ADR 014
 - **Canonical ADR:** `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - **Parent tracking:** GitHub issue #2
 - **Implementation tracking:** issues #4, #5, #6 and #7
-- **Last updated:** 2026-07-24
+- **Last updated:** 2026-07-25
 
 ## 1. Purpose
 
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1A domain/persistence and PI-1B staff invitation lifecycle completed; PI-1C is the next gated slice.
+- Phase 2.1: active; PI-1A domain/persistence, PI-1B staff invitations and PI-1C patient auth/session completed; PI-1D is next.
 
 This placement is deliberate:
 
@@ -58,11 +58,12 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Release 7 Documents/Dashboard foundations | Completed; MVP accepted | ADR 010/011 / Release 7 audit |
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
-| PI-1 access/invitations | Active; PI-1A and PI-1B completed; PI-1C next | Issues #4 and #22–#25 / PRs #26 and #28 |
+| PI-1 access/invitations | Active; PI-1A through PI-1C completed; PI-1D next | Issues #4 and #22–#25 / PRs #26, #28 and #29 |
 | PI-2 intake draft | Planned; not implemented | Issue #5 |
 | PI-3 submit/review/apply | Planned; not implemented | Issue #6 |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
-| Patient-facing backend/API/database/frontend | Not started | No implementation PR |
+| Patient-facing backend/API/database | Auth foundation implemented through PI-1C | PRs #26, #28 and #29 |
+| Patient-facing frontend/intake | Not implemented | PI-1D / PI-2 |
 
 ## 4. Scope boundary
 
@@ -316,7 +317,7 @@ Every PI slice must consider:
 
 ## 10. Decisions and remaining gates
 
-### Approved for PI-1 under ADR 012 and ADR 013
+### Approved for PI-1 under ADR 012, ADR 013 and ADR 014
 
 - Invitation management uses `patientportal.invitation.manage` for `TenantAdmin` only; no `TenantUser`, `PlatformAdmin` or platform override.
 - Invitation issuance returns the raw token once, stores only its SHA-256 hash, supersedes outstanding invitations and records append-only audit.
@@ -327,6 +328,11 @@ Every PI slice must consider:
 - Pilot delivery by reception without external provider.
 - Lockout baseline: 5 attempts / 15 minutes, configurable.
 - Assisted recovery through session revocation and invitation reissue.
+- Patient recurrent login uses `Tenant.Subdomain + LoginName + password`; internal `TenantId` is never a public selector.
+- Patient password hashes use a dedicated versioned Identity V3/PBKDF2 format with explicit work factor and rehash support.
+- Patient JWT uses a separate scheme/secret/issuer/audience, 60-minute access token, no refresh token and server-side `SessionVersion` validation.
+- Activation/login use generic responses and configurable fixed-window rate limits.
+- Assisted recovery uses `patientportal.account.recover` for `TenantAdmin` only, without platform override.
 
 ### Before PI-2
 
@@ -376,11 +382,10 @@ The current repository has an accepted MVP and an explicitly opened **Phase 2.1 
 
 For Patient Intake and Portal:
 
-1. Preserve PI-1A / issue #22 and PI-1B / issue #23 as completed through PRs #26 and #28.
-2. Resolve PI-1C decisions for password-hash format/versioning, patient JWT audience/scope/lifetime, token comparison, rate limiting, lockout enforcement and `SessionVersion`.
-3. Open only PI-1C / issue #24 after those decisions are accepted.
-4. Keep PI-1D/#25 sequentially gated.
-5. Keep PI-2 through PI-4 pending until formal PI-1 closure.
+1. Preserve PI-1A / #22, PI-1B / #23 and PI-1C / #24 as completed through PRs #26, #28 and #29.
+2. Open only PI-1D / #25 for the separate Angular patient-auth area, in-memory session state, e2e and recovery runbook.
+3. Do not add intake/questionnaire or canonical module access to PI-1D.
+4. Keep PI-2 through PI-4 pending until formal PI-1 closure.
 
 ## 13. Decision note
 
@@ -388,4 +393,4 @@ For Patient Intake and Portal:
 
 **Decision:** Open Phase 2.1 under ADR 012 and implement the approved access baseline through PI-1A to PI-1D before opening intake.
 
-**Consequence:** PI-1A and PI-1B now provide tenant-owned account/invitation persistence plus staff issuance/revocation and audit, but public auth and intake remain unavailable until PI-1C/PI-1D and later gates. PI-2 to PI-4 remain unimplemented.
+**Consequence:** PI-1A through PI-1C now provide tenant-owned account/invitation persistence, staff invitation lifecycle and a separate patient activation/login/self-session backend. The capability is not operational for patients until PI-1D supplies frontend/e2e/runbook, and intake remains unavailable until PI-2. PI-2 to PI-4 remain unimplemented.
