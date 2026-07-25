@@ -244,6 +244,14 @@ namespace BigSmile.Api.Controllers
                         new[] { nameof(ResponsiblePartyName) });
                 }
 
+                if (MedicalAnswers is null)
+                {
+                    yield return new ValidationResult(
+                        "Medical answers are required.",
+                        new[] { nameof(MedicalAnswers) });
+                    yield break;
+                }
+
                 for (var index = 0; index < MedicalAnswers.Count; index++)
                 {
                     var answer = MedicalAnswers[index];
@@ -258,6 +266,13 @@ namespace BigSmile.Api.Controllers
 
             public SavePatientIntakeDraftCommand ToCommand()
             {
+                if (MedicalAnswers is null)
+                {
+                    throw new ArgumentException(
+                        "Medical answers are required.",
+                        nameof(MedicalAnswers));
+                }
+
                 return new SavePatientIntakeDraftCommand(
                     FirstName,
                     LastName,
