@@ -55,6 +55,28 @@ jobs:
     - name: Validate architecture
       run: python3 backend/scripts/validate_architecture.py
 
+    - name: Restore EF tool
+      run: dotnet tool restore
+      working-directory: backend
+
+    - name: Generate PI-1C migration artifact
+      env:
+        ASPNETCORE_ENVIRONMENT: Development
+      run: >-
+        dotnet ef migrations add AddPatientPortalAuthenticationBoundary
+        --project src/BigSmile.Infrastructure
+        --startup-project src/BigSmile.Api
+        --context AppDbContext
+        --output-dir Data/Migrations
+      working-directory: backend
+
+    - name: Upload PI-1C migration artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pi1c-migrations
+        path: backend/src/BigSmile.Infrastructure/Data/Migrations
+        retention-days: 1
+
     - name: Run backend unit tests
       run: dotnet test backend/tests/BigSmile.UnitTests --configuration Release --no-build
 
