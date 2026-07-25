@@ -43,9 +43,7 @@ builder.Services.AddAuthentication(options =>
     options =>
     {
         options.ForwardDefaultSelector = context =>
-            context.Request.Path.StartsWithSegments(PatientPortalAuthenticationDefaults.PatientPathPrefix)
-                ? PatientPortalAuthenticationDefaults.PatientBearerScheme
-                : JwtBearerDefaults.AuthenticationScheme;
+            PatientPortalAuthenticationSchemeSelector.SelectScheme(context.Request.Path);
     })
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
