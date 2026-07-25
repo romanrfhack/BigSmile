@@ -51,6 +51,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Validate PI-2A documentation reconciliation
+      shell: bash
+      run: |
+        mkdir -p diagnostics
+        set +e
+        python3 backend/scripts/reconcile_pi2a_docs.py 2>&1 | tee diagnostics/pi2a-docs.log
+        status=${PIPESTATUS[0]}
+        echo "DOC_STATUS=$status" >> diagnostics/pi2a-docs.log
+        exit "$status"
+
+    - name: Upload PI-2A documentation diagnostics
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pi2a-docs-diagnostics
+        path: diagnostics/pi2a-docs.log
+        if-no-files-found: ignore
+        retention-days: 1
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
