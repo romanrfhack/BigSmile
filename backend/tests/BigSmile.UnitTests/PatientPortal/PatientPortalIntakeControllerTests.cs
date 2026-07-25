@@ -167,7 +167,7 @@ namespace BigSmile.UnitTests.PatientPortal
                 .GetCustomAttribute<AuthorizeAttribute>();
             Assert.NotNull(authorize);
             Assert.Equal(
-                PatientPortalAuthenticationDefaults.PatientSelfPolicy,
+                PatientPortalAuthenticationDefaults.PatientIntakeSelfPolicy,
                 authorize!.Policy);
 
             var route = typeof(PatientPortalIntakeController)
