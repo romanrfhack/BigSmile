@@ -33,7 +33,7 @@ namespace BigSmile.UnitTests.PatientPortal
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             Assert.Same(intake, ok.Value);
-            AssertNoStore(controller.Response);
+            AssertNoStore(controller.Response.Headers);
         }
 
         [Fact]
@@ -54,7 +54,7 @@ namespace BigSmile.UnitTests.PatientPortal
             var created = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(StatusCodes.Status201Created, created.StatusCode);
             Assert.Same(intake, created.Value);
-            AssertNoStore(controller.Response);
+            AssertNoStore(controller.Response.Headers);
         }
 
         [Fact]
@@ -88,7 +88,7 @@ namespace BigSmile.UnitTests.PatientPortal
             var response = Assert.IsType<PatientIntakeSaveResponseDto>(ok.Value);
             Assert.True(response.Changed);
             Assert.Same(intake, response.Intake);
-            AssertNoStore(controller.Response);
+            AssertNoStore(controller.Response.Headers);
         }
 
         [Theory]
@@ -116,7 +116,7 @@ namespace BigSmile.UnitTests.PatientPortal
             Assert.DoesNotContain(identity.AccountId.ToString(), problem.Detail!, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(identity.PatientId.ToString(), problem.Detail!, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(identity.TenantId.ToString(), problem.Detail!, StringComparison.OrdinalIgnoreCase);
-            AssertNoStore(controller.Response);
+            AssertNoStore(controller.Response.Headers);
         }
 
         [Fact]
@@ -139,6 +139,25 @@ namespace BigSmile.UnitTests.PatientPortal
             Assert.IsType<UnauthorizedResult>(createResult.Result);
             Assert.IsType<UnauthorizedResult>(saveResult.Result);
             service.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void SaveRequest_NullMedicalAnswersProducesControlledValidation()
+        {
+            var request = BuildSaveRequest();
+            request.MedicalAnswers = null!;
+            var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+
+            var isValid = System.ComponentModel.DataAnnotations.Validator.TryValidateObject(
+                request,
+                new System.ComponentModel.DataAnnotations.ValidationContext(request),
+                validationResults,
+                validateAllProperties: true);
+
+            Assert.False(isValid);
+            Assert.Contains(validationResults, result =>
+                result.MemberNames.Contains(nameof(request.MedicalAnswers), StringComparer.Ordinal));
+            Assert.Throws<ArgumentException>(() => request.ToCommand());
         }
 
         [Fact]
