@@ -11,6 +11,11 @@ namespace BigSmile.Application.Interfaces.Security
         GeneratedPatientPortalAccessToken Generate(
             PatientPortalAccount account,
             DateTime issuedAtUtc);
+
+        GeneratedPatientPortalAccessToken GenerateForIntake(
+            PatientPortalAccount account,
+            PatientIntake intake,
+            DateTime issuedAtUtc);
     }
 
     public interface IPatientPortalJwtSettings
