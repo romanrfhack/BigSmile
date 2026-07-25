@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import {
   CurrentPatientPortalSession,
   PatientPortalAuthenticationResponse
@@ -12,7 +12,6 @@ export class PatientPortalSessionStore {
 
   readonly current = this.currentState.asReadonly();
   readonly expiresAtUtc = this.expiresAtUtcState.asReadonly();
-  readonly isAuthenticated = computed(() => this.hasUsableSession());
 
   setSession(response: PatientPortalAuthenticationResponse): void {
     if (!response.accessToken?.trim()) {
@@ -30,6 +29,10 @@ export class PatientPortalSessionStore {
 
   updateCurrent(current: CurrentPatientPortalSession): void {
     this.currentState.set(current);
+  }
+
+  isAuthenticated(): boolean {
+    return this.hasUsableSession();
   }
 
   getAccessToken(): string | null {
