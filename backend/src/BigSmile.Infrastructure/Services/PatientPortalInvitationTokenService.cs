@@ -7,6 +7,7 @@ namespace BigSmile.Infrastructure.Services
     public sealed class PatientPortalInvitationTokenService : IPatientPortalInvitationTokenService
     {
         private const int TokenSizeBytes = 32;
+        private const int TokenHashSizeBytes = 32;
 
         public GeneratedPatientPortalInvitationToken Generate()
         {
@@ -24,6 +25,30 @@ namespace BigSmile.Infrastructure.Services
 
             var tokenBytes = Encoding.UTF8.GetBytes(rawToken.Trim());
             return Convert.ToHexString(SHA256.HashData(tokenBytes));
+        }
+
+        public bool VerifyHash(string rawToken, string expectedTokenHash)
+        {
+            if (string.IsNullOrWhiteSpace(rawToken) || string.IsNullOrWhiteSpace(expectedTokenHash))
+            {
+                return false;
+            }
+
+            try
+            {
+                var expectedBytes = Convert.FromHexString(expectedTokenHash.Trim());
+                if (expectedBytes.Length != TokenHashSizeBytes)
+                {
+                    return false;
+                }
+
+                var actualBytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken.Trim()));
+                return CryptographicOperations.FixedTimeEquals(actualBytes, expectedBytes);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
         }
 
         private static string ToBase64Url(byte[] bytes)
