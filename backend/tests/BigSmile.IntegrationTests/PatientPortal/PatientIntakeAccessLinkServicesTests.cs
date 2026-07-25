@@ -8,6 +8,8 @@ using BigSmile.Infrastructure.Data.Repositories;
 using BigSmile.Infrastructure.Services;
 using BigSmile.SharedKernel.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 
 namespace BigSmile.IntegrationTests.PatientPortal
@@ -22,92 +24,79 @@ namespace BigSmile.IntegrationTests.PatientPortal
         {
             var databaseName = Guid.NewGuid().ToString();
             var seed = await SeedTenantAsync(databaseName, "Tenant A", "tenant-a");
-            var timeProvider = new MutableTimeProvider(InitialUtc);
             var actorUserId = Guid.NewGuid();
-            var tenantContext = CreateTenantContext(actorUserId, seed.Tenant.Id);
-            var tokenService = new PatientIntakeAccessLinkTokenService(
-                new PatientPortalInvitationTokenService());
+            var timeProvider = new MutableTimeProvider(InitialUtc);
+            var tokenService = CreateTokenService();
 
-            string firstRawToken;
-            Guid firstAccessLinkId;
-            await using (var context = CreateContext(databaseName, tenantContext))
+            string rawToken;
+            Guid firstLinkId;
+            var staffContext = CreateTenantContext(actorUserId, seed.Tenant.Id);
+            await using (var context = CreateContext(databaseName, staffContext))
             {
                 var service = CreateCommandService(
                     context,
-                    tenantContext,
+                    staffContext,
                     timeProvider,
                     tokenService);
-
-                var first = await service.IssueAsync(
-                    seed.Branch.Id,
-                    "issue-1");
-                var second = await service.IssueAsync(
-                    seed.Branch.Id,
-                    "issue-2");
+                var first = await service.IssueAsync(seed.Branch.Id, "issue-1");
+                var second = await service.IssueAsync(seed.Branch.Id, "issue-2");
 
                 Assert.NotNull(first);
                 Assert.NotNull(second);
                 Assert.NotEqual(first!.BootstrapToken, second!.BootstrapToken);
-                Assert.Equal(InitialUtc.AddMinutes(30), first.ExpiresAtUtc);
                 Assert.Equal(seed.Branch.Id, first.BranchId);
-                firstRawToken = first.BootstrapToken;
-                firstAccessLinkId = first.AccessLinkId;
+                Assert.Equal(InitialUtc.AddMinutes(30), first.ExpiresAtUtc);
+                rawToken = first.BootstrapToken;
+                firstLinkId = first.AccessLinkId;
             }
 
             await using (var verificationContext = CreateContext(
                              databaseName,
                              CreateTenantContext(actorUserId, seed.Tenant.Id)))
             {
-                var accessLinks = await verificationContext.PatientIntakeAccessLinks
-                    .OrderBy(link => link.CreatedAtUtc)
-                    .ThenBy(link => link.Id)
+                var links = await verificationContext.PatientIntakeAccessLinks
+                    .OrderBy(link => link.Id)
                     .ToListAsync();
                 var audits = await verificationContext.PatientIntakeAccessLinkAuditEntries
-                    .OrderBy(entry => entry.OccurredAtUtc)
-                    .ThenBy(entry => entry.Id)
+                    .OrderBy(entry => entry.Id)
                     .ToListAsync();
 
-                Assert.Equal(2, accessLinks.Count);
+                Assert.Equal(2, links.Count);
                 Assert.Equal(2, audits.Count);
                 Assert.All(audits, audit =>
                     Assert.Equal(PatientIntakeAccessLinkAuditAction.Issued, audit.Action));
-                Assert.DoesNotContain(accessLinks, link => link.TokenHash == firstRawToken);
-                Assert.Contains(accessLinks, link =>
-                    link.TokenHash == tokenService.ComputeHash(firstRawToken));
+                Assert.DoesNotContain(links, link => link.TokenHash == rawToken);
+                Assert.Contains(links, link =>
+                    link.TokenHash == tokenService.ComputeHash(rawToken));
                 Assert.DoesNotContain(
                     typeof(PatientIntakeAccessLinkAuditEntry).GetProperties(),
                     property => property.Name.Contains("Token", StringComparison.OrdinalIgnoreCase));
             }
 
             timeProvider.Advance(TimeSpan.FromMinutes(1));
-            await using (var revokeContext = CreateContext(
-                             databaseName,
-                             CreateTenantContext(actorUserId, seed.Tenant.Id)))
+            var revokeContextValue = CreateTenantContext(actorUserId, seed.Tenant.Id);
+            await using (var revokeContext = CreateContext(databaseName, revokeContextValue))
             {
-                var commandService = CreateCommandService(
+                var service = CreateCommandService(
                     revokeContext,
-                    CreateTenantContext(actorUserId, seed.Tenant.Id),
+                    revokeContextValue,
                     timeProvider,
                     tokenService);
-
-                Assert.True(await commandService.RevokeAsync(
-                    firstAccessLinkId,
-                    "revoke-1"));
+                Assert.True(await service.RevokeAsync(firstLinkId, "revoke-1"));
             }
 
-            await using (var listContext = CreateContext(
-                             databaseName,
-                             CreateTenantContext(actorUserId, seed.Tenant.Id)))
+            var listContextValue = CreateTenantContext(actorUserId, seed.Tenant.Id);
+            await using (var listContext = CreateContext(databaseName, listContextValue))
             {
-                var queryService = new PatientIntakeAccessLinkQueryService(
+                var query = new PatientIntakeAccessLinkQueryService(
                     new EfPatientIntakeAccessLinkRepository(listContext),
-                    CreateTenantContext(actorUserId, seed.Tenant.Id),
+                    listContextValue,
                     timeProvider);
-                var summaries = await queryService.ListAsync();
+                var summaries = await query.ListAsync();
 
                 Assert.Equal(2, summaries.Count);
                 Assert.Contains(summaries, summary =>
-                    summary.AccessLinkId == firstAccessLinkId &&
+                    summary.AccessLinkId == firstLinkId &&
                     summary.Status == "Revoked" &&
                     !summary.CanRevoke);
                 Assert.Contains(summaries, summary =>
@@ -118,8 +107,7 @@ namespace BigSmile.IntegrationTests.PatientPortal
                              databaseName,
                              CreateTenantContext(actorUserId, seed.Tenant.Id)))
             {
-                var audit = await auditContext.PatientIntakeAccessLinkAuditEntries
-                    .FirstAsync();
+                var audit = await auditContext.PatientIntakeAccessLinkAuditEntries.FirstAsync();
                 auditContext.Entry(audit)
                     .Property(nameof(PatientIntakeAccessLinkAuditEntry.CorrelationId))
                     .CurrentValue = "tampered";
@@ -131,43 +119,36 @@ namespace BigSmile.IntegrationTests.PatientPortal
         }
 
         [Fact]
-        public async Task QueryFiltersAndWriteEnforcement_BlockCrossTenantAccess()
+        public async Task TenantFiltersWriteEnforcementAndPrivilegeGuards_BlockUnsafeAccess()
         {
             var databaseName = Guid.NewGuid().ToString();
             var tenantA = await SeedTenantAsync(databaseName, "Tenant A", "tenant-a");
             var tenantB = await SeedTenantAsync(databaseName, "Tenant B", "tenant-b");
-            var timeProvider = new MutableTimeProvider(InitialUtc);
-            var tokenService = new PatientIntakeAccessLinkTokenService(
-                new PatientPortalInvitationTokenService());
             var actorA = Guid.NewGuid();
             var actorB = Guid.NewGuid();
+            var timeProvider = new MutableTimeProvider(InitialUtc);
+            var tokenService = CreateTokenService();
 
-            Guid accessLinkAId;
-            Guid accessLinkBId;
-            await using (var contextA = CreateContext(
-                             databaseName,
-                             CreateTenantContext(actorA, tenantA.Tenant.Id)))
+            Guid linkAId;
+            Guid linkBId;
+            var contextAValue = CreateTenantContext(actorA, tenantA.Tenant.Id);
+            await using (var contextA = CreateContext(databaseName, contextAValue))
             {
-                var tenantContext = CreateTenantContext(actorA, tenantA.Tenant.Id);
-                var service = CreateCommandService(
+                linkAId = (await CreateCommandService(
                     contextA,
-                    tenantContext,
+                    contextAValue,
                     timeProvider,
-                    tokenService);
-                accessLinkAId = (await service.IssueAsync(null, "tenant-a"))!.AccessLinkId;
+                    tokenService).IssueAsync(null, "tenant-a"))!.AccessLinkId;
             }
 
-            await using (var contextB = CreateContext(
-                             databaseName,
-                             CreateTenantContext(actorB, tenantB.Tenant.Id)))
+            var contextBValue = CreateTenantContext(actorB, tenantB.Tenant.Id);
+            await using (var contextB = CreateContext(databaseName, contextBValue))
             {
-                var tenantContext = CreateTenantContext(actorB, tenantB.Tenant.Id);
-                var service = CreateCommandService(
+                linkBId = (await CreateCommandService(
                     contextB,
-                    tenantContext,
+                    contextBValue,
                     timeProvider,
-                    tokenService);
-                accessLinkBId = (await service.IssueAsync(null, "tenant-b"))!.AccessLinkId;
+                    tokenService).IssueAsync(null, "tenant-b"))!.AccessLinkId;
             }
 
             await using (var filteredA = CreateContext(
@@ -175,25 +156,24 @@ namespace BigSmile.IntegrationTests.PatientPortal
                              CreateTenantContext(actorA, tenantA.Tenant.Id)))
             {
                 var visible = Assert.Single(await filteredA.PatientIntakeAccessLinks.ToListAsync());
-                Assert.Equal(accessLinkAId, visible.Id);
+                Assert.Equal(linkAId, visible.Id);
                 Assert.Null(await new EfPatientIntakeAccessLinkRepository(filteredA)
-                    .GetByIdAsync(accessLinkBId, trackChanges: false));
+                    .GetByIdAsync(linkBId, trackChanges: false));
             }
 
-            var tenantAContext = CreateTenantContext(actorA, tenantA.Tenant.Id);
-            await using (var blockedWrite = CreateContext(databaseName, tenantAContext))
+            var tenantAWriteContext = CreateTenantContext(actorA, tenantA.Tenant.Id);
+            await using (var blockedWrite = CreateContext(databaseName, tenantAWriteContext))
             {
                 var foreignTenant = await blockedWrite.Tenants
                     .IgnoreQueryFilters()
                     .SingleAsync(tenant => tenant.Id == tenantB.Tenant.Id);
-                var foreignLink = new PatientIntakeAccessLink(
+                blockedWrite.PatientIntakeAccessLinks.Add(new PatientIntakeAccessLink(
                     foreignTenant,
                     branch: null,
                     new string('b', 64),
                     InitialUtc,
                     InitialUtc.AddMinutes(30),
-                    actorB);
-                blockedWrite.PatientIntakeAccessLinks.Add(foreignLink);
+                    actorB));
 
                 var exception = await Assert.ThrowsAsync<InvalidOperationException>(
                     () => blockedWrite.SaveChangesAsync());
@@ -202,54 +182,40 @@ namespace BigSmile.IntegrationTests.PatientPortal
                     exception.Message,
                     StringComparison.OrdinalIgnoreCase);
             }
-        }
-
-        [Fact]
-        public async Task Issue_RejectsPlatformOverrideAndForeignOrInactiveBranch()
-        {
-            var databaseName = Guid.NewGuid().ToString();
-            var tenantA = await SeedTenantAsync(databaseName, "Tenant A", "tenant-a");
-            var tenantB = await SeedTenantAsync(databaseName, "Tenant B", "tenant-b");
-            var timeProvider = new MutableTimeProvider(InitialUtc);
-            var tokenService = new PatientIntakeAccessLinkTokenService(
-                new PatientPortalInvitationTokenService());
-            var actor = Guid.NewGuid();
 
             var platformContext = new TenantContext();
             platformContext.SetRequestContext(
-                actor.ToString(),
+                actorA.ToString(),
                 AccessScope.Platform,
                 isAuthenticated: true);
-            await using (var context = CreateContext(databaseName, platformContext))
+            await using (var platformDb = CreateContext(databaseName, platformContext))
             {
-                var service = CreateCommandService(
-                    context,
-                    platformContext,
-                    timeProvider,
-                    tokenService);
                 await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                    service.IssueAsync(null, "platform"));
+                    CreateCommandService(
+                        platformDb,
+                        platformContext,
+                        timeProvider,
+                        tokenService).IssueAsync(null, "platform"));
             }
 
-            var overrideContext = CreateTenantContext(actor, tenantA.Tenant.Id);
+            var overrideContext = CreateTenantContext(actorA, tenantA.Tenant.Id);
             overrideContext.EnablePlatformOverride();
-            await using (var context = CreateContext(databaseName, overrideContext))
+            await using (var overrideDb = CreateContext(databaseName, overrideContext))
             {
-                var service = CreateCommandService(
-                    context,
-                    overrideContext,
-                    timeProvider,
-                    tokenService);
                 await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                    service.IssueAsync(null, "override"));
+                    CreateCommandService(
+                        overrideDb,
+                        overrideContext,
+                        timeProvider,
+                        tokenService).IssueAsync(null, "override"));
             }
 
-            var tenantAContext = CreateTenantContext(actor, tenantA.Tenant.Id);
-            await using (var context = CreateContext(databaseName, tenantAContext))
+            var branchContext = CreateTenantContext(actorA, tenantA.Tenant.Id);
+            await using (var branchDb = CreateContext(databaseName, branchContext))
             {
                 var service = CreateCommandService(
-                    context,
-                    tenantAContext,
+                    branchDb,
+                    branchContext,
                     timeProvider,
                     tokenService);
                 Assert.Null(await service.IssueAsync(
@@ -265,16 +231,16 @@ namespace BigSmile.IntegrationTests.PatientPortal
                 await seedContext.SaveChangesAsync();
             }
 
-            await using (var context = CreateContext(databaseName, tenantAContext))
+            var inactiveContext = CreateTenantContext(actorA, tenantA.Tenant.Id);
+            await using (var inactiveDb = CreateContext(databaseName, inactiveContext))
             {
-                var service = CreateCommandService(
-                    context,
-                    tenantAContext,
+                Assert.Null(await CreateCommandService(
+                    inactiveDb,
+                    inactiveContext,
                     timeProvider,
-                    tokenService);
-                Assert.Null(await service.IssueAsync(
-                    tenantA.Branch.Id,
-                    "inactive-branch"));
+                    tokenService).IssueAsync(
+                        tenantA.Branch.Id,
+                        "inactive-branch"));
             }
         }
 
@@ -284,9 +250,10 @@ namespace BigSmile.IntegrationTests.PatientPortal
             using var context = CreateContext(
                 Guid.NewGuid().ToString(),
                 new TenantContext());
-            var linkType = context.Model.FindEntityType(typeof(PatientIntakeAccessLink))
+            var model = context.GetService<IDesignTimeModel>().Model;
+            var linkType = model.FindEntityType(typeof(PatientIntakeAccessLink))
                 ?? throw new InvalidOperationException("PatientIntakeAccessLink metadata was not found.");
-            var auditType = context.Model.FindEntityType(typeof(PatientIntakeAccessLinkAuditEntry))
+            var auditType = model.FindEntityType(typeof(PatientIntakeAccessLinkAuditEntry))
                 ?? throw new InvalidOperationException("PatientIntakeAccessLinkAuditEntry metadata was not found.");
 
             var tokenIndex = linkType.GetIndexes().Single(index =>
@@ -327,6 +294,12 @@ namespace BigSmile.IntegrationTests.PatientPortal
                 new FixedAccessLinkSettings(TimeSpan.FromMinutes(30)),
                 tenantContext,
                 timeProvider);
+        }
+
+        private static PatientIntakeAccessLinkTokenService CreateTokenService()
+        {
+            return new PatientIntakeAccessLinkTokenService(
+                new PatientPortalInvitationTokenService());
         }
 
         private static async Task<SeedData> SeedTenantAsync(
