@@ -156,6 +156,7 @@ namespace BigSmile.Application.Features.PatientPortalAuthentication.Commands
             CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(command);
+            var providedPassword = command.Password ?? string.Empty;
 
             string normalizedSubdomain;
             string normalizedLoginName;
@@ -166,7 +167,7 @@ namespace BigSmile.Application.Features.PatientPortalAuthentication.Commands
             }
             catch (ArgumentException)
             {
-                _passwordHasher.PerformDummyVerification(command.Password ?? string.Empty);
+                _passwordHasher.PerformDummyVerification(providedPassword);
                 return null;
             }
 
@@ -174,7 +175,7 @@ namespace BigSmile.Application.Features.PatientPortalAuthentication.Commands
             var tenant = await _repository.GetActiveTenantBySubdomainAsync(normalizedSubdomain, cancellationToken);
             if (tenant is null)
             {
-                _passwordHasher.PerformDummyVerification(command.Password ?? string.Empty);
+                _passwordHasher.PerformDummyVerification(providedPassword);
                 return null;
             }
 
@@ -184,21 +185,25 @@ namespace BigSmile.Application.Features.PatientPortalAuthentication.Commands
                 trackChanges: true,
                 cancellationToken);
 
-            if (account is null || !account.PatientId.HasValue || account.PatientId.Value == Guid.Empty)
+            if (account is null ||
+                !account.PatientId.HasValue ||
+                account.PatientId.Value == Guid.Empty ||
+                account.Patient is null ||
+                !account.Patient.IsActive)
             {
-                _passwordHasher.PerformDummyVerification(command.Password ?? string.Empty);
+                _passwordHasher.PerformDummyVerification(providedPassword);
                 return null;
             }
 
             if (!account.IsActive || account.IsLockedOutAt(now))
             {
-                _passwordHasher.PerformDummyVerification(command.Password ?? string.Empty);
+                _passwordHasher.PerformDummyVerification(providedPassword);
                 return null;
             }
 
             var verification = _passwordHasher.VerifyHashedPassword(
                 account.PasswordHash,
-                command.Password ?? string.Empty);
+                providedPassword);
 
             if (verification == PatientPortalPasswordVerificationStatus.Failed)
             {
@@ -243,7 +248,7 @@ namespace BigSmile.Application.Features.PatientPortalAuthentication.Commands
 
             if (verification == PatientPortalPasswordVerificationStatus.SuccessRehashNeeded)
             {
-                account.UpdatePasswordHash(_passwordHasher.HashPassword(command.Password), now);
+                account.UpdatePasswordHash(_passwordHasher.HashPassword(providedPassword), now);
             }
 
             account.RegisterSuccessfulLogin(now);
