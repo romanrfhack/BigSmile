@@ -105,6 +105,8 @@ namespace BigSmile.Application.Features.PatientPortalAuthentication.Commands
         {
             return account is not null &&
                    account.IsActive &&
+                   account.Patient is not null &&
+                   account.Patient.IsActive &&
                    account.PatientId == identity.PatientId &&
                    account.TenantId == identity.TenantId &&
                    account.SessionVersion == identity.SessionVersion;
