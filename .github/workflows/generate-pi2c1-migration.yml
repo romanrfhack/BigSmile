@@ -1,0 +1,54 @@
+name: Generate PI-2C1 Migration
+
+on:
+  push:
+    branches:
+      - phase-2.1/pi-2c1-waiting-room-link-management
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout PI-2C1 branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-2.1/pi-2c1-waiting-room-link-management
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore backend
+        run: dotnet restore backend/BigSmile.slnx
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 10.0.0
+
+      - name: Generate additive migration
+        working-directory: backend/src/BigSmile.Infrastructure
+        run: |
+          if find Data/Migrations -maxdepth 1 -type f -name '*_AddPatientIntakeAccessLinkFoundation.cs' | grep -q .; then
+            echo 'Migration already exists.'
+            exit 0
+          fi
+          "$HOME/.dotnet/tools/dotnet-ef" migrations add AddPatientIntakeAccessLinkFoundation \
+            --context AppDbContext \
+            --output-dir Data/Migrations
+
+      - name: Commit migration and model snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/src/BigSmile.Infrastructure/Data/Migrations
+          if git diff --cached --quiet; then
+            echo 'No migration changes were generated.'
+            exit 0
+          fi
+          git commit -m 'PI-2C1: add waiting-room link migration'
+          git push origin HEAD:phase-2.1/pi-2c1-waiting-room-link-management
