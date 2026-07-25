@@ -1,0 +1,51 @@
+name: Patch PI-2C2 No-Store
+
+on:
+  push:
+    branches:
+      - phase-2.1/pi-2c2-intake-only-session
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-2.1/pi-2c2-intake-only-session
+          fetch-depth: 0
+
+      - name: Apply no-store before all auth outcomes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('backend/src/BigSmile.Api/Controllers/PatientIntakeAuthenticationController.cs')
+          text = path.read_text(encoding='utf-8')
+
+          activate = '''        {\n            try\n            {\n                var result = await _authenticationService.ActivateAsync(\n'''
+          activate_new = '''        {\n            SetNoStoreHeaders();\n            try\n            {\n                var result = await _authenticationService.ActivateAsync(\n'''
+          if activate in text:
+              text = text.replace(activate, activate_new, 1)
+
+          login = '''        {\n            var result = await _authenticationService.LoginAsync(\n'''
+          login_new = '''        {\n            SetNoStoreHeaders();\n            var result = await _authenticationService.LoginAsync(\n'''
+          if login in text:
+              text = text.replace(login, login_new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit patch and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/patch-pi2c2-no-store.yml
+          git add backend/src/BigSmile.Api/Controllers/PatientIntakeAuthenticationController.cs
+          git diff --cached --check
+          git commit -m 'PI-2C2: mark all intake-auth responses no-store'
+          git push origin HEAD:phase-2.1/pi-2c2-intake-only-session
