@@ -29,6 +29,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<PatientDocument> PatientDocuments => Set<PatientDocument>();
         public DbSet<PatientPortalAccount> PatientPortalAccounts => Set<PatientPortalAccount>();
         public DbSet<PatientPortalInvitation> PatientPortalInvitations => Set<PatientPortalInvitation>();
+        public DbSet<PatientPortalSecurityAuditEntry> PatientPortalSecurityAuditEntries => Set<PatientPortalSecurityAuditEntry>();
         public DbSet<BillingDocument> BillingDocuments => Set<BillingDocument>();
         public DbSet<BillingDocumentItem> BillingDocumentItems => Set<BillingDocumentItem>();
         public DbSet<TreatmentPlan> TreatmentPlans => Set<TreatmentPlan>();
@@ -90,6 +91,9 @@ namespace BigSmile.Infrastructure.Data
             modelBuilder.Entity<PatientPortalInvitation>().HasQueryFilter(invitation =>
                 !ShouldApplyTenantFilter || invitation.TenantId == ResolvedTenantId);
 
+            modelBuilder.Entity<PatientPortalSecurityAuditEntry>().HasQueryFilter(entry =>
+                !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
+
             modelBuilder.Entity<BillingDocument>().HasQueryFilter(billingDocument =>
                 !ShouldApplyTenantFilter || billingDocument.TenantId == ResolvedTenantId);
 
@@ -125,24 +129,28 @@ namespace BigSmile.Infrastructure.Data
 
         public override int SaveChanges()
         {
+            ValidateAppendOnlyEntries();
             ValidateTenantBoundWrites();
             return base.SaveChanges();
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
+            ValidateAppendOnlyEntries();
             ValidateTenantBoundWrites();
             return base.SaveChanges(acceptAllChangesOnSuccess);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
+            ValidateAppendOnlyEntries();
             ValidateTenantBoundWrites();
             return base.SaveChangesAsync(cancellationToken);
         }
 
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
+            ValidateAppendOnlyEntries();
             ValidateTenantBoundWrites();
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
@@ -156,6 +164,17 @@ namespace BigSmile.Infrastructure.Data
 
         private bool ShouldApplyTenantFilter =>
             _tenantContext.IsAuthenticated() && !_tenantContext.HasPlatformOverride();
+
+        private void ValidateAppendOnlyEntries()
+        {
+            var invalidAuditEntry = ChangeTracker.Entries<PatientPortalSecurityAuditEntry>()
+                .FirstOrDefault(entry => entry.State is EntityState.Modified or EntityState.Deleted);
+
+            if (invalidAuditEntry is not null)
+            {
+                throw new InvalidOperationException("Patient portal security audit entries are append-only and cannot be modified or deleted.");
+            }
+        }
 
         private void ValidateTenantBoundWrites()
         {
