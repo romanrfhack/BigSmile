@@ -66,15 +66,15 @@ namespace BigSmile.Application.Features.PatientIntakeAccessLinks.Commands
             if (branchId.HasValue)
             {
                 branch = await _branchRepository.GetByIdAsync(branchId.Value, cancellationToken);
-                if (branch is null)
+                if (branch is null || !branch.IsActive)
                 {
                     return null;
                 }
 
-                if (branch.TenantId != tenantId || !branch.IsActive)
+                if (branch.TenantId != tenantId)
                 {
                     throw new InvalidOperationException(
-                        "Patient intake access link Branch must be active and belong to the resolved tenant.");
+                        "Patient intake access link Branch must belong to the resolved tenant.");
                 }
             }
 
