@@ -3,6 +3,8 @@ using BigSmile.Infrastructure.Context;
 using BigSmile.Infrastructure.Data;
 using BigSmile.SharedKernel.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 
 namespace BigSmile.IntegrationTests.PatientPortal
@@ -109,11 +111,12 @@ namespace BigSmile.IntegrationTests.PatientPortal
         public void Model_ContainsIntakeUniquenessConcurrencyFiltersAndCheckConstraints()
         {
             using var context = CreateContext(Guid.NewGuid().ToString(), new TenantContext());
-            var intakeType = context.Model.FindEntityType(typeof(PatientIntake))
+            var model = context.GetService<IDesignTimeModel>().Model;
+            var intakeType = model.FindEntityType(typeof(PatientIntake))
                 ?? throw new InvalidOperationException("PatientIntake model metadata was not found.");
-            var answerType = context.Model.FindEntityType(typeof(PatientIntakeMedicalAnswer))
+            var answerType = model.FindEntityType(typeof(PatientIntakeMedicalAnswer))
                 ?? throw new InvalidOperationException("PatientIntakeMedicalAnswer model metadata was not found.");
-            var revisionType = context.Model.FindEntityType(typeof(PatientIntakeRevision))
+            var revisionType = model.FindEntityType(typeof(PatientIntakeRevision))
                 ?? throw new InvalidOperationException("PatientIntakeRevision model metadata was not found.");
 
             var activeDraftIndex = intakeType.GetIndexes().Single(index =>
