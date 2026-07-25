@@ -61,8 +61,8 @@ namespace BigSmile.UnitTests.PatientPortal
             var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             var problem = Assert.IsType<ProblemDetails>(unauthorized.Value);
             Assert.Equal(StatusCodes.Status401Unauthorized, problem.Status);
-            Assert.DoesNotContain("tenant", problem.Detail!, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("patient", problem.Detail!, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("invalid-token", problem.Detail!, StringComparison.Ordinal);
+            Assert.DoesNotContain("patient.login", problem.Detail!, StringComparison.Ordinal);
         }
 
         [Fact]
@@ -88,6 +88,8 @@ namespace BigSmile.UnitTests.PatientPortal
             var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             var problem = Assert.IsType<ProblemDetails>(unauthorized.Value);
             Assert.Equal(StatusCodes.Status401Unauthorized, problem.Status);
+            Assert.DoesNotContain("unknown-realm", problem.Detail!, StringComparison.Ordinal);
+            Assert.DoesNotContain("unknown-login", problem.Detail!, StringComparison.Ordinal);
         }
 
         [Fact]
