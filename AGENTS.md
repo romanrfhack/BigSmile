@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A and PI-2B completed, PI-2C active
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A, PI-2B and PI-2C1 completed; PI-2C2 next
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -139,7 +139,7 @@ Phase 2.1 opening evidence:
 - PI-1D — issue #25 / PR #30
 - PI-2A — issue #31 / PR #32
 - PI-2B — issue #33 / PR #34
-- PI-2C — issue #35; sub-slices #36, #37 and #38
+- PI-2C — issue #35; PI-2C1 #36 / PR #40 completed; PI-2C2 #37 next; PI-2C3 #38 pending
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -196,7 +196,7 @@ Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted 
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve completed PI-1, PI-2A and PI-2B, and implement only `PI-2C1 — Waiting-Room Credential Foundation and TenantAdmin Management API` before anonymous consume, intake-only JWT or Angular handoff UI.
+Preserve completed PI-1, PI-2A, PI-2B and PI-2C1, and implement only `PI-2C2 — Transactional Waiting-Room Activation and patient_intake Session` before the staff handoff UI or patient questionnaire UI.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -208,7 +208,7 @@ Immediate priorities:
 - preserve PI-1D route/shell/interceptor separation, activation fragment cleanup and memory-only patient session
 - preserve ADR 016 fields, typed-phone proposal ownership, 30-day effective-save expiry, explicit save and append-only revisions
 - preserve PI-2B as linked existing-patient self-only create/get/save with id-less ownership, no-store, optimistic concurrency and no canonical Patient/Clinical writes
-- implement PI-2C sequentially: #36 credential/staff API, #37 transactional activation/`patient_intake`, #38 staff copy/print/local-QR UI; keep patient Angular intake capture in PI-2D
+- preserve PI-2C1 hash-only credential, TenantAdmin-only permission, staff route outside `/api/patient-portal/*`, append-only audit and migration; implement #37 transactional activation/`patient_intake` next, then #38 staff copy/print/local-QR UI; keep patient Angular capture in PI-2D
 - avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override

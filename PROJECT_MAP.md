@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A and PI-2B completed, PI-2C active
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A, PI-2B and PI-2C1 completed; PI-2C2 next
 
 ### Release 4 closure evidence
 
@@ -101,7 +101,7 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B while implementing only PI-2C:
+Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B/PI-2C1 while implementing only PI-2C2:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
 * preserve PI-1A tenant-owned account/invitation persistence
@@ -110,7 +110,7 @@ Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B while implementing 
 * preserve PI-1D separate Angular route/shell/interceptors, fragment cleanup and memory-only session
 * preserve PI-2A tenant-owned draft, fixed-answer, immutable-revision, expiry and concurrency semantics
 * preserve PI-2B id-less self-only create/get/save, GET without side effects, no-store and canonical-write prohibition
-* implement PI-2C only as #36 credential/staff API → #37 intake-only session → #38 staff handoff UI; reserve patient capture for PI-2D
+* preserve completed #36 credential/staff API and implement only #37 intake-only activation/session next; #38 retains staff handoff UI and PI-2D patient capture
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
 * PI-1, PI-2A and PI-2B are accepted with tests/ADR evidence; PI-2C1 is the next bounded step
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
@@ -658,7 +658,7 @@ Examples:
 * patient document -> tenant + patient; binary access follows authorized metadata lookup
 * dashboard summary -> tenant-scoped read model; operational day derives from tenant-owned `TimeZoneId`
 * patient portal account/invitation -> tenant-owned identity/bootstrap records; patient linkage and login uniqueness remain tenant-scoped
-* waiting-room intake credential -> tenant-owned, optional same-tenant Branch context, no PatientId, hash-only and single-use
+* waiting-room intake credential -> tenant-owned, optional same-tenant Branch context, no PatientId, hash-only, 30-minute default, staff-managed through `patientportal.intake.manage` and prepared for single-use consume in PI-2C2
 * patient intake/answer/revision -> tenant-owned proposal records; optional Branch is operational only and revisions are append-only
 
 ### Child-table rule

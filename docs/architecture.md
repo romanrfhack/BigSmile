@@ -506,7 +506,7 @@ Responsible for the bounded Phase 2.1 patient-facing boundary:
 * patient-originated revisions and audit
 * clinic review before canonical application
 
-It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary; ADR 012–015 establish linked-patient access and browser-session separation; ADR 016 establishes the intake model; ADR 017 accepts the linked-patient API and opens a separate waiting-room credential plus `patient_intake` policy. PI-2B never accepts ownership ids or applies canonical data, and PI-2C must keep staff management outside the patient bearer prefix.
+It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary; ADR 012–015 establish linked-patient access and browser-session separation; ADR 016 establishes the intake model; ADR 017 accepts the linked-patient API and separate waiting-room trust mode. PI-2C1 implements the tenant-owned hash-only credential and TenantAdmin staff API outside the patient bearer prefix. PI-2C2 must add transactional consume and a separate `patient_intake` policy without making `patient_id` optional in the existing patient identity.
 
 ---
 

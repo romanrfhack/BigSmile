@@ -79,7 +79,7 @@ Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 —
 
 Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Phase 2.1 is active with PI-1, PI-2A and PI-2B completed. ADR 016 accepts the intake baseline and ADR 017 accepts the existing-patient self-only API while opening the waiting-room bootstrap boundary. PI-2C is active; the questionnaire UI remains PI-2D. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.
+Phase 2.1 is active with PI-1, PI-2A, PI-2B and PI-2C1 completed. ADR 017 now has an implemented TenantAdmin-only waiting-room credential foundation; PI-2C2 is next for transactional consume and the isolated `patient_intake` session. The questionnaire UI remains PI-2D. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.
 
 ---
 
@@ -279,8 +279,9 @@ Current roadmap position:
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
 * **Latest Phase 2.1 slice completed:** **PI-2B — Existing-Patient Self-Service Draft**
-* **Current slice:** **PI-2C — Waiting-Room Link and Intake-Only Scope**
-* **Public patient runtime:** activation/login/session and linked-patient intake API available; waiting-room bootstrap and intake capture UI remain pending
+* **Latest Phase 2.1 sub-slice completed:** **PI-2C1 — Waiting-Room Access Link Foundation**
+* **Next slice:** **PI-2C2 — Transactional Waiting-Room Activation and `patient_intake` Session**
+* **Public patient runtime:** linked-patient auth/intake API available; staff can issue/revoke waiting-room credentials, but anonymous consume and intake capture UI remain pending
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
@@ -451,7 +452,7 @@ The initial operational MVP is accepted, but Bigsmile is not feature-complete. P
 * PI-1 is completed through account/invitation persistence, tenant-admin invitation lifecycle, separate patient auth/session backend and bounded Angular patient auth
 * PI-2A completed the tenant-owned draft/fixed-answer/revision persistence foundation
 * PI-2B completed linked-patient self-only `POST / GET / PUT /api/patient-portal/intake` with no-store, no GET side effects and optimistic concurrency
-* PI-2C is active only for the one-time waiting-room credential, `patientportal.intake.manage`, unlinked `patient_intake` session and minimal staff copy/print/local-QR UI; PI-2D retains patient capture
+* PI-2C1 completed the one-time waiting-room credential, `patientportal.intake.manage`, staff issue/list/revoke API and additive migration; PI-2C2 retains unlinked `patient_intake` activation/session and PI-2C3 the copy/print/local-QR UI; PI-2D retains patient capture
 * PI-3 and PI-4 remain pending for clinic review/application, audit visibility and production hardening
 * PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`; PI-2 decisions: ADR 016 and ADR 017
 * The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred
