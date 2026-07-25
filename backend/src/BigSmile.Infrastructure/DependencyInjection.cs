@@ -1,3 +1,4 @@
+using BigSmile.Application.Interfaces.PatientIntakes;
 using BigSmile.Application.Interfaces.Repositories;
 using BigSmile.Application.Interfaces.Security;
 using BigSmile.Application.Interfaces.Storage;
@@ -25,11 +26,12 @@ namespace BigSmile.Infrastructure
 
             services.AddSingleton<IOptions<PatientDocumentStorageOptions>>(
                 Microsoft.Extensions.Options.Options.Create(patientDocumentStorageOptions));
-
             services.AddSingleton<IPatientPortalAuthenticationSettings>(
                 _ => new PatientPortalAuthenticationSettings(configuration));
             services.AddSingleton<IPatientPortalJwtSettings>(
                 _ => new PatientPortalJwtSettings(configuration));
+            services.AddSingleton<IPatientIntakeDraftSettings>(
+                _ => new PatientIntakeDraftSettings(configuration));
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
@@ -40,6 +42,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IClinicalRecordRepository, EfClinicalRecordRepository>();
             services.AddScoped<IOdontogramRepository, EfOdontogramRepository>();
             services.AddScoped<IPatientDocumentRepository, EfPatientDocumentRepository>();
+            services.AddScoped<IPatientIntakeRepository, EfPatientIntakeRepository>();
             services.AddScoped<IPatientPortalInvitationRepository, EfPatientPortalInvitationRepository>();
             services.AddScoped<IPatientPortalAuthenticationRepository, EfPatientPortalAuthenticationRepository>();
             services.AddScoped<IDashboardSummaryRepository, EfDashboardSummaryRepository>();
