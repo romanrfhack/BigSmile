@@ -141,7 +141,7 @@ The initial MVP is formally accepted through Release 7 under ADR 011.
 Current roadmap frontier after MVP closure:
 
 ```text
-Phase 2.1 — planned, explicit opening pending
+Phase 2.1 — active; PI-1A and PI-1B completed; PI-1C next
 ```
 
 Phase 2.1 was explicitly opened on 2026-07-24 after the access/bootstrap choices were approved in ADR 012. PI-1 is active and begins with PI-1A; later slices remain gated and no public patient runtime is accepted by the opening alone.
@@ -255,6 +255,8 @@ Product confirmed on 2026-07-22 that:
 
 On 2026-07-24 the client additionally approved the ADR 012 baseline: password after single-use activation, tenant-scoped `LoginName`, 24 h/30 min TTL defaults, reception delivery, 5/15 lockout and assisted recovery.
 
+On 2026-07-25 the client approved ADR 013: `patientportal.invitation.manage` only for `TenantAdmin`, no `TenantUser`, `PlatformAdmin` or platform override, with one-time token issuance and append-only invitation audit.
+
 ## Implementation status
 
 - Decision: accepted.
@@ -262,6 +264,6 @@ On 2026-07-24 the client additionally approved the ADR 012 baseline: password af
 - Parent: issue #2.
 - Phase 2.1: opened.
 - PI-1: active; PI-1A domain/persistence completed through PR #26.
-- PI-1B is next and awaits its staff-authorization decision.
-- PI-1C–PI-1D and PI-2–PI-4: not implemented.
+- PI-1B staff invitation lifecycle completed through PR #28 under ADR 013.
+- PI-1C is next; PI-1D and PI-2–PI-4 are not implemented.
 - Public patient API/auth/frontend and intake: not started.

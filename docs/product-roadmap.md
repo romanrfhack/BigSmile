@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1A is completed; PI-1B is next and awaits the explicit staff-permission decision.
+Active after formal MVP acceptance. PI-1A and PI-1B are completed; PI-1C is next and awaits explicit auth/session decisions.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006 and ADR 012. PI-1A (#22) is completed; PI-1B (#23) is next but not opened. No public patient runtime is accepted yet.
+Active under ADR 006, ADR 012 and ADR 013. PI-1A (#22) and PI-1B (#23) are completed; PI-1C (#24) is next but not opened. No public patient runtime is accepted yet.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -486,7 +486,7 @@ Allow new and existing patients to propose or complement information through lea
 #### Sequential implementation
 1. PI-1 — Access and Invitation Foundation — issue #4
    1. PI-1A domain/persistence — #22 — completed
-   2. PI-1B staff invitation lifecycle — #23 — next, permission decision pending
+   2. PI-1B staff invitation lifecycle — #23 — completed
    3. PI-1C activation/login/self-session — #24
    4. PI-1D patient auth frontend/security closure — #25
 2. PI-2 — Intake Draft and Self-Service Capture — issue #5
@@ -516,6 +516,7 @@ Allow new and existing patients to propose or complement information through lea
 #### Tracking
 - ADR 006: `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - ADR 012: `docs/decisions/012-patient-portal-access-baseline-and-phase-opening.md`
+- ADR 013: `docs/decisions/013-patient-portal-invitation-management.md`
 - plan: `docs/patient-intake-and-portal-plan.md`
 - parent issue #2
 

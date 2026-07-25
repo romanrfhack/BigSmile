@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 active, PI-1A completed, PI-1B pending authorization decision
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 active, PI-1A and PI-1B completed, PI-1C next and auth/session-gated
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -126,7 +126,9 @@ Release 7 / MVP closure evidence:
 Phase 2.1 opening evidence:
 - ADR 006 — `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - ADR 012 — `docs/decisions/012-patient-portal-access-baseline-and-phase-opening.md`
+- ADR 013 — `docs/decisions/013-patient-portal-invitation-management.md`
 - PI-1A — issue #22 / PR #26
+- PI-1B — issue #23 / PR #28
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -175,23 +177,23 @@ Do not reopen advanced Release 7 scope incidentally. OCR, sharing, generated PDF
 Repository code also exists in later capabilities, including reminders/manual reminders. Code presence alone does not accept providers, jobs, online booking, Phase 2 or advanced analytics.
 
 Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted MVP:
-- architecture accepted in ADR 006 and access baseline/opening accepted in ADR 012
-- PI-1 is active; PI-1A (#22) is completed through PR #26
-- PI-1B (#23) is next but requires explicit staff-permission approval
-- PI-1C (#24) and PI-1D (#25) remain sequentially gated
+- architecture accepted in ADR 006, access baseline/opening accepted in ADR 012 and invitation management accepted in ADR 013
+- PI-1 is active; PI-1A (#22) and PI-1B (#23) are completed
+- PI-1C (#24) is next and requires explicit password/JWT/session decisions
+- PI-1D (#25) remains sequentially gated
 - PI-2 to PI-4 remain not started
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve completed PI-1A and resolve the explicit authorization decision required before opening `PI-1B — Staff-issued patient portal invitation lifecycle`.
+Preserve completed PI-1A/PI-1B and resolve the auth/session decisions required before opening `PI-1C — Patient activation, login and self-session boundary`.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
 - preserve completed Patients, Scheduling, Clinical Records, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard behavior
 - keep Documents upload validation, storage containment and tenant-local Dashboard dates intact
-- preserve PI-1A tenant ownership, tenant-scoped login uniqueness, one-patient linkage, hash-only invitation persistence and rowversion concurrency
-- do not add activation/login, patient JWTs, frontend auth or intake to PI-1B
-- approve a dedicated invitation-management permission before PI-1B; do not reuse broad `patient.write` silently
+- preserve PI-1A tenant ownership, tenant-scoped login uniqueness, one-patient linkage and rowversion concurrency
+- preserve PI-1B `TenantAdmin`-only permission, no platform override, token hash-at-rest, replacement semantics and append-only audit
+- do not open activation/login until password-hash versioning, patient JWT audience/scope/lifetime, comparison, rate limits and session invalidation are explicitly accepted
 - avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override

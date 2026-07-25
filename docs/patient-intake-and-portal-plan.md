@@ -1,9 +1,9 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1 active; PI-1A completed; PI-1B next and permission-gated
+- **Status:** In progress; PI-1 active; PI-1A and PI-1B completed; PI-1C next and auth/session-gated
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
-- **Architecture decisions:** ADR 006 and ADR 012
+- **Architecture decisions:** ADR 006, ADR 012 and ADR 013
 - **Canonical ADR:** `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - **Parent tracking:** GitHub issue #2
 - **Implementation tracking:** issues #4, #5, #6 and #7
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1A domain/persistence completed; PI-1B is the next gated slice.
+- Phase 2.1: active; PI-1A domain/persistence and PI-1B staff invitation lifecycle completed; PI-1C is the next gated slice.
 
 This placement is deliberate:
 
@@ -58,7 +58,7 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Release 7 Documents/Dashboard foundations | Completed; MVP accepted | ADR 010/011 / Release 7 audit |
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
-| PI-1 access/invitations | Active; PI-1A completed; PI-1B next | Issues #4 and #22–#25 |
+| PI-1 access/invitations | Active; PI-1A and PI-1B completed; PI-1C next | Issues #4 and #22–#25 / PRs #26 and #28 |
 | PI-2 intake draft | Planned; not implemented | Issue #5 |
 | PI-3 submit/review/apply | Planned; not implemented | Issue #6 |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
@@ -316,8 +316,10 @@ Every PI slice must consider:
 
 ## 10. Decisions and remaining gates
 
-### Approved for PI-1 under ADR 012
+### Approved for PI-1 under ADR 012 and ADR 013
 
+- Invitation management uses `patientportal.invitation.manage` for `TenantAdmin` only; no `TenantUser`, `PlatformAdmin` or platform override.
+- Invitation issuance returns the raw token once, stores only its SHA-256 hash, supersedes outstanding invitations and records append-only audit.
 - Activation single-use followed by password access.
 - Tenant-scoped `LoginName`; email or username allowed, but phone/DOB/contact do not prove ownership.
 - Existing-patient invitation TTL: 24 hours, configurable.
@@ -374,10 +376,10 @@ The current repository has an accepted MVP and an explicitly opened **Phase 2.1 
 
 For Patient Intake and Portal:
 
-1. Preserve PI-1A / issue #22 as completed through PR #26.
-2. Approve the PI-1B staff permission before implementation; recommendation: dedicated `patientportal.invitation.manage`, initially `TenantAdmin` only, no platform override.
-3. After approval, open only PI-1B / issue #23.
-4. Keep PI-1C/#24 and PI-1D/#25 sequentially gated.
+1. Preserve PI-1A / issue #22 and PI-1B / issue #23 as completed through PRs #26 and #28.
+2. Resolve PI-1C decisions for password-hash format/versioning, patient JWT audience/scope/lifetime, token comparison, rate limiting, lockout enforcement and `SessionVersion`.
+3. Open only PI-1C / issue #24 after those decisions are accepted.
+4. Keep PI-1D/#25 sequentially gated.
 5. Keep PI-2 through PI-4 pending until formal PI-1 closure.
 
 ## 13. Decision note
@@ -386,4 +388,4 @@ For Patient Intake and Portal:
 
 **Decision:** Open Phase 2.1 under ADR 012 and implement the approved access baseline through PI-1A to PI-1D before opening intake.
 
-**Consequence:** PI-1A may add tenant-owned account/invitation persistence, but public auth and intake remain unavailable until their explicit gates. PI-2 to PI-4 remain unimplemented.
+**Consequence:** PI-1A and PI-1B now provide tenant-owned account/invitation persistence plus staff issuance/revocation and audit, but public auth and intake remain unavailable until PI-1C/PI-1D and later gates. PI-2 to PI-4 remain unimplemented.
