@@ -25,6 +25,7 @@ namespace BigSmile.IntegrationTests.PatientPortal
             var tenantContext = CreateTenantContext(seed.User.Id, seed.Tenant.Id);
             var timeProvider = new MutableTimeProvider(InitialUtc);
             var tokenService = new PatientPortalInvitationTokenService();
+            string rawToken;
 
             await using (var context = CreateContext(databaseName, tenantContext))
             {
@@ -33,7 +34,8 @@ namespace BigSmile.IntegrationTests.PatientPortal
                 var result = await commandService.IssueAsync(seed.Patient.Id, "correlation-issue-1");
 
                 Assert.NotNull(result);
-                Assert.False(string.IsNullOrWhiteSpace(result!.ActivationToken));
+                rawToken = result!.ActivationToken;
+                Assert.False(string.IsNullOrWhiteSpace(rawToken));
                 Assert.Equal(InitialUtc, result.CreatedAtUtc);
                 Assert.Equal(InitialUtc.AddHours(24), result.ExpiresAtUtc);
             }
@@ -42,7 +44,6 @@ namespace BigSmile.IntegrationTests.PatientPortal
             {
                 var invitation = await verificationContext.PatientPortalInvitations.SingleAsync();
                 var auditEntry = await verificationContext.PatientPortalSecurityAuditEntries.SingleAsync();
-                var tokenServiceForVerification = new PatientPortalInvitationTokenService();
                 var queryService = CreateQueryService(verificationContext, tenantContext, timeProvider);
                 var summaries = await queryService.ListAsync(seed.Patient.Id);
 
@@ -54,14 +55,9 @@ namespace BigSmile.IntegrationTests.PatientPortal
                 Assert.Equal("correlation-issue-1", auditEntry.CorrelationId);
                 Assert.DoesNotContain("TokenHash", JsonSerializer.Serialize(summary), StringComparison.OrdinalIgnoreCase);
                 Assert.DoesNotContain("ActivationToken", JsonSerializer.Serialize(summary), StringComparison.OrdinalIgnoreCase);
-                Assert.Equal(64, invitation.TokenHash.Length);
-
-                var issuedToken = await IssueSecondTokenForHashVerificationAsync(
-                    databaseName,
-                    seed,
-                    timeProvider,
-                    tokenServiceForVerification);
-                Assert.Equal(tokenServiceForVerification.ComputeHash(issuedToken.RawToken), issuedToken.TokenHash);
+                Assert.Equal(tokenService.ComputeHash(rawToken), invitation.TokenHash);
+                Assert.NotEqual(rawToken, invitation.TokenHash);
+                Assert.DoesNotContain(rawToken, JsonSerializer.Serialize(auditEntry), StringComparison.Ordinal);
             }
         }
 
@@ -230,14 +226,13 @@ namespace BigSmile.IntegrationTests.PatientPortal
             await IssueForTenantAsync(databaseName, tenantB, timeProvider, "tenant-b-audit");
 
             var tenantAContext = CreateTenantContext(tenantA.User.Id, tenantA.Tenant.Id);
-            await using (var filteredContext = CreateContext(databaseName, tenantAContext))
-            {
-                var entry = Assert.Single(await filteredContext.PatientPortalSecurityAuditEntries.ToListAsync());
-                Assert.Equal(tenantA.Tenant.Id, entry.TenantId);
+            await using var filteredContext = CreateContext(databaseName, tenantAContext);
+            var entry = Assert.Single(await filteredContext.PatientPortalSecurityAuditEntries.ToListAsync());
+            Assert.Equal(tenantA.Tenant.Id, entry.TenantId);
 
-                filteredContext.Entry(entry).Property(nameof(PatientPortalSecurityAuditEntry.CorrelationId)).CurrentValue = "changed";
-                await Assert.ThrowsAsync<InvalidOperationException>(() => filteredContext.SaveChangesAsync());
-            }
+            filteredContext.Entry(entry).Property(nameof(PatientPortalSecurityAuditEntry.CorrelationId)).CurrentValue = "changed";
+            filteredContext.Entry(entry).State = EntityState.Modified;
+            await Assert.ThrowsAsync<InvalidOperationException>(() => filteredContext.SaveChangesAsync());
         }
 
         [Fact]
@@ -277,17 +272,6 @@ namespace BigSmile.IntegrationTests.PatientPortal
                 timeProvider,
                 new PatientPortalInvitationTokenService());
             Assert.NotNull(await service.IssueAsync(seed.Patient.Id, correlationId));
-        }
-
-        private static async Task<GeneratedPatientPortalInvitationToken> IssueSecondTokenForHashVerificationAsync(
-            string databaseName,
-            SeedData seed,
-            MutableTimeProvider timeProvider,
-            PatientPortalInvitationTokenService tokenService)
-        {
-            var generated = tokenService.Generate();
-            await Task.CompletedTask;
-            return generated;
         }
 
         private static PatientPortalInvitationCommandService CreateCommandService(
