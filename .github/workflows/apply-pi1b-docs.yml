@@ -1,0 +1,33 @@
+name: Apply PI-1B Documentation
+
+on:
+  push:
+    branches:
+      - phase-2.1/pi-1b-invitation-lifecycle
+
+jobs:
+  patch_docs:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout PI-1B branch
+      uses: actions/checkout@v4
+      with:
+        ref: phase-2.1/pi-1b-invitation-lifecycle
+        fetch-depth: 1
+        show-progress: false
+
+    - name: Patch canonical documentation
+      run: python scripts/patch_pi1b_docs.py
+
+    - name: Commit reconciled documentation
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add "STATE — BigSmile.md" README.md AGENTS.md PROJECT_MAP.md docs
+        git diff --cached --check
+        git commit -m "docs: complete PI-1B and gate PI-1C"
+        git push origin HEAD:phase-2.1/pi-1b-invitation-lifecycle
