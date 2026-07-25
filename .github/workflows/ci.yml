@@ -54,7 +54,7 @@ jobs:
       run: |
         mkdir -p ../../../diagnostics
         set +e
-        dotnet ef migrations add AddPatientIntakeDraftFoundation \
+        "$HOME/.dotnet/tools/dotnet-ef" migrations add AddPatientIntakeDraftFoundation \
           --context AppDbContext \
           --output-dir Data/Migrations 2>&1 | tee ../../../diagnostics/pi2a-migration.log
         status=${PIPESTATUS[0]}
