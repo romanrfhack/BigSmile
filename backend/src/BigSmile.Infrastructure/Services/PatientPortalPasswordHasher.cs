@@ -1,6 +1,5 @@
 using BigSmile.Application.Interfaces.Security;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 
 namespace BigSmile.Infrastructure.Services
 {
@@ -14,11 +13,12 @@ namespace BigSmile.Infrastructure.Services
         {
             ArgumentNullException.ThrowIfNull(settings);
 
-            _hasher = new PasswordHasher<object>(Options.Create(new PasswordHasherOptions
-            {
-                CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3,
-                IterationCount = settings.PasswordHashIterationCount
-            }));
+            _hasher = new PasswordHasher<object>(Microsoft.Extensions.Options.Options.Create(
+                new PasswordHasherOptions
+                {
+                    CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3,
+                    IterationCount = settings.PasswordHashIterationCount
+                }));
             _dummyHash = _hasher.HashPassword(HashUser, "BigSmile.PatientPortal.Dummy.Password.Value");
         }
 
