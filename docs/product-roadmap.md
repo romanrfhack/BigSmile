@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1A, PI-1B and PI-1C are completed; PI-1D is next.
+Active after formal MVP acceptance. PI-1 is completed through PI-1A to PI-1D; PI-2 is next and decision-gated.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006, ADR 012, ADR 013 and ADR 014. PI-1A (#22), PI-1B (#23) and PI-1C (#24) are completed; PI-1D (#25) is next. The backend public auth boundary is accepted, but the patient Angular experience and intake are not.
+Active under ADR 006, ADR 012, ADR 013, ADR 014 and ADR 015. PI-1 (#4) is completed through PI-1A to PI-1D. The bounded backend and Angular patient-auth boundary is accepted; PI-2 (#5) is next, but intake is not yet implemented.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -488,8 +488,8 @@ Allow new and existing patients to propose or complement information through lea
    1. PI-1A domain/persistence — #22 — completed
    2. PI-1B staff invitation lifecycle — #23 — completed
    3. PI-1C activation/login/self-session — #24 — completed
-   4. PI-1D patient auth frontend/security closure — #25 — next
-2. PI-2 — Intake Draft and Self-Service Capture — issue #5
+   4. PI-1D patient auth frontend/security closure — #25 — completed
+2. PI-2 — Intake Draft and Self-Service Capture — issue #5 — next, decision-gated
 3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
 4. PI-4 — Audit Visibility and Security Hardening — issue #7
 
@@ -518,6 +518,9 @@ Allow new and existing patients to propose or complement information through lea
 - ADR 012: `docs/decisions/012-patient-portal-access-baseline-and-phase-opening.md`
 - ADR 013: `docs/decisions/013-patient-portal-invitation-management.md`
 - ADR 014: `docs/decisions/014-patient-portal-authentication-and-session-boundary.md`
+- ADR 015: `docs/decisions/015-patient-portal-frontend-session-boundary.md`
+- PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`
+- recovery runbook: `docs/patient-portal-assisted-recovery-runbook.md`
 - plan: `docs/patient-intake-and-portal-plan.md`
 - parent issue #2
 

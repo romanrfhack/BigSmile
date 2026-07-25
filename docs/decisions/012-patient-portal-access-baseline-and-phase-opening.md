@@ -188,8 +188,9 @@ No later sub-slice may bypass an earlier exit gate.
 - staff permission for invitation management — resolved in ADR 013 / PI-1B;
 - waiting-room token entity/runtime and draft ownership — PI-2;
 - remote recovery provider, retention and privacy policy — PI-4;
+- frontend patient session boundary — resolved in ADR 015 / PI-1D;
 - full patient portal access to records/documents/commercial modules — Phase 4.
 
 ## Exit condition
 
-This ADR is implemented incrementally. It does not mean PI-1 or Phase 2.1 is complete. Completion requires the exit gates and aligned code/tests/docs for PI-1A through PI-1D, followed by PI-2 through PI-4 under ADR 006.
+This ADR is implemented through PI-1A to PI-1D. PI-1 is complete, but Phase 2.1 remains incomplete until PI-2 through PI-4 satisfy their own exit gates under ADR 006.

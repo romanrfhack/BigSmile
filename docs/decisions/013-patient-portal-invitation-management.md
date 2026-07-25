@@ -186,4 +186,4 @@ PI-1B must retain automated evidence for:
 
 ## Follow-up
 
-PI-1C (#24) is accepted through ADR 014 and PR #29. It implements password-hash versioning, separate patient JWT/scheme, fixed-time token verification, transactional single-use activation, anti-enumeration, rate limiting, lockout, server-side `SessionVersion` validation and assisted recovery. PI-1D (#25) is the only next PI-1 slice.
+PI-1C (#24) is accepted through ADR 014 and PR #29. PI-1D (#25) is accepted through ADR 015 and PR #30 with the separate Angular patient auth/session boundary and recovery runbook. PI-1 is complete; PI-2 remains the next decision-gated slice.

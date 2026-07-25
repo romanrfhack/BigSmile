@@ -79,7 +79,7 @@ Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 —
 
 Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Phase 2.1 is active through PI-1C. Account/invitation persistence, tenant-admin invitation management and the separate patient activation/login/self-session backend are accepted. The patient Angular experience and intake remain unavailable until PI-1D and PI-2. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.
+Phase 2.1 is active with PI-1 completed through PI-1A to PI-1D. Account/invitation persistence, tenant-admin invitation management, separate patient authentication/session and the bounded Angular patient-auth experience are accepted. Intake remains unavailable until PI-2. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.
 
 ---
 
@@ -174,6 +174,7 @@ frontend/
     shared/
     features/
       auth/
+      patient-portal-auth/
       platform/
       dashboard/
       patients/
@@ -277,9 +278,9 @@ Current roadmap position:
 * **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
-* **Latest Phase 2.1 slice completed:** **PI-1C — Patient activation, login and self-session boundary**
-* **Next slice:** **PI-1D — Patient auth frontend and security closure**
-* **Public patient runtime:** backend activation/login/self-session accepted; Angular patient UI and intake remain pending
+* **Latest Phase 2.1 milestone completed:** **PI-1 — Access and Invitation Foundation** through PI-1A to PI-1D
+* **Next slice:** **PI-2 — Intake Draft and Self-Service Capture**, pending explicit intake-scope decisions
+* **Public patient runtime:** bounded backend and Angular activation/login/session available; intake remains pending
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
@@ -359,7 +360,7 @@ Release 7 closure evidence:
 
 The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The initial operational MVP is accepted, but Bigsmile is not feature-complete. PI-1A through PI-1C are completed; PI-1D is the next gated slice. Patient activation/login and self-session exist only as backend contracts; Angular patient UX, intake, review/apply and final audit hardening remain pending. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
+The initial operational MVP is accepted, but Bigsmile is not feature-complete. PI-1 is completed through PI-1A to PI-1D, including the bounded Angular patient-auth surface. Intake, review/apply and final audit hardening remain pending through PI-2 to PI-4. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
 
 ---
 
@@ -446,10 +447,11 @@ The initial operational MVP is accepted, but Bigsmile is not feature-complete. P
 
 ### Phase 2 Expansion — Modern Operations
 
-* **Phase 2.1 — Patient Intake and Portal Foundation** is the active phase under ADR 006, ADR 012, ADR 013 and ADR 014
-* PI-1A completed account/invitation persistence; PI-1B completed tenant-admin invitation lifecycle; PI-1C completed the separate patient activation/login/self-session backend
-* PI-1 proceeds next through PI-1D (#25) for Angular patient auth, e2e and the assisted-recovery runbook before intake begins
-* PI-2 to PI-4 remain pending for intake, clinic review/application and audit hardening
+* **Phase 2.1 — Patient Intake and Portal Foundation** is the active phase under ADR 006, ADR 012, ADR 013, ADR 014 and ADR 015
+* PI-1 is completed through account/invitation persistence, tenant-admin invitation lifecycle, separate patient auth/session backend and bounded Angular patient auth
+* PI-2 (#5) is next only after explicit decisions for proposal fields, contact/phone scope, waiting-room link lifecycle, draft expiry and save behavior
+* PI-3 and PI-4 remain pending for clinic review/application, audit visibility and production hardening
+* PI-1 closure evidence: `docs/pi-1-patient-portal-access-and-security-closure.md`; recovery runbook: `docs/patient-portal-assisted-recovery-runbook.md`
 * The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred
 
 ---

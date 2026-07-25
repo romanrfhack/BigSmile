@@ -233,7 +233,7 @@ A role alone is not enough; it must be evaluated together with its scope and mem
 
 ### 7.4 Patient-Facing Identity Boundary
 
-Patient-facing identity is separate from staff identity under ADR 006, ADR 012, ADR 013 and ADR 014.
+Patient-facing identity is separate from staff identity under ADR 006, ADR 012, ADR 013, ADR 014 and ADR 015.
 
 Current rules:
 - `PatientPortalAccount`, `PatientPortalInvitation` and patient-portal security/authentication audit entries are tenant-owned records
@@ -244,9 +244,11 @@ Current rules:
 - patient tokens use a distinct scheme/secret/issuer/audience and contain only account, Tenant, Patient, patient scope, session version and token id
 - every patient-authenticated request revalidates active Tenant/Patient/account plus `SessionVersion`
 - patient policies have no platform override
+- Angular patient routes/shell/guards/interceptors remain separate from staff auth and keep token/session state in memory only
+- activation links use a fragment that is removed immediately before the token is submitted in the request body
 - `TenantId`, portal account and linked Patient come from verified server context
 - phone, date of birth and contact data cannot be used to claim a record publicly
-- Phase 2.1 proceeds through PI-1A to PI-1D before intake is opened
+- PI-1 is completed through PI-1A to PI-1D; intake opens only through PI-2 after its own decisions
 
 ---
 
