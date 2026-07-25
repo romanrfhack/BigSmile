@@ -253,8 +253,8 @@ Current rules:
 - `PatientIntake`, its medical answers and revisions carry `TenantId`; optional `BranchId` remains operational and same-tenant
 - PI-2A provides one active `Draft` per account, soft `Expired`, `RowVersion` and append-only effective-save revisions
 - PI-2B exposes id-less self-only create/get/save for linked accounts; Tenant/Patient/intake come from the validated session
-- PI-2C waiting-room credentials carry `TenantId`, optional same-tenant Branch and no PatientId; management is TenantAdmin-only with no platform override
-- unlinked accounts use an explicit `patient_intake` scope with `intake_id` and no `patient_id`
+- PI-2C1 waiting-room credentials carry `TenantId`, optional same-tenant Branch and no PatientId; token hashes are persisted, audit is append-only and management is TenantAdmin-only with no platform override
+- PI-2C2 unlinked accounts use an explicit `patient_intake` scope with `intake_id` and no `patient_id`; consume must be transactional and session-version validated
 
 ---
 

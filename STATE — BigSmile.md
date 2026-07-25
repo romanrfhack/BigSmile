@@ -22,7 +22,7 @@
 
 **Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos y draft lifecycle; ADR 017 acepta la API self-only de paciente existente y abre el bootstrap de sala de espera. PI-1 queda completado. PI-2 está activa: PI-2A y PI-2B están completados; PI-2C está abierta mediante #35 y se implementa secuencialmente como #36 → #37 → #38.
+**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos y draft lifecycle; ADR 017 acepta la API self-only y la frontera de sala de espera. PI-1, PI-2A, PI-2B y PI-2C1 están completados. PI-2C continúa activa con PI-2C2 #37 como siguiente gate y PI-2C3 #38 después.
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
@@ -94,7 +94,9 @@
 
 [Hecho] PI-2B — Existing-Patient Self-Service Draft (#33) queda completado mediante PR #34 y merge commit `7325a73e7f86ae0e6f0557574fe9d9756a89293f`: `POST / GET / PUT /api/patient-portal/intake`, ownership derivado de sesión patient-only, GET sin side effects, no-store, 39 respuestas `Unknown`, save explícito con optimistic concurrency, no-op sin revisión y cambio efectivo con una revisión append-only. CI #315 quedó verde y no se modifican datos canónicos.
 
-[Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) queda abierta con autorización explícita y alcance limitado: credencial single-use/hash-only/30 minutos, permiso `patientportal.intake.manage` solo `TenantAdmin`, cuenta unlinked con `scope=patient_intake` y UI staff mínima para generar/copiar/imprimir/QR local. Se implementa únicamente mediante PI-2C1 #36 → PI-2C2 #37 → PI-2C3 #38. PI-2D permanece pendiente.
+[Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) permanece activa y se implementa únicamente mediante PI-2C1 #36 → PI-2C2 #37 → PI-2C3 #38.
+
+[Hecho] PI-2C1 — Waiting-Room Access Link Foundation (#36) queda completado mediante PR #40: `PatientIntakeAccessLink` tenant-owned sin `PatientId`, Branch opcional same-tenant, token de 256 bits con SHA-256 hash-at-rest, TTL configurable de 30 minutos, estados terminales, bitácora append-only, permiso `patientportal.intake.manage` solo `TenantAdmin`, API staff `POST / GET / DELETE /api/patient-intake-links`, migración `20260725204625_AddPatientIntakeAccessLinkFoundation` y pruebas de aislamiento/concurrencia/modelo. No agrega consume público, cuenta unlinked, JWT `patient_intake` ni UI Angular. PI-2C2 #37 es el siguiente gate; PI-2C3 #38 y PI-2D permanecen pendientes.
 
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
@@ -112,7 +114,7 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016/017; PI-2A y PI-2B completados. La API self-only para pacientes existentes existe; PI-2C está activa para bootstrap de sala de espera y PI-2D conserva la captura Angular del cuestionario.
+**Estado** — [Hecho] fase abierta; PI-1, PI-2A, PI-2B y PI-2C1 completados bajo ADR 016/017. La API self-only de pacientes existentes y la gestión staff de credenciales de sala de espera existen. PI-2C2 debe implementar consume transaccional y sesión `patient_intake`; PI-2C3 conserva la UI staff y PI-2D la captura Angular del paciente.
 
 **Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 está cerrado y PI-2 se implementa de forma obligatoria mediante PI-2A → PI-2B → PI-2C → PI-2D antes de abrir PI-3.
 
@@ -138,7 +140,7 @@
 - PI-2A Domain/Persistence — issue #31 / PR #32.
 - PI-2B Existing-Patient Self-Service — issue #33 / PR #34.
 - PI-2C Waiting-Room Bootstrap — issue #35.
-- PI-2C1 Credential/Staff API — issue #36.
+- PI-2C1 Credential/Staff API — issue #36 / PR #40 / `docs/pi-2c1-waiting-room-access-link-foundation.md`.
 - PI-2C2 Intake-Only Session — issue #37.
 - PI-2C3 Staff Link/Print/QR UI — issue #38.
 - PI-3 Submit, Review and Apply — issue #6.
@@ -385,7 +387,7 @@ Lista priorizada:
 
 2. Preservar PI-2B (#33 / PR #34) como API self-only completada para pacientes existentes y mantener sus contratos id-less, no-store, GET sin side effects y optimistic concurrency.
 
-3. Implementar PI-2C solo mediante #36 → #37 → #38: credencial de 30 minutos, `patientportal.intake.manage`, scope `patient_intake` y UI staff mínima; PI-2D conserva la captura Angular del paciente.
+3. Preservar PI-2C1 como foundation completado y abrir únicamente PI-2C2 #37 para consume transaccional, cuenta unlinked y sesión `patient_intake`; PI-2C3 #38 conserva la UI staff y PI-2D la captura Angular del paciente.
 
 4. Mantener guardado explícito, no-op sin revisión, expiración sliding de 30 días, `Unknown` distinto de `No` y revisiones append-only.
 

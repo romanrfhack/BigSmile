@@ -204,7 +204,7 @@ No sub-slice bypasses the previous gate.
 
 - PI-2B: completed through PR #34 / `7325a73e7f86ae0e6f0557574fe9d9756a89293f`; CI #315 green.
 - PI-2C parent: issue #35 active.
-- PI-2C1: issue #36 active and next.
-- PI-2C2: issue #37 blocked by PI-2C1.
-- PI-2C3: issue #38 blocked by PI-2C1 and PI-2C2.
+- PI-2C1: completed through issue #36 / PR #40 with migration `20260725204625_AddPatientIntakeAccessLinkFoundation`; closure evidence: `docs/pi-2c1-waiting-room-access-link-foundation.md`.
+- PI-2C2: issue #37 is the next gate.
+- PI-2C3: issue #38 remains blocked by PI-2C2.
 - PI-2D, PI-3 and PI-4: not implemented.

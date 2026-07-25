@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1, PI-2A and PI-2B are completed; PI-2C is active.
+Active after formal MVP acceptance. PI-1, PI-2A, PI-2B and PI-2C1 are completed; PI-2C2 is next.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006 and ADR 012–017. PI-1 (#4) is completed. PI-2 (#5) is active; PI-2A (#31) completed domain/persistence and PI-2B (#33 / PR #34) completed existing-patient self-only create/get/save. PI-2C (#35) is active; waiting-room bootstrap and patient Angular capture are not yet implemented.
+Active under ADR 006 and ADR 012–017. PI-1 (#4), PI-2A (#31), PI-2B (#33 / PR #34) and PI-2C1 (#36 / PR #40) are completed. PI-2C2 (#37) is next for transactional waiting-room activation and `patient_intake`; staff handoff UI and patient capture are not yet implemented.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -492,7 +492,7 @@ Allow new and existing patients to propose or complement information through lea
 2. PI-2 — Intake Draft and Self-Service Capture — issue #5 — active
    1. PI-2A domain/persistence — #31 — completed
    2. PI-2B existing-patient self-service draft — #33 / PR #34 — completed
-   3. PI-2C waiting-room link and intake-only scope — #35 — active through #36 → #37 → #38
+   3. PI-2C waiting-room link and intake-only scope — #35 — active: #36 completed, #37 next, #38 pending
    4. PI-2D Angular intake capture/closure — pending
 3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
 4. PI-4 — Audit Visibility and Security Hardening — issue #7
