@@ -1,0 +1,61 @@
+name: Generate PI-1C Migration
+
+on:
+  push:
+    branches:
+      - phase-2.1/pi-1c-patient-auth-boundary
+
+jobs:
+  generate_migration:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout PI-1C branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-2.1/pi-1c-patient-auth-boundary
+          fetch-depth: 1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore backend dependencies
+        run: dotnet restore BigSmile.slnx
+        working-directory: backend
+
+      - name: Restore EF tool
+        run: dotnet tool restore
+        working-directory: backend
+
+      - name: Generate migration when missing
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+        run: |
+          if ls src/BigSmile.Infrastructure/Data/Migrations/*_AddPatientPortalAuthenticationBoundary.cs >/dev/null 2>&1; then
+            echo "PI-1C migration already exists."
+            exit 0
+          fi
+          dotnet ef migrations add AddPatientPortalAuthenticationBoundary \
+            --project src/BigSmile.Infrastructure \
+            --startup-project src/BigSmile.Api \
+            --context AppDbContext \
+            --output-dir Data/Migrations
+        working-directory: backend
+
+      - name: Commit migration and snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/src/BigSmile.Infrastructure/Data/Migrations
+          if git diff --cached --quiet; then
+            echo "No migration changes to commit."
+            exit 0
+          fi
+          git diff --cached --check
+          git commit -m "feat: add patient portal authentication boundary migration"
+          git push origin HEAD:phase-2.1/pi-1c-patient-auth-boundary
