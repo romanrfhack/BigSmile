@@ -45,6 +45,15 @@ namespace BigSmile.Infrastructure.Data.Configurations
                 {
                     invitation.TenantId,
                     invitation.PatientId,
+                    invitation.Purpose
+                })
+                .IsUnique()
+                .HasFilter("[RevokedAtUtc] IS NULL AND [ConsumedAtUtc] IS NULL");
+
+            builder.HasIndex(invitation => new
+                {
+                    invitation.TenantId,
+                    invitation.PatientId,
                     invitation.CreatedAtUtc
                 });
 
