@@ -68,8 +68,7 @@ export const routes: Routes = [
     children: [
       {
         path: 'activate',
-        loadComponent: loadPatientPortalActivationPage,
-        canActivate: [patientPortalAnonymousGuard]
+        loadComponent: loadPatientPortalActivationPage
       },
       {
         path: ':tenantSubdomain/login',
