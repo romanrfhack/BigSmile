@@ -32,6 +32,8 @@ namespace BigSmile.Infrastructure
                 _ => new PatientPortalJwtSettings(configuration));
             services.AddSingleton<IPatientIntakeDraftSettings>(
                 _ => new PatientIntakeDraftSettings(configuration));
+            services.AddSingleton<IPatientIntakeAccessLinkSettings>(
+                _ => new PatientIntakeAccessLinkSettings(configuration));
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
@@ -43,6 +45,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IOdontogramRepository, EfOdontogramRepository>();
             services.AddScoped<IPatientDocumentRepository, EfPatientDocumentRepository>();
             services.AddScoped<IPatientIntakeRepository, EfPatientIntakeRepository>();
+            services.AddScoped<IPatientIntakeAccessLinkRepository, EfPatientIntakeAccessLinkRepository>();
             services.AddScoped<IPatientPortalInvitationRepository, EfPatientPortalInvitationRepository>();
             services.AddScoped<IPatientPortalAuthenticationRepository, EfPatientPortalAuthenticationRepository>();
             services.AddScoped<IDashboardSummaryRepository, EfDashboardSummaryRepository>();
@@ -67,6 +70,7 @@ namespace BigSmile.Infrastructure
 
             services.AddSingleton<IPatientPortalInvitationTokenService, PatientPortalInvitationTokenService>();
             services.AddSingleton<IPatientPortalInvitationSettings, PatientPortalInvitationSettings>();
+            services.AddSingleton<IPatientIntakeAccessLinkTokenService, PatientIntakeAccessLinkTokenService>();
             services.AddSingleton<IPatientPortalPasswordHasher, PatientPortalPasswordHasher>();
             services.AddSingleton<IPatientPortalJwtTokenService, PatientPortalJwtTokenService>();
             services.AddScoped<IPatientPortalSessionValidator, PatientPortalSessionValidator>();
