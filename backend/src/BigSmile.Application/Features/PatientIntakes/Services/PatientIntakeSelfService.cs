@@ -36,10 +36,25 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
     public sealed class PatientIntakeSelfService : IPatientIntakeSelfService
     {
         private readonly IPatientPortalAuthenticationRepository _authenticationRepository;
-        private readonly IPatientIntakeAuthenticationRepository _intakeAuthenticationRepository;
+        private readonly IPatientIntakeAuthenticationRepository? _intakeAuthenticationRepository;
         private readonly IPatientIntakeRepository _intakeRepository;
         private readonly IPatientIntakeDraftSettings _settings;
         private readonly TimeProvider _timeProvider;
+
+        public PatientIntakeSelfService(
+            IPatientPortalAuthenticationRepository authenticationRepository,
+            IPatientIntakeRepository intakeRepository,
+            IPatientIntakeDraftSettings settings,
+            TimeProvider timeProvider)
+        {
+            _authenticationRepository = authenticationRepository
+                ?? throw new ArgumentNullException(nameof(authenticationRepository));
+            _intakeAuthenticationRepository = null;
+            _intakeRepository = intakeRepository
+                ?? throw new ArgumentNullException(nameof(intakeRepository));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        }
 
         public PatientIntakeSelfService(
             IPatientPortalAuthenticationRepository authenticationRepository,
@@ -284,6 +299,12 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(identity);
+
+            if (_intakeAuthenticationRepository is null)
+            {
+                throw new InvalidOperationException(
+                    "Intake-only session support is not configured for this service instance.");
+            }
 
             var account = await _intakeAuthenticationRepository.GetAccountForSessionAsync(
                 identity.AccountId,
