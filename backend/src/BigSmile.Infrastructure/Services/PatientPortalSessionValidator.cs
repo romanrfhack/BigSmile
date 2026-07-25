@@ -33,6 +33,8 @@ namespace BigSmile.Infrastructure.Services
 
             return account is not null &&
                    account.IsActive &&
+                   account.Patient is not null &&
+                   account.Patient.IsActive &&
                    account.PatientId == identity.PatientId &&
                    account.SessionVersion == identity.SessionVersion &&
                    account.Tenant.IsActive;
