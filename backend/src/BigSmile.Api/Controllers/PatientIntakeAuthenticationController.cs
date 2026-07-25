@@ -33,6 +33,7 @@ namespace BigSmile.Api.Controllers
             [FromBody] ActivatePatientIntakeAccountRequest request,
             CancellationToken cancellationToken = default)
         {
+            SetNoStoreHeaders();
             try
             {
                 var result = await _authenticationService.ActivateAsync(
@@ -71,6 +72,7 @@ namespace BigSmile.Api.Controllers
             [FromBody] LoginPatientIntakeAccountRequest request,
             CancellationToken cancellationToken = default)
         {
+            SetNoStoreHeaders();
             var result = await _authenticationService.LoginAsync(
                 new LoginPatientIntakeAccountCommand(
                     tenantSubdomain,
