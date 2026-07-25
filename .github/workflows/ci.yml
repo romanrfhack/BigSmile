@@ -4,15 +4,46 @@ on:
   push:
     branches:
       - main
+      - phase-2.1/pi-2a-intake-domain-persistence
   pull_request:
     branches:
       - main
+
+permissions:
+  contents: write
 
 env:
   DOTNET_VERSION: '10.0.x'
   NODE_VERSION: '22.x'
 
 jobs:
+  reconcile-pi2a-docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/phase-2.1/pi-2a-intake-domain-persistence' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout PI-2A branch
+      uses: actions/checkout@v4
+      with:
+        ref: phase-2.1/pi-2a-intake-domain-persistence
+        fetch-depth: 0
+
+    - name: Reconcile canonical documentation
+      run: python3 backend/scripts/reconcile_pi2a_docs.py
+
+    - name: Commit documentation
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        git add 'STATE — BigSmile.md' README.md AGENTS.md PROJECT_MAP.md docs
+        git diff --cached --check
+        if git diff --cached --quiet; then
+          echo 'No documentation changes were required.'
+          exit 0
+        fi
+        git commit -m 'docs: accept PI-2 baseline and close PI-2A'
+        git push origin HEAD:phase-2.1/pi-2a-intake-domain-persistence
+
   build:
     runs-on: ubuntu-latest
 
