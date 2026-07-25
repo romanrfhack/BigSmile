@@ -17,6 +17,7 @@ namespace BigSmile.UnitTests.PatientPortal
             Assert.DoesNotContain("+", generated.RawToken, StringComparison.Ordinal);
             Assert.DoesNotContain("/", generated.RawToken, StringComparison.Ordinal);
             Assert.Equal(generated.TokenHash, _service.ComputeHash(generated.RawToken));
+            Assert.True(_service.VerifyHash(generated.RawToken, generated.TokenHash));
             Assert.NotEqual(generated.RawToken, generated.TokenHash);
         }
 
@@ -28,6 +29,16 @@ namespace BigSmile.UnitTests.PatientPortal
 
             Assert.NotEqual(first.RawToken, second.RawToken);
             Assert.NotEqual(first.TokenHash, second.TokenHash);
+            Assert.False(_service.VerifyHash(first.RawToken, second.TokenHash));
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("not-hex")]
+        [InlineData("AA")]
+        public void VerifyHash_RejectsMalformedExpectedHash(string expectedHash)
+        {
+            Assert.False(_service.VerifyHash("raw-token", expectedHash));
         }
 
         [Fact]
