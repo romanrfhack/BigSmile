@@ -26,10 +26,10 @@ namespace BigSmile.Infrastructure
             services.AddSingleton<IOptions<PatientDocumentStorageOptions>>(
                 Microsoft.Extensions.Options.Options.Create(patientDocumentStorageOptions));
 
-            var patientPortalAuthenticationSettings = new PatientPortalAuthenticationSettings(configuration);
-            var patientPortalJwtSettings = new PatientPortalJwtSettings(configuration);
-            services.AddSingleton<IPatientPortalAuthenticationSettings>(patientPortalAuthenticationSettings);
-            services.AddSingleton<IPatientPortalJwtSettings>(patientPortalJwtSettings);
+            services.AddSingleton<IPatientPortalAuthenticationSettings>(
+                _ => new PatientPortalAuthenticationSettings(configuration));
+            services.AddSingleton<IPatientPortalJwtSettings>(
+                _ => new PatientPortalJwtSettings(configuration));
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
