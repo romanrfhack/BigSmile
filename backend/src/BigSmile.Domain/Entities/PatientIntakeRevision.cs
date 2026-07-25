@@ -56,6 +56,7 @@ namespace BigSmile.Domain.Entities
             PatientIntakeId = patientIntake.Id;
             PatientIntake = patientIntake;
             ActorPatientPortalAccountId = actorPatientPortalAccountId;
+            ActorPatientPortalAccount = patientIntake.PatientPortalAccount;
             RevisionNumber = revisionNumber;
             OccurredAtUtc = occurredAtUtc;
             ChangedFieldsJson = NormalizeRequiredJson(changedFieldsJson, nameof(changedFieldsJson));
