@@ -112,6 +112,12 @@ namespace BigSmile.Domain.Entities
                     nameof(revokedAtUtc));
             }
 
+            if (revokedAtUtc >= ExpiresAtUtc)
+            {
+                throw new InvalidOperationException(
+                    "An expired patient intake access link cannot be revoked.");
+            }
+
             RevokedAtUtc = revokedAtUtc;
             RevokedByUserId = revokedByUserId;
         }
