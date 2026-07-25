@@ -10,6 +10,7 @@ using BigSmile.Application.Features.Odontograms.Commands;
 using BigSmile.Application.Features.Odontograms.Queries;
 using BigSmile.Application.Features.PatientDocuments.Commands;
 using BigSmile.Application.Features.PatientDocuments.Queries;
+using BigSmile.Application.Features.PatientIntakes.Services;
 using BigSmile.Application.Features.PatientPortalAuthentication.Commands;
 using BigSmile.Application.Features.PatientPortalInvitations.Commands;
 using BigSmile.Application.Features.PatientPortalInvitations.Queries;
@@ -43,6 +44,7 @@ namespace BigSmile.Application
             services.AddScoped<IOdontogramQueryService, OdontogramQueryService>();
             services.AddScoped<IPatientDocumentCommandService, PatientDocumentCommandService>();
             services.AddScoped<IPatientDocumentQueryService, PatientDocumentQueryService>();
+            services.AddScoped<IPatientIntakeSelfService, PatientIntakeSelfService>();
             services.AddScoped<IPatientPortalPublicAuthenticationService, PatientPortalPublicAuthenticationService>();
             services.AddScoped<IPatientPortalSessionService, PatientPortalSessionService>();
             services.AddScoped<IPatientPortalRecoveryService, PatientPortalRecoveryService>();
