@@ -26,11 +26,14 @@ namespace BigSmile.Infrastructure
             services.AddSingleton<IOptions<PatientDocumentStorageOptions>>(
                 Microsoft.Extensions.Options.Options.Create(patientDocumentStorageOptions));
 
-            // Register DbContext
+            var patientPortalAuthenticationSettings = new PatientPortalAuthenticationSettings(configuration);
+            var patientPortalJwtSettings = new PatientPortalJwtSettings(configuration);
+            services.AddSingleton<IPatientPortalAuthenticationSettings>(patientPortalAuthenticationSettings);
+            services.AddSingleton<IPatientPortalJwtSettings>(patientPortalJwtSettings);
+
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-            // Register EF-based repositories (scoped, as they depend on DbContext)
             services.AddScoped<ITenantRepository, EfTenantRepository>();
             services.AddScoped<IBranchRepository, EfBranchRepository>();
             services.AddScoped<IPatientRepository, EfPatientRepository>();
@@ -38,6 +41,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IOdontogramRepository, EfOdontogramRepository>();
             services.AddScoped<IPatientDocumentRepository, EfPatientDocumentRepository>();
             services.AddScoped<IPatientPortalInvitationRepository, EfPatientPortalInvitationRepository>();
+            services.AddScoped<IPatientPortalAuthenticationRepository, EfPatientPortalAuthenticationRepository>();
             services.AddScoped<IDashboardSummaryRepository, EfDashboardSummaryRepository>();
             services.AddScoped<IBillingDocumentRepository, EfBillingDocumentRepository>();
             services.AddScoped<ITreatmentPlanRepository, EfTreatmentPlanRepository>();
@@ -52,17 +56,18 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IUserBranchAssignmentStore, EfUserBranchAssignmentStore>();
             services.AddScoped<RealPilotUserBootstrapper>();
 
-            // Register context as scoped (per request)
             services.AddScoped<TenantContext>();
             services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
 
-            // Register JWT token service
             services.AddScoped<IJwtTokenService, JwtTokenService>();
-
-            // Register security and storage services
             services.AddScoped<IPasswordHasher, PasswordHasher>();
+
             services.AddSingleton<IPatientPortalInvitationTokenService, PatientPortalInvitationTokenService>();
             services.AddSingleton<IPatientPortalInvitationSettings, PatientPortalInvitationSettings>();
+            services.AddSingleton<IPatientPortalPasswordHasher, PatientPortalPasswordHasher>();
+            services.AddSingleton<IPatientPortalJwtTokenService, PatientPortalJwtTokenService>();
+            services.AddScoped<IPatientPortalSessionValidator, PatientPortalSessionValidator>();
+
             services.AddScoped<IPatientDocumentBinaryStore, LocalPatientDocumentBinaryStore>();
 
             return services;
