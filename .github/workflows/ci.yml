@@ -4,64 +4,15 @@ on:
   push:
     branches:
       - main
-      - phase-2.1/pi-2a-intake-domain-persistence
   pull_request:
     branches:
       - main
-
-permissions:
-  contents: write
 
 env:
   DOTNET_VERSION: '10.0.x'
   NODE_VERSION: '22.x'
 
 jobs:
-  generate-pi2a-migration:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/phase-2.1/pi-2a-intake-domain-persistence' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout PI-2A branch
-      uses: actions/checkout@v4
-      with:
-        ref: phase-2.1/pi-2a-intake-domain-persistence
-        fetch-depth: 0
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-
-    - name: Restore backend dependencies
-      run: dotnet restore backend/BigSmile.slnx
-
-    - name: Install dotnet-ef
-      run: dotnet tool install --global dotnet-ef --version 10.0.0
-
-    - name: Generate additive migration
-      working-directory: backend/src/BigSmile.Infrastructure
-      run: |
-        if find Data/Migrations -maxdepth 1 -type f -name '*_AddPatientIntakeDraftFoundation.cs' | grep -q .; then
-          echo 'Migration already exists.'
-          exit 0
-        fi
-        dotnet ef migrations add AddPatientIntakeDraftFoundation \
-          --context AppDbContext \
-          --output-dir Data/Migrations
-
-    - name: Commit migration and model snapshot
-      run: |
-        git config user.name 'github-actions[bot]'
-        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-        git add backend/src/BigSmile.Infrastructure/Data/Migrations
-        if git diff --cached --quiet; then
-          echo 'No migration changes were generated.'
-          exit 0
-        fi
-        git commit -m 'PI-2A: add patient intake draft migration'
-        git push origin HEAD:phase-2.1/pi-2a-intake-domain-persistence
-
   build:
     runs-on: ubuntu-latest
 
@@ -93,6 +44,27 @@ jobs:
 
     - name: Run backend integration tests
       run: dotnet test backend/tests/BigSmile.IntegrationTests --configuration Release --no-build
+
+    - name: Install dotnet-ef for PI-2A migration capture
+      run: dotnet tool install --global dotnet-ef --version 10.0.0
+
+    - name: Generate PI-2A migration for review
+      working-directory: backend/src/BigSmile.Infrastructure
+      run: |
+        dotnet ef migrations add AddPatientIntakeDraftFoundation \
+          --context AppDbContext \
+          --output-dir Data/Migrations
+
+    - name: Upload generated PI-2A migration
+      uses: actions/upload-artifact@v4
+      with:
+        name: pi2a-generated-migration
+        path: |
+          backend/src/BigSmile.Infrastructure/Data/Migrations/*_AddPatientIntakeDraftFoundation.cs
+          backend/src/BigSmile.Infrastructure/Data/Migrations/*_AddPatientIntakeDraftFoundation.Designer.cs
+          backend/src/BigSmile.Infrastructure/Data/Migrations/AppDbContextModelSnapshot.cs
+        if-no-files-found: error
+        retention-days: 1
 
     - name: Install frontend dependencies
       run: npm ci
