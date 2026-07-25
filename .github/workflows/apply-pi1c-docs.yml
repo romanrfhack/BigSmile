@@ -1,0 +1,32 @@
+name: Apply PI-1C Documentation
+
+on:
+  push:
+    branches:
+      - phase-2.1/pi-1c-patient-auth-boundary
+
+jobs:
+  patch_docs:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout PI-1C branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-2.1/pi-1c-patient-auth-boundary
+          fetch-depth: 1
+
+      - name: Patch canonical documentation
+        run: python scripts/patch_pi1c_docs.py
+
+      - name: Commit reconciled documentation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "STATE — BigSmile.md" README.md AGENTS.md PROJECT_MAP.md docs
+          git diff --cached --check
+          git commit -m "docs: complete PI-1C and gate PI-1D"
+          git push origin HEAD:phase-2.1/pi-1c-patient-auth-boundary
