@@ -9,6 +9,8 @@ using BigSmile.Infrastructure.Data.Repositories;
 using BigSmile.Infrastructure.Services;
 using BigSmile.SharedKernel.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 
 namespace BigSmile.IntegrationTests.PatientPortal
@@ -202,9 +204,10 @@ namespace BigSmile.IntegrationTests.PatientPortal
             await using var metadataContext = CreateContext(
                 Guid.NewGuid().ToString(),
                 new TenantContext());
-            var linkType = metadataContext.Model.FindEntityType(typeof(PatientIntakeAccessLink))
+            var model = metadataContext.GetService<IDesignTimeModel>().Model;
+            var linkType = model.FindEntityType(typeof(PatientIntakeAccessLink))
                 ?? throw new InvalidOperationException("PatientIntakeAccessLink metadata was not found.");
-            var auditType = metadataContext.Model.FindEntityType(typeof(PatientIntakeAccessLinkAuditEntry))
+            var auditType = model.FindEntityType(typeof(PatientIntakeAccessLinkAuditEntry))
                 ?? throw new InvalidOperationException("PatientIntakeAccessLinkAuditEntry metadata was not found.");
 
             var tokenIndex = linkType.GetIndexes().Single(index =>
