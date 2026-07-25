@@ -53,6 +53,7 @@ namespace BigSmile.Api.Controllers
                     return NotFound();
                 }
 
+                SetSensitiveResponseHeaders();
                 return CreatedAtAction(nameof(List), new { patientId }, invitation);
             }
             catch (ArgumentException exception)
@@ -103,6 +104,13 @@ namespace BigSmile.Api.Controllers
                     Detail = exception.Message
                 });
             }
+        }
+
+        private void SetSensitiveResponseHeaders()
+        {
+            Response.Headers.CacheControl = "no-store";
+            Response.Headers.Pragma = "no-cache";
+            Response.Headers.Expires = "0";
         }
 
         private string GetCorrelationId()
