@@ -6,6 +6,7 @@ namespace BigSmile.SharedKernel.Authorization
         Tenant = 1,
         Branch = 2,
         Platform = 3,
-        Patient = 4
+        Patient = 4,
+        PatientIntake = 5
     }
 }
