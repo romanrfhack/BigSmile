@@ -49,11 +49,26 @@ jobs:
       run: dotnet tool install --global dotnet-ef --version 10.0.0
 
     - name: Generate PI-2A migration for review
+      shell: bash
       working-directory: backend/src/BigSmile.Infrastructure
       run: |
+        mkdir -p ../../../../diagnostics
+        set +e
         dotnet ef migrations add AddPatientIntakeDraftFoundation \
           --context AppDbContext \
-          --output-dir Data/Migrations
+          --output-dir Data/Migrations 2>&1 | tee ../../../../diagnostics/pi2a-migration.log
+        status=${PIPESTATUS[0]}
+        echo "MIGRATION_STATUS=$status" >> ../../../../diagnostics/pi2a-migration.log
+        exit "$status"
+
+    - name: Upload PI-2A migration diagnostics
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: pi2a-migration-diagnostics
+        path: diagnostics/pi2a-migration.log
+        if-no-files-found: ignore
+        retention-days: 1
 
     - name: Upload generated PI-2A migration
       uses: actions/upload-artifact@v4
