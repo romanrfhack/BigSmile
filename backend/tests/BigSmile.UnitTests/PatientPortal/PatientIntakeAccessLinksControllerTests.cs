@@ -125,10 +125,9 @@ namespace BigSmile.UnitTests.PatientPortal
                 .GetCustomAttribute<AuthorizeAttribute>();
 
             Assert.Equal("api/patient-intake-links", route!.Template);
-            Assert.DoesNotStartWith(
+            Assert.False(route.Template!.StartsWith(
                 "api/patient-portal",
-                route.Template!,
-                StringComparison.OrdinalIgnoreCase);
+                StringComparison.OrdinalIgnoreCase));
             Assert.Equal(
                 AuthorizationPolicies.PatientPortalIntakeManage,
                 authorize!.Policy);
