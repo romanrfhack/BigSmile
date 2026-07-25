@@ -27,7 +27,7 @@ namespace BigSmile.UnitTests.PatientPortal
         }
 
         [Fact]
-        public async Task Issue_ReturnsCreatedAndPassesRequestCorrelationId()
+        public async Task Issue_ReturnsCreatedPassesCorrelationIdAndDisablesCaching()
         {
             var patientId = Guid.NewGuid();
             var response = new IssuedPatientPortalInvitationDto(
@@ -52,6 +52,9 @@ namespace BigSmile.UnitTests.PatientPortal
             var created = Assert.IsType<CreatedAtActionResult>(result.Result);
             Assert.Equal(nameof(PatientPortalInvitationsController.List), created.ActionName);
             Assert.Same(response, created.Value);
+            Assert.Equal("no-store", controller.Response.Headers.CacheControl.ToString());
+            Assert.Equal("no-cache", controller.Response.Headers.Pragma.ToString());
+            Assert.Equal("0", controller.Response.Headers.Expires.ToString());
         }
 
         [Fact]
