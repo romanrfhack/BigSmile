@@ -1,18 +1,18 @@
   Determining projects to restore...
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Domain/BigSmile.Domain.csproj (in 287 ms).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/BigSmile.Application.csproj (in 1.72 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Domain/BigSmile.Domain.csproj (in 243 ms).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Application/BigSmile.Application.csproj (in 1.52 sec).
   Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.SharedKernel/BigSmile.SharedKernel.csproj (in 2 ms).
-/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
+/home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-23rf-6693-g89p [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-8q5v-6pqq-x66h [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-g8r8-53c2-pm3f [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-mmjf-rqrv-855v [/home/runner/work/BigSmile/BigSmile/backend/BigSmile.slnx]
-  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj (in 3.51 sec).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj (in 3.92 sec).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj (in 3.98 sec).
-  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj (in 2.25 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.IntegrationTests/BigSmile.IntegrationTests.csproj (in 3.48 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/tests/BigSmile.UnitTests/BigSmile.UnitTests.csproj (in 3.84 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Api/BigSmile.Api.csproj (in 4.01 sec).
+  Restored /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj (in 2.44 sec).
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-23rf-6693-g89p
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-8q5v-6pqq-x66h
 /home/runner/work/BigSmile/BigSmile/backend/src/BigSmile.Infrastructure/BigSmile.Infrastructure.csproj : warning NU1903: Package 'System.Security.Cryptography.Xml' 9.0.15 has a known high severity vulnerability, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q
@@ -40,5 +40,5 @@ Build FAILED.
     8 Warning(s)
     1 Error(s)
 
-Time Elapsed 00:00:13.27
+Time Elapsed 00:00:10.60
 BUILD_STATUS=1
