@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, of, tap, throwError } from 'rxjs';
 import { PatientPortalAuthApi } from '../data-access/patient-portal-auth.api';
 import {
@@ -11,17 +11,14 @@ import { PatientPortalSessionStore } from '../services/patient-portal-session.st
 
 @Injectable({ providedIn: 'root' })
 export class PatientPortalAuthFacade {
+  private readonly api = inject(PatientPortalAuthApi);
+  private readonly sessionStore = inject(PatientPortalSessionStore);
   private readonly loadingState = signal(false);
   private readonly errorState = signal<string | null>(null);
 
   readonly loading = this.loadingState.asReadonly();
   readonly error = this.errorState.asReadonly();
   readonly current = this.sessionStore.current;
-
-  constructor(
-    private readonly api: PatientPortalAuthApi,
-    private readonly sessionStore: PatientPortalSessionStore
-  ) {}
 
   activate(request: ActivatePatientPortalAccountRequest): Observable<PatientPortalAuthenticationResponse> {
     this.beginRequest();
