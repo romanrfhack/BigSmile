@@ -34,6 +34,8 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<PatientIntake> PatientIntakes => Set<PatientIntake>();
         public DbSet<PatientIntakeMedicalAnswer> PatientIntakeMedicalAnswers => Set<PatientIntakeMedicalAnswer>();
         public DbSet<PatientIntakeRevision> PatientIntakeRevisions => Set<PatientIntakeRevision>();
+        public DbSet<PatientIntakeAccessLink> PatientIntakeAccessLinks => Set<PatientIntakeAccessLink>();
+        public DbSet<PatientIntakeAccessLinkAuditEntry> PatientIntakeAccessLinkAuditEntries => Set<PatientIntakeAccessLinkAuditEntry>();
         public DbSet<BillingDocument> BillingDocuments => Set<BillingDocument>();
         public DbSet<BillingDocumentItem> BillingDocumentItems => Set<BillingDocumentItem>();
         public DbSet<TreatmentPlan> TreatmentPlans => Set<TreatmentPlan>();
@@ -93,6 +95,10 @@ namespace BigSmile.Infrastructure.Data
                 !ShouldApplyTenantFilter || answer.TenantId == ResolvedTenantId);
             modelBuilder.Entity<PatientIntakeRevision>().HasQueryFilter(revision =>
                 !ShouldApplyTenantFilter || revision.TenantId == ResolvedTenantId);
+            modelBuilder.Entity<PatientIntakeAccessLink>().HasQueryFilter(link =>
+                !ShouldApplyTenantFilter || link.TenantId == ResolvedTenantId);
+            modelBuilder.Entity<PatientIntakeAccessLinkAuditEntry>().HasQueryFilter(entry =>
+                !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
             modelBuilder.Entity<BillingDocument>().HasQueryFilter(billingDocument =>
                 !ShouldApplyTenantFilter || billingDocument.TenantId == ResolvedTenantId);
             modelBuilder.Entity<TreatmentPlan>().HasQueryFilter(treatmentPlan =>
@@ -181,6 +187,14 @@ namespace BigSmile.Infrastructure.Data
             {
                 throw new InvalidOperationException(
                     "Patient intake revisions are append-only and cannot be modified or deleted.");
+            }
+
+            var invalidAccessLinkAuditEntry = ChangeTracker.Entries<PatientIntakeAccessLinkAuditEntry>()
+                .FirstOrDefault(entry => entry.State is EntityState.Modified or EntityState.Deleted);
+            if (invalidAccessLinkAuditEntry is not null)
+            {
+                throw new InvalidOperationException(
+                    "Patient intake access link audit entries are append-only and cannot be modified or deleted.");
             }
         }
 
