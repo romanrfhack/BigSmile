@@ -31,7 +31,7 @@ namespace BigSmile.Infrastructure.Services
                 configuration,
                 MinimumPasswordLengthKey,
                 DefaultMinimumPasswordLength,
-                minimum: 10,
+                minimum: DefaultMinimumPasswordLength,
                 maximum: 64);
             MaximumPasswordLength = ReadInt(
                 configuration,
