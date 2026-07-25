@@ -22,7 +22,7 @@
 
 **Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 fija el baseline de acceso; ADR 013 fija la gestión de invitaciones staff; ADR 014 acepta la autenticación/sesión pública de paciente; y ADR 015 fija la separación Angular, token en memoria y activación por fragment. PI-1 queda completado mediante PI-1A a PI-1D. Phase 2.1 continúa activa con PI-2 como siguiente slice sujeto a decisiones de alcance; la captura de intake todavía no está implementada.
+**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos, draft lifecycle, revisión append-only y futuro bootstrap de sala de espera. PI-1 queda completado. PI-2 está activa: PI-2A incorpora dominio/persistencia tenant-aware sin endpoints ni captura Angular; PI-2B es el siguiente gate.
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
@@ -86,7 +86,11 @@
 
 [Hecho] PI-1C — Patient Activation, Login and Self-Session (#24) queda completado mediante PR #29: realm por `Tenant.Subdomain`, activación single-use transaccional, Identity V3/PBKDF2 con parámetros explícitos, JWT patient-only separado, validación server-side de `SessionVersion`, lockout/rate limiting/anti-enumeración, recovery asistido solo `TenantAdmin` y auditoría append-only.
 
-[Hecho] PI-1D — Patient Auth Frontend and Security Closure (#25) queda completado mediante PR #30: route tree `/patient-portal/*` fuera del staff shell, activación con token en fragment y limpieza inmediata, sesión/token solo en memoria, interceptores/guards separados, login/home/logout acotados, pruebas frontend y runbook de recovery. PI-1 queda cerrado; PI-2 (#5) es el siguiente slice y todavía no está abierto.
+[Hecho] PI-1D — Patient Auth Frontend and Security Closure (#25) queda completado mediante PR #30: route tree `/patient-portal/*` fuera del staff shell, activación con token en fragment y limpieza inmediata, sesión/token solo en memoria, interceptores/guards separados, login/home/logout acotados, pruebas frontend y runbook de recovery. PI-1 queda cerrado.
+
+[Hecho] El cliente aprobó el baseline de PI-2 el 2026-07-25: campos de propuesta —incluido motivo de visita—, teléfonos tipificados como intake, expiración sliding de 30 días, guardado explícito sin autosave, link de sala de espera single-use de 30 minutos, permiso futuro `patientportal.intake.manage` solo para `TenantAdmin`, scope futuro `patient_intake` y secuencia PI-2A → PI-2B → PI-2C → PI-2D. ADR 016 registra la decisión.
+
+[Hecho] PI-2A — Patient Intake Domain and Persistence (#31) queda completado mediante PR #32: `PatientIntake`, 39 respuestas separadas de Clinical, revisiones inmutables por guardado efectivo, expiración `Draft / Expired`, baseline canónico para conflictos futuros, `RowVersion`, filtros/write enforcement tenant-aware, restricciones SQL e integración EF mediante migración `20260725182044_AddPatientIntakeDraftFoundation`. No agrega endpoints, JWT scope, staff permission, UI de intake ni writes canónicos. PI-2B es el siguiente gate.
 
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
@@ -104,9 +108,9 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 es el siguiente slice sujeto a decisiones explícitas. La autenticación backend y el frontend Angular acotado de pacientes existen, pero no hay captura de intake todavía.
+**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016; PI-2A completado y PI-2B es el siguiente gate. Existe persistencia de draft, pero todavía no hay endpoints ni captura Angular de intake.
 
-**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; se implementa mediante PI-1A → PI-1B → PI-1C → PI-1D antes de abrir PI-2.
+**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 está cerrado y PI-2 se implementa de forma obligatoria mediante PI-2A → PI-2B → PI-2C → PI-2D antes de abrir PI-3.
 
 **Tracking** — [Hecho]
 
@@ -115,6 +119,7 @@
 - ADR 013 — `docs/decisions/013-patient-portal-invitation-management.md`.
 - ADR 014 — `docs/decisions/014-patient-portal-authentication-and-session-boundary.md`.
 - ADR 015 — `docs/decisions/015-patient-portal-frontend-session-boundary.md`.
+- ADR 016 — `docs/decisions/016-patient-intake-draft-baseline.md`.
 - Cierre PI-1 — `docs/pi-1-patient-portal-access-and-security-closure.md`.
 - Runbook — `docs/patient-portal-assisted-recovery-runbook.md`.
 - Plan general — `docs/patient-intake-and-portal-plan.md`.
@@ -125,6 +130,7 @@
 - PI-1C Patient Activation/Login — issue #24.
 - PI-1D Patient Auth Frontend/Closure — issue #25.
 - PI-2 Intake Draft — issue #5.
+- PI-2A Domain/Persistence — issue #31 / PR #32.
 - PI-3 Submit, Review and Apply — issue #6.
 - PI-4 Audit Visibility and Hardening — issue #7.
 
@@ -367,23 +373,23 @@ Lista priorizada:
 
 1. Preservar PI-1 (#4) como foundation completado mediante PI-1A a PI-1D, sin acceso paciente a módulos canónicos.
 
-2. Resolver antes de abrir PI-2 (#5) los campos demográficos/contacto editables, el tratamiento de teléfonos, el ownership/lifecycle del link de sala de espera, la expiración de drafts y save explícito vs autosave acotado.
+2. Preservar PI-2A (#31) como foundation de dominio/persistencia completado y abrir únicamente PI-2B para create/get/save self-only de paciente existente, sin waiting-room bootstrap ni aplicación canónica.
 
-3. Mantener tokens de paciente solo en memoria; no introducir `localStorage`, refresh token ni recuperación remota sin una decisión posterior.
+3. Mantener la secuencia PI-2A → PI-2B → PI-2C → PI-2D; `patientportal.intake.manage`, link de 30 minutos y scope `patient_intake` pertenecen a PI-2C.
 
-4. Mantener PI-3 y PI-4 no iniciados y prohibir aplicación canónica desde endpoints de paciente.
+4. Mantener guardado explícito, no-op sin revisión, expiración sliding de 30 días, `Unknown` distinto de `No` y revisiones append-only.
 
-5. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
+5. Mantener tokens de paciente solo en memoria; no introducir `localStorage`, refresh token ni recuperación remota sin una decisión posterior.
 
-6. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
+6. Mantener PI-3 y PI-4 no iniciados y prohibir aplicación canónica desde endpoints de paciente.
 
-7. Mantener diferidas las `doctor-based views` hasta un slice dedicado de provider/doctor assignment.
+7. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
 
-8. Mantener fuera de agregados cerrados cualquier linkage cross-module no aceptado y preservar joins tenant-aware para accesos directos a tablas hijas.
+8. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
 
-9. Mantener recordatorios/providers/jobs/queues, online booking, advanced analytics y full Patient Portal como capabilities futuras no aceptadas.
+9. Mantener diferidas las `doctor-based views` y cualquier linkage cross-module no aceptado.
 
-10. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap, tenant model y ADRs en cada gate de PI-1.
+10. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap, tenant model y ADRs en cada gate de PI-2.
 
 ## 12. Riesgos y temas a vigilar
 
@@ -391,7 +397,7 @@ Lista priorizada:
 
 **Authorization model** — [Hecho] Permisos nuevos deben evolucionar junto con módulos reales, sin cambiar silenciosamente scopes o roles.
 
-**Patient-facing identity** — [Hecho] PI-1A a PI-1D establecen persistencia, invitaciones staff, autenticación/sesión backend y frontend Angular separado. La frontera usa realm por subdominio, scheme/issuer/audience/secret separados, no emite roles/permisos staff, valida `SessionVersion` en cada request, no acepta `PatientId`/`TenantId` como autoridad pública, no permite platform override, mantiene tokens solo en memoria y no aplica cambios canónicos. El intake sigue pendiente.
+**Patient-facing identity e intake** — [Hecho] PI-1A a PI-1D establecen acceso separado. PI-2A agrega únicamente persistencia tenant-owned de draft, respuestas y revisiones; no cambia claims ni expone endpoints. La frontera no acepta `PatientId`/`TenantId` como autoridad pública, no permite platform override, mantiene tokens solo en memoria y no aplica cambios canónicos. PI-2B debe derivar ownership de la cuenta autenticada.
 
 **Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
 
@@ -415,7 +421,7 @@ Lista priorizada:
 
 [Hecho] BigSmile es un producto SaaS multi-tenant; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewability rompe el rumbo.
 
-[Hecho] El orden completado del MVP es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. Phase 2.1 Patient Intake and Portal Foundation está activa mediante PI-1; el portal amplio permanece en Phase 4.
+[Hecho] El orden completado del MVP es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. Phase 2.1 Patient Intake and Portal Foundation está activa; PI-1 y PI-2A están completados, PI-2B es el siguiente gate y el portal amplio permanece en Phase 4.
 
 [Hecho] Ningún release funcional ni Phase 2.1 se considera completado sin evidencia explícita en código, pruebas y documentación alineada.
 
@@ -423,10 +429,10 @@ Lista priorizada:
 
 ## 14. Nota tipo ADR resumida
 
-**Estado:** Nota canónica actualizada con ADR 006 a ADR 015; Phase 2.1 abierta; PI-1 completado; PI-2 es el siguiente slice sujeto a decisiones de alcance.
+**Estado:** Nota canónica actualizada con ADR 006 a ADR 016; Phase 2.1 abierta; PI-1 y PI-2A completados; PI-2B es el siguiente gate.
 
-**Contexto:** PI-1A a PI-1C ya establecían cuentas, invitaciones y auth/session backend tenant-owned. PI-1D debía cerrar el riesgo de browser session sin mezclar staff/patient ni abrir intake.
+**Contexto:** PI-1 cerró la identidad/sesión de paciente. El cliente autorizó el alcance de datos, teléfonos como propuestas, expiración, guardado explícito, link de sala de espera y scope intake-only antes de persistir información médica declarada.
 
-**Decisión:** Aceptar PI-1D mediante ADR 015 con route tree y shell separados, activación por fragment con limpieza inmediata, token/session solo en memoria, interceptores/guards no superpuestos, UX genérica, pruebas y runbook de recovery.
+**Decisión:** Aceptar ADR 016 y PI-2A con `PatientIntake` tenant-owned, 39 respuestas separadas de Clinical, revisiones append-only por cambios efectivos, baseline canónico, expiración sliding de 30 días, `RowVersion`, restricciones SQL y migración aditiva; sin endpoints ni writes canónicos.
 
-**Consecuencias:** Pacientes existentes ya pueden activar, iniciar/cerrar sesión y recuperar acceso con asistencia sin permisos staff ni acceso canónico. PI-1 queda cerrado. Intake, revisión/aplicación, payments/cash/CFDI, doctor views, automatizaciones, advanced analytics y full Patient Portal siguen diferidos.
+**Consecuencias:** La base de draft ya existe de forma trazable y aislada. PI-2B puede abrir create/get/save para paciente existente. Waiting-room link, `patient_intake`, UI Angular, submit/review/apply, payments/cash/CFDI, doctor views, automatizaciones, advanced analytics y full Patient Portal siguen pendientes.

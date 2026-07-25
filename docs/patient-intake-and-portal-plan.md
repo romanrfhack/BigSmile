@@ -1,9 +1,9 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1 completed through PI-1A to PI-1D; PI-2 next and decision-gated
+- **Status:** In progress; PI-1 and PI-2A completed; PI-2B next
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
-- **Architecture decisions:** ADR 006, ADR 012, ADR 013, ADR 014 and ADR 015
+- **Architecture decisions:** ADR 006 and ADR 012–016
 - **Canonical ADR:** `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - **Parent tracking:** GitHub issue #2
 - **Implementation tracking:** issues #4, #5, #6 and #7
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1 is completed through PI-1A to PI-1D; PI-2 is next and decision-gated.
+- Phase 2.1: active; PI-1 and PI-2A are completed; PI-2B is next.
 
 This placement is deliberate:
 
@@ -59,12 +59,12 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Completed through PI-1A to PI-1D | Issues #4 and #22–#25 / PRs #26, #28, #29 and #30 |
-| PI-2 intake draft | Next; decision-gated; not implemented | Issue #5 |
+| PI-2 intake draft | Active; PI-2A domain/persistence completed; PI-2B next | Issue #5 / #31 / PR #32 |
 | PI-3 submit/review/apply | Planned; not implemented | Issue #6 |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
-| Patient-facing backend/API/database | Access/auth foundation implemented through PI-1 | PRs #26, #28 and #29 |
+| Patient-facing backend/API/database | Access/auth through PI-1 plus intake persistence through PI-2A | PRs #26, #28, #29 and #32 |
 | Patient-facing frontend | Bounded activation/login/session implemented | PR #30 / ADR 015 |
-| Patient-facing intake | Not implemented | PI-2 |
+| Patient-facing intake | Domain/persistence only; no API/UI | PI-2A / PR #32 |
 
 ## 4. Scope boundary
 
@@ -256,15 +256,25 @@ Exit gate:
 
 ### PI-2 — Intake Draft and Self-Service Capture — issue #5
 
-Scope:
-- `PatientIntake` and fixed questionnaire draft answers;
-- existing-patient and new-patient flows;
-- self-only read/save;
-- explicit effective-save revisions;
-- optimistic concurrency;
-- mobile/tablet Angular feature outside staff shell.
+Approved sequence under ADR 016:
 
-Exit gate:
+1. **PI-2A — Intake Domain and Persistence — #31 — completed through PR #32**
+   - tenant-owned `PatientIntake`, fixed answer rows and immutable revisions;
+   - linked/unlinked origin, optional same-tenant Branch context and Patient baseline;
+   - approved proposal fields, 39 exact keys, `Draft / Expired`, 30-day expiry and `RowVersion`;
+   - effective save creates one revision; identical save creates none;
+   - additive migration, filters/write enforcement and tests;
+   - no endpoint or canonical write.
+2. **PI-2B — Existing-Patient Self-Service Draft — next**
+   - explicit create/get/save from the linked authenticated account;
+   - no arbitrary intake/Patient selector and no GET side effects;
+   - concurrency conflict and current-draft expiry handling.
+3. **PI-2C — Waiting-Room Link and Intake-Only Account Scope — pending**
+   - 30-minute hash-only link, `patientportal.intake.manage`, unlinked account and `patient_intake`.
+4. **PI-2D — Angular Intake Capture and PI-2 Closure — pending**
+   - mobile/tablet sections, explicit save, dirty/saved/conflict/expired states and fixed questionnaire UX.
+
+PI-2 exit gate:
 - no canonical Patient/ClinicalRecord changes;
 - identical save creates no revision;
 - unknown/duplicate question keys rejected;
@@ -342,12 +352,16 @@ Every PI slice must consider:
 - Patient access token/session remain in memory only; staff and patient interceptors never cross API boundaries.
 - PI-1 operational recovery follows `docs/patient-portal-assisted-recovery-runbook.md`.
 
-### Before PI-2
+### Approved PI-2 baseline under ADR 016
 
-- Exact demographic/contact fields the patient may propose.
-- Whether phone slots are intake proposals or a separate Patient Contact Details slice.
-- Draft expiration/abandonment policy.
-- Explicit save vs bounded debounced autosave.
+- Proposed identity/demographic/contact/responsible-party fields plus `ReasonForVisit`.
+- `Preferred / Mobile / Home / Work` phones remain intake proposals; canonical typed contacts are a prerequisite before PI-3 apply.
+- Exact existing 39-key questionnaire, `Unknown / Yes / No`, optional 500-character details.
+- One active draft per account; 30-day sliding expiry after effective saves; soft expiry only.
+- Explicit save; no autosave; identical save creates no revision and does not extend expiry.
+- Waiting-room link single-use/hash-only/30 minutes, future `patientportal.intake.manage` TenantAdmin-only and no platform override.
+- Future unlinked account uses `scope=patient_intake` with `intake_id`, no `patient_id`.
+- Mandatory sequence PI-2A → PI-2B → PI-2C → PI-2D.
 
 ### Before PI-3
 
@@ -390,15 +404,15 @@ The current repository has an accepted MVP and an explicitly opened **Phase 2.1 
 
 For Patient Intake and Portal:
 
-1. Preserve PI-1 / #4 as completed through PI-1A to PI-1D and PRs #26, #28, #29 and #30.
-2. Resolve PI-2 decisions for editable proposal fields, phones/contact ownership, waiting-room link lifecycle, draft expiry and save behavior.
-3. Open PI-2 only after those decisions are accepted; do not add canonical application to PI-2.
-4. Keep PI-3 and PI-4 pending until their own gates.
+1. Preserve PI-1 / #4 and PI-2A / #31 as completed through PRs #26, #28, #29, #30 and #32.
+2. Open only PI-2B for existing-patient self-only create/get/save over the accepted aggregate.
+3. Keep waiting-room link, staff permission and `patient_intake` scope in PI-2C; keep Angular intake capture in PI-2D.
+4. Do not add canonical application to PI-2; keep PI-3 and PI-4 pending until their own gates.
 
 ## 13. Decision note
 
 **Context:** The client wants waiting-room registration and ongoing patient updates, but did not assign priority over the operational-core roadmap.
 
-**Decision:** Open Phase 2.1 under ADR 012 and implement the approved access baseline through PI-1A to PI-1D before opening intake.
+**Decision:** Implement PI-1 under ADR 012–015, then implement PI-2 only in the ADR 016 sequence PI-2A → PI-2B → PI-2C → PI-2D.
 
-**Consequence:** PI-1A through PI-1D now provide tenant-owned account/invitation persistence, staff invitation lifecycle, separate patient auth/session backend and bounded Angular activation/login/session with an assisted-recovery runbook. PI-1 is complete, while intake remains unavailable until PI-2. PI-2 to PI-4 remain unimplemented.
+**Consequence:** PI-1 and PI-2A now provide secure access plus tenant-owned intake draft/answer/revision persistence. No intake endpoint or UI exists yet. PI-2B is next; PI-2C/PI-2D, review/apply and final hardening remain unimplemented.

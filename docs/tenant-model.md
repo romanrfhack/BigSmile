@@ -152,6 +152,7 @@ Examples:
 - tenant
 - tenant settings
 - patient portal accounts and invitations
+- patient intake drafts, fixed answers and immutable revisions
 - tenant users
 - patient
 - clinical record
@@ -233,7 +234,7 @@ A role alone is not enough; it must be evaluated together with its scope and mem
 
 ### 7.4 Patient-Facing Identity Boundary
 
-Patient-facing identity is separate from staff identity under ADR 006, ADR 012, ADR 013, ADR 014 and ADR 015.
+Patient-facing identity and intake are separate from staff identity and canonical clinical ownership under ADR 006 and ADR 012–016.
 
 Current rules:
 - `PatientPortalAccount`, `PatientPortalInvitation` and patient-portal security/authentication audit entries are tenant-owned records
@@ -248,7 +249,9 @@ Current rules:
 - activation links use a fragment that is removed immediately before the token is submitted in the request body
 - `TenantId`, portal account and linked Patient come from verified server context
 - phone, date of birth and contact data cannot be used to claim a record publicly
-- PI-1 is completed through PI-1A to PI-1D; intake opens only through PI-2 after its own decisions
+- `PatientIntake`, its medical answers and revisions carry `TenantId`; optional `BranchId` remains operational and same-tenant
+- PI-2A provides one active `Draft` per account, soft `Expired`, `RowVersion` and append-only effective-save revisions without endpoints or canonical writes
+- PI-2B is the next gate; waiting-room `patient_intake` scope remains PI-2C
 
 ---
 

@@ -6,7 +6,7 @@
 - **Scope:** Patient self-registration, existing-patient activation, medical-history intake and audit
 - **Applies To:** Identity, Patients, Clinical Records, API, frontend, persistence, security and roadmap
 - **Roadmap Placement:** Phase 2.1 after the initial MVP
-- **Tracking:** issue #2; PI-1 #4; PI-1A–PI-1D #22–#25; PI-2–PI-4 #5–#7
+- **Tracking:** issue #2; PI-1 #4; PI-1A–PI-1D #22–#25; PI-2 #5; PI-2A #31; PI-3–PI-4 #6–#7
 - **Access baseline/opening:** ADR 012
 
 ## Context
@@ -261,6 +261,8 @@ On 2026-07-25 the client approved ADR 014: tenant realm by subdomain, dedicated 
 
 On 2026-07-25 the client authorized continuing with PI-1D. ADR 015 accepts the separate Angular route/shell/interceptor boundary, activation token fragment cleanup, memory-only session and assisted-recovery runbook.
 
+On 2026-07-25 the client approved ADR 016: exact proposal fields including `ReasonForVisit`, typed phones as intake proposals, 30-day effective-save expiry, explicit save without autosave, a future single-use 30-minute waiting-room link, `patientportal.intake.manage` for `TenantAdmin` only, unlinked `patient_intake` scope and PI-2A → PI-2B → PI-2C → PI-2D sequencing.
+
 ## Implementation status
 
 - Decision: accepted.
@@ -272,4 +274,6 @@ On 2026-07-25 the client authorized continuing with PI-1D. ADR 015 accepts the s
 - PI-1B staff invitation lifecycle completed through PR #28 under ADR 013.
 - PI-1C patient activation/login/self-session completed through PR #29 under ADR 014.
 - PI-1D Angular patient auth/security closure completed through PR #30 under ADR 015.
-- Public patient auth API and bounded frontend exist; PI-2–PI-4 and intake are not implemented.
+- PI-2 baseline accepted under ADR 016.
+- PI-2A domain/persistence completed through PR #32 with migration `20260725182044_AddPatientIntakeDraftFoundation`.
+- Public patient auth API and bounded frontend exist; intake API/UI, PI-2B–PI-2D, PI-3 and PI-4 remain pending.
