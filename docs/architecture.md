@@ -506,7 +506,7 @@ Responsible for the bounded Phase 2.1 patient-facing boundary:
 * patient-originated revisions and audit
 * clinic review before canonical application
 
-It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary, ADR 012 defines the pilot access baseline, ADR 013 restricts invitation management, ADR 014 establishes the separate backend bearer/session boundary, and ADR 015 establishes the separate Angular route/shell/interceptor boundary with fragment activation and memory-only session state.
+It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary; ADR 012–015 establish access and browser-session separation; ADR 016 establishes patient-proposed fields, typed-phone proposal ownership, fixed-question reuse, explicit-save revisions, 30-day expiry and the future waiting-room/intake-only scope. PI-2A implements only domain/persistence and no public endpoint.
 
 ---
 
@@ -521,6 +521,7 @@ Bigsmile should avoid an anemic domain model for critical business areas.
 * `ClinicalRecord`
 * `Odontogram`
 * `TreatmentPlan`
+* `PatientIntake`
 * `Payment`
 
 These aggregates should own important invariants and lifecycle rules.
