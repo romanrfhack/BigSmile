@@ -136,7 +136,7 @@ namespace BigSmile.UnitTests.PatientPortal
             var saveResult = await controller.Save(BuildSaveRequest());
 
             Assert.IsType<UnauthorizedResult>(getResult.Result);
-            Assert.IsType<UnauthorizedResult>(createResult.Result);
+            Assert.IsType<ForbidResult>(createResult.Result);
             Assert.IsType<UnauthorizedResult>(saveResult.Result);
             service.VerifyNoOtherCalls();
         }
