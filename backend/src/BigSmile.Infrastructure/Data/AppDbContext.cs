@@ -36,6 +36,7 @@ namespace BigSmile.Infrastructure.Data
         public DbSet<PatientIntakeRevision> PatientIntakeRevisions => Set<PatientIntakeRevision>();
         public DbSet<PatientIntakeAccessLink> PatientIntakeAccessLinks => Set<PatientIntakeAccessLink>();
         public DbSet<PatientIntakeAccessLinkAuditEntry> PatientIntakeAccessLinkAuditEntries => Set<PatientIntakeAccessLinkAuditEntry>();
+        public DbSet<PatientIntakeAuthenticationAuditEntry> PatientIntakeAuthenticationAuditEntries => Set<PatientIntakeAuthenticationAuditEntry>();
         public DbSet<BillingDocument> BillingDocuments => Set<BillingDocument>();
         public DbSet<BillingDocumentItem> BillingDocumentItems => Set<BillingDocumentItem>();
         public DbSet<TreatmentPlan> TreatmentPlans => Set<TreatmentPlan>();
@@ -98,6 +99,8 @@ namespace BigSmile.Infrastructure.Data
             modelBuilder.Entity<PatientIntakeAccessLink>().HasQueryFilter(link =>
                 !ShouldApplyTenantFilter || link.TenantId == ResolvedTenantId);
             modelBuilder.Entity<PatientIntakeAccessLinkAuditEntry>().HasQueryFilter(entry =>
+                !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
+            modelBuilder.Entity<PatientIntakeAuthenticationAuditEntry>().HasQueryFilter(entry =>
                 !ShouldApplyTenantFilter || entry.TenantId == ResolvedTenantId);
             modelBuilder.Entity<BillingDocument>().HasQueryFilter(billingDocument =>
                 !ShouldApplyTenantFilter || billingDocument.TenantId == ResolvedTenantId);
@@ -195,6 +198,14 @@ namespace BigSmile.Infrastructure.Data
             {
                 throw new InvalidOperationException(
                     "Patient intake access link audit entries are append-only and cannot be modified or deleted.");
+            }
+
+            var invalidIntakeAuthenticationAuditEntry = ChangeTracker.Entries<PatientIntakeAuthenticationAuditEntry>()
+                .FirstOrDefault(entry => entry.State is EntityState.Modified or EntityState.Deleted);
+            if (invalidIntakeAuthenticationAuditEntry is not null)
+            {
+                throw new InvalidOperationException(
+                    "Patient intake authentication audit entries are append-only and cannot be modified or deleted.");
             }
         }
 
