@@ -216,6 +216,7 @@ namespace BigSmile.Application.Features.PatientIntakeAuthentication.Commands
 
             if (account.IsLockedOutAt(occurredAtUtc))
             {
+                _passwordHasher.PerformDummyVerification(command.Password);
                 return null;
             }
 
