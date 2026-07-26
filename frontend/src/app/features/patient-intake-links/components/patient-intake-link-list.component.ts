@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { BranchSummary } from '../../../core/auth/auth.service';
+import { TranslatePipe } from '../../../shared/i18n';
 import {
   PatientIntakeAccessLinkSummary,
   isActiveWaitingRoomLink
@@ -9,41 +10,41 @@ import {
 @Component({
   selector: 'app-patient-intake-link-list',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, TranslatePipe],
   template: `
     <section class="link-list" aria-labelledby="waiting-room-link-list-title">
       <header class="link-list__header">
         <div>
-          <p class="link-list__eyebrow">Control operativo</p>
-          <h2 id="waiting-room-link-list-title">Enlaces recientes</h2>
-          <p>El listado conserva solo metadata. Nunca reconstruye ni vuelve a mostrar el token.</p>
+          <p class="link-list__eyebrow">{{ 'Operational control' | t }}</p>
+          <h2 id="waiting-room-link-list-title">{{ 'Recent links' | t }}</h2>
+          <p>{{ 'The list contains metadata only. It never reconstructs or displays the token again.' | t }}</p>
         </div>
         @if (loading) {
-          <span class="link-list__loading" aria-live="polite">Actualizando…</span>
+          <span class="link-list__loading" aria-live="polite">{{ 'Updating...' | t }}</span>
         }
       </header>
 
       @if (!loading && links.length === 0) {
-        <p class="link-list__empty">Aún no hay enlaces de sala de espera registrados.</p>
+        <p class="link-list__empty">{{ 'No waiting-room links have been registered yet.' | t }}</p>
       } @else {
         <div class="link-list__table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Estado</th>
-                <th>Sucursal</th>
-                <th>Creado</th>
-                <th>Vence</th>
-                <th><span class="sr-only">Acciones</span></th>
+                <th>{{ 'Status' | t }}</th>
+                <th>{{ 'Branch' | t }}</th>
+                <th>{{ 'Created' | t }}</th>
+                <th>{{ 'Expires' | t }}</th>
+                <th><span class="sr-only">{{ 'Actions' | t }}</span></th>
               </tr>
             </thead>
             <tbody>
               @for (link of links; track link.id) {
                 <tr>
                   <td>
-                    <span class="status" [class]="statusClass(link)">{{ statusLabel(link) }}</span>
+                    <span class="status" [class]="statusClass(link)">{{ statusLabel(link) | t }}</span>
                   </td>
-                  <td>{{ branchLabel(link.branchId) }}</td>
+                  <td>{{ branchLabel(link.branchId) | t }}</td>
                   <td>{{ link.createdAtUtc | date:'short' }}</td>
                   <td>{{ link.expiresAtUtc | date:'short' }}</td>
                   <td class="link-list__actions">
@@ -53,10 +54,10 @@ import {
                         class="revoke-button"
                         [disabled]="revokingId === link.id"
                         (click)="revoke.emit(link)">
-                        {{ revokingId === link.id ? 'Revocando…' : 'Revocar' }}
+                        {{ (revokingId === link.id ? 'Revoking...' : 'Revoke') | t }}
                       </button>
                     } @else {
-                      <span class="resolved-label">Resuelto</span>
+                      <span class="resolved-label">{{ 'Resolved' | t }}</span>
                     }
                   </td>
                 </tr>
@@ -212,24 +213,24 @@ export class PatientIntakeLinkListComponent {
 
   branchLabel(branchId: string | null): string {
     if (!branchId) {
-      return 'Sin sucursal específica';
+      return 'No specific branch';
     }
 
-    return this.branches.find(branch => branch.id === branchId)?.name ?? 'Sucursal no disponible';
+    return this.branches.find(branch => branch.id === branchId)?.name ?? 'Branch unavailable';
   }
 
   statusLabel(link: PatientIntakeAccessLinkSummary): string {
     switch (link.status.toLowerCase()) {
       case 'active':
-        return 'Activo';
+        return 'Active';
       case 'expired':
-        return 'Vencido';
+        return 'Expired';
       case 'revoked':
-        return 'Revocado';
+        return 'Revoked';
       case 'consumed':
-        return 'Consumido';
+        return 'Consumed';
       default:
-        return 'Pendiente';
+        return 'Pending';
     }
   }
 
