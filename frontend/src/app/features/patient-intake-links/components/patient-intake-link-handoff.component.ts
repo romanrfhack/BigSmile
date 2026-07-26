@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 import {
   WaitingRoomCopyState,
   WaitingRoomHandoff
@@ -9,71 +10,69 @@ import { LocalQrCodeComponent } from './local-qr-code.component';
 @Component({
   selector: 'app-patient-intake-link-handoff',
   standalone: true,
-  imports: [DatePipe, LocalQrCodeComponent],
+  imports: [DatePipe, TranslatePipe, LocalQrCodeComponent],
   template: `
     <section class="handoff bsm-print-surface" aria-labelledby="waiting-room-handoff-title">
       <header class="handoff__header">
         <div>
-          <p class="handoff__eyebrow">Entrega inmediata</p>
-          <h2 id="waiting-room-handoff-title">Enlace de sala de espera listo</h2>
+          <p class="handoff__eyebrow">{{ 'Immediate handoff' | t }}</p>
+          <h2 id="waiting-room-handoff-title">{{ 'Waiting-room link ready' | t }}</h2>
           <p>
-            Este enlace solo se muestra durante esta sesión. Al salir o recargar la página deberá
-            generarse uno nuevo.
+            {{ 'This link is shown only during this session. Leaving or refreshing the page requires a new one.' | t }}
           </p>
         </div>
-        <span class="handoff__badge">Un solo uso</span>
+        <span class="handoff__badge">{{ 'One-time use' | t }}</span>
       </header>
 
       <div class="handoff__layout">
         <div class="handoff__details">
           <dl>
             <div>
-              <dt>Clínica</dt>
+              <dt>{{ 'Clinic' | t }}</dt>
               <dd>{{ handoff.clinicName }}</dd>
             </div>
             <div>
-              <dt>Sucursal</dt>
-              <dd>{{ handoff.branchName || 'Sin sucursal específica' }}</dd>
+              <dt>{{ 'Branch' | t }}</dt>
+              <dd>{{ (handoff.branchName || 'No specific branch') | t }}</dd>
             </div>
             <div>
-              <dt>Vence</dt>
+              <dt>{{ 'Expires' | t }}</dt>
               <dd>{{ handoff.expiresAtUtc | date:'medium' }}</dd>
             </div>
           </dl>
 
           <div class="handoff__url">
-            <span>Enlace de activación</span>
+            <span>{{ 'Activation link' | t }}</span>
             <code>{{ handoff.url }}</code>
           </div>
 
           <ol class="handoff__instructions">
-            <li>Entrega esta hoja directamente al paciente.</li>
-            <li>El paciente escanea el código o abre el enlace en su dispositivo.</li>
-            <li>El enlace deja de funcionar al activarse, revocarse o vencer.</li>
+            <li>{{ 'Hand this sheet directly to the patient.' | t }}</li>
+            <li>{{ 'The patient scans the code or opens the link on their device.' | t }}</li>
+            <li>{{ 'The link stops working after activation, revocation, or expiration.' | t }}</li>
           </ol>
         </div>
 
         <div class="handoff__qr">
           <app-local-qr-code [value]="handoff.url" />
-          <p>Escanear para activar acceso privado</p>
+          <p>{{ 'Scan to activate private access' | t }}</p>
         </div>
       </div>
 
       <footer class="handoff__actions bsm-no-print">
         <button type="button" class="button button--primary" (click)="copyRequested.emit()">
-          {{ copyLabel }}
+          {{ copyLabelKey | t }}
         </button>
         <button type="button" class="button button--secondary" (click)="printRequested.emit()">
-          Imprimir hoja
+          {{ 'Print handoff' | t }}
         </button>
         <button type="button" class="button button--quiet" (click)="dismissRequested.emit()">
-          Ocultar enlace
+          {{ 'Hide link' | t }}
         </button>
       </footer>
 
       <p class="handoff__security-note">
-        No contiene información clínica. El código QR representa exactamente el enlace one-time
-        mostrado arriba y se genera de forma local.
+        {{ 'It contains no clinical information. The QR code represents exactly the one-time link shown above and is generated locally.' | t }}
       </p>
     </section>
   `,
@@ -295,16 +294,16 @@ export class PatientIntakeLinkHandoffComponent {
   @Output() readonly printRequested = new EventEmitter<void>();
   @Output() readonly dismissRequested = new EventEmitter<void>();
 
-  get copyLabel(): string {
+  get copyLabelKey(): string {
     switch (this.copyState) {
       case 'copying':
-        return 'Copiando…';
+        return 'Copying...';
       case 'copied':
-        return 'Enlace copiado';
+        return 'Link copied';
       case 'error':
-        return 'No se pudo copiar';
+        return 'Copy failed';
       default:
-        return 'Copiar enlace';
+        return 'Copy link';
     }
   }
 }
