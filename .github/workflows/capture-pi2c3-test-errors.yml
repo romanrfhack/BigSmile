@@ -1,0 +1,45 @@
+name: Capture PI-2C3 Test Errors
+
+on:
+  push:
+    branches:
+      - phase-2.1/pi-2c3-staff-waiting-room-ui
+
+jobs:
+  capture:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase-2.1/pi-2c3-staff-waiting-room-ui
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - working-directory: frontend
+        run: npm ci
+      - name: Capture frontend test output
+        working-directory: frontend
+        shell: bash
+        run: |
+          set +e
+          npm run test -- --watch=false > ../pi2c3-test-diagnostics.txt 2>&1
+          status=$?
+          echo "TEST_STATUS=$status" >> ../pi2c3-test-diagnostics.txt
+          tail -n 180 ../pi2c3-test-diagnostics.txt > ../pi2c3-test-diagnostics.tail
+          mv ../pi2c3-test-diagnostics.tail ../pi2c3-test-diagnostics.txt
+          exit 0
+      - name: Commit diagnostics and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/capture-pi2c3-test-errors.yml
+          git add pi2c3-test-diagnostics.txt
+          git commit -m 'PI-2C3: capture frontend test diagnostics'
+          git push origin HEAD:phase-2.1/pi-2c3-staff-waiting-room-ui
