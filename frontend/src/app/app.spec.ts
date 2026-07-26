@@ -77,19 +77,24 @@ describe('App', () => {
     expect(compiled.textContent).not.toContain('Panel');
   });
 
-  it('renders waiting-room navigation only with patientportal.intake.manage', async () => {
+  it('renders waiting-room navigation with patientportal.intake.manage', async () => {
     grantedPermissions = ['patientportal.intake.manage'];
 
-    const allowedFixture = TestBed.createComponent(App);
-    await allowedFixture.whenStable();
-    allowedFixture.detectChanges();
-    expect((allowedFixture.nativeElement as HTMLElement).textContent).toContain('Sala de espera');
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
 
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Sala de espera');
+  });
+
+  it('hides waiting-room navigation without patientportal.intake.manage', async () => {
     grantedPermissions = [];
-    const deniedFixture = TestBed.createComponent(App);
-    await deniedFixture.whenStable();
-    deniedFixture.detectChanges();
-    expect((deniedFixture.nativeElement as HTMLElement).textContent).not.toContain('Sala de espera');
+
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Sala de espera');
   });
 
   it('hides shell navigation and language selector on the login route', async () => {
