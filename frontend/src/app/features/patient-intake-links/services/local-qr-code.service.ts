@@ -1,0 +1,23 @@
+import { Injectable } from '@angular/core';
+import encodeQR from 'qr';
+
+@Injectable({ providedIn: 'root' })
+export class LocalQrCodeService {
+  createSvg(value: string): SVGSVGElement {
+    const normalizedValue = value?.trim();
+    if (!normalizedValue) {
+      throw new Error('A waiting-room URL is required to render a QR code.');
+    }
+
+    const svg = encodeQR(normalizedValue, 'svg', { ecc: 'medium' }) as SVGSVGElement;
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Código QR del enlace de sala de espera');
+    svg.setAttribute('focusable', 'false');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.style.display = 'block';
+    svg.style.maxWidth = '100%';
+    svg.style.height = 'auto';
+    return svg;
+  }
+}
