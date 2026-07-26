@@ -1,35 +1,35 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { BranchSummary } from '../../../core/auth/auth.service';
+import { TranslatePipe } from '../../../shared/i18n';
 
 @Component({
   selector: 'app-patient-intake-link-issue-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   template: `
     <form class="issue-form" (ngSubmit)="submit()" novalidate>
       <div>
-        <p class="issue-form__eyebrow">Nuevo ingreso</p>
-        <h2>Generar enlace de sala de espera</h2>
+        <p class="issue-form__eyebrow">{{ 'New intake' | t }}</p>
+        <h2>{{ 'Generate waiting-room link' | t }}</h2>
         <p>
-          Crea una credencial de un solo uso. El paciente podrá activar su acceso sin crear todavía
-          un expediente canónico.
+          {{ 'Create a one-time credential. The patient can activate access without creating a canonical record yet.' | t }}
         </p>
       </div>
 
-      <label for="waiting-room-branch">Sucursal operativa</label>
+      <label for="waiting-room-branch">{{ 'Operational branch' | t }}</label>
       <select id="waiting-room-branch" [formControl]="branchControl" [disabled]="issuing">
-        <option value="">Sin sucursal específica</option>
+        <option value="">{{ 'No specific branch' | t }}</option>
         @for (branch of branches; track branch.id) {
           <option [value]="branch.id">{{ branch.name }}</option>
         }
       </select>
       <p class="issue-form__hint">
-        La sucursal es contexto operativo opcional; el tenant sigue siendo la frontera de seguridad.
+        {{ 'Branch is optional operational context; the tenant remains the security boundary.' | t }}
       </p>
 
       <button class="issue-form__submit" type="submit" [disabled]="issuing">
-        {{ issuing ? 'Generando…' : 'Generar enlace seguro' }}
+        {{ (issuing ? 'Generating...' : 'Generate secure link') | t }}
       </button>
     </form>
   `,
