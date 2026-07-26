@@ -46,6 +46,7 @@ namespace BigSmile.Infrastructure
             services.AddScoped<IPatientDocumentRepository, EfPatientDocumentRepository>();
             services.AddScoped<IPatientIntakeRepository, EfPatientIntakeRepository>();
             services.AddScoped<IPatientIntakeAccessLinkRepository, EfPatientIntakeAccessLinkRepository>();
+            services.AddScoped<IPatientIntakeAuthenticationRepository, EfPatientIntakeAuthenticationRepository>();
             services.AddScoped<IPatientPortalInvitationRepository, EfPatientPortalInvitationRepository>();
             services.AddScoped<IPatientPortalAuthenticationRepository, EfPatientPortalAuthenticationRepository>();
             services.AddScoped<IDashboardSummaryRepository, EfDashboardSummaryRepository>();
@@ -74,6 +75,7 @@ namespace BigSmile.Infrastructure
             services.AddSingleton<IPatientPortalPasswordHasher, PatientPortalPasswordHasher>();
             services.AddSingleton<IPatientPortalJwtTokenService, PatientPortalJwtTokenService>();
             services.AddScoped<IPatientPortalSessionValidator, PatientPortalSessionValidator>();
+            services.AddScoped<IPatientIntakeSessionValidator, PatientIntakeSessionValidator>();
 
             services.AddScoped<IPatientDocumentBinaryStore, LocalPatientDocumentBinaryStore>();
 

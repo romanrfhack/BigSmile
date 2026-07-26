@@ -118,6 +118,45 @@ namespace BigSmile.Api.Authorization
                 policy.RequireClaim(BigSmileClaimTypes.TenantId);
                 policy.RequireClaim(BigSmileClaimTypes.PatientId);
                 policy.RequireClaim(BigSmileClaimTypes.SessionVersion);
+                policy.RequireAssertion(context =>
+                    !context.User.HasClaim(claim => claim.Type == BigSmileClaimTypes.IntakeId));
+            });
+
+            options.AddPolicy(PatientPortalAuthenticationDefaults.IntakeOnlyPolicy, policy =>
+            {
+                policy.AuthenticationSchemes.Add(PatientPortalAuthenticationDefaults.PatientBearerScheme);
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim(BigSmileClaimTypes.Scope, AccessScope.PatientIntake.ToClaimValue());
+                policy.RequireClaim(BigSmileClaimTypes.TenantId);
+                policy.RequireClaim(BigSmileClaimTypes.IntakeId);
+                policy.RequireClaim(BigSmileClaimTypes.SessionVersion);
+                policy.RequireAssertion(context =>
+                    !context.User.HasClaim(claim => claim.Type == BigSmileClaimTypes.PatientId));
+            });
+
+            options.AddPolicy(PatientPortalAuthenticationDefaults.PatientIntakeSelfPolicy, policy =>
+            {
+                policy.AuthenticationSchemes.Add(PatientPortalAuthenticationDefaults.PatientBearerScheme);
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim(BigSmileClaimTypes.TenantId);
+                policy.RequireClaim(BigSmileClaimTypes.SessionVersion);
+                policy.RequireAssertion(context =>
+                {
+                    var scope = context.User.FindFirst(BigSmileClaimTypes.Scope)?.Value;
+                    var isLinkedPatient = string.Equals(
+                        scope,
+                        AccessScope.Patient.ToClaimValue(),
+                        StringComparison.OrdinalIgnoreCase) &&
+                        context.User.HasClaim(claim => claim.Type == BigSmileClaimTypes.PatientId) &&
+                        !context.User.HasClaim(claim => claim.Type == BigSmileClaimTypes.IntakeId);
+                    var isIntakeOnly = string.Equals(
+                        scope,
+                        AccessScope.PatientIntake.ToClaimValue(),
+                        StringComparison.OrdinalIgnoreCase) &&
+                        context.User.HasClaim(claim => claim.Type == BigSmileClaimTypes.IntakeId) &&
+                        !context.User.HasClaim(claim => claim.Type == BigSmileClaimTypes.PatientId);
+                    return isLinkedPatient || isIntakeOnly;
+                });
             });
 
             options.AddPolicy(SchedulingRead, policy =>

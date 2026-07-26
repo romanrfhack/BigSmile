@@ -77,19 +77,45 @@ builder.Services.AddAuthentication(options =>
     {
         OnTokenValidated = async context =>
         {
-            if (context.Principal is null ||
-                !PatientPortalClaims.TryGetSessionIdentity(context.Principal, out var identity))
+            if (context.Principal is null)
             {
                 context.Fail("The patient portal token claims are invalid.");
                 return;
             }
 
-            var validator = context.HttpContext.RequestServices
-                .GetRequiredService<IPatientPortalSessionValidator>();
-            if (!await validator.ValidateAsync(identity, context.HttpContext.RequestAborted))
+            if (PatientPortalClaims.TryGetSessionIdentity(
+                    context.Principal,
+                    out var patientIdentity))
             {
-                context.Fail("The patient portal session is no longer valid.");
+                var validator = context.HttpContext.RequestServices
+                    .GetRequiredService<IPatientPortalSessionValidator>();
+                if (!await validator.ValidateAsync(
+                        patientIdentity,
+                        context.HttpContext.RequestAborted))
+                {
+                    context.Fail("The patient portal session is no longer valid.");
+                }
+
+                return;
             }
+
+            if (PatientPortalClaims.TryGetIntakeSessionIdentity(
+                    context.Principal,
+                    out var intakeIdentity))
+            {
+                var validator = context.HttpContext.RequestServices
+                    .GetRequiredService<IPatientIntakeSessionValidator>();
+                if (!await validator.ValidateAsync(
+                        intakeIdentity,
+                        context.HttpContext.RequestAborted))
+                {
+                    context.Fail("The patient intake session is no longer valid.");
+                }
+
+                return;
+            }
+
+            context.Fail("The patient portal token claims are invalid.");
         }
     };
 });
@@ -139,16 +165,23 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddPolicy(
         PatientPortalAuthenticationController.LoginRateLimitPolicy,
-        httpContext =>
-        {
-            var tenantRealm = httpContext.Request.RouteValues.TryGetValue("tenantSubdomain", out var routeValue)
-                ? routeValue?.ToString()?.Trim().ToLowerInvariant() ?? "unknown"
-                : "unknown";
-            var partitionKey = $"{GetNormalizedRemoteIp(httpContext)}|{tenantRealm}";
-            return RateLimitPartition.GetFixedWindowLimiter(
-                partitionKey,
-                _ => CreateFixedWindowOptions(loginPermitLimit, rateLimitWindow));
-        });
+        httpContext => CreateRealmLoginPartition(
+            httpContext,
+            loginPermitLimit,
+            rateLimitWindow));
+
+    options.AddPolicy(
+        PatientIntakeAuthenticationController.ActivationRateLimitPolicy,
+        httpContext => RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetNormalizedRemoteIp(httpContext),
+            factory: _ => CreateFixedWindowOptions(activationPermitLimit, rateLimitWindow)));
+
+    options.AddPolicy(
+        PatientIntakeAuthenticationController.LoginRateLimitPolicy,
+        httpContext => CreateRealmLoginPartition(
+            httpContext,
+            loginPermitLimit,
+            rateLimitWindow));
 });
 
 var app = builder.Build();
@@ -184,6 +217,22 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
+
+static RateLimitPartition<string> CreateRealmLoginPartition(
+    HttpContext httpContext,
+    int permitLimit,
+    TimeSpan window)
+{
+    var tenantRealm = httpContext.Request.RouteValues.TryGetValue(
+        "tenantSubdomain",
+        out var routeValue)
+        ? routeValue?.ToString()?.Trim().ToLowerInvariant() ?? "unknown"
+        : "unknown";
+    var partitionKey = $"{GetNormalizedRemoteIp(httpContext)}|{tenantRealm}";
+    return RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey,
+        _ => CreateFixedWindowOptions(permitLimit, window));
+}
 
 static FixedWindowRateLimiterOptions CreateFixedWindowOptions(int permitLimit, TimeSpan window)
 {

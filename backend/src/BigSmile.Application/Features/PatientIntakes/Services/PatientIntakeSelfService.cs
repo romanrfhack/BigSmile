@@ -12,6 +12,10 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
             PatientPortalSessionIdentity identity,
             CancellationToken cancellationToken = default);
 
+        Task<PatientIntakeReadResult> GetCurrentAsync(
+            PatientIntakeSessionIdentity identity,
+            CancellationToken cancellationToken = default);
+
         Task<PatientIntakeCreateResult> CreateAsync(
             PatientPortalSessionIdentity identity,
             CancellationToken cancellationToken = default);
@@ -21,11 +25,18 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
             SavePatientIntakeDraftCommand command,
             string correlationId,
             CancellationToken cancellationToken = default);
+
+        Task<PatientIntakeSaveResult> SaveAsync(
+            PatientIntakeSessionIdentity identity,
+            SavePatientIntakeDraftCommand command,
+            string correlationId,
+            CancellationToken cancellationToken = default);
     }
 
     public sealed class PatientIntakeSelfService : IPatientIntakeSelfService
     {
         private readonly IPatientPortalAuthenticationRepository _authenticationRepository;
+        private readonly IPatientIntakeAuthenticationRepository? _intakeAuthenticationRepository;
         private readonly IPatientIntakeRepository _intakeRepository;
         private readonly IPatientIntakeDraftSettings _settings;
         private readonly TimeProvider _timeProvider;
@@ -38,6 +49,24 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
         {
             _authenticationRepository = authenticationRepository
                 ?? throw new ArgumentNullException(nameof(authenticationRepository));
+            _intakeAuthenticationRepository = null;
+            _intakeRepository = intakeRepository
+                ?? throw new ArgumentNullException(nameof(intakeRepository));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        }
+
+        public PatientIntakeSelfService(
+            IPatientPortalAuthenticationRepository authenticationRepository,
+            IPatientIntakeAuthenticationRepository intakeAuthenticationRepository,
+            IPatientIntakeRepository intakeRepository,
+            IPatientIntakeDraftSettings settings,
+            TimeProvider timeProvider)
+        {
+            _authenticationRepository = authenticationRepository
+                ?? throw new ArgumentNullException(nameof(authenticationRepository));
+            _intakeAuthenticationRepository = intakeAuthenticationRepository
+                ?? throw new ArgumentNullException(nameof(intakeAuthenticationRepository));
             _intakeRepository = intakeRepository
                 ?? throw new ArgumentNullException(nameof(intakeRepository));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
@@ -69,6 +98,19 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
             }
 
             return PatientIntakeReadResult.Success(intake.ToDto());
+        }
+
+        public async Task<PatientIntakeReadResult> GetCurrentAsync(
+            PatientIntakeSessionIdentity identity,
+            CancellationToken cancellationToken = default)
+        {
+            var state = await GetCurrentIntakeOnlyStateAsync(
+                identity,
+                trackIntakeChanges: false,
+                cancellationToken);
+            return state is null
+                ? PatientIntakeReadResult.Failed(PatientIntakeReadFailure.SessionInvalid)
+                : PatientIntakeReadResult.Success(state.Value.Intake.ToDto());
         }
 
         public async Task<PatientIntakeCreateResult> CreateAsync(
@@ -145,6 +187,47 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
                 identity.AccountId,
                 trackChanges: true,
                 cancellationToken);
+            return await SaveResolvedDraftAsync(
+                intake,
+                identity.AccountId,
+                command,
+                correlationId,
+                cancellationToken);
+        }
+
+        public async Task<PatientIntakeSaveResult> SaveAsync(
+            PatientIntakeSessionIdentity identity,
+            SavePatientIntakeDraftCommand command,
+            string correlationId,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+
+            var state = await GetCurrentIntakeOnlyStateAsync(
+                identity,
+                trackIntakeChanges: true,
+                cancellationToken);
+            if (state is null)
+            {
+                return PatientIntakeSaveResult.Failed(
+                    PatientIntakeSaveFailure.SessionInvalid);
+            }
+
+            return await SaveResolvedDraftAsync(
+                state.Value.Intake,
+                identity.AccountId,
+                command,
+                correlationId,
+                cancellationToken);
+        }
+
+        private async Task<PatientIntakeSaveResult> SaveResolvedDraftAsync(
+            PatientIntake? intake,
+            Guid actorAccountId,
+            SavePatientIntakeDraftCommand command,
+            string correlationId,
+            CancellationToken cancellationToken)
+        {
             if (intake is null)
             {
                 return PatientIntakeSaveResult.Failed(PatientIntakeSaveFailure.Missing);
@@ -173,7 +256,7 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
 
             var revision = intake.SaveDraft(
                 command.ToDraftData(),
-                identity.AccountId,
+                actorAccountId,
                 utcNow,
                 correlationId,
                 _settings.DraftLifetime);
@@ -208,6 +291,53 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
                 cancellationToken);
 
             return IsCurrentSession(account, identity) ? account : null;
+        }
+
+        private async Task<(PatientPortalAccount Account, PatientIntake Intake)?> GetCurrentIntakeOnlyStateAsync(
+            PatientIntakeSessionIdentity identity,
+            bool trackIntakeChanges,
+            CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(identity);
+
+            if (_intakeAuthenticationRepository is null)
+            {
+                throw new InvalidOperationException(
+                    "Intake-only session support is not configured for this service instance.");
+            }
+
+            var account = await _intakeAuthenticationRepository.GetAccountForSessionAsync(
+                identity.AccountId,
+                identity.TenantId,
+                trackChanges: false,
+                cancellationToken);
+            if (account is null ||
+                !account.IsActive ||
+                account.PatientId.HasValue ||
+                account.Tenant is null ||
+                !account.Tenant.IsActive ||
+                account.SessionVersion != identity.SessionVersion)
+            {
+                return null;
+            }
+
+            var intake = await _intakeAuthenticationRepository.GetIntakeForSessionAsync(
+                identity.IntakeId,
+                identity.AccountId,
+                identity.TenantId,
+                trackIntakeChanges,
+                cancellationToken);
+            var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+            if (intake is null ||
+                intake.PatientId.HasValue ||
+                intake.Origin != PatientIntakeOrigin.NewPatientWaitingRoom ||
+                intake.Status != PatientIntakeStatus.Draft ||
+                intake.IsExpiredAt(utcNow))
+            {
+                return null;
+            }
+
+            return (account, intake);
         }
 
         private static bool IsCurrentSession(

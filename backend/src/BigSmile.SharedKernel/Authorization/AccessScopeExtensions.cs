@@ -10,6 +10,7 @@ namespace BigSmile.SharedKernel.Authorization
                 AccessScope.Branch => "branch",
                 AccessScope.Platform => "platform",
                 AccessScope.Patient => "patient",
+                AccessScope.PatientIntake => "patient_intake",
                 _ => "anonymous"
             };
         }
@@ -22,6 +23,7 @@ namespace BigSmile.SharedKernel.Authorization
                 "branch" => AccessScope.Branch,
                 "platform" => AccessScope.Platform,
                 "patient" => AccessScope.Patient,
+                "patient_intake" => AccessScope.PatientIntake,
                 _ => AccessScope.Anonymous
             };
         }

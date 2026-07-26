@@ -86,7 +86,21 @@ namespace BigSmile.Domain.Entities
             string loginName,
             string passwordHash)
         {
-            return new PatientPortalAccount(tenantId, null, loginName, passwordHash, DateTime.UtcNow);
+            return CreateUnlinked(tenantId, loginName, passwordHash, DateTime.UtcNow);
+        }
+
+        public static PatientPortalAccount CreateUnlinked(
+            Guid tenantId,
+            string loginName,
+            string passwordHash,
+            DateTime createdAtUtc)
+        {
+            return new PatientPortalAccount(
+                tenantId,
+                patient: null,
+                loginName,
+                passwordHash,
+                createdAtUtc);
         }
 
         public void LinkPatient(Patient patient)

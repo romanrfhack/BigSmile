@@ -1,0 +1,1 @@
+global using BigSmile.Application.Features.PatientPortalAuthentication.Commands;

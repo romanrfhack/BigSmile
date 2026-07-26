@@ -10,7 +10,7 @@ namespace BigSmile.Api.Controllers
 {
     [ApiController]
     [Route("api/patient-portal/intake")]
-    [Authorize(Policy = PatientPortalAuthenticationDefaults.PatientSelfPolicy)]
+    [Authorize(Policy = PatientPortalAuthenticationDefaults.PatientIntakeSelfPolicy)]
     public sealed class PatientPortalIntakeController : ControllerBase
     {
         private readonly IPatientIntakeSelfService _intakeService;
@@ -25,12 +25,25 @@ namespace BigSmile.Api.Controllers
             CancellationToken cancellationToken = default)
         {
             SetNoStoreHeaders();
-            if (!PatientPortalClaims.TryGetSessionIdentity(User, out var identity))
+
+            PatientIntakeReadResult result;
+            if (PatientPortalClaims.TryGetSessionIdentity(User, out var patientIdentity))
+            {
+                result = await _intakeService.GetCurrentAsync(
+                    patientIdentity,
+                    cancellationToken);
+            }
+            else if (PatientPortalClaims.TryGetIntakeSessionIdentity(User, out var intakeIdentity))
+            {
+                result = await _intakeService.GetCurrentAsync(
+                    intakeIdentity,
+                    cancellationToken);
+            }
+            else
             {
                 return Unauthorized();
             }
 
-            var result = await _intakeService.GetCurrentAsync(identity, cancellationToken);
             return result.Failure switch
             {
                 PatientIntakeReadFailure.None => Ok(result.Intake),
@@ -46,7 +59,7 @@ namespace BigSmile.Api.Controllers
             SetNoStoreHeaders();
             if (!PatientPortalClaims.TryGetSessionIdentity(User, out var identity))
             {
-                return Unauthorized();
+                return Forbid();
             }
 
             try
@@ -80,18 +93,30 @@ namespace BigSmile.Api.Controllers
             CancellationToken cancellationToken = default)
         {
             SetNoStoreHeaders();
-            if (!PatientPortalClaims.TryGetSessionIdentity(User, out var identity))
-            {
-                return Unauthorized();
-            }
 
             try
             {
-                var result = await _intakeService.SaveAsync(
-                    identity,
-                    request.ToCommand(),
-                    GetCorrelationId(),
-                    cancellationToken);
+                PatientIntakeSaveResult result;
+                if (PatientPortalClaims.TryGetSessionIdentity(User, out var patientIdentity))
+                {
+                    result = await _intakeService.SaveAsync(
+                        patientIdentity,
+                        request.ToCommand(),
+                        GetCorrelationId(),
+                        cancellationToken);
+                }
+                else if (PatientPortalClaims.TryGetIntakeSessionIdentity(User, out var intakeIdentity))
+                {
+                    result = await _intakeService.SaveAsync(
+                        intakeIdentity,
+                        request.ToCommand(),
+                        GetCorrelationId(),
+                        cancellationToken);
+                }
+                else
+                {
+                    return Unauthorized();
+                }
 
                 return result.Failure switch
                 {
