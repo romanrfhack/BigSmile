@@ -29,9 +29,7 @@ export class PatientIntakeAuthFacade {
     return this.api.activate(request).pipe(
       tap(response => this.sessionStore.setSession(response)),
       catchError(error => {
-        this.errorState.set(
-          'No fue posible activar este acceso. Solicita a recepción un enlace nuevo.'
-        );
+        this.errorState.set('The access could not be activated. Ask reception for a new link.');
         return throwError(() => error);
       }),
       finalize(() => this.loadingState.set(false))
@@ -43,7 +41,7 @@ export class PatientIntakeAuthFacade {
 
     return this.api.logout().pipe(
       catchError(() => {
-        this.errorState.set('La sesión terminó localmente. No fue posible confirmar el cierre con el servidor.');
+        this.errorState.set('The session ended locally. Server confirmation was unavailable.');
         return of(void 0);
       }),
       finalize(() => {
