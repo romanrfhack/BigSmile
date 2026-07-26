@@ -95,7 +95,7 @@ GET  /api/patient-portal/intake-auth/me
 POST /api/patient-portal/intake-auth/logout
 ```
 
-Login reuses the dedicated patient password hasher, tenant-subdomain realm, generic anti-enumeration responses, the approved five-attempt/fifteen-minute lockout and rate limiting.
+Login reuses the dedicated patient password hasher, tenant-subdomain realm, generic anti-enumeration responses, the approved five-attempt/fifteen-minute lockout and rate limiting. Unknown, inactive and locked account paths perform bounded dummy password verification to reduce timing-based account disclosure.
 
 ### 5. Intake ownership contracts
 
