@@ -153,18 +153,18 @@ import {
 
     .status--active {
       background: var(--bsm-color-success-soft);
-      color: var(--bsm-color-success-dark);
+      color: var(--bsm-color-success-text);
     }
 
     .status--expired,
     .status--pending {
       background: var(--bsm-color-warning-soft);
-      color: var(--bsm-color-warning-dark);
+      color: var(--bsm-color-warning-text);
     }
 
     .status--revoked,
     .status--consumed {
-      background: var(--bsm-color-bg-muted);
+      background: var(--bsm-color-neutral-soft);
       color: var(--bsm-color-text-muted);
     }
 
