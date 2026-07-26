@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { TranslatePipe } from '../../../shared/i18n';
 import { PatientIntakeLinkHandoffComponent } from '../components/patient-intake-link-handoff.component';
 import { PatientIntakeLinkIssueFormComponent } from '../components/patient-intake-link-issue-form.component';
 import { PatientIntakeLinkListComponent } from '../components/patient-intake-link-list.component';
@@ -9,6 +10,7 @@ import { PatientIntakeAccessLinkSummary } from '../models/patient-intake-link.mo
   selector: 'app-patient-intake-links-page',
   standalone: true,
   imports: [
+    TranslatePipe,
     PatientIntakeLinkIssueFormComponent,
     PatientIntakeLinkHandoffComponent,
     PatientIntakeLinkListComponent
@@ -18,22 +20,24 @@ import { PatientIntakeAccessLinkSummary } from '../models/patient-intake-link.mo
     <section class="waiting-room-page">
       <header class="waiting-room-page__header">
         <div>
-          <p class="waiting-room-page__eyebrow">Recepción</p>
-          <h1>Acceso de sala de espera</h1>
+          <p class="waiting-room-page__eyebrow">{{ 'Reception' | t }}</p>
+          <h1>{{ 'Waiting-room access' | t }}</h1>
           <p>
-            Genera credenciales de un solo uso para pacientes nuevos. La captura se mantiene como
-            intake pendiente y no modifica expedientes canónicos.
+            {{ 'Generate one-time credentials for new patients. Their information remains a pending intake and does not modify canonical records.' | t }}
           </p>
         </div>
         <button type="button" class="refresh-button" (click)="facade.loadLinks()" [disabled]="facade.loading()">
-          {{ facade.loading() ? 'Actualizando…' : 'Actualizar' }}
+          {{ (facade.loading() ? 'Refreshing...' : 'Refresh') | t }}
         </button>
       </header>
 
       @if (facade.error()) {
         <div class="waiting-room-page__alert" role="alert" aria-live="polite">
-          <span>{{ facade.error() }}</span>
-          <button type="button" (click)="facade.clearError()" aria-label="Cerrar mensaje">×</button>
+          <span>{{ facade.error() | t }}</span>
+          <button
+            type="button"
+            (click)="facade.clearError()"
+            [attr.aria-label]="'Close message' | t">×</button>
         </div>
       }
 
