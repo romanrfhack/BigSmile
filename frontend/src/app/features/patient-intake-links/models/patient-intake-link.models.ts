@@ -30,6 +30,7 @@ export interface IssuePatientIntakeAccessLinkRequest {
 }
 
 export interface WaitingRoomHandoff {
+  linkId: string;
   clinicName: string;
   branchName: string | null;
   url: string;
