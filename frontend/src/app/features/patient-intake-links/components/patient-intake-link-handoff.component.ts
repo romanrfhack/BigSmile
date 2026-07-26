@@ -158,7 +158,7 @@ import { LocalQrCodeComponent } from './local-qr-code.component';
       padding: 0.75rem;
       border: 1px solid var(--bsm-color-border);
       border-radius: var(--bsm-radius-sm);
-      background: var(--bsm-color-bg-muted);
+      background: var(--bsm-color-surface);
     }
 
     dt {
@@ -189,9 +189,9 @@ import { LocalQrCodeComponent } from './local-qr-code.component';
     code {
       display: block;
       padding: 0.85rem;
-      border: 1px dashed var(--bsm-color-border-strong);
+      border: 1px dashed var(--bsm-color-border);
       border-radius: var(--bsm-radius-sm);
-      background: var(--bsm-color-bg-muted);
+      background: var(--bsm-color-neutral-soft);
       color: var(--bsm-color-text);
       line-height: 1.5;
       overflow-wrap: anywhere;
