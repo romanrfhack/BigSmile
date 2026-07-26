@@ -1,9 +1,13 @@
 import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable } from '@angular/core';
+import { I18nService } from '../../../core/i18n';
 
 @Injectable({ providedIn: 'root' })
 export class PatientIntakeLinkBrowserActions {
-  constructor(@Inject(DOCUMENT) private readonly document: Document) {}
+  constructor(
+    @Inject(DOCUMENT) private readonly document: Document,
+    private readonly i18n: I18nService
+  ) {}
 
   async copyText(value: string): Promise<void> {
     const normalizedValue = value?.trim();
@@ -21,7 +25,7 @@ export class PatientIntakeLinkBrowserActions {
 
   confirmRevoke(): boolean {
     return this.document.defaultView?.confirm(
-      '¿Revocar este enlace de sala de espera? Ya no podrá utilizarse.'
+      this.i18n.translate('Revoke this waiting-room link? It can no longer be used.')
     ) ?? false;
   }
 
