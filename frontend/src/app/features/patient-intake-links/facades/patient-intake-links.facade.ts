@@ -153,7 +153,7 @@ export class PatientIntakeLinksFacade {
     ).subscribe(() => {
       this.linksState.update(links => links.map(current =>
         current.id === link.id
-          ? { ...current, status: 'Revoked', revokedAtUtc: new Date().toISOString() }
+          ? { ...current, status: 'Revoked' }
           : current
       ));
     });
