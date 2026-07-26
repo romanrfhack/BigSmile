@@ -43,6 +43,10 @@ const loadTreatmentPlanPage = () =>
   );
 const loadSchedulingPage = () =>
   import('./features/scheduling/pages/scheduling.page').then((m) => m.SchedulingPageComponent);
+const loadPatientIntakeLinksPage = () =>
+  import('./features/patient-intake-links/pages/patient-intake-links.page').then(
+    (m) => m.PatientIntakeLinksPageComponent,
+  );
 const loadPatientPortalShell = () =>
   import('./features/patient-portal-auth/components/patient-portal-shell.component').then(
     (m) => m.PatientPortalShellComponent,
@@ -50,6 +54,10 @@ const loadPatientPortalShell = () =>
 const loadPatientPortalActivationPage = () =>
   import('./features/patient-portal-auth/pages/patient-portal-activation.page').then(
     (m) => m.PatientPortalActivationPageComponent,
+  );
+const loadPatientIntakeActivationPage = () =>
+  import('./features/patient-portal-auth/pages/patient-intake-activation.page').then(
+    (m) => m.PatientIntakeActivationPageComponent,
   );
 const loadPatientPortalLoginPage = () =>
   import('./features/patient-portal-auth/pages/patient-portal-login.page').then(
@@ -69,6 +77,10 @@ export const routes: Routes = [
       {
         path: 'activate',
         loadComponent: loadPatientPortalActivationPage
+      },
+      {
+        path: 'intake-activate',
+        loadComponent: loadPatientIntakeActivationPage
       },
       {
         path: ':tenantSubdomain/login',
@@ -101,6 +113,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: {
       requiredPermissions: ['dashboard.read'],
+    },
+  },
+  {
+    path: 'patient-intake-links',
+    loadComponent: loadPatientIntakeLinksPage,
+    canActivate: [authGuard],
+    data: {
+      requiredPermissions: ['patientportal.intake.manage'],
     },
   },
   {
