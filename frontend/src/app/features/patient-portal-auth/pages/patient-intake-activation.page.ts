@@ -2,6 +2,7 @@ import { Location } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslatePipe } from '../../../shared/i18n';
 import { PatientPortalCardComponent } from '../components/patient-portal-card.component';
 import { PatientIntakeAuthFacade } from '../facades/patient-intake-auth.facade';
 import { PatientPortalSessionStore } from '../services/patient-portal-session.store';
@@ -13,25 +14,24 @@ import {
 @Component({
   selector: 'app-patient-intake-activation-page',
   standalone: true,
-  imports: [ReactiveFormsModule, PatientPortalCardComponent],
+  imports: [ReactiveFormsModule, TranslatePipe, PatientPortalCardComponent],
   template: `
     <app-patient-portal-card
-      eyebrow="Sala de espera"
-      title="Activa tu acceso privado"
-      description="Crea las credenciales que usarás para completar la información solicitada por la clínica.">
+      eyebrow="Waiting room"
+      title="Activate your private access"
+      description="Create the credentials you will use to complete the information requested by the clinic.">
 
       @if (facade.current(); as current) {
         <section class="patient-success" aria-live="polite">
           <span class="patient-success__icon" aria-hidden="true">✓</span>
           <div>
-            <h2>Acceso activado</h2>
+            <h2>{{ 'Access activated' | t }}</h2>
             <p>
-              Tu borrador privado fue creado para <strong>{{ current.tenantSubdomain }}</strong>.
-              Conserva el usuario <strong>{{ current.loginName }}</strong> y tu contraseña.
+              {{ 'Your private draft was created for {tenantSubdomain}.' | t:{ tenantSubdomain: current.tenantSubdomain } }}
+              {{ 'Keep the login name {loginName} and your password.' | t:{ loginName: current.loginName } }}
             </p>
             <p>
-              La captura completa se habilitará en el siguiente paso del flujo. No se ha creado ni
-              modificado un expediente clínico canónico.
+              {{ 'The full form will be available in the next step. No canonical clinical record was created or changed.' | t }}
             </p>
           </div>
           <button
@@ -39,23 +39,23 @@ import {
             class="patient-button patient-button--secondary"
             [disabled]="facade.loading()"
             (click)="logout()">
-            {{ facade.loading() ? 'Cerrando…' : 'Cerrar sesión' }}
+            {{ (facade.loading() ? 'Closing...' : 'Close session') | t }}
           </button>
         </section>
       } @else if (!hasActivationToken()) {
         <div class="patient-alert patient-alert--error" role="alert">
-          Este enlace no es válido o ya no está disponible. Solicita a recepción una credencial nueva.
+          {{ 'This link is invalid or is no longer available. Ask reception for a new credential.' | t }}
         </div>
       } @else {
         @if (facade.error()) {
           <div class="patient-alert patient-alert--error" role="alert" aria-live="polite">
-            {{ facade.error() }}
+            {{ facade.error() | t }}
           </div>
         }
 
         <form class="patient-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="patient-form__field">
-            <label for="intake-login-name">Usuario</label>
+            <label for="intake-login-name">{{ 'Login name' | t }}</label>
             <input
               id="intake-login-name"
               type="text"
@@ -65,18 +65,18 @@ import {
               spellcheck="false"
               maxlength="200" />
             <p class="patient-form__hint">
-              Puede ser tu correo o un nombre de usuario fácil de recordar. Solo es único dentro de esta clínica.
+              {{ 'Use an email address or a username you can remember. It is unique only inside this clinic.' | t }}
             </p>
             @if (form.controls.loginName.touched && form.controls.loginName.hasError('required')) {
-              <p class="patient-form__error">El usuario es obligatorio.</p>
+              <p class="patient-form__error">{{ 'Login name is required.' | t }}</p>
             }
             @if (form.controls.loginName.touched && form.controls.loginName.hasError('minlength')) {
-              <p class="patient-form__error">El usuario debe tener al menos 3 caracteres.</p>
+              <p class="patient-form__error">{{ 'Login name must contain at least 3 characters.' | t }}</p>
             }
           </div>
 
           <div class="patient-form__field">
-            <label for="intake-password">Contraseña</label>
+            <label for="intake-password">{{ 'Password' | t }}</label>
             <input
               id="intake-password"
               type="password"
@@ -84,17 +84,17 @@ import {
               autocomplete="new-password"
               minlength="12"
               maxlength="128" />
-            <p class="patient-form__hint">Usa al menos 12 caracteres.</p>
+            <p class="patient-form__hint">{{ 'Use at least 12 characters.' | t }}</p>
             @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-              <p class="patient-form__error">La contraseña es obligatoria.</p>
+              <p class="patient-form__error">{{ 'Password is required.' | t }}</p>
             }
             @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
-              <p class="patient-form__error">La contraseña debe tener al menos 12 caracteres.</p>
+              <p class="patient-form__error">{{ 'Password must contain at least 12 characters.' | t }}</p>
             }
           </div>
 
           <div class="patient-form__field">
-            <label for="intake-confirm-password">Confirmar contraseña</label>
+            <label for="intake-confirm-password">{{ 'Confirm password' | t }}</label>
             <input
               id="intake-confirm-password"
               type="password"
@@ -103,10 +103,10 @@ import {
               minlength="12"
               maxlength="128" />
             @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
-              <p class="patient-form__error">Confirma la contraseña.</p>
+              <p class="patient-form__error">{{ 'Password confirmation is required.' | t }}</p>
             }
             @if (form.touched && form.hasError('passwordMismatch')) {
-              <p class="patient-form__error">Las contraseñas no coinciden.</p>
+              <p class="patient-form__error">{{ 'Passwords do not match.' | t }}</p>
             }
           </div>
 
@@ -115,7 +115,7 @@ import {
               class="patient-button patient-button--primary"
               type="submit"
               [disabled]="form.invalid || facade.loading()">
-              {{ facade.loading() ? 'Activando…' : 'Activar acceso' }}
+              {{ (facade.loading() ? 'Activating access...' : 'Activate access') | t }}
             </button>
           </div>
         </form>
