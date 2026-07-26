@@ -12,6 +12,7 @@ using BigSmile.Application.Features.PatientDocuments.Commands;
 using BigSmile.Application.Features.PatientDocuments.Queries;
 using BigSmile.Application.Features.PatientIntakeAccessLinks.Commands;
 using BigSmile.Application.Features.PatientIntakeAccessLinks.Queries;
+using BigSmile.Application.Features.PatientIntakeAuthentication.Commands;
 using BigSmile.Application.Features.PatientIntakes.Services;
 using BigSmile.Application.Features.PatientPortalAuthentication.Commands;
 using BigSmile.Application.Features.PatientPortalInvitations.Commands;
@@ -48,6 +49,8 @@ namespace BigSmile.Application
             services.AddScoped<IPatientDocumentQueryService, PatientDocumentQueryService>();
             services.AddScoped<IPatientIntakeAccessLinkCommandService, PatientIntakeAccessLinkCommandService>();
             services.AddScoped<IPatientIntakeAccessLinkQueryService, PatientIntakeAccessLinkQueryService>();
+            services.AddScoped<IPatientIntakePublicAuthenticationService, PatientIntakePublicAuthenticationService>();
+            services.AddScoped<IPatientIntakeSessionService, PatientIntakeSessionService>();
             services.AddScoped<IPatientIntakeSelfService, PatientIntakeSelfService>();
             services.AddScoped<IPatientPortalPublicAuthenticationService, PatientPortalPublicAuthenticationService>();
             services.AddScoped<IPatientPortalSessionService, PatientPortalSessionService>();
