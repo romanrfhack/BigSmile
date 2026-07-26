@@ -52,7 +52,7 @@ export class PatientIntakeLinksFacade {
 
     this.api.list(true, 50).pipe(
       catchError(() => {
-        this.errorState.set('No se pudieron cargar los enlaces de sala de espera.');
+        this.errorState.set('Waiting-room links could not be loaded.');
         return EMPTY;
       }),
       finalize(() => this.loadingState.set(false))
@@ -70,7 +70,7 @@ export class PatientIntakeLinksFacade {
 
     this.api.issue(branchId).pipe(
       catchError(() => {
-        this.errorState.set('No se pudo generar el enlace de sala de espera. Intenta nuevamente.');
+        this.errorState.set('The waiting-room link could not be generated. Try again.');
         return EMPTY;
       }),
       finalize(() => this.issuingState.set(false))
@@ -128,7 +128,7 @@ export class PatientIntakeLinksFacade {
     try {
       this.browserActions.printCurrentHandoff();
     } catch {
-      this.errorState.set('No se pudo abrir la vista de impresión en este navegador.');
+      this.errorState.set('Print is not available in this browser.');
     }
   }
 
@@ -146,7 +146,7 @@ export class PatientIntakeLinksFacade {
 
     this.api.revoke(link.id).pipe(
       catchError(() => {
-        this.errorState.set('No se pudo revocar el enlace. Actualiza el listado e intenta nuevamente.');
+        this.errorState.set('The link could not be revoked. Refresh the list and try again.');
         return EMPTY;
       }),
       finalize(() => this.revokingIdState.set(null))
