@@ -21,24 +21,32 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
-      - name: Build frontend and capture diagnostics
-        id: frontend-build
+      - name: Build and test frontend with captured diagnostics
+        id: frontend-validation
         working-directory: frontend
         shell: bash
         run: |
           set +e
           npm run build > pi2c3-build.log 2>&1
-          status=$?
-          echo "status=$status" >> "$GITHUB_OUTPUT"
+          build_status=$?
+          npm test -- --watch=false > pi2c3-test.log 2>&1
+          test_status=$?
+          echo "build_status=$build_status" >> "$GITHUB_OUTPUT"
+          echo "test_status=$test_status" >> "$GITHUB_OUTPUT"
+          echo '--- build tail ---'
           tail -n 80 pi2c3-build.log
+          echo '--- test tail ---'
+          tail -n 140 pi2c3-test.log
           exit 0
-      - name: Upload frontend diagnostic
+      - name: Upload frontend diagnostics
         uses: actions/upload-artifact@v4
         with:
-          name: pi2c3-frontend-build-log
-          path: frontend/pi2c3-build.log
+          name: pi2c3-frontend-validation-logs
+          path: |
+            frontend/pi2c3-build.log
+            frontend/pi2c3-test.log
           if-no-files-found: error
           retention-days: 1
-      - name: Preserve build result
-        if: steps.frontend-build.outputs.status != '0'
+      - name: Preserve validation result
+        if: steps.frontend-validation.outputs.build_status != '0' || steps.frontend-validation.outputs.test_status != '0'
         run: exit 1
