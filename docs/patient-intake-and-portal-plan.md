@@ -1,13 +1,13 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1, PI-2A and PI-2B completed; PI-2C active
+- **Status:** In progress; PI-1, PI-2A, PI-2B and PI-2C completed; PI-2D active
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
-- **Architecture decisions:** ADR 006 and ADR 012–017
+- **Architecture decisions:** ADR 006 and ADR 012–019
 - **Canonical ADR:** `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - **Parent tracking:** GitHub issue #2
 - **Implementation tracking:** issues #4, #5, #6 and #7
-- **Last updated:** 2026-07-25
+- **Last updated:** 2026-07-27
 
 ## 1. Purpose
 
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1, PI-2A and PI-2B are completed; PI-2C is active.
+- Phase 2.1: active; PI-1, PI-2A, PI-2B and PI-2C are completed; PI-2D is active.
 
 This placement is deliberate:
 
@@ -59,12 +59,12 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Completed through PI-1A to PI-1D | Issues #4 and #22–#25 / PRs #26, #28, #29 and #30 |
-| PI-2 intake draft | Active; PI-2A and PI-2B completed; PI-2C active | Issue #5 / #31 / #33 / #35 |
+| PI-2 intake draft | Active; PI-2A, PI-2B and PI-2C completed; PI-2D active | Issue #5 / #31 / #33 / #35 / #44 |
 | PI-3 submit/review/apply | Planned; not implemented | Issue #6 |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
-| Patient-facing backend/API/database | Access/auth, intake persistence and linked-patient self-only API implemented | PRs #26, #28, #29, #32 and #34 |
-| Patient-facing frontend | Bounded activation/login/session implemented | PR #30 / ADR 015 |
-| Patient-facing intake | Existing-patient API implemented; waiting-room bootstrap and patient capture UI pending | PI-2B / PI-2C / PI-2D |
+| Patient-facing backend/API/database | Access/auth, intake persistence, linked-patient API and waiting-room intake-only bootstrap implemented | PRs #26, #28, #29, #32, #34, #41 and #42 |
+| Patient-facing frontend | Existing-patient auth plus waiting-room staff handoff and intake-only activation implemented | PR #30 / PR #43 / ADR 015 / ADR 019 |
+| Patient-facing intake | Existing-patient and waiting-room self-only APIs implemented; full Angular capture active in PI-2D | PI-2B / PI-2C / PI-2D #44 |
 
 ## 4. Scope boundary
 
@@ -269,12 +269,16 @@ Approved sequence under ADR 016:
    - explicit id-less create/get/save from the linked authenticated account;
    - GET has no side effects; all sensitive responses are no-store;
    - no-op/effective-save, expiry and optimistic concurrency contracts.
-3. **PI-2C — Waiting-Room Link and Intake-Only Account Scope — #35 — active**
-   - PI-2C1 #36: credential/persistence and TenantAdmin management API;
-   - PI-2C2 #37: transactional activation and `patient_intake` session;
-   - PI-2C3 #38: staff generate/copy/print/local-QR UI and closure.
-4. **PI-2D — Angular Patient Intake Capture and PI-2 Closure — pending**
-   - mobile/tablet sections, explicit save, dirty/saved/conflict/expired states and fixed questionnaire UX.
+3. **PI-2C — Waiting-Room Link and Intake-Only Account Scope — #35 — completed**
+   - PI-2C1 #36 / PR #41: credential/persistence and TenantAdmin management API;
+   - PI-2C2 #37 / PR #42: transactional activation and `patient_intake` session;
+   - PI-2C3 #38 / PR #43: staff generate/copy/print/local-QR UI and closure.
+4. **PI-2D — Angular Patient Intake Capture and PI-2 Closure — #44 — active**
+   - PI-2D1 #45: routes, sessions and shared self-only data access — active;
+   - PI-2D2 #46: demographics/contact/reason capture — blocked by #45;
+   - PI-2D3 #47: familiar fixed 39-question capture — blocked by #46;
+   - PI-2D4 #48: conflict/expiry validation and PI-2 closure — blocked by #47;
+   - plan: `docs/pi-2d-angular-intake-capture-plan.md`.
 
 PI-2 exit gate:
 - no canonical Patient/ClinicalRecord changes;

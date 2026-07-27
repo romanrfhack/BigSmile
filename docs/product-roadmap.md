@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1, PI-2A and PI-2B are completed; PI-2C is active.
+Active after formal MVP acceptance. PI-1, PI-2A, PI-2B and PI-2C are completed; PI-2D is active.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006 and ADR 012–017. PI-1 (#4) is completed. PI-2 (#5) is active; PI-2A (#31) completed domain/persistence and PI-2B (#33 / PR #34) completed existing-patient self-only create/get/save. PI-2C (#35) is active; waiting-room bootstrap and patient Angular capture are not yet implemented.
+Active under ADR 006 and ADR 012–019. PI-1 (#4) is completed. PI-2 (#5) is active; PI-2A (#31), PI-2B (#33) and PI-2C (#35) are completed. Waiting-room credential management, transactional `patient_intake` activation/session and staff handoff UI are available. PI-2D (#44) is active for Angular capture through #45 → #46 → #47 → #48.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -492,8 +492,8 @@ Allow new and existing patients to propose or complement information through lea
 2. PI-2 — Intake Draft and Self-Service Capture — issue #5 — active
    1. PI-2A domain/persistence — #31 — completed
    2. PI-2B existing-patient self-service draft — #33 / PR #34 — completed
-   3. PI-2C waiting-room link and intake-only scope — #35 — active through #36 → #37 → #38
-   4. PI-2D Angular intake capture/closure — pending
+   3. PI-2C waiting-room link and intake-only scope — #35 — completed through #36 / #37 / #38 and PR #43
+   4. PI-2D Angular intake capture/closure — #44 — active through #45 → #46 → #47 → #48
 3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
 4. PI-4 — Audit Visibility and Security Hardening — issue #7
 
@@ -525,6 +525,9 @@ Allow new and existing patients to propose or complement information through lea
 - ADR 015: `docs/decisions/015-patient-portal-frontend-session-boundary.md`
 - ADR 016: `docs/decisions/016-patient-intake-draft-baseline.md`
 - ADR 017: `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`
+- ADR 018: `docs/decisions/018-patient-intake-waiting-room-link-management.md`
+- ADR 019: `docs/decisions/019-patient-intake-only-authentication-boundary.md`
+- PI-2D plan: `docs/pi-2d-angular-intake-capture-plan.md`
 - PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`
 - recovery runbook: `docs/patient-portal-assisted-recovery-runbook.md`
 - plan: `docs/patient-intake-and-portal-plan.md`

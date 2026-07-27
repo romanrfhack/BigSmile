@@ -22,7 +22,7 @@
 
 **Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos y draft lifecycle; ADR 017 acepta la API self-only de paciente existente y abre el bootstrap de sala de espera. PI-1 queda completado. PI-2 está activa: PI-2A y PI-2B están completados; PI-2C está abierta mediante #35 y se implementa secuencialmente como #36 → #37 → #38.
+**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos y draft lifecycle; ADR 017 acepta la API self-only de paciente existente; ADR 018 y ADR 019 cierran la credencial de sala de espera y el boundary `patient_intake`. PI-1 y PI-2C quedan completados. PI-2D está activa mediante #44 y se implementa secuencialmente como #45 → #46 → #47 → #48.
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
@@ -88,13 +88,15 @@
 
 [Hecho] PI-1D — Patient Auth Frontend and Security Closure (#25) queda completado mediante PR #30: route tree `/patient-portal/*` fuera del staff shell, activación con token en fragment y limpieza inmediata, sesión/token solo en memoria, interceptores/guards separados, login/home/logout acotados, pruebas frontend y runbook de recovery. PI-1 queda cerrado.
 
-[Hecho] El cliente aprobó el baseline de PI-2 el 2026-07-25: campos de propuesta —incluido motivo de visita—, teléfonos tipificados como intake, expiración sliding de 30 días, guardado explícito sin autosave, link de sala de espera single-use de 30 minutos, permiso futuro `patientportal.intake.manage` solo para `TenantAdmin`, scope futuro `patient_intake` y secuencia PI-2A → PI-2B → PI-2C → PI-2D. ADR 016 registra la decisión.
+[Hecho] El cliente aprobó el baseline de PI-2 el 2026-07-25: campos de propuesta —incluido motivo de visita—, teléfonos tipificados como intake, expiración sliding de 30 días, guardado explícito sin autosave, link de sala de espera single-use de 30 minutos, permiso `patientportal.intake.manage` solo para `TenantAdmin`, scope `patient_intake` y secuencia PI-2A → PI-2B → PI-2C → PI-2D. ADR 016 registra el baseline; PI-2C materializó el link, permiso y scope.
 
 [Hecho] PI-2A — Patient Intake Domain and Persistence (#31) queda completado mediante PR #32: `PatientIntake`, 39 respuestas separadas de Clinical, revisiones inmutables por guardado efectivo, expiración `Draft / Expired`, baseline canónico para conflictos futuros, `RowVersion`, filtros/write enforcement tenant-aware, restricciones SQL e integración EF mediante migración `20260725182044_AddPatientIntakeDraftFoundation`. No agrega endpoints, JWT scope, staff permission, UI de intake ni writes canónicos.
 
 [Hecho] PI-2B — Existing-Patient Self-Service Draft (#33) queda completado mediante PR #34 y merge commit `7325a73e7f86ae0e6f0557574fe9d9756a89293f`: `POST / GET / PUT /api/patient-portal/intake`, ownership derivado de sesión patient-only, GET sin side effects, no-store, 39 respuestas `Unknown`, save explícito con optimistic concurrency, no-op sin revisión y cambio efectivo con una revisión append-only. CI #315 quedó verde y no se modifican datos canónicos.
 
-[Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) queda abierta con autorización explícita y alcance limitado: credencial single-use/hash-only/30 minutos, permiso `patientportal.intake.manage` solo `TenantAdmin`, cuenta unlinked con `scope=patient_intake` y UI staff mínima para generar/copiar/imprimir/QR local. Se implementa únicamente mediante PI-2C1 #36 → PI-2C2 #37 → PI-2C3 #38. PI-2D permanece pendiente.
+[Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) queda completado mediante PI-2C1 #36 / PR #41, PI-2C2 #37 / PR #42 y PI-2C3 #38 / PR #43. El cierre incluye credencial single-use/hash-only de 30 minutos, permiso `patientportal.intake.manage` solo `TenantAdmin`, activación transaccional, cuenta unlinked con `scope=patient_intake`, UI staff para generar/copiar/imprimir/revocar y QR local, fragment cleanup y sesión browser memory-only. CI #455 quedó verde y no se crean datos canónicos.
+
+[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) queda abierta mediante cuatro incrementos obligatorios: PI-2D1 #45 — rutas/sesiones/data-access; PI-2D2 #46 — demografía/contacto/motivo; PI-2D3 #47 — cuestionario fijo de 39 preguntas; PI-2D4 #48 — conflictos/expiración/validación/cierre. Solo #45 está activo; #46 → #47 → #48 permanecen bloqueados secuencialmente.
 
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
@@ -112,7 +114,7 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016/017; PI-2A y PI-2B completados. La API self-only para pacientes existentes existe; PI-2C está activa para bootstrap de sala de espera y PI-2D conserva la captura Angular del cuestionario.
+**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016–019; PI-2A, PI-2B y PI-2C completados. El bootstrap de sala de espera y el boundary `patient_intake` existen; PI-2D #44 está activo para la captura Angular mediante #45 → #46 → #47 → #48.
 
 **Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 está cerrado y PI-2 se implementa de forma obligatoria mediante PI-2A → PI-2B → PI-2C → PI-2D antes de abrir PI-3.
 
@@ -125,6 +127,9 @@
 - ADR 015 — `docs/decisions/015-patient-portal-frontend-session-boundary.md`.
 - ADR 016 — `docs/decisions/016-patient-intake-draft-baseline.md`.
 - ADR 017 — `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`.
+- ADR 018 — `docs/decisions/018-patient-intake-waiting-room-link-management.md`.
+- ADR 019 — `docs/decisions/019-patient-intake-only-authentication-boundary.md`.
+- Plan PI-2D — `docs/pi-2d-angular-intake-capture-plan.md`.
 - Cierre PI-1 — `docs/pi-1-patient-portal-access-and-security-closure.md`.
 - Runbook — `docs/patient-portal-assisted-recovery-runbook.md`.
 - Plan general — `docs/patient-intake-and-portal-plan.md`.
@@ -140,7 +145,12 @@
 - PI-2C Waiting-Room Bootstrap — issue #35.
 - PI-2C1 Credential/Staff API — issue #36.
 - PI-2C2 Intake-Only Session — issue #37.
-- PI-2C3 Staff Link/Print/QR UI — issue #38.
+- PI-2C3 Staff Link/Print/QR UI — issue #38 / PR #43.
+- PI-2D Angular Capture/Closure — issue #44.
+- PI-2D1 Routes/Session/Data-Access — issue #45.
+- PI-2D2 Demographics/Contact/Reason — issue #46.
+- PI-2D3 Medical Questionnaire — issue #47.
+- PI-2D4 Conflict/Expiry/Closure — issue #48.
 - PI-3 Submit, Review and Apply — issue #6.
 - PI-4 Audit Visibility and Hardening — issue #7.
 

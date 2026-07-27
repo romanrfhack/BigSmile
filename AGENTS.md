@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A and PI-2B completed, PI-2C active
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A, PI-2B and PI-2C completed, PI-2D active through #45 → #46 → #47 → #48
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -139,7 +139,8 @@ Phase 2.1 opening evidence:
 - PI-1D — issue #25 / PR #30
 - PI-2A — issue #31 / PR #32
 - PI-2B — issue #33 / PR #34
-- PI-2C — issue #35; sub-slices #36, #37 and #38
+- PI-2C — issue #35; sub-slices #36, #37 and #38 — completed through PR #43
+- PI-2D — issue #44; increments #45, #46, #47 and #48
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -188,15 +189,15 @@ Do not reopen advanced Release 7 scope incidentally. OCR, sharing, generated PDF
 Repository code also exists in later capabilities, including reminders/manual reminders. Code presence alone does not accept providers, jobs, online booking, Phase 2 or advanced analytics.
 
 Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted MVP:
-- architecture accepted in ADR 006; PI-1 access decisions are accepted in ADR 012 through ADR 015; PI-2 baseline is accepted in ADR 016
+- architecture accepted in ADR 006; PI-1 access decisions are accepted in ADR 012 through ADR 015; PI-2 baseline and runtime boundaries are accepted in ADR 016 through ADR 019
 - PI-1 (#4) is completed through PI-1A to PI-1D
-- PI-2 (#5) is active; PI-2A (#31) and PI-2B (#33) are completed
-- PI-2C (#35) is active only through #36 → #37 → #38 for waiting-room credential, dedicated staff permission, `patient_intake` scope and minimal staff handoff UI; PI-2D retains patient Angular capture
+- PI-2 (#5) is active; PI-2A (#31), PI-2B (#33) and PI-2C (#35) are completed
+- PI-2D (#44) is active only through #45 → #46 → #47 → #48 for Angular self-only capture and PI-2 closure
 - PI-3 and PI-4 remain not started
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve completed PI-1, PI-2A and PI-2B, and implement only `PI-2C1 — Waiting-Room Credential Foundation and TenantAdmin Management API` before anonymous consume, intake-only JWT or Angular handoff UI.
+Preserve completed PI-1, PI-2A, PI-2B and PI-2C, and implement only `PI-2D1 — Patient/intake session routes and self-only data access` before demographic form, medical questionnaire or PI-2 closure work.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -208,7 +209,8 @@ Immediate priorities:
 - preserve PI-1D route/shell/interceptor separation, activation fragment cleanup and memory-only patient session
 - preserve ADR 016 fields, typed-phone proposal ownership, 30-day effective-save expiry, explicit save and append-only revisions
 - preserve PI-2B as linked existing-patient self-only create/get/save with id-less ownership, no-store, optimistic concurrency and no canonical Patient/Clinical writes
-- implement PI-2C sequentially: #36 credential/staff API, #37 transactional activation/`patient_intake`, #38 staff copy/print/local-QR UI; keep patient Angular intake capture in PI-2D
+- preserve completed PI-2C credential, activation, `patient_intake`, staff copy/print/local-QR and memory-only handoff boundaries
+- implement PI-2D sequentially: #45 routes/session/data-access, #46 demographics/contact/reason, #47 fixed questionnaire, #48 conflict/expiry/closure
 - avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override
