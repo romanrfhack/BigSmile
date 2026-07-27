@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe } from '../../../shared/i18n';
 import { PatientPortalCardComponent } from '../components/patient-portal-card.component';
 import { PatientIntakeAuthFacade } from '../facades/patient-intake-auth.facade';
-import { PatientPortalSessionStore } from '../services/patient-portal-session.store';
+import { PatientPortalSessionBoundary } from '../services/patient-portal-session-boundary.service';
 import {
   extractActivationToken,
   passwordsMatchValidator
@@ -31,16 +31,25 @@ import {
               {{ 'Keep the login name {loginName} and your password.' | t:{ loginName: current.loginName } }}
             </p>
             <p>
-              {{ 'The full form will be available in the next step. No canonical clinical record was created or changed.' | t }}
+              {{ 'The intake workspace is ready. No canonical clinical record was created or changed.' | t }}
             </p>
           </div>
-          <button
-            type="button"
-            class="patient-button patient-button--secondary"
-            [disabled]="facade.loading()"
-            (click)="logout()">
-            {{ (facade.loading() ? 'Closing...' : 'Close session') | t }}
-          </button>
+          <div class="patient-success__actions">
+            <button
+              type="button"
+              class="patient-button patient-button--primary"
+              [disabled]="facade.loading()"
+              (click)="continueToIntake(current.tenantSubdomain)">
+              {{ 'Continue to intake' | t }}
+            </button>
+            <button
+              type="button"
+              class="patient-button patient-button--secondary"
+              [disabled]="facade.loading()"
+              (click)="logout()">
+              {{ (facade.loading() ? 'Closing...' : 'Close session') | t }}
+            </button>
+          </div>
         </section>
       } @else if (!hasActivationToken()) {
         <div class="patient-alert patient-alert--error" role="alert">
@@ -158,9 +167,11 @@ import {
       line-height: 1.55;
     }
 
-    .patient-success .patient-button {
+    .patient-success__actions {
       grid-column: 2;
-      justify-self: start;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
 
     @media (max-width: 560px) {
@@ -168,8 +179,11 @@ import {
         grid-template-columns: 1fr;
       }
 
-      .patient-success .patient-button {
+      .patient-success__actions {
         grid-column: 1;
+      }
+
+      .patient-success__actions .patient-button {
         width: 100%;
       }
     }
@@ -180,7 +194,7 @@ export class PatientIntakeActivationPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
-  private readonly linkedPatientSessionStore = inject(PatientPortalSessionStore);
+  private readonly sessionBoundary = inject(PatientPortalSessionBoundary);
   readonly facade = inject(PatientIntakeAuthFacade);
 
   private activationToken = '';
@@ -193,8 +207,7 @@ export class PatientIntakeActivationPageComponent implements OnInit {
   }, { validators: passwordsMatchValidator });
 
   ngOnInit(): void {
-    this.linkedPatientSessionStore.clear();
-    this.facade.clearSession();
+    this.sessionBoundary.clearAll();
     this.activationToken = extractActivationToken(this.route.snapshot.fragment);
     this.hasActivationToken.set(this.activationToken.length > 0 && this.activationToken.length <= 256);
 
@@ -226,6 +239,13 @@ export class PatientIntakeActivationPageComponent implements OnInit {
         // The facade exposes a bounded, non-enumerating message.
       }
     });
+  }
+
+  continueToIntake(tenantSubdomain: string): void {
+    void this.router.navigate(
+      ['/patient-portal', tenantSubdomain, 'intake'],
+      { replaceUrl: true }
+    );
   }
 
   logout(): void {
