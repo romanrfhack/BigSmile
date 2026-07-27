@@ -7,6 +7,7 @@ export type PatientIntakeMaritalStatus =
   | 'Divorced'
   | 'Widowed'
   | 'Other';
+export type PatientIntakeSaveOutcome = 'saved' | 'unchanged' | null;
 
 export const PATIENT_INTAKE_SEX_VALUES: readonly PatientIntakeSex[] = [
   'Unspecified',
