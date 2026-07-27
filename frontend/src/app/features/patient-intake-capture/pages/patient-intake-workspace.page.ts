@@ -4,18 +4,25 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../shared/i18n';
 import { PatientPortalCardComponent } from '../../patient-portal-auth/components/patient-portal-card.component';
 import { normalizeTenantRealm } from '../../patient-portal-auth/guards/patient-portal-auth.guard';
+import { PatientIntakeDemographicsFormComponent } from '../components/patient-intake-demographics-form.component';
 import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspace.facade';
 
 @Component({
   selector: 'app-patient-intake-workspace-page',
   standalone: true,
-  imports: [DatePipe, RouterLink, TranslatePipe, PatientPortalCardComponent],
+  imports: [
+    DatePipe,
+    RouterLink,
+    TranslatePipe,
+    PatientPortalCardComponent,
+    PatientIntakeDemographicsFormComponent
+  ],
   providers: [PatientIntakeWorkspaceFacade],
   template: `
     <app-patient-portal-card
       eyebrow="Patient information"
       title="Your private intake"
-      description="Review the current draft boundary before entering personal and medical information.">
+      description="Review and save the information requested by your clinic.">
 
       @if (facade.status() === 'loading') {
         <div class="patient-alert patient-alert--info" aria-live="polite">
@@ -97,14 +104,26 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
           </dl>
 
           <div class="patient-alert patient-alert--info">
-            {{ 'The demographic and medical form will be added in the next controlled increments. This screen does not modify canonical patient or clinical records.' | t }}
+            {{ 'This information remains in your private draft until the clinic reviews it. Medical history questions are not editable in this step.' | t }}
           </div>
+
+          <app-patient-intake-demographics-form
+            [intake]="intake"
+            [saving]="facade.saving()"
+            [saveOutcome]="facade.saveOutcome()"
+            [saveError]="facade.saveError()"
+            (saveRequested)="facade.saveNonMedicalDraft($event)">
+          </app-patient-intake-demographics-form>
         </section>
       }
 
       @if (facade.status() !== 'loading' && facade.status() !== 'unauthorized') {
-        <div class="patient-form__actions">
-          <button type="button" class="patient-button patient-button--secondary" (click)="logout()">
+        <div class="patient-form__actions patient-form__actions--session">
+          <button
+            type="button"
+            class="patient-button patient-button--secondary"
+            [disabled]="facade.saving()"
+            (click)="logout()">
             {{ 'End session' | t }}
           </button>
         </div>
@@ -142,6 +161,10 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
       margin: 0.25rem 0 0;
       color: var(--bsm-color-text-brand);
       font-weight: 800;
+    }
+
+    .patient-form__actions--session {
+      margin-top: 1rem;
     }
 
     @media (max-width: 560px) {
