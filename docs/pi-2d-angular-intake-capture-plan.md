@@ -4,8 +4,8 @@
 - **Parent:** PI-2 issue #5
 - **Tracking:** PI-2D #44
 - **Dependencies:** PI-2A #31, PI-2B #33 and completed PI-2C #35
-- **Latest completed increment:** PI-2D1 #45 / PR #50 / CI #459
-- **Current active increment:** PI-2D2 #46
+- **Latest completed increment:** PI-2D2 #46 / PR #53 / CI #470
+- **Next gated increment:** PI-2D3 #47 — implementation pending explicit authorization
 - **Required sequence:** #45 → #46 → #47 → #48
 - **Architecture:** ADR 006 and ADR 012–019
 - **Risk:** High but bounded — browser capture of personal and patient-reported medical data
@@ -113,7 +113,7 @@ Exit gate:
 - GET remains side-effect-free;
 - CI #459 green; PR #50 merged as `b11d6af1e3e77e325e38a7022059106d3afa23bd`; method-aware bearer hardening merged through PR #51.
 
-### PI-2D2 — Demographics, contact and reason-for-visit — #46 — active
+### PI-2D2 — Demographics, contact and reason-for-visit — #46 — completed
 
 Scope:
 
@@ -130,9 +130,9 @@ Exit gate:
 - both scope modes can save exact supported non-medical fields;
 - untouched medical answers remain intact;
 - no canonical writes;
-- CI green.
+- CI #470 green; PR #53 merged as `ade674eb7f52be366f8c2970539966c10e3d0f52`.
 
-### PI-2D3 — Familiar 39-question medical history capture — #47
+### PI-2D3 — Familiar 39-question medical history capture — #47 — next gate; not started
 
 Scope:
 
