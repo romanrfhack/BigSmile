@@ -12,5 +12,5 @@ declare module 'qr' {
     value: string,
     output: 'svg',
     options?: QrSvgOptions
-  ): SVGSVGElement;
+  ): SVGSVGElement | string;
 }
