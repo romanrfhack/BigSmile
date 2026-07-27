@@ -86,7 +86,6 @@ describe('PatientIntakeDemographicsFormComponent', () => {
       mobilePhone: '+52 55 0000 0000',
       reasonForVisit: 'Dolor al masticar.'
     });
-    fixture.detectChanges();
 
     expect(emitted).toHaveLength(0);
     fixture.componentInstance.submit();
