@@ -4,7 +4,8 @@
 - **Parent:** PI-2 issue #5
 - **Tracking:** PI-2D #44
 - **Dependencies:** PI-2A #31, PI-2B #33 and completed PI-2C #35
-- **First active increment:** PI-2D1 #45
+- **Latest completed increment:** PI-2D1 #45 / PR #50 / CI #459
+- **Current active increment:** PI-2D2 #46
 - **Required sequence:** #45 → #46 → #47 → #48
 - **Architecture:** ADR 006 and ADR 012–019
 - **Risk:** High but bounded — browser capture of personal and patient-reported medical data
@@ -92,7 +93,7 @@ It remains a patient declaration and does not automatically become a clinical en
 
 ## 4. Increment sequence
 
-### PI-2D1 — Routes, sessions and self-only data access — #45
+### PI-2D1 — Routes, sessions and self-only data access — #45 — completed
 
 Scope:
 
@@ -110,9 +111,9 @@ Exit gate:
 - both scope modes reach only their own workspace;
 - no bearer ambiguity or browser persistence;
 - GET remains side-effect-free;
-- CI green.
+- CI #459 green; PR #50 merged as `b11d6af1e3e77e325e38a7022059106d3afa23bd`; method-aware bearer hardening merged through PR #51.
 
-### PI-2D2 — Demographics, contact and reason-for-visit — #46
+### PI-2D2 — Demographics, contact and reason-for-visit — #46 — active
 
 Scope:
 

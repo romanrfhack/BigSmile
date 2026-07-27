@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A, PI-2B and PI-2C completed, PI-2D active
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 completed; PI-2D2 active
 
 ### Release 4 closure evidence
 
@@ -111,9 +111,9 @@ Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B/PI-2C while impleme
 * preserve PI-2A tenant-owned draft, fixed-answer, immutable-revision, expiry and concurrency semantics
 * preserve PI-2B id-less self-only create/get/save, GET without side effects, no-store and canonical-write prohibition
 * preserve PI-2C credential/staff API, transactional intake-only session and memory-only staff handoff UI
-* implement PI-2D only as #45 routes/session/data-access → #46 demographics/contact/reason → #47 fixed questionnaire → #48 conflict/expiry/closure
+* preserve completed PI-2D1 and implement the remaining sequence only as #46 demographics/contact/reason → #47 fixed questionnaire → #48 conflict/expiry/closure
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* PI-1, PI-2A, PI-2B and PI-2C are accepted with tests/ADR evidence; PI-2D1 #45 is the next bounded step
+* PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 are accepted with test evidence; PI-2D2 #46 is the next bounded step
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
