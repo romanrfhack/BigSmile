@@ -1,6 +1,10 @@
 import { Routes } from '@angular/router';
 import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
 import {
+  patientIntakeAnonymousGuard,
+  patientIntakeWorkspaceGuard
+} from './features/patient-portal-auth/guards/patient-intake-workspace.guard';
+import {
   patientPortalAnonymousGuard,
   patientPortalAuthGuard
 } from './features/patient-portal-auth/guards/patient-portal-auth.guard';
@@ -63,9 +67,17 @@ const loadPatientPortalLoginPage = () =>
   import('./features/patient-portal-auth/pages/patient-portal-login.page').then(
     (m) => m.PatientPortalLoginPageComponent,
   );
+const loadPatientIntakeLoginPage = () =>
+  import('./features/patient-portal-auth/pages/patient-intake-login.page').then(
+    (m) => m.PatientIntakeLoginPageComponent,
+  );
 const loadPatientPortalHomePage = () =>
   import('./features/patient-portal-auth/pages/patient-portal-home.page').then(
     (m) => m.PatientPortalHomePageComponent,
+  );
+const loadPatientIntakeWorkspacePage = () =>
+  import('./features/patient-intake-capture/pages/patient-intake-workspace.page').then(
+    (m) => m.PatientIntakeWorkspacePageComponent,
   );
 
 export const routes: Routes = [
@@ -81,6 +93,16 @@ export const routes: Routes = [
       {
         path: 'intake-activate',
         loadComponent: loadPatientIntakeActivationPage
+      },
+      {
+        path: ':tenantSubdomain/intake-login',
+        loadComponent: loadPatientIntakeLoginPage,
+        canActivate: [patientIntakeAnonymousGuard]
+      },
+      {
+        path: ':tenantSubdomain/intake',
+        loadComponent: loadPatientIntakeWorkspacePage,
+        canActivate: [patientIntakeWorkspaceGuard]
       },
       {
         path: ':tenantSubdomain/login',
