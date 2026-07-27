@@ -82,6 +82,7 @@ export class PatientIntakeLinksFacade {
       const handoffUrl = this.handoffUrlBuilder.build(issued.accessToken);
 
       this.handoffState.set({
+        linkId: issued.id,
         clinicName: current?.tenant?.name ?? 'BigSmile',
         branchName,
         url: handoffUrl,
