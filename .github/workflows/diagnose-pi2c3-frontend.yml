@@ -21,12 +21,24 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
-      - name: Build frontend with bounded diagnostics
+      - name: Build frontend and capture diagnostics
+        id: frontend-build
         working-directory: frontend
         shell: bash
         run: |
           set +e
-          npm run build > /tmp/pi2c3-build.log 2>&1
+          npm run build > pi2c3-build.log 2>&1
           status=$?
-          tail -n 160 /tmp/pi2c3-build.log
-          exit $status
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          tail -n 80 pi2c3-build.log
+          exit 0
+      - name: Upload frontend diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi2c3-frontend-build-log
+          path: frontend/pi2c3-build.log
+          if-no-files-found: error
+          retention-days: 1
+      - name: Preserve build result
+        if: steps.frontend-build.outputs.status != '0'
+        run: exit 1
