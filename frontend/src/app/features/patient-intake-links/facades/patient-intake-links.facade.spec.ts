@@ -31,6 +31,7 @@ describe('PatientIntakeLinksFacade', () => {
     expect(facade.branches()).toEqual([{ id: 'branch-a', name: 'Centro' }]);
     expect(builder.build).toHaveBeenCalledWith('one-time-token');
     expect(facade.handoff()).toEqual({
+      linkId: 'issued-link',
       clinicName: 'Clínica Uno',
       branchName: 'Centro',
       url: 'https://clinic.test/patient-portal/intake-activate#token=one-time-token',
