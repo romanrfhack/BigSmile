@@ -8,6 +8,7 @@ import { Observable, of } from 'rxjs';
 import { AuthInterceptor } from '../../../core/auth/auth.interceptor';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PatientIntakeSessionStore } from '../services/patient-intake-session.store';
+import { PatientPortalSessionBoundary } from '../services/patient-portal-session-boundary.service';
 import { PatientPortalSessionStore } from '../services/patient-portal-session.store';
 import { PatientPortalAuthInterceptor } from './patient-portal-auth.interceptor';
 
@@ -21,23 +22,25 @@ class RecordingHandler implements HttpHandler {
 }
 
 describe('patient, intake, and staff auth interceptor separation', () => {
-  it('attaches the linked-patient token only to linked-patient protected endpoints', () => {
-    const interceptor = new PatientPortalAuthInterceptor(
-      createPatientSession(),
-      new PatientIntakeSessionStore()
-    );
-    const handler = new RecordingHandler();
+  it('attaches the linked-patient token to linked auth and the shared intake endpoint', () => {
+    const patientStore = createPatientSession();
+    const intakeStore = new PatientIntakeSessionStore();
+    const interceptor = createInterceptor(patientStore, intakeStore);
 
-    interceptor.intercept(new HttpRequest('GET', '/api/patient-portal/auth/me'), handler).subscribe();
-
-    expect(handler.request?.headers.get('Authorization')).toBe('Bearer patient-token');
+    for (const url of [
+      '/api/patient-portal/auth/me',
+      '/api/patient-portal/intake'
+    ]) {
+      const handler = new RecordingHandler();
+      interceptor.intercept(new HttpRequest('GET', url), handler).subscribe();
+      expect(handler.request?.headers.get('Authorization')).toBe('Bearer patient-token');
+    }
   });
 
   it('attaches the intake token to intake auth and the shared self-only draft endpoint', () => {
-    const interceptor = new PatientPortalAuthInterceptor(
-      createPatientSession(),
-      createIntakeSession()
-    );
+    const patientStore = new PatientPortalSessionStore();
+    const intakeStore = createIntakeSession();
+    const interceptor = createInterceptor(patientStore, intakeStore);
 
     for (const url of [
       '/api/patient-portal/intake-auth/me',
@@ -50,7 +53,7 @@ describe('patient, intake, and staff auth interceptor separation', () => {
   });
 
   it('never sends a linked-patient token to intake-only auth endpoints', () => {
-    const interceptor = new PatientPortalAuthInterceptor(
+    const interceptor = createInterceptor(
       createPatientSession(),
       new PatientIntakeSessionStore()
     );
@@ -64,8 +67,36 @@ describe('patient, intake, and staff auth interceptor separation', () => {
     expect(handler.request?.headers.has('Authorization')).toBe(false);
   });
 
+  it('never sends an intake token to linked-patient auth endpoints', () => {
+    const interceptor = createInterceptor(
+      new PatientPortalSessionStore(),
+      createIntakeSession()
+    );
+    const handler = new RecordingHandler();
+
+    interceptor.intercept(
+      new HttpRequest('GET', '/api/patient-portal/auth/me'),
+      handler
+    ).subscribe();
+
+    expect(handler.request?.headers.has('Authorization')).toBe(false);
+  });
+
+  it('fails closed and clears both stores when the shared endpoint sees ambiguous sessions', () => {
+    const patientStore = createPatientSession();
+    const intakeStore = createIntakeSession();
+    const interceptor = createInterceptor(patientStore, intakeStore);
+    const handler = new RecordingHandler();
+
+    interceptor.intercept(new HttpRequest('GET', '/api/patient-portal/intake'), handler).subscribe();
+
+    expect(handler.request?.headers.has('Authorization')).toBe(false);
+    expect(patientStore.current()).toBeNull();
+    expect(intakeStore.current()).toBeNull();
+  });
+
   it('does not attach patient or intake tokens to public auth or staff endpoints', () => {
-    const interceptor = new PatientPortalAuthInterceptor(
+    const interceptor = createInterceptor(
       createPatientSession(),
       createIntakeSession()
     );
@@ -102,6 +133,15 @@ describe('patient, intake, and staff auth interceptor separation', () => {
     interceptor.intercept(new HttpRequest('GET', '/api/patient-intake-links'), staffHandler).subscribe();
     expect(staffHandler.request?.headers.get('Authorization')).toBe('Bearer staff-token');
   });
+
+  function createInterceptor(
+    patientStore: PatientPortalSessionStore,
+    intakeStore: PatientIntakeSessionStore
+  ): PatientPortalAuthInterceptor {
+    return new PatientPortalAuthInterceptor(
+      new PatientPortalSessionBoundary(patientStore, intakeStore)
+    );
+  }
 
   function createPatientSession(): PatientPortalSessionStore {
     const store = new PatientPortalSessionStore();
