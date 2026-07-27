@@ -278,9 +278,10 @@ Current roadmap position:
 * **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
-* **Latest Phase 2.1 slice completed:** **PI-2B — Existing-Patient Self-Service Draft**
-* **Current slice:** **PI-2C — Waiting-Room Link and Intake-Only Scope**
-* **Public patient runtime:** activation/login/session and linked-patient intake API available; waiting-room bootstrap and intake capture UI remain pending
+* **Latest Phase 2.1 slice completed:** **PI-2C — Waiting-Room Link and Intake-Only Scope**
+* **Current slice:** **PI-2D — Angular Patient Intake Capture and PI-2 Closure**
+* **First active increment:** **PI-2D1 — Patient/intake session routes and self-only data access**
+* **Public patient runtime:** linked-patient and waiting-room activation/login/session plus self-only intake APIs are available; the complete Angular capture form remains under PI-2D
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
