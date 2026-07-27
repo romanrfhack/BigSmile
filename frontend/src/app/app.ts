@@ -18,6 +18,10 @@ export class App {
     return this.authService.hasPermissions(['dashboard.read']);
   }
 
+  canManagePatientIntakeLinks(): boolean {
+    return this.authService.hasPermissions(['patientportal.intake.manage']);
+  }
+
   isLoginRoute(): boolean {
     const pathSegments = this.primaryPathSegments();
     return pathSegments.length === 1 && pathSegments[0] === 'login';

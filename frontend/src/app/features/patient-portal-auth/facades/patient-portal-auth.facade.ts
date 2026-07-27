@@ -7,12 +7,14 @@ import {
   LoginPatientPortalAccountRequest,
   PatientPortalAuthenticationResponse
 } from '../models/patient-portal-auth.models';
+import { PatientIntakeSessionStore } from '../services/patient-intake-session.store';
 import { PatientPortalSessionStore } from '../services/patient-portal-session.store';
 
 @Injectable({ providedIn: 'root' })
 export class PatientPortalAuthFacade {
   private readonly api = inject(PatientPortalAuthApi);
   private readonly sessionStore = inject(PatientPortalSessionStore);
+  private readonly intakeSessionStore = inject(PatientIntakeSessionStore);
   private readonly loadingState = signal(false);
   private readonly errorState = signal<string | null>(null);
 
@@ -22,6 +24,7 @@ export class PatientPortalAuthFacade {
 
   activate(request: ActivatePatientPortalAccountRequest): Observable<PatientPortalAuthenticationResponse> {
     this.beginRequest();
+    this.intakeSessionStore.clear();
 
     return this.api.activate(request).pipe(
       tap(response => this.sessionStore.setSession(response)),
@@ -38,6 +41,7 @@ export class PatientPortalAuthFacade {
     request: LoginPatientPortalAccountRequest
   ): Observable<PatientPortalAuthenticationResponse> {
     this.beginRequest();
+    this.intakeSessionStore.clear();
 
     return this.api.login(tenantSubdomain, request).pipe(
       tap(response => this.sessionStore.setSession(response)),

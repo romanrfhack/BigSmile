@@ -1,0 +1,28 @@
+@media print {
+  body.bsm-printing-waiting-room-handoff * {
+    visibility: hidden !important;
+  }
+
+  body.bsm-printing-waiting-room-handoff .bsm-print-surface,
+  body.bsm-printing-waiting-room-handoff .bsm-print-surface * {
+    visibility: visible !important;
+  }
+
+  body.bsm-printing-waiting-room-handoff .bsm-print-surface {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    min-height: 100%;
+    background: #ffffff;
+    color: #202124;
+  }
+
+  body.bsm-printing-waiting-room-handoff .bsm-no-print {
+    display: none !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 12mm;
+  }
+}

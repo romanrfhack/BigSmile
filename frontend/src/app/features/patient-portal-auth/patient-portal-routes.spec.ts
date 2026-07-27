@@ -12,11 +12,13 @@ describe('patient portal route tree', () => {
     expect(patientPortal?.loadComponent).toBeDefined();
     expect(children.map(route => route.path)).toEqual([
       'activate',
+      'intake-activate',
       ':tenantSubdomain/login',
       ':tenantSubdomain/home',
       ':tenantSubdomain'
     ]);
     expect(children.find(route => route.path === 'activate')?.canActivate).toBeUndefined();
+    expect(children.find(route => route.path === 'intake-activate')?.canActivate).toBeUndefined();
     expect(children.find(route => route.path === ':tenantSubdomain/login')?.canActivate)
       .toEqual([patientPortalAnonymousGuard]);
     expect(children.find(route => route.path === ':tenantSubdomain/home')?.canActivate)

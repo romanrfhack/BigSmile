@@ -23,7 +23,9 @@ describe('App', () => {
         provideRouter([
           { path: 'login', component: RouteStubComponent },
           { path: 'patient-portal/activate', component: RouteStubComponent },
+          { path: 'patient-portal/intake-activate', component: RouteStubComponent },
           { path: 'patient-portal/:tenantSubdomain/login', component: RouteStubComponent },
+          { path: 'patient-intake-links', component: RouteStubComponent },
           { path: 'patients', component: RouteStubComponent }
         ]),
         {
@@ -75,6 +77,26 @@ describe('App', () => {
     expect(compiled.textContent).not.toContain('Panel');
   });
 
+  it('renders waiting-room navigation with patientportal.intake.manage', async () => {
+    grantedPermissions = ['patientportal.intake.manage'];
+
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Sala de espera');
+  });
+
+  it('hides waiting-room navigation without patientportal.intake.manage', async () => {
+    grantedPermissions = [];
+
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Sala de espera');
+  });
+
   it('hides shell navigation and language selector on the login route', async () => {
     const compiled = await renderAppAt('/login');
     expect(compiled.querySelector('.app-header')).toBeNull();
@@ -105,13 +127,19 @@ describe('App', () => {
   });
 
   it('hides staff shell navigation on patient portal routes', async () => {
-    const compiled = await renderAppAt('/patient-portal/activate#token=secret');
+    for (const url of [
+      '/patient-portal/activate#token=secret',
+      '/patient-portal/intake-activate#token=secret'
+    ]) {
+      const compiled = await renderAppAt(url);
 
-    expect(compiled.querySelector('.app-header')).toBeNull();
-    expect(compiled.querySelector('.app-footer')).toBeNull();
-    expect(compiled.textContent).not.toContain('Pacientes');
-    expect(compiled.textContent).not.toContain('Agenda');
-    expect(compiled.textContent).not.toContain('Contexto de acceso');
+      expect(compiled.querySelector('.app-header')).toBeNull();
+      expect(compiled.querySelector('.app-footer')).toBeNull();
+      expect(compiled.textContent).not.toContain('Pacientes');
+      expect(compiled.textContent).not.toContain('Agenda');
+      expect(compiled.textContent).not.toContain('Contexto de acceso');
+      expect(compiled.textContent).not.toContain('Sala de espera');
+    }
   });
 
   it('keeps shell navigation and language selector on non-login routes', async () => {

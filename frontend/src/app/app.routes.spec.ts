@@ -5,6 +5,7 @@ describe('app routes', () => {
   const protectedRoutes = [
     { path: 'app', requiredPermissions: ['auth.self.read'] },
     { path: 'dashboard', requiredPermissions: ['dashboard.read'] },
+    { path: 'patient-intake-links', requiredPermissions: ['patientportal.intake.manage'] },
     { path: 'patients', requiredPermissions: ['patient.read'] },
     { path: 'patients/new', requiredPermissions: ['patient.write'] },
     { path: 'patients/:id/edit', requiredPermissions: ['patient.write'] },
@@ -42,5 +43,14 @@ describe('app routes', () => {
       expect(route.loadComponent).toEqual(expect.any(Function));
       expect(route.component).toBeUndefined();
     }
+  });
+
+  it('keeps the intake activation entry inside the shellless patient portal tree', () => {
+    const patientPortal = findRoute('patient-portal');
+    const activation = patientPortal.children?.find(route => route.path === 'intake-activate');
+
+    expect(activation).toBeDefined();
+    expect(activation?.loadComponent).toEqual(expect.any(Function));
+    expect(activation?.canActivate).toBeUndefined();
   });
 });

@@ -12,6 +12,9 @@
         }
         <a routerLink="/patients" routerLinkActive="is-active">{{ 'Patients' | t }}</a>
         <a routerLink="/scheduling" routerLinkActive="is-active">{{ 'Scheduling' | t }}</a>
+        @if (canManagePatientIntakeLinks()) {
+          <a routerLink="/patient-intake-links" routerLinkActive="is-active">{{ 'Waiting room' | t }}</a>
+        }
         <a routerLink="/app" routerLinkActive="is-active">{{ 'Access Context' | t }}</a>
       </nav>
 
