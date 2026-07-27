@@ -1,0 +1,178 @@
+name: Reconcile PI-2D Opening
+
+on:
+  push:
+    branches:
+      - docs/pi-2d-opening
+
+jobs:
+  reconcile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/pi-2d-opening
+          fetch-depth: 0
+
+      - name: Reconcile canonical project state
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_required(path_value: str, old: str, new: str) -> None:
+              path = Path(path_value)
+              text = path.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Required text not found in {path_value}: {old[:120]!r}')
+              path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # STATE — BigSmile.md
+          replace_required(
+              'STATE — BigSmile.md',
+              '**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos y draft lifecycle; ADR 017 acepta la API self-only de paciente existente y abre el bootstrap de sala de espera. PI-1 queda completado. PI-2 está activa: PI-2A y PI-2B están completados; PI-2C está abierta mediante #35 y se implementa secuencialmente como #36 → #37 → #38.',
+              '**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos y draft lifecycle; ADR 017 acepta la API self-only de paciente existente; ADR 018 y ADR 019 cierran la credencial de sala de espera y el boundary `patient_intake`. PI-1 y PI-2C quedan completados. PI-2D está activa mediante #44 y se implementa secuencialmente como #45 → #46 → #47 → #48.'
+          )
+          replace_required(
+              'STATE — BigSmile.md',
+              '[Hecho] El cliente aprobó el baseline de PI-2 el 2026-07-25: campos de propuesta —incluido motivo de visita—, teléfonos tipificados como intake, expiración sliding de 30 días, guardado explícito sin autosave, link de sala de espera single-use de 30 minutos, permiso futuro `patientportal.intake.manage` solo para `TenantAdmin`, scope futuro `patient_intake` y secuencia PI-2A → PI-2B → PI-2C → PI-2D. ADR 016 registra la decisión.',
+              '[Hecho] El cliente aprobó el baseline de PI-2 el 2026-07-25: campos de propuesta —incluido motivo de visita—, teléfonos tipificados como intake, expiración sliding de 30 días, guardado explícito sin autosave, link de sala de espera single-use de 30 minutos, permiso `patientportal.intake.manage` solo para `TenantAdmin`, scope `patient_intake` y secuencia PI-2A → PI-2B → PI-2C → PI-2D. ADR 016 registra el baseline; PI-2C materializó el link, permiso y scope.'
+          )
+          replace_required(
+              'STATE — BigSmile.md',
+              '[Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) queda abierta con autorización explícita y alcance limitado: credencial single-use/hash-only/30 minutos, permiso `patientportal.intake.manage` solo `TenantAdmin`, cuenta unlinked con `scope=patient_intake` y UI staff mínima para generar/copiar/imprimir/QR local. Se implementa únicamente mediante PI-2C1 #36 → PI-2C2 #37 → PI-2C3 #38. PI-2D permanece pendiente.',
+              '[Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) queda completado mediante PI-2C1 #36 / PR #41, PI-2C2 #37 / PR #42 y PI-2C3 #38 / PR #43. El cierre incluye credencial single-use/hash-only de 30 minutos, permiso `patientportal.intake.manage` solo `TenantAdmin`, activación transaccional, cuenta unlinked con `scope=patient_intake`, UI staff para generar/copiar/imprimir/revocar y QR local, fragment cleanup y sesión browser memory-only. CI #455 quedó verde y no se crean datos canónicos.\n\n[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) queda abierta mediante cuatro incrementos obligatorios: PI-2D1 #45 — rutas/sesiones/data-access; PI-2D2 #46 — demografía/contacto/motivo; PI-2D3 #47 — cuestionario fijo de 39 preguntas; PI-2D4 #48 — conflictos/expiración/validación/cierre. Solo #45 está activo; #46 → #47 → #48 permanecen bloqueados secuencialmente.'
+          )
+          replace_required(
+              'STATE — BigSmile.md',
+              '**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016/017; PI-2A y PI-2B completados. La API self-only para pacientes existentes existe; PI-2C está activa para bootstrap de sala de espera y PI-2D conserva la captura Angular del cuestionario.',
+              '**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016–019; PI-2A, PI-2B y PI-2C completados. El bootstrap de sala de espera y el boundary `patient_intake` existen; PI-2D #44 está activo para la captura Angular mediante #45 → #46 → #47 → #48.'
+          )
+          replace_required(
+              'STATE — BigSmile.md',
+              '- ADR 017 — `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`.\n- Cierre PI-1 — `docs/pi-1-patient-portal-access-and-security-closure.md`.',
+              '- ADR 017 — `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`.\n- ADR 018 — `docs/decisions/018-patient-intake-waiting-room-link-management.md`.\n- ADR 019 — `docs/decisions/019-patient-intake-only-authentication-boundary.md`.\n- Plan PI-2D — `docs/pi-2d-angular-intake-capture-plan.md`.\n- Cierre PI-1 — `docs/pi-1-patient-portal-access-and-security-closure.md`.'
+          )
+          replace_required(
+              'STATE — BigSmile.md',
+              '- PI-2C3 Staff Link/Print/QR UI — issue #38.\n- PI-3 Submit, Review and Apply — issue #6.',
+              '- PI-2C3 Staff Link/Print/QR UI — issue #38 / PR #43.\n- PI-2D Angular Capture/Closure — issue #44.\n- PI-2D1 Routes/Session/Data-Access — issue #45.\n- PI-2D2 Demographics/Contact/Reason — issue #46.\n- PI-2D3 Medical Questionnaire — issue #47.\n- PI-2D4 Conflict/Expiry/Closure — issue #48.\n- PI-3 Submit, Review and Apply — issue #6.'
+          )
+
+          # README.md
+          replace_required(
+              'README.md',
+              '* **Latest Phase 2.1 slice completed:** **PI-2B — Existing-Patient Self-Service Draft**\n* **Current slice:** **PI-2C — Waiting-Room Link and Intake-Only Scope**\n* **Public patient runtime:** activation/login/session and linked-patient intake API available; waiting-room bootstrap and intake capture UI remain pending',
+              '* **Latest Phase 2.1 slice completed:** **PI-2C — Waiting-Room Link and Intake-Only Scope**\n* **Current slice:** **PI-2D — Angular Patient Intake Capture and PI-2 Closure**\n* **First active increment:** **PI-2D1 — Patient/intake session routes and self-only data access**\n* **Public patient runtime:** linked-patient and waiting-room activation/login/session plus self-only intake APIs are available; the complete Angular capture form remains under PI-2D'
+          )
+
+          # AGENTS.md
+          replace_required(
+              'AGENTS.md',
+              '- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A and PI-2B completed, PI-2C active',
+              '- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A, PI-2B and PI-2C completed, PI-2D active through #45 → #46 → #47 → #48'
+          )
+          replace_required(
+              'AGENTS.md',
+              '- PI-2C — issue #35; sub-slices #36, #37 and #38',
+              '- PI-2C — issue #35; sub-slices #36, #37 and #38 — completed through PR #43\n- PI-2D — issue #44; increments #45, #46, #47 and #48'
+          )
+          replace_required(
+              'AGENTS.md',
+              'Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted MVP:\n- architecture accepted in ADR 006; PI-1 access decisions are accepted in ADR 012 through ADR 015; PI-2 baseline is accepted in ADR 016\n- PI-1 (#4) is completed through PI-1A to PI-1D\n- PI-2 (#5) is active; PI-2A (#31) and PI-2B (#33) are completed\n- PI-2C (#35) is active only through #36 → #37 → #38 for waiting-room credential, dedicated staff permission, `patient_intake` scope and minimal staff handoff UI; PI-2D retains patient Angular capture\n- PI-3 and PI-4 remain not started\n- full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability\n\n# Immediate objective\nPreserve completed PI-1, PI-2A and PI-2B, and implement only `PI-2C1 — Waiting-Room Credential Foundation and TenantAdmin Management API` before anonymous consume, intake-only JWT or Angular handoff UI.',
+              'Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted MVP:\n- architecture accepted in ADR 006; PI-1 access decisions are accepted in ADR 012 through ADR 015; PI-2 baseline and runtime boundaries are accepted in ADR 016 through ADR 019\n- PI-1 (#4) is completed through PI-1A to PI-1D\n- PI-2 (#5) is active; PI-2A (#31), PI-2B (#33) and PI-2C (#35) are completed\n- PI-2D (#44) is active only through #45 → #46 → #47 → #48 for Angular self-only capture and PI-2 closure\n- PI-3 and PI-4 remain not started\n- full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability\n\n# Immediate objective\nPreserve completed PI-1, PI-2A, PI-2B and PI-2C, and implement only `PI-2D1 — Patient/intake session routes and self-only data access` before demographic form, medical questionnaire or PI-2 closure work.'
+          )
+          replace_required(
+              'AGENTS.md',
+              '- implement PI-2C sequentially: #36 credential/staff API, #37 transactional activation/`patient_intake`, #38 staff copy/print/local-QR UI; keep patient Angular intake capture in PI-2D',
+              '- preserve completed PI-2C credential, activation, `patient_intake`, staff copy/print/local-QR and memory-only handoff boundaries\n- implement PI-2D sequentially: #45 routes/session/data-access, #46 demographics/contact/reason, #47 fixed questionnaire, #48 conflict/expiry/closure'
+          )
+
+          # PROJECT_MAP.md
+          replace_required(
+              'PROJECT_MAP.md',
+              '* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A and PI-2B completed, PI-2C active',
+              '* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A, PI-2B and PI-2C completed, PI-2D active'
+          )
+          replace_required(
+              'PROJECT_MAP.md',
+              'Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B while implementing only PI-2C:',
+              'Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B/PI-2C while implementing only PI-2D:'
+          )
+          replace_required(
+              'PROJECT_MAP.md',
+              '* implement PI-2C only as #36 credential/staff API → #37 intake-only session → #38 staff handoff UI; reserve patient capture for PI-2D\n* preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries\n* PI-1, PI-2A and PI-2B are accepted with tests/ADR evidence; PI-2C1 is the next bounded step',
+              '* preserve PI-2C credential/staff API, transactional intake-only session and memory-only staff handoff UI\n* implement PI-2D only as #45 routes/session/data-access → #46 demographics/contact/reason → #47 fixed questionnaire → #48 conflict/expiry/closure\n* preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries\n* PI-1, PI-2A, PI-2B and PI-2C are accepted with tests/ADR evidence; PI-2D1 #45 is the next bounded step'
+          )
+
+          # docs/product-roadmap.md
+          replace_required(
+              'docs/product-roadmap.md',
+              'Active after formal MVP acceptance. PI-1, PI-2A and PI-2B are completed; PI-2C is active.',
+              'Active after formal MVP acceptance. PI-1, PI-2A, PI-2B and PI-2C are completed; PI-2D is active.'
+          )
+          replace_required(
+              'docs/product-roadmap.md',
+              'Active under ADR 006 and ADR 012–017. PI-1 (#4) is completed. PI-2 (#5) is active; PI-2A (#31) completed domain/persistence and PI-2B (#33 / PR #34) completed existing-patient self-only create/get/save. PI-2C (#35) is active; waiting-room bootstrap and patient Angular capture are not yet implemented.',
+              'Active under ADR 006 and ADR 012–019. PI-1 (#4) is completed. PI-2 (#5) is active; PI-2A (#31), PI-2B (#33) and PI-2C (#35) are completed. Waiting-room credential management, transactional `patient_intake` activation/session and staff handoff UI are available. PI-2D (#44) is active for Angular capture through #45 → #46 → #47 → #48.'
+          )
+          replace_required(
+              'docs/product-roadmap.md',
+              '   3. PI-2C waiting-room link and intake-only scope — #35 — active through #36 → #37 → #38\n   4. PI-2D Angular intake capture/closure — pending',
+              '   3. PI-2C waiting-room link and intake-only scope — #35 — completed through #36 / #37 / #38 and PR #43\n   4. PI-2D Angular intake capture/closure — #44 — active through #45 → #46 → #47 → #48'
+          )
+          replace_required(
+              'docs/product-roadmap.md',
+              '- ADR 017: `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`\n- PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`',
+              '- ADR 017: `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`\n- ADR 018: `docs/decisions/018-patient-intake-waiting-room-link-management.md`\n- ADR 019: `docs/decisions/019-patient-intake-only-authentication-boundary.md`\n- PI-2D plan: `docs/pi-2d-angular-intake-capture-plan.md`\n- PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`'
+          )
+
+          # docs/patient-intake-and-portal-plan.md
+          replace_required(
+              'docs/patient-intake-and-portal-plan.md',
+              '- **Status:** In progress; PI-1, PI-2A and PI-2B completed; PI-2C active\n- **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation\n- **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24\n- **Architecture decisions:** ADR 006 and ADR 012–017',
+              '- **Status:** In progress; PI-1, PI-2A, PI-2B and PI-2C completed; PI-2D active\n- **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation\n- **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24\n- **Architecture decisions:** ADR 006 and ADR 012–019'
+          )
+          replace_required(
+              'docs/patient-intake-and-portal-plan.md',
+              '- **Last updated:** 2026-07-25',
+              '- **Last updated:** 2026-07-27'
+          )
+          replace_required(
+              'docs/patient-intake-and-portal-plan.md',
+              '- Phase 2.1: active; PI-1, PI-2A and PI-2B are completed; PI-2C is active.',
+              '- Phase 2.1: active; PI-1, PI-2A, PI-2B and PI-2C are completed; PI-2D is active.'
+          )
+          replace_required(
+              'docs/patient-intake-and-portal-plan.md',
+              '| PI-2 intake draft | Active; PI-2A and PI-2B completed; PI-2C active | Issue #5 / #31 / #33 / #35 |',
+              '| PI-2 intake draft | Active; PI-2A, PI-2B and PI-2C completed; PI-2D active | Issue #5 / #31 / #33 / #35 / #44 |'
+          )
+          replace_required(
+              'docs/patient-intake-and-portal-plan.md',
+              '| Patient-facing backend/API/database | Access/auth, intake persistence and linked-patient self-only API implemented | PRs #26, #28, #29, #32 and #34 |\n| Patient-facing frontend | Bounded activation/login/session implemented | PR #30 / ADR 015 |\n| Patient-facing intake | Existing-patient API implemented; waiting-room bootstrap and patient capture UI pending | PI-2B / PI-2C / PI-2D |',
+              '| Patient-facing backend/API/database | Access/auth, intake persistence, linked-patient API and waiting-room intake-only bootstrap implemented | PRs #26, #28, #29, #32, #34, #41 and #42 |\n| Patient-facing frontend | Existing-patient auth plus waiting-room staff handoff and intake-only activation implemented | PR #30 / PR #43 / ADR 015 / ADR 019 |\n| Patient-facing intake | Existing-patient and waiting-room self-only APIs implemented; full Angular capture active in PI-2D | PI-2B / PI-2C / PI-2D #44 |'
+          )
+          replace_required(
+              'docs/patient-intake-and-portal-plan.md',
+              '3. **PI-2C — Waiting-Room Link and Intake-Only Account Scope — #35 — active**\n   - PI-2C1 #36: credential/persistence and TenantAdmin management API;\n   - PI-2C2 #37: transactional activation and `patient_intake` session;\n   - PI-2C3 #38: staff generate/copy/print/local-QR UI and closure.\n4. **PI-2D — Angular Patient Intake Capture and PI-2 Closure — pending**\n   - mobile/tablet sections, explicit save, dirty/saved/conflict/expired states and fixed questionnaire UX.',
+              '3. **PI-2C — Waiting-Room Link and Intake-Only Account Scope — #35 — completed**\n   - PI-2C1 #36 / PR #41: credential/persistence and TenantAdmin management API;\n   - PI-2C2 #37 / PR #42: transactional activation and `patient_intake` session;\n   - PI-2C3 #38 / PR #43: staff generate/copy/print/local-QR UI and closure.\n4. **PI-2D — Angular Patient Intake Capture and PI-2 Closure — #44 — active**\n   - PI-2D1 #45: routes, sessions and shared self-only data access — active;\n   - PI-2D2 #46: demographics/contact/reason capture — blocked by #45;\n   - PI-2D3 #47: familiar fixed 39-question capture — blocked by #46;\n   - PI-2D4 #48: conflict/expiry validation and PI-2 closure — blocked by #47;\n   - plan: `docs/pi-2d-angular-intake-capture-plan.md`.'
+          )
+
+          print('PI-2D opening documentation reconciled successfully.')
+          PY
+
+      - name: Commit reconciled documentation and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/reconcile-pi2d-opening.yml
+          git add 'STATE — BigSmile.md' README.md AGENTS.md PROJECT_MAP.md docs/product-roadmap.md docs/patient-intake-and-portal-plan.md docs/pi-2d-angular-intake-capture-plan.md
+          git diff --cached --check
+          git commit -m 'Docs: close PI-2C and open PI-2D in four increments'
+          git push origin HEAD:docs/pi-2d-opening
