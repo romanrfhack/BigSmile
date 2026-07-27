@@ -79,7 +79,7 @@ Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 —
 
 Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Phase 2.1 is active with PI-1, PI-2A and PI-2B completed. ADR 016 accepts the intake baseline and ADR 017 accepts the existing-patient self-only API while opening the waiting-room bootstrap boundary. PI-2C is active; the questionnaire UI remains PI-2D. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.
+Phase 2.1 is active with PI-1, PI-2A, PI-2B and PI-2C completed. PI-2D1 and PI-2D2 are also completed: both patient scopes now share a self-only intake workspace and can explicitly save the supported demographic/contact/responsible-party/reason-for-visit snapshot without canonical writes. PI-2D3 is the next gated increment for the fixed 39-question UI; PI-3 and later capabilities remain unopened. Code presence in reminders, providers, jobs, online booking or advanced analytics still does not imply acceptance.
 
 ---
 
@@ -278,10 +278,10 @@ Current roadmap position:
 * **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
-* **Latest Phase 2.1 increment completed:** **PI-2D1 — Patient/intake session routes and self-only data access**
+* **Latest Phase 2.1 increment completed:** **PI-2D2 — Demographics, contact and reason-for-visit capture**
 * **Current slice:** **PI-2D — Angular Patient Intake Capture and PI-2 Closure**
-* **Current active increment:** **PI-2D2 — Demographics, contact and reason-for-visit capture**
-* **Public patient runtime:** linked-patient and waiting-room authentication plus the shared self-only intake workspace boundary are available; demographic/contact capture is active in PI-2D2 and the medical questionnaire remains PI-2D3
+* **Next gated increment:** **PI-2D3 — Familiar fixed 39-question medical history capture**; implementation pending explicit authorization
+* **Public patient runtime:** linked-patient and waiting-room authentication, the shared self-only intake workspace, and explicit non-medical draft capture are available; the fixed 39-question interaction remains PI-2D3 and canonical application remains PI-3
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 

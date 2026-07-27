@@ -96,7 +96,7 @@
 
 [Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) queda completado mediante PI-2C1 #36 / PR #41, PI-2C2 #37 / PR #42 y PI-2C3 #38 / PR #43. El cierre incluye credencial single-use/hash-only de 30 minutos, permiso `patientportal.intake.manage` solo `TenantAdmin`, activación transaccional, cuenta unlinked con `scope=patient_intake`, UI staff para generar/copiar/imprimir/revocar y QR local, fragment cleanup y sesión browser memory-only. CI #455 quedó verde y no se crean datos canónicos.
 
-[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) permanece activa mediante cuatro incrementos obligatorios. PI-2D1 #45 quedó completado mediante PR #50, merge commit `b11d6af1e3e77e325e38a7022059106d3afa23bd` y CI #459; el hardening de POST intake-only quedó integrado mediante PR #51 y CI #461. PI-2D2 #46 — demografía/contacto/motivo — es el único incremento activo; PI-2D3 #47 y PI-2D4 #48 permanecen bloqueados secuencialmente.
+[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) permanece activa mediante cuatro incrementos obligatorios. PI-2D1 #45 quedó completado mediante PR #50, merge commit `b11d6af1e3e77e325e38a7022059106d3afa23bd` y CI #459; el hardening de POST intake-only quedó integrado mediante PR #51 y CI #461. PI-2D2 #46 quedó completado mediante PR #53, merge commit `ade674eb7f52be366f8c2970539966c10e3d0f52` y CI #470: formulario responsive de demografía/contacto/responsable/motivo, edad derivada, validaciones equivalentes al backend, guardado explícito full-snapshot y preservación intacta de las 39 respuestas. PI-2D3 #47 es el siguiente gate con dependencia satisfecha, pero su implementación permanece pendiente de autorización explícita; PI-2D4 #48 sigue bloqueado por #47.
 
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
@@ -114,7 +114,7 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016–019; PI-2A, PI-2B y PI-2C completados. PI-2D #44 está activo: PI-2D1 #45 completó las rutas, sesiones mutuamente excluyentes y data-access self-only; PI-2D2 #46 es el único incremento activo y #47 → #48 permanecen bloqueados.
+**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016–019; PI-2A, PI-2B y PI-2C completados. PI-2D #44 está activo: PI-2D1 #45 completó rutas/sesiones/data-access self-only y PI-2D2 #46 completó la captura no médica con guardado explícito y preservación del cuestionario. PI-2D3 #47 es el siguiente gate pendiente de autorización; PI-2D4 #48 permanece bloqueado.
 
 **Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 está cerrado y PI-2 se implementa de forma obligatoria mediante PI-2A → PI-2B → PI-2C → PI-2D antes de abrir PI-3.
 
