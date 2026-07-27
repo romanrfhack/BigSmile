@@ -15,7 +15,8 @@ jobs:
           node-version: 22.x
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Diagnose frontend tests
+      - name: Run frontend tests with captured diagnostics
+        id: frontend-tests
         working-directory: frontend
         shell: bash
         run: |
@@ -23,6 +24,15 @@ jobs:
           set +e
           npm test -- --watch=false > pi2d2-test.log 2>&1
           status=$?
-          echo '--- PI-2D2 failure summary ---'
-          grep -E -A 10 -B 4 'FAIL|AssertionError|expected|Expected|Test Files|Tests ' pi2d2-test.log | tail -n 180 || true
-          exit $status
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Upload PI-2D2 test log
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi2d2-test-log
+          path: frontend/pi2d2-test.log
+          if-no-files-found: error
+          retention-days: 1
+      - name: Preserve test result
+        if: steps.frontend-tests.outputs.status != '0'
+        run: exit 1
