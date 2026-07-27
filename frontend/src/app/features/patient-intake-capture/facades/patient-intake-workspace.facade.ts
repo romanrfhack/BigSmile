@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
-import { Observable, catchError, finalize, of, switchMap, tap, throwError } from 'rxjs';
+import { Observable, catchError, finalize, of, switchMap, tap } from 'rxjs';
 import { PatientIntakeAuthApi } from '../../patient-portal-auth/data-access/patient-intake-auth.api';
 import { PatientPortalAuthApi } from '../../patient-portal-auth/data-access/patient-portal-auth.api';
 import { PatientIntakeSessionStore } from '../../patient-portal-auth/services/patient-intake-session.store';
@@ -10,7 +10,12 @@ import {
 } from '../../patient-portal-auth/services/patient-portal-session-boundary.service';
 import { PatientPortalSessionStore } from '../../patient-portal-auth/services/patient-portal-session.store';
 import { PatientIntakeApi } from '../data-access/patient-intake.api';
-import { PatientIntakeDraft } from '../models/patient-intake.models';
+import {
+  PatientIntakeDraft,
+  PatientIntakeNonMedicalFormValue,
+  PatientIntakeSaveOutcome,
+  buildSavePatientIntakeDraftRequest
+} from '../models/patient-intake.models';
 
 export type PatientIntakeWorkspaceStatus =
   | 'idle'
@@ -27,6 +32,9 @@ export class PatientIntakeWorkspaceFacade {
   private readonly intakeState = signal<PatientIntakeDraft | null>(null);
   private readonly errorState = signal<string | null>(null);
   private readonly creatingState = signal(false);
+  private readonly savingState = signal(false);
+  private readonly saveOutcomeState = signal<PatientIntakeSaveOutcome>(null);
+  private readonly saveErrorState = signal<string | null>(null);
   private tenantRealm = '';
 
   readonly status = this.statusState.asReadonly();
@@ -34,6 +42,9 @@ export class PatientIntakeWorkspaceFacade {
   readonly intake = this.intakeState.asReadonly();
   readonly error = this.errorState.asReadonly();
   readonly creating = this.creatingState.asReadonly();
+  readonly saving = this.savingState.asReadonly();
+  readonly saveOutcome = this.saveOutcomeState.asReadonly();
+  readonly saveError = this.saveErrorState.asReadonly();
   readonly canCreate = computed(() => this.modeState() === 'patient' && this.statusState() === 'missing');
 
   constructor(
@@ -49,6 +60,7 @@ export class PatientIntakeWorkspaceFacade {
     this.tenantRealm = normalizeRealm(tenantSubdomain);
     this.errorState.set(null);
     this.intakeState.set(null);
+    this.clearSaveFeedback();
 
     const resolution = this.sessionBoundary.resolve();
     if (
@@ -89,6 +101,7 @@ export class PatientIntakeWorkspaceFacade {
 
     this.creatingState.set(true);
     this.errorState.set(null);
+    this.clearSaveFeedback();
 
     this.intakeApi.create().pipe(
       tap(intake => {
@@ -111,6 +124,31 @@ export class PatientIntakeWorkspaceFacade {
     ).subscribe();
   }
 
+  saveNonMedicalDraft(value: PatientIntakeNonMedicalFormValue): void {
+    const intake = this.intakeState();
+    const mode = this.modeState();
+    if (!intake || !mode || this.statusState() !== 'ready' || this.savingState()) {
+      return;
+    }
+
+    this.savingState.set(true);
+    this.saveOutcomeState.set(null);
+    this.saveErrorState.set(null);
+
+    const request = buildSavePatientIntakeDraftRequest(intake, value);
+    this.intakeApi.save(request).pipe(
+      tap(response => {
+        this.intakeState.set(response.intake);
+        this.saveOutcomeState.set(response.changed ? 'saved' : 'unchanged');
+      }),
+      catchError(error => {
+        this.handleSaveError(error, mode);
+        return of(null);
+      }),
+      finalize(() => this.savingState.set(false))
+    ).subscribe();
+  }
+
   logout(): Observable<void> {
     const mode = this.modeState();
     if (!mode) {
@@ -129,12 +167,18 @@ export class PatientIntakeWorkspaceFacade {
         this.intakeState.set(null);
         this.modeState.set(null);
         this.statusState.set('unauthorized');
+        this.clearSaveFeedback();
       })
     );
   }
 
   clearError(): void {
     this.errorState.set(null);
+  }
+
+  clearSaveFeedback(): void {
+    this.saveOutcomeState.set(null);
+    this.saveErrorState.set(null);
   }
 
   private refreshCurrent(mode: PatientPortalSessionMode): Observable<unknown> {
@@ -166,6 +210,28 @@ export class PatientIntakeWorkspaceFacade {
 
     this.errorState.set('The intake workspace is temporarily unavailable.');
     this.statusState.set('error');
+  }
+
+  private handleSaveError(error: unknown, mode: PatientPortalSessionMode): void {
+    if (error instanceof HttpErrorResponse && error.status === 401) {
+      this.sessionBoundary.clearMode(mode);
+      this.modeState.set(null);
+      this.statusState.set('unauthorized');
+      this.saveErrorState.set('Your intake session is no longer available.');
+      return;
+    }
+
+    if (error instanceof HttpErrorResponse && error.status === 409) {
+      this.saveErrorState.set('The intake draft changed or expired. Reload it before saving again.');
+      return;
+    }
+
+    if (error instanceof HttpErrorResponse && error.status === 400) {
+      this.saveErrorState.set('Review the highlighted information before saving the draft.');
+      return;
+    }
+
+    this.saveErrorState.set('The intake draft could not be saved. Try again.');
   }
 }
 

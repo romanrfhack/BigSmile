@@ -6,6 +6,10 @@ import { PatientIntakeSessionStore } from '../../patient-portal-auth/services/pa
 import { PatientPortalSessionBoundary } from '../../patient-portal-auth/services/patient-portal-session-boundary.service';
 import { PatientPortalSessionStore } from '../../patient-portal-auth/services/patient-portal-session.store';
 import { PatientIntakeApi } from '../data-access/patient-intake.api';
+import {
+  PatientIntakeDraft,
+  PatientIntakeNonMedicalFormValue
+} from '../models/patient-intake.models';
 import { PatientIntakeWorkspaceFacade } from './patient-intake-workspace.facade';
 
 describe('PatientIntakeWorkspaceFacade', () => {
@@ -33,7 +37,7 @@ describe('PatientIntakeWorkspaceFacade', () => {
     intakeApi = {
       create: vi.fn().mockReturnValue(of(draft())),
       getCurrent: vi.fn().mockReturnValue(of(draft())),
-      save: vi.fn()
+      save: vi.fn().mockReturnValue(of({ intake: savedDraft(), changed: true }))
     } as unknown as typeof intakeApi;
     patientAuthApi = {
       getCurrent: vi.fn().mockReturnValue(of(patientCurrent())),
@@ -113,6 +117,62 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(intakeApi.getCurrent).not.toHaveBeenCalled();
   });
 
+  it('saves the complete snapshot while preserving all 39 medical answers', () => {
+    boundary.setPatientSession(patientResponse());
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+
+    facade.saveNonMedicalDraft(nonMedicalValue());
+
+    expect(intakeApi.save).toHaveBeenCalledTimes(1);
+    const request = intakeApi.save.mock.calls[0][0];
+    expect(request).toMatchObject({
+      firstName: 'María',
+      lastName: 'García',
+      occupation: null,
+      mobilePhone: '+52 55 0000 0000',
+      reasonForVisit: 'Dolor al masticar.',
+      concurrencyToken: 'rv1.token'
+    });
+    expect(request.medicalAnswers).toHaveLength(39);
+    expect(request.medicalAnswers).toEqual(draft().medicalAnswers);
+    expect(request).not.toHaveProperty('age');
+    expect(request).not.toHaveProperty('tenantId');
+    expect(request).not.toHaveProperty('patientId');
+    expect(request).not.toHaveProperty('intakeId');
+    expect(facade.saveOutcome()).toBe('saved');
+    expect(facade.intake()?.currentRevisionNumber).toBe(1);
+    expect(facade.intake()?.concurrencyToken).toBe('rv1.next-token');
+  });
+
+  it('represents an unchanged save without inventing a revision increment', () => {
+    boundary.setIntakeSession(intakeResponse());
+    intakeApi.save.mockReturnValue(of({ intake: draft(), changed: false }));
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+
+    facade.saveNonMedicalDraft(nonMedicalValue());
+
+    expect(facade.saveOutcome()).toBe('unchanged');
+    expect(facade.intake()?.currentRevisionNumber).toBe(0);
+    expect(facade.intake()?.concurrencyToken).toBe('rv1.token');
+  });
+
+  it('keeps the current local snapshot and exposes a bounded message on conflict', () => {
+    boundary.setPatientSession(patientResponse());
+    intakeApi.save.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+
+    facade.saveNonMedicalDraft(nonMedicalValue());
+
+    expect(facade.intake()?.concurrencyToken).toBe('rv1.token');
+    expect(facade.saveOutcome()).toBeNull();
+    expect(facade.saveError()).toBe(
+      'The intake draft changed or expired. Reload it before saving again.'
+    );
+  });
+
   function createFacade(): PatientIntakeWorkspaceFacade {
     return new PatientIntakeWorkspaceFacade(
       intakeApi,
@@ -160,33 +220,77 @@ describe('PatientIntakeWorkspaceFacade', () => {
     };
   }
 
-  function draft() {
+  function nonMedicalValue(): PatientIntakeNonMedicalFormValue {
     return {
-      origin: 'ExistingPatientPortal',
-      status: 'Draft',
-      firstName: null,
-      lastName: null,
-      dateOfBirth: null,
-      sex: 'Unspecified',
-      occupation: null,
-      maritalStatus: 'Unspecified',
-      referredBy: null,
-      preferredPhone: null,
-      mobilePhone: null,
-      homePhone: null,
-      workPhone: null,
-      email: null,
-      responsiblePartyName: null,
-      responsiblePartyRelationship: null,
-      responsiblePartyPhone: null,
-      reasonForVisit: null,
-      medicalAnswers: [],
-      currentRevisionNumber: 0,
-      concurrencyToken: 'rv1.token',
-      createdAtUtc: '2026-07-27T10:00:00Z',
-      lastUpdatedAtUtc: '2026-07-27T10:00:00Z',
-      lastEffectiveSavedAtUtc: null,
-      expiresAtUtc: '2026-08-26T10:00:00Z'
+      firstName: ' María ',
+      lastName: ' García ',
+      dateOfBirth: '1992-08-10',
+      sex: 'Female',
+      occupation: '   ',
+      maritalStatus: 'Single',
+      referredBy: '',
+      preferredPhone: '',
+      mobilePhone: '+52 55 0000 0000',
+      homePhone: '',
+      workPhone: '',
+      email: 'maria@example.test',
+      responsiblePartyName: '',
+      responsiblePartyRelationship: '',
+      responsiblePartyPhone: '',
+      reasonForVisit: ' Dolor al masticar. '
     };
   }
 });
+
+function draft(): PatientIntakeDraft {
+  return {
+    origin: 'ExistingPatientPortal',
+    status: 'Draft',
+    firstName: null,
+    lastName: null,
+    dateOfBirth: null,
+    sex: 'Unspecified',
+    occupation: null,
+    maritalStatus: 'Unspecified',
+    referredBy: null,
+    preferredPhone: null,
+    mobilePhone: null,
+    homePhone: null,
+    workPhone: null,
+    email: null,
+    responsiblePartyName: null,
+    responsiblePartyRelationship: null,
+    responsiblePartyPhone: null,
+    reasonForVisit: null,
+    medicalAnswers: Array.from({ length: 39 }, (_, index) => ({
+      questionKey: `question-${index + 1}`,
+      answer: index === 0 ? 'Yes' : 'Unknown',
+      details: index === 0 ? 'Preserve this answer.' : null
+    })),
+    currentRevisionNumber: 0,
+    concurrencyToken: 'rv1.token',
+    createdAtUtc: '2026-07-27T10:00:00Z',
+    lastUpdatedAtUtc: '2026-07-27T10:00:00Z',
+    lastEffectiveSavedAtUtc: null,
+    expiresAtUtc: '2026-08-26T10:00:00Z'
+  };
+}
+
+function savedDraft(): PatientIntakeDraft {
+  return {
+    ...draft(),
+    firstName: 'María',
+    lastName: 'García',
+    dateOfBirth: '1992-08-10',
+    sex: 'Female',
+    maritalStatus: 'Single',
+    mobilePhone: '+52 55 0000 0000',
+    email: 'maria@example.test',
+    reasonForVisit: 'Dolor al masticar.',
+    currentRevisionNumber: 1,
+    concurrencyToken: 'rv1.next-token',
+    lastUpdatedAtUtc: '2026-07-27T11:00:00Z',
+    lastEffectiveSavedAtUtc: '2026-07-27T11:00:00Z',
+    expiresAtUtc: '2026-08-26T11:00:00Z'
+  };
+}
