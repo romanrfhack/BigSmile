@@ -3,16 +3,18 @@ import { Observable, catchError, finalize, of, tap, throwError } from 'rxjs';
 import { PatientIntakeAuthApi } from '../data-access/patient-intake-auth.api';
 import {
   ActivatePatientIntakeAccountRequest,
+  CurrentPatientIntakeSession,
+  LoginPatientIntakeAccountRequest,
   PatientIntakeAuthenticationResponse
 } from '../models/patient-intake-auth.models';
 import { PatientIntakeSessionStore } from '../services/patient-intake-session.store';
-import { PatientPortalSessionStore } from '../services/patient-portal-session.store';
+import { PatientPortalSessionBoundary } from '../services/patient-portal-session-boundary.service';
 
 @Injectable({ providedIn: 'root' })
 export class PatientIntakeAuthFacade {
   private readonly api = inject(PatientIntakeAuthApi);
   private readonly sessionStore = inject(PatientIntakeSessionStore);
-  private readonly linkedPatientSessionStore = inject(PatientPortalSessionStore);
+  private readonly sessionBoundary = inject(PatientPortalSessionBoundary);
   private readonly loadingState = signal(false);
   private readonly errorState = signal<string | null>(null);
 
@@ -23,13 +25,43 @@ export class PatientIntakeAuthFacade {
 
   activate(request: ActivatePatientIntakeAccountRequest): Observable<PatientIntakeAuthenticationResponse> {
     this.beginRequest();
-    this.linkedPatientSessionStore.clear();
-    this.sessionStore.clear();
+    this.sessionBoundary.clearAll();
 
     return this.api.activate(request).pipe(
-      tap(response => this.sessionStore.setSession(response)),
+      tap(response => this.sessionBoundary.setIntakeSession(response)),
       catchError(error => {
         this.errorState.set('The access could not be activated. Ask reception for a new link.');
+        return throwError(() => error);
+      }),
+      finalize(() => this.loadingState.set(false))
+    );
+  }
+
+  login(
+    tenantSubdomain: string,
+    request: LoginPatientIntakeAccountRequest
+  ): Observable<PatientIntakeAuthenticationResponse> {
+    this.beginRequest();
+    this.sessionBoundary.clearAll();
+
+    return this.api.login(tenantSubdomain, request).pipe(
+      tap(response => this.sessionBoundary.setIntakeSession(response)),
+      catchError(error => {
+        this.errorState.set('The supplied intake credential is not valid.');
+        return throwError(() => error);
+      }),
+      finalize(() => this.loadingState.set(false))
+    );
+  }
+
+  refreshCurrent(): Observable<CurrentPatientIntakeSession> {
+    this.beginRequest();
+
+    return this.api.getCurrent().pipe(
+      tap(current => this.sessionStore.updateCurrent(current)),
+      catchError(error => {
+        this.sessionBoundary.clearIntakeSession();
+        this.errorState.set('The intake session is no longer available.');
         return throwError(() => error);
       }),
       finalize(() => this.loadingState.set(false))
@@ -45,14 +77,14 @@ export class PatientIntakeAuthFacade {
         return of(void 0);
       }),
       finalize(() => {
-        this.sessionStore.clear();
+        this.sessionBoundary.clearIntakeSession();
         this.loadingState.set(false);
       })
     );
   }
 
   clearSession(): void {
-    this.sessionStore.clear();
+    this.sessionBoundary.clearIntakeSession();
   }
 
   clearError(): void {

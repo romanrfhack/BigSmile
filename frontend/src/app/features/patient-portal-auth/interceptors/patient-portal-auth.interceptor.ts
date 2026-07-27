@@ -7,42 +7,52 @@ import {
   isPatientPortalApiRequest,
   isPatientPortalPublicAuthRequest
 } from '../../../core/auth/auth-endpoint-scope';
-import { PatientIntakeSessionStore } from '../services/patient-intake-session.store';
-import { PatientPortalSessionStore } from '../services/patient-portal-session.store';
+import {
+  PatientPortalSessionBoundary,
+  PatientPortalSessionMode
+} from '../services/patient-portal-session-boundary.service';
 
 @Injectable()
 export class PatientPortalAuthInterceptor implements HttpInterceptor {
-  constructor(
-    private readonly patientSessionStore: PatientPortalSessionStore,
-    private readonly intakeSessionStore: PatientIntakeSessionStore
-  ) {}
+  constructor(private readonly sessionBoundary: PatientPortalSessionBoundary) {}
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     if (!isPatientPortalApiRequest(req.url) || isPatientPortalPublicAuthRequest(req.url)) {
       return next.handle(req);
     }
 
-    const usesIntakeSession = isPatientIntakeAuthApiRequest(req.url) ||
-      (isPatientIntakeDraftApiRequest(req.url) && this.intakeSessionStore.isAuthenticated());
-    const selectedStore = usesIntakeSession
-      ? this.intakeSessionStore
-      : this.patientSessionStore;
-    const token = selectedStore.getAccessToken();
+    const resolution = this.sessionBoundary.resolve();
+    if (resolution.state !== 'active') {
+      return next.handle(req);
+    }
 
-    if (!token) {
+    const mode = resolution.session.mode;
+    if (!this.isModeAllowedForRequest(req.url, mode)) {
       return next.handle(req);
     }
 
     return next.handle(req.clone({
-      headers: req.headers.set('Authorization', `Bearer ${token}`)
+      headers: req.headers.set('Authorization', `Bearer ${resolution.session.accessToken}`)
     })).pipe(
       catchError(error => {
         if (error instanceof HttpErrorResponse && error.status === 401) {
-          selectedStore.clear();
+          this.sessionBoundary.clearMode(mode);
         }
 
         return throwError(() => error);
       })
     );
+  }
+
+  private isModeAllowedForRequest(url: string, mode: PatientPortalSessionMode): boolean {
+    if (isPatientIntakeDraftApiRequest(url)) {
+      return mode === 'patient' || mode === 'patient_intake';
+    }
+
+    if (isPatientIntakeAuthApiRequest(url)) {
+      return mode === 'patient_intake';
+    }
+
+    return mode === 'patient';
   }
 }

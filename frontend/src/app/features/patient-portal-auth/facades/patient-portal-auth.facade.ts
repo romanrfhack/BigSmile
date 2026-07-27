@@ -7,14 +7,14 @@ import {
   LoginPatientPortalAccountRequest,
   PatientPortalAuthenticationResponse
 } from '../models/patient-portal-auth.models';
-import { PatientIntakeSessionStore } from '../services/patient-intake-session.store';
+import { PatientPortalSessionBoundary } from '../services/patient-portal-session-boundary.service';
 import { PatientPortalSessionStore } from '../services/patient-portal-session.store';
 
 @Injectable({ providedIn: 'root' })
 export class PatientPortalAuthFacade {
   private readonly api = inject(PatientPortalAuthApi);
   private readonly sessionStore = inject(PatientPortalSessionStore);
-  private readonly intakeSessionStore = inject(PatientIntakeSessionStore);
+  private readonly sessionBoundary = inject(PatientPortalSessionBoundary);
   private readonly loadingState = signal(false);
   private readonly errorState = signal<string | null>(null);
 
@@ -24,10 +24,10 @@ export class PatientPortalAuthFacade {
 
   activate(request: ActivatePatientPortalAccountRequest): Observable<PatientPortalAuthenticationResponse> {
     this.beginRequest();
-    this.intakeSessionStore.clear();
+    this.sessionBoundary.clearAll();
 
     return this.api.activate(request).pipe(
-      tap(response => this.sessionStore.setSession(response)),
+      tap(response => this.sessionBoundary.setPatientSession(response)),
       catchError(error => {
         this.errorState.set('Patient portal activation could not be completed.');
         return throwError(() => error);
@@ -41,10 +41,10 @@ export class PatientPortalAuthFacade {
     request: LoginPatientPortalAccountRequest
   ): Observable<PatientPortalAuthenticationResponse> {
     this.beginRequest();
-    this.intakeSessionStore.clear();
+    this.sessionBoundary.clearAll();
 
     return this.api.login(tenantSubdomain, request).pipe(
-      tap(response => this.sessionStore.setSession(response)),
+      tap(response => this.sessionBoundary.setPatientSession(response)),
       catchError(error => {
         this.errorState.set('The supplied patient portal credential is not valid.');
         return throwError(() => error);
@@ -59,7 +59,7 @@ export class PatientPortalAuthFacade {
     return this.api.getCurrent().pipe(
       tap(current => this.sessionStore.updateCurrent(current)),
       catchError(error => {
-        this.sessionStore.clear();
+        this.sessionBoundary.clearPatientSession();
         this.errorState.set('The patient portal session is no longer available.');
         return throwError(() => error);
       }),
@@ -76,7 +76,7 @@ export class PatientPortalAuthFacade {
         return of(void 0);
       }),
       finalize(() => {
-        this.sessionStore.clear();
+        this.sessionBoundary.clearPatientSession();
         this.loadingState.set(false);
       })
     );

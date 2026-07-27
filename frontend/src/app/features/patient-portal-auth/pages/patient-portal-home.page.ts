@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../shared/i18n';
 import { PatientPortalCardComponent } from '../components/patient-portal-card.component';
 import { PatientPortalAuthFacade } from '../facades/patient-portal-auth.facade';
@@ -8,7 +8,7 @@ import { normalizeTenantRealm } from '../guards/patient-portal-auth.guard';
 @Component({
   selector: 'app-patient-portal-home-page',
   standalone: true,
-  imports: [TranslatePipe, PatientPortalCardComponent],
+  imports: [RouterLink, TranslatePipe, PatientPortalCardComponent],
   template: `
     <app-patient-portal-card
       eyebrow="Patient portal"
@@ -31,16 +31,23 @@ import { normalizeTenantRealm } from '../guards/patient-portal-auth.guard';
           </dl>
 
           <div class="patient-alert patient-alert--info">
-            {{ 'The medical information form will be available in the next implementation step. No clinical data can be changed from this screen.' | t }}
+            {{ 'Your intake draft is kept separate from the clinic record until staff review.' | t }}
           </div>
 
-          <button
-            class="patient-button patient-button--secondary"
-            type="button"
-            [disabled]="facade.loading()"
-            (click)="logout()">
-            {{ (facade.loading() ? 'Ending session...' : 'End session') | t }}
-          </button>
+          <div class="patient-form__actions">
+            <a
+              class="patient-button patient-button--primary"
+              [routerLink]="['/patient-portal', current.tenantSubdomain, 'intake']">
+              {{ 'Open my intake' | t }}
+            </a>
+            <button
+              class="patient-button patient-button--secondary"
+              type="button"
+              [disabled]="facade.loading()"
+              (click)="logout()">
+              {{ (facade.loading() ? 'Ending session...' : 'End session') | t }}
+            </button>
+          </div>
         </div>
       } @else if (facade.loading()) {
         <div class="patient-alert patient-alert--info" aria-live="polite">
