@@ -27,7 +27,7 @@ export class PatientPortalAuthInterceptor implements HttpInterceptor {
     }
 
     const mode = resolution.session.mode;
-    if (!this.isModeAllowedForRequest(req.url, mode)) {
+    if (!this.isModeAllowedForRequest(req, mode)) {
       return next.handle(req);
     }
 
@@ -44,12 +44,19 @@ export class PatientPortalAuthInterceptor implements HttpInterceptor {
     );
   }
 
-  private isModeAllowedForRequest(url: string, mode: PatientPortalSessionMode): boolean {
-    if (isPatientIntakeDraftApiRequest(url)) {
+  private isModeAllowedForRequest(
+    request: HttpRequest<unknown>,
+    mode: PatientPortalSessionMode
+  ): boolean {
+    if (isPatientIntakeDraftApiRequest(request.url)) {
+      if (request.method.toUpperCase() === 'POST') {
+        return mode === 'patient';
+      }
+
       return mode === 'patient' || mode === 'patient_intake';
     }
 
-    if (isPatientIntakeAuthApiRequest(url)) {
+    if (isPatientIntakeAuthApiRequest(request.url)) {
       return mode === 'patient_intake';
     }
 

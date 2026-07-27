@@ -37,19 +37,50 @@ describe('patient, intake, and staff auth interceptor separation', () => {
     }
   });
 
-  it('attaches the intake token to intake auth and the shared self-only draft endpoint', () => {
+  it('attaches the intake token to intake auth and shared draft reads/writes', () => {
     const patientStore = new PatientPortalSessionStore();
     const intakeStore = createIntakeSession();
     const interceptor = createInterceptor(patientStore, intakeStore);
 
-    for (const url of [
-      '/api/patient-portal/intake-auth/me',
-      '/api/patient-portal/intake'
+    for (const request of [
+      new HttpRequest('GET', '/api/patient-portal/intake-auth/me'),
+      new HttpRequest('GET', '/api/patient-portal/intake'),
+      new HttpRequest('PUT', '/api/patient-portal/intake', {})
     ]) {
       const handler = new RecordingHandler();
-      interceptor.intercept(new HttpRequest('GET', url), handler).subscribe();
+      interceptor.intercept(request, handler).subscribe();
       expect(handler.request?.headers.get('Authorization')).toBe('Bearer intake-token');
     }
+  });
+
+  it('never sends an intake-only token to linked-patient draft creation', () => {
+    const interceptor = createInterceptor(
+      new PatientPortalSessionStore(),
+      createIntakeSession()
+    );
+    const handler = new RecordingHandler();
+
+    interceptor.intercept(
+      new HttpRequest('POST', '/api/patient-portal/intake', {}),
+      handler
+    ).subscribe();
+
+    expect(handler.request?.headers.has('Authorization')).toBe(false);
+  });
+
+  it('allows the linked-patient token to create a draft explicitly', () => {
+    const interceptor = createInterceptor(
+      createPatientSession(),
+      new PatientIntakeSessionStore()
+    );
+    const handler = new RecordingHandler();
+
+    interceptor.intercept(
+      new HttpRequest('POST', '/api/patient-portal/intake', {}),
+      handler
+    ).subscribe();
+
+    expect(handler.request?.headers.get('Authorization')).toBe('Bearer patient-token');
   });
 
   it('never sends a linked-patient token to intake-only auth endpoints', () => {
