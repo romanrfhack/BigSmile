@@ -1,0 +1,174 @@
+name: Reconcile PI-2D2 Documentation
+
+on:
+  push:
+    branches:
+      - docs/pi-2d2-closure
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reconcile canonical documentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'STATE — BigSmile.md': [
+                  (
+                      '[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) permanece activa mediante cuatro incrementos obligatorios. PI-2D1 #45 quedó completado mediante PR #50, merge commit `b11d6af1e3e77e325e38a7022059106d3afa23bd` y CI #459; el hardening de POST intake-only quedó integrado mediante PR #51 y CI #461. PI-2D2 #46 — demografía/contacto/motivo — es el único incremento activo; PI-2D3 #47 y PI-2D4 #48 permanecen bloqueados secuencialmente.',
+                      '[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) permanece activa mediante cuatro incrementos obligatorios. PI-2D1 #45 quedó completado mediante PR #50, merge commit `b11d6af1e3e77e325e38a7022059106d3afa23bd` y CI #459; el hardening de POST intake-only quedó integrado mediante PR #51 y CI #461. PI-2D2 #46 quedó completado mediante PR #53, merge commit `ade674eb7f52be366f8c2970539966c10e3d0f52` y CI #470: formulario responsive de demografía/contacto/responsable/motivo, edad derivada, validaciones equivalentes al backend, guardado explícito full-snapshot y preservación intacta de las 39 respuestas. PI-2D3 #47 es el siguiente gate con dependencia satisfecha, pero su implementación permanece pendiente de autorización explícita; PI-2D4 #48 sigue bloqueado por #47.'
+                  ),
+                  (
+                      '**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016–019; PI-2A, PI-2B y PI-2C completados. PI-2D #44 está activo: PI-2D1 #45 completó las rutas, sesiones mutuamente excluyentes y data-access self-only; PI-2D2 #46 es el único incremento activo y #47 → #48 permanecen bloqueados.',
+                      '**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016–019; PI-2A, PI-2B y PI-2C completados. PI-2D #44 está activo: PI-2D1 #45 completó rutas/sesiones/data-access self-only y PI-2D2 #46 completó la captura no médica con guardado explícito y preservación del cuestionario. PI-2D3 #47 es el siguiente gate pendiente de autorización; PI-2D4 #48 permanece bloqueado.'
+                  )
+              ],
+              'README.md': [
+                  (
+                      'Phase 2.1 is active with PI-1, PI-2A and PI-2B completed. ADR 016 accepts the intake baseline and ADR 017 accepts the existing-patient self-only API while opening the waiting-room bootstrap boundary. PI-2C is active; the questionnaire UI remains PI-2D. Code in reminders/manual reminders, providers, jobs, online booking, later PI slices or advanced analytics still does not imply acceptance.',
+                      'Phase 2.1 is active with PI-1, PI-2A, PI-2B and PI-2C completed. PI-2D1 and PI-2D2 are also completed: both patient scopes now share a self-only intake workspace and can explicitly save the supported demographic/contact/responsible-party/reason-for-visit snapshot without canonical writes. PI-2D3 is the next gated increment for the fixed 39-question UI; PI-3 and later capabilities remain unopened. Code presence in reminders, providers, jobs, online booking or advanced analytics still does not imply acceptance.'
+                  ),
+                  (
+                      '* **Latest Phase 2.1 increment completed:** **PI-2D1 — Patient/intake session routes and self-only data access**',
+                      '* **Latest Phase 2.1 increment completed:** **PI-2D2 — Demographics, contact and reason-for-visit capture**'
+                  ),
+                  (
+                      '* **Current active increment:** **PI-2D2 — Demographics, contact and reason-for-visit capture**',
+                      '* **Next gated increment:** **PI-2D3 — Familiar fixed 39-question medical history capture**; implementation pending explicit authorization'
+                  ),
+                  (
+                      '* **Public patient runtime:** linked-patient and waiting-room authentication plus the shared self-only intake workspace boundary are available; demographic/contact capture is active in PI-2D2 and the medical questionnaire remains PI-2D3',
+                      '* **Public patient runtime:** linked-patient and waiting-room authentication, the shared self-only intake workspace, and explicit non-medical draft capture are available; the fixed 39-question interaction remains PI-2D3 and canonical application remains PI-3'
+                  )
+              ],
+              'AGENTS.md': [
+                  (
+                      '- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A, PI-2B and PI-2C completed; PI-2D1 #45 completed through PR #50/CI #459 plus PR #51 hardening; PI-2D2 #46 active; #47 → #48 blocked',
+                      '- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A, PI-2B and PI-2C completed; PI-2D1 #45 and PI-2D2 #46 completed through PRs #50/#51/#53 and CI #459/#461/#470; PI-2D3 #47 is the next gated increment pending explicit authorization; PI-2D4 #48 remains blocked'
+                  ),
+                  (
+                      '- PI-2D — issue #44; #45 / PR #50 completed, #46 active, #47 and #48 blocked',
+                      '- PI-2D — issue #44; #45 / PR #50 and #46 / PR #53 completed, #47 next pending authorization, #48 blocked'
+                  ),
+                  (
+                      '- PI-2D (#44) is active: #45 routes/session/data-access is completed; #46 demographics/contact/reason is active; #47 → #48 remain blocked',
+                      '- PI-2D (#44) is active: #45 routes/session/data-access and #46 demographics/contact/reason are completed; #47 fixed questionnaire is the next gate pending explicit authorization; #48 remains blocked'
+                  ),
+                  (
+                      'Preserve completed PI-1, PI-2A, PI-2B, PI-2C and PI-2D1, and implement only `PI-2D2 — Demographics, contact and reason-for-visit capture` before medical-questionnaire or PI-2 closure work.',
+                      'Preserve completed PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2. Do not implement PI-2D3 until its explicit gate is authorized; when authorized, limit it to the shared fixed 39-question catalog, familiar `Sí / No / Sin respuesta` interaction, details/progress and explicit full-snapshot save.'
+                  ),
+                  (
+                      '- preserve completed PI-2D1 route/session/data-access and implement PI-2D sequentially: #46 demographics/contact/reason, #47 fixed questionnaire, #48 conflict/expiry/closure',
+                      '- preserve completed PI-2D1 route/session/data-access and PI-2D2 non-medical capture; keep the remaining sequence #47 fixed questionnaire → #48 conflict/expiry/closure gated and explicit'
+                  )
+              ],
+              'PROJECT_MAP.md': [
+                  (
+                      '* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 completed; PI-2D2 active',
+                      '* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 completed; PI-2D3 is the next gate pending explicit authorization'
+                  ),
+                  (
+                      '* preserve completed PI-2D1 and implement the remaining sequence only as #46 demographics/contact/reason → #47 fixed questionnaire → #48 conflict/expiry/closure',
+                      '* preserve completed PI-2D1 and PI-2D2; keep the remaining sequence only as #47 fixed questionnaire → #48 conflict/expiry/closure'
+                  ),
+                  (
+                      '* PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 are accepted with test evidence; PI-2D2 #46 is the next bounded step',
+                      '* PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 are accepted with test evidence; PI-2D3 #47 is the next gated step and remains unimplemented pending authorization'
+                  )
+              ],
+              'docs/product-roadmap.md': [
+                  (
+                      'Active after formal MVP acceptance. PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 are completed; PI-2D2 is active.',
+                      'Active after formal MVP acceptance. PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 are completed; PI-2D3 is the next gated increment pending explicit authorization.'
+                  ),
+                  (
+                      'Active under ADR 006 and ADR 012–019. PI-1 (#4), PI-2A (#31), PI-2B (#33), PI-2C (#35) and PI-2D1 (#45 / PR #50) are completed. The shared Angular workspace now supports mutually exclusive `patient` / `patient_intake` sessions and exact self-only data access. PI-2D2 (#46) is active; #47 → #48 remain blocked.',
+                      'Active under ADR 006 and ADR 012–019. PI-1 (#4), PI-2A (#31), PI-2B (#33), PI-2C (#35), PI-2D1 (#45 / PR #50) and PI-2D2 (#46 / PR #53) are completed. Both patient scopes can explicitly save the supported non-medical intake snapshot while preserving all 39 medical answers and canonical records. PI-2D3 (#47) is the next gated increment pending explicit authorization; PI-2D4 (#48) remains blocked.'
+                  ),
+                  (
+                      '   4. PI-2D Angular intake capture/closure — #44 — #45 completed; #46 active; #47 → #48 blocked',
+                      '   4. PI-2D Angular intake capture/closure — #44 — #45 and #46 completed; #47 next pending authorization; #48 blocked'
+                  )
+              ],
+              'docs/patient-intake-and-portal-plan.md': [
+                  (
+                      '- **Status:** In progress; PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 completed; PI-2D2 active',
+                      '- **Status:** In progress; PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 completed; PI-2D3 is the next gate pending explicit authorization'
+                  ),
+                  (
+                      '- Phase 2.1: active; PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 are completed; PI-2D2 is active.',
+                      '- Phase 2.1: active; PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 are completed; PI-2D3 is the next gated increment pending explicit authorization.'
+                  ),
+                  (
+                      '| PI-2 intake draft | Active; PI-2A, PI-2B, PI-2C and PI-2D1 completed; PI-2D2 active | Issue #5 / #31 / #33 / #35 / #44 / #45 / #46 |',
+                      '| PI-2 intake draft | Active; PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 completed; PI-2D3 next | Issue #5 / #31 / #33 / #35 / #44 / #45 / #46 / #47 |'
+                  ),
+                  (
+                      '| Patient-facing frontend | Auth, waiting-room handoff and shared linked/intake-only workspace boundary implemented | PR #30 / PR #43 / PR #50 / ADR 015 / ADR 019 |',
+                      '| Patient-facing frontend | Auth, waiting-room handoff, shared workspace and non-medical intake capture implemented | PR #30 / PR #43 / PR #50 / PR #53 / ADR 015 / ADR 019 |'
+                  ),
+                  (
+                      '| Patient-facing intake | Self-only APIs and shared workspace boundary implemented; non-medical form active in PI-2D2 | PI-2B / PI-2C / PI-2D1 #45 / PI-2D2 #46 |',
+                      '| Patient-facing intake | Self-only APIs, shared workspace and explicit non-medical capture implemented; medical questionnaire remains pending | PI-2B / PI-2C / PI-2D1 #45 / PI-2D2 #46 / PR #53 |'
+                  ),
+                  (
+                      '   - PI-2D2 #46: demographics/contact/reason capture — active;',
+                      '   - PI-2D2 #46 / PR #53: demographics/contact/reason capture — completed;'
+                  ),
+                  (
+                      '   - PI-2D3 #47: familiar fixed 39-question capture — blocked by #46;',
+                      '   - PI-2D3 #47: familiar fixed 39-question capture — dependency satisfied; implementation pending explicit authorization;'
+                  )
+              ],
+              'docs/pi-2d-angular-intake-capture-plan.md': [
+                  (
+                      '- **Latest completed increment:** PI-2D1 #45 / PR #50 / CI #459',
+                      '- **Latest completed increment:** PI-2D2 #46 / PR #53 / CI #470'
+                  ),
+                  (
+                      '- **Current active increment:** PI-2D2 #46',
+                      '- **Next gated increment:** PI-2D3 #47 — implementation pending explicit authorization'
+                  ),
+                  (
+                      '### PI-2D2 — Demographics, contact and reason-for-visit — #46 — active',
+                      '### PI-2D2 — Demographics, contact and reason-for-visit — #46 — completed'
+                  ),
+                  (
+                      '- CI green.\n\n### PI-2D3 — Familiar 39-question medical history capture — #47',
+                      '- CI #470 green; PR #53 merged as `ade674eb7f52be366f8c2970539966c10e3d0f52`.\n\n### PI-2D3 — Familiar 39-question medical history capture — #47 — next gate; not started'
+                  )
+              ]
+          }
+
+          for file_name, file_replacements in replacements.items():
+              path = Path(file_name)
+              text = path.read_text(encoding='utf-8')
+              for old, new in file_replacements:
+                  if old not in text:
+                      raise SystemExit(f'Missing expected text in {file_name}: {old[:120]}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text, encoding='utf-8')
+
+          closure = Path('docs/pi-2d2-demographics-contact-and-reason-closure.md')
+          closure.write_text('''# PI-2D2 — Demographics, Contact and Reason-for-Visit Closure\n\n- **Status:** Completed\n- **Issue:** #46\n- **Pull request:** #53\n- **Merge commit:** `ade674eb7f52be366f8c2970539966c10e3d0f52`\n- **Validation:** CI #470\n- **Architecture:** ADR 006 and ADR 012–019; PI-2D plan\n\n## Accepted scope\n\nPI-2D2 adds the responsive patient-facing form for the non-medical fields already supported by `PatientIntake`:\n\n- first and last name;\n- date of birth with derived read-only age;\n- sex, occupation, marital status and referred-by;\n- preferred, mobile, home and work phones;\n- email;\n- responsible-party name, relationship and phone;\n- patient-reported reason for visit.\n\nThe same form works for linked `scope=patient` and unlinked `scope=patient_intake` sessions.\n\n## Save and validation contract\n\n- explicit save only; no autosave;\n- complete snapshot PUT using the current concurrency token;\n- blank optional strings normalized to `null`;\n- frontend constraints mirror the backend while backend validation remains authoritative;\n- date of birth cannot be in the future;\n- responsible-party name is required when relationship or phone is supplied;\n- age is derived and is not transported;\n- all 39 medical answers are preserved unchanged and in server order;\n- `changed=true` replaces the local authoritative revision/token;\n- `changed=false` is represented as a no-op and does not invent a revision.\n\n## Security and compatibility\n\n- no Tenant, Patient, account or intake identifiers were added to route/body authority;\n- patient and intake-only tokens remain memory-only and preserve PI-2D1 bearer separation;\n- no platform override;\n- no backend, database, migration, permission or API contract change;\n- no canonical `Patient`, `ClinicalRecord` or `ClinicalMedicalAnswer` write.\n\n## Deferred\n\n- interactive fixed 39-question medical questionnaire — PI-2D3;\n- final conflict, expiry, unsaved-navigation and closure UX — PI-2D4;\n- submit/review/apply and canonical contact storage — PI-3 prerequisites;\n- retention/privacy production hardening — PI-4.\n\n## Decision note\n\nPI-2D2 implements an already accepted capture contract and does not change architecture, ownership, authentication or session strategy. No new ADR is required. PI-2D3 is the next dependency-satisfied gate but remains unimplemented until explicitly authorized.\n''', encoding='utf-8')
+
+          workflow = Path('.github/workflows/reconcile-pi2d2-docs.yml')
+          workflow.unlink()
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Reconcile PI-2D2 canonical state'
+          git push origin HEAD:docs/pi-2d2-closure
