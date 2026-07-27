@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - phase-2.1/pi-2c3-staff-waiting-room-ui
+  pull_request:
+    branches:
+      - main
 
 jobs:
   diagnose:
