@@ -517,6 +517,10 @@ export class PatientIntakeDemographicsFormComponent implements OnChanges {
     return relevantControlTouched && this.form.hasError('responsiblePartyNameRequired');
   }
 
+  currentValue(): PatientIntakeNonMedicalFormValue {
+    return this.form.getRawValue();
+  }
+
   hasControlError(
     controlName: keyof PatientIntakeNonMedicalFormValue,
     errorCode: string
@@ -536,7 +540,7 @@ export class PatientIntakeDemographicsFormComponent implements OnChanges {
       return;
     }
 
-    this.saveRequested.emit(this.form.getRawValue());
+    this.saveRequested.emit(this.currentValue());
   }
 }
 
