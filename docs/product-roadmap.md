@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 are completed; PI-2D3 is the next gated increment pending explicit authorization.
+Active after formal MVP acceptance. PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3 are completed; PI-2D4 is the next gated increment pending explicit authorization.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006 and ADR 012–019. PI-1 (#4), PI-2A (#31), PI-2B (#33), PI-2C (#35), PI-2D1 (#45 / PR #50) and PI-2D2 (#46 / PR #53) are completed. Both patient scopes can explicitly save the supported non-medical intake snapshot while preserving all 39 medical answers and canonical records. PI-2D3 (#47) is the next gated increment pending explicit authorization; PI-2D4 (#48) remains blocked.
+Active under ADR 006 and ADR 012–019. PI-1 (#4), PI-2A (#31), PI-2B (#33), PI-2C (#35) and PI-2D1 through PI-2D3 (#45–#47 / PRs #50, #53 and #55) are completed. Both patient scopes can explicitly save the supported non-medical snapshot and the shared fixed 39-question questionnaire while canonical records remain unchanged. PI-2D4 (#48) is the next gated increment pending explicit authorization.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -493,7 +493,7 @@ Allow new and existing patients to propose or complement information through lea
    1. PI-2A domain/persistence — #31 — completed
    2. PI-2B existing-patient self-service draft — #33 / PR #34 — completed
    3. PI-2C waiting-room link and intake-only scope — #35 — completed through #36 / #37 / #38 and PR #43
-   4. PI-2D Angular intake capture/closure — #44 — #45 and #46 completed; #47 next pending authorization; #48 blocked
+   4. PI-2D Angular intake capture/closure — #44 — #45, #46 and #47 completed; #48 next pending authorization
 3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
 4. PI-4 — Audit Visibility and Security Hardening — issue #7
 
