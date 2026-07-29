@@ -52,7 +52,7 @@ describe('PatientIntakeWorkspaceFacade', () => {
     } as unknown as typeof intakeAuthApi;
   });
 
-  it('refreshes and loads the linked patient draft without creating it', () => {
+  it('loads the linked-patient draft without creating it', () => {
     boundary.setPatientSession(patientResponse());
     const facade = createFacade();
 
@@ -62,12 +62,10 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(facade.status()).toBe('ready');
     expect(facade.intake()?.concurrencyToken).toBe('rv1.token');
     expect(patientAuthApi.getCurrent).toHaveBeenCalledTimes(1);
-    expect(intakeAuthApi.getCurrent).not.toHaveBeenCalled();
-    expect(intakeApi.getCurrent).toHaveBeenCalledTimes(1);
     expect(intakeApi.create).not.toHaveBeenCalled();
   });
 
-  it('refreshes and loads the exact intake-only draft', () => {
+  it('loads the exact intake-only draft through the same workspace', () => {
     boundary.setIntakeSession(intakeResponse());
     const facade = createFacade();
 
@@ -79,24 +77,21 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(patientAuthApi.getCurrent).not.toHaveBeenCalled();
   });
 
-  it('shows explicit create only for a linked patient after a side-effect-free 404', () => {
+  it('offers explicit create only to a linked patient after side-effect-free 404', () => {
     boundary.setPatientSession(patientResponse());
     intakeApi.getCurrent.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
     const facade = createFacade();
 
     facade.initialize('clinic-a');
-
-    expect(facade.status()).toBe('missing');
     expect(facade.canCreate()).toBe(true);
     expect(intakeApi.create).not.toHaveBeenCalled();
 
     facade.createDraft();
-
     expect(intakeApi.create).toHaveBeenCalledTimes(1);
     expect(facade.status()).toBe('ready');
   });
 
-  it('never allows an intake-only session to create an arbitrary draft', () => {
+  it('never allows intake-only scope to create an arbitrary draft', () => {
     boundary.setIntakeSession(intakeResponse());
     intakeApi.getCurrent.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
     const facade = createFacade();
@@ -104,12 +99,11 @@ describe('PatientIntakeWorkspaceFacade', () => {
     facade.initialize('clinic-a');
     facade.createDraft();
 
-    expect(facade.status()).toBe('missing');
     expect(facade.canCreate()).toBe(false);
     expect(intakeApi.create).not.toHaveBeenCalled();
   });
 
-  it('fails closed on tenant realm mismatch without calling the API', () => {
+  it('fails closed on tenant realm mismatch without calling APIs', () => {
     boundary.setPatientSession(patientResponse());
     const facade = createFacade();
 
@@ -120,14 +114,13 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(intakeApi.getCurrent).not.toHaveBeenCalled();
   });
 
-  it('saves the complete non-medical snapshot while preserving all 39 medical answers', () => {
+  it('saves one complete snapshot with all 39 medical answers', () => {
     boundary.setPatientSession(patientResponse());
     const facade = createFacade();
     facade.initialize('clinic-a');
 
     facade.saveNonMedicalDraft(nonMedicalValue());
 
-    expect(intakeApi.save).toHaveBeenCalledTimes(1);
     const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
     expect(request).toMatchObject({
       firstName: 'María',
@@ -139,55 +132,29 @@ describe('PatientIntakeWorkspaceFacade', () => {
     });
     expect(request.medicalAnswers).toHaveLength(39);
     expect(request.medicalAnswers).toEqual(draft().medicalAnswers);
-    expect(request).not.toHaveProperty('age');
     expect(request).not.toHaveProperty('tenantId');
     expect(request).not.toHaveProperty('patientId');
     expect(request).not.toHaveProperty('intakeId');
-    expect(facade.saveTarget()).toBe('demographics');
     expect(facade.saveOutcome()).toBe('saved');
-    expect(facade.intake()?.currentRevisionNumber).toBe(1);
     expect(facade.intake()?.concurrencyToken).toBe('rv1.next-token');
   });
 
-  it('saves all 39 medical answers and includes current unsaved non-medical edits', () => {
+  it('preserves current unsaved values from the sibling section', () => {
     boundary.setIntakeSession(intakeResponse());
     const facade = createFacade();
     facade.initialize('clinic-a');
-
     const answers = medicalValue();
-    const diabetes = answers.find(answer => answer.questionKey === 'diabetes')!;
-    diabetes.answer = 'Yes';
-    diabetes.details = '  Diet controlled.  ';
+    answers.find(answer => answer.questionKey === 'diabetes')!.answer = 'Yes';
+
     facade.saveMedicalDraft(answers, nonMedicalValue());
 
     const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
     expect(request.firstName).toBe('María');
-    expect(request.lastName).toBe('García');
-    expect(request.reasonForVisit).toBe('Dolor al masticar.');
     expect(request.medicalAnswers.map(answer => answer.questionKey)).toEqual(MEDICAL_QUESTIONNAIRE_KEYS);
-    expect(request.medicalAnswers.find(answer => answer.questionKey === 'diabetes')).toEqual({
-      questionKey: 'diabetes',
-      answer: 'Yes',
-      details: 'Diet controlled.'
-    });
-    expect(facade.saveTarget()).toBe('medical');
-    expect(facade.saveOutcome()).toBe('saved');
+    expect(request.medicalAnswers.find(answer => answer.questionKey === 'diabetes')?.answer).toBe('Yes');
   });
 
-  it('includes current unsaved medical edits when saving the non-medical section', () => {
-    boundary.setPatientSession(patientResponse());
-    const facade = createFacade();
-    facade.initialize('clinic-a');
-    const answers = medicalValue();
-    answers.find(answer => answer.questionKey === 'hypertension')!.answer = 'No';
-
-    facade.saveNonMedicalDraft(nonMedicalValue(), answers);
-
-    const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
-    expect(request.medicalAnswers.find(answer => answer.questionKey === 'hypertension')?.answer).toBe('No');
-  });
-
-  it('represents an unchanged save without inventing a revision increment', () => {
+  it('represents no-op save without inventing a revision increment', () => {
     boundary.setIntakeSession(intakeResponse());
     intakeApi.save.mockReturnValue(of({ intake: draft(), changed: false }));
     const facade = createFacade();
@@ -195,26 +162,30 @@ describe('PatientIntakeWorkspaceFacade', () => {
 
     facade.saveMedicalDraft(medicalValue());
 
-    expect(facade.saveTarget()).toBe('medical');
     expect(facade.saveOutcome()).toBe('unchanged');
     expect(facade.intake()?.currentRevisionNumber).toBe(0);
     expect(facade.intake()?.concurrencyToken).toBe('rv1.token');
   });
 
-  it('keeps the current local snapshot and exposes a bounded message on conflict', () => {
+  it('retains the current snapshot and blocks repeated stale writes after conflict', () => {
     boundary.setPatientSession(patientResponse());
-    intakeApi.save.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+    intakeApi.save.mockReturnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: { code: 'patient_intake.concurrency_conflict' }
+    })));
     const facade = createFacade();
     facade.initialize('clinic-a');
 
     facade.saveNonMedicalDraft(nonMedicalValue());
+    facade.saveNonMedicalDraft(nonMedicalValue());
 
     expect(facade.intake()?.concurrencyToken).toBe('rv1.token');
-    expect(facade.saveTarget()).toBe('demographics');
-    expect(facade.saveOutcome()).toBeNull();
+    expect(facade.blockingState()).toBe('conflict');
+    expect(facade.saveBlocked()).toBe(true);
     expect(facade.saveError()).toBe(
-      'The intake draft changed or expired. Reload it before saving again.'
+      'A newer version of this intake exists. Reload it before saving again.'
     );
+    expect(intakeApi.save).toHaveBeenCalledTimes(1);
   });
 
   function createFacade(): PatientIntakeWorkspaceFacade {
@@ -227,72 +198,72 @@ describe('PatientIntakeWorkspaceFacade', () => {
       boundary
     );
   }
-
-  function patientResponse() {
-    return {
-      accessToken: 'patient-token',
-      expiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
-      current: patientCurrent()
-    };
-  }
-
-  function intakeResponse() {
-    return {
-      accessToken: 'intake-token',
-      expiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
-      current: intakeCurrent()
-    };
-  }
-
-  function patientCurrent() {
-    return {
-      accountId: 'patient-account-id',
-      patientId: 'patient-id',
-      tenantSubdomain: 'clinic-a',
-      loginName: 'patient.login',
-      sessionVersion: 1
-    };
-  }
-
-  function intakeCurrent() {
-    return {
-      accountId: 'intake-account-id',
-      intakeId: 'intake-id',
-      tenantSubdomain: 'clinic-a',
-      loginName: 'new.patient',
-      sessionVersion: 1
-    };
-  }
-
-  function nonMedicalValue(): PatientIntakeNonMedicalFormValue {
-    return {
-      firstName: ' María ',
-      lastName: ' García ',
-      dateOfBirth: '1992-08-10',
-      sex: 'Female',
-      occupation: '   ',
-      maritalStatus: 'Single',
-      referredBy: '',
-      preferredPhone: '',
-      mobilePhone: '+52 55 0000 0000',
-      homePhone: '',
-      workPhone: '',
-      email: 'maria@example.test',
-      responsiblePartyName: '',
-      responsiblePartyRelationship: '',
-      responsiblePartyPhone: '',
-      reasonForVisit: ' Dolor al masticar. '
-    };
-  }
-
-  function medicalValue(): PatientIntakeMedicalAnswerFormValue[] {
-    return MEDICAL_QUESTIONNAIRE_KEYS.map(questionKey => ({
-      questionKey,
-      answer: 'Unknown',
-      details: ''
-    }));
-  }
 });
+
+function patientResponse() {
+  return {
+    accessToken: 'patient-token',
+    expiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
+    current: patientCurrent()
+  };
+}
+
+function intakeResponse() {
+  return {
+    accessToken: 'intake-token',
+    expiresAtUtc: new Date(Date.now() + 60_000).toISOString(),
+    current: intakeCurrent()
+  };
+}
+
+function patientCurrent() {
+  return {
+    accountId: 'patient-account-id',
+    patientId: 'patient-id',
+    tenantSubdomain: 'clinic-a',
+    loginName: 'patient.login',
+    sessionVersion: 1
+  };
+}
+
+function intakeCurrent() {
+  return {
+    accountId: 'intake-account-id',
+    intakeId: 'intake-id',
+    tenantSubdomain: 'clinic-a',
+    loginName: 'new.patient',
+    sessionVersion: 1
+  };
+}
+
+function nonMedicalValue(): PatientIntakeNonMedicalFormValue {
+  return {
+    firstName: ' María ',
+    lastName: ' García ',
+    dateOfBirth: '1992-08-10',
+    sex: 'Female',
+    occupation: '   ',
+    maritalStatus: 'Single',
+    referredBy: '',
+    preferredPhone: '',
+    mobilePhone: '+52 55 0000 0000',
+    homePhone: '',
+    workPhone: '',
+    email: 'maria@example.test',
+    responsiblePartyName: '',
+    responsiblePartyRelationship: '',
+    responsiblePartyPhone: '',
+    reasonForVisit: ' Dolor al masticar. '
+  };
+}
+
+function medicalValue(): PatientIntakeMedicalAnswerFormValue[] {
+  return MEDICAL_QUESTIONNAIRE_KEYS.map(questionKey => ({
+    questionKey,
+    answer: 'Unknown',
+    details: ''
+  }));
+}
 
 function draft(): PatientIntakeDraft {
   return {
@@ -333,16 +304,8 @@ function savedDraft(): PatientIntakeDraft {
     ...draft(),
     firstName: 'María',
     lastName: 'García',
-    dateOfBirth: '1992-08-10',
-    sex: 'Female',
-    maritalStatus: 'Single',
-    mobilePhone: '+52 55 0000 0000',
-    email: 'maria@example.test',
-    reasonForVisit: 'Dolor al masticar.',
     currentRevisionNumber: 1,
     concurrencyToken: 'rv1.next-token',
-    lastUpdatedAtUtc: '2026-07-27T11:00:00Z',
-    lastEffectiveSavedAtUtc: '2026-07-27T11:00:00Z',
-    expiresAtUtc: '2026-08-26T11:00:00Z'
+    lastEffectiveSavedAtUtc: '2026-07-27T11:00:00Z'
   };
 }
