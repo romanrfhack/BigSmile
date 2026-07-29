@@ -148,12 +148,6 @@
   line-height: 1.1;
   text-align: center;
   cursor: pointer;
-  transition:
-    background-color var(--bsm-motion-fast) var(--bsm-ease-standard),
-    border-color var(--bsm-motion-fast) var(--bsm-ease-standard),
-    box-shadow var(--bsm-motion-fast) var(--bsm-ease-standard),
-    color var(--bsm-motion-fast) var(--bsm-ease-standard),
-    transform var(--bsm-motion-fast) var(--bsm-ease-standard);
 }
 
 .medical-option input:checked + span {
@@ -167,11 +161,6 @@
 .patient-button:focus-visible {
   outline: none;
   box-shadow: var(--bsm-shadow-focus);
-}
-
-.medical-option input:not(:disabled) + span:hover {
-  border-color: var(--bsm-color-primary-soft);
-  transform: translateY(-1px);
 }
 
 .medical-details {
@@ -220,16 +209,6 @@
   border: 1px solid var(--bsm-color-border);
   border-radius: var(--bsm-radius-md);
   background: var(--bsm-color-surface);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .medical-option span {
-    transition: none;
-  }
-
-  .medical-option input:not(:disabled) + span:hover {
-    transform: none;
-  }
 }
 
 @media (max-width: 860px) {
