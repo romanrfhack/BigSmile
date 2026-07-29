@@ -79,7 +79,7 @@ Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 —
 
 Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Phase 2.1 is active with PI-1, PI-2A, PI-2B and PI-2C completed. PI-2D1 through PI-2D3 are also completed: both patient scopes share a self-only workspace, can explicitly save the supported non-medical fields, and can capture the fixed 39-question medical questionnaire through one shared frontend catalog without canonical writes. PI-2D4 is the next gated increment for conflict, expiry, unsaved-navigation validation and PI-2 closure; PI-3 and later capabilities remain unopened. Code presence in reminders, providers, jobs, online booking or advanced analytics still does not imply acceptance.
+Phase 2.1 is active with PI-1 and PI-2 completed. Both patient scopes use the same self-only workspace for explicit full-snapshot demographic/contact and fixed 39-question capture, with conflict/expiry/session-invalidated recovery and unsaved-navigation protection. Canonical Patient/Clinical data remains unchanged. PI-3 submit/review/apply and PI-4 audit hardening remain unopened and require separate decisions. Code presence in reminders, providers, jobs, online booking or advanced analytics still does not imply acceptance.
 
 ---
 

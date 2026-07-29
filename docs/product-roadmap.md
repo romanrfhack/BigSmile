@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3 are completed; PI-2D4 is the next gated increment pending explicit authorization.
+Active after formal MVP acceptance. PI-1 and PI-2 are completed; PI-3 and PI-4 remain not started and require separate explicit opening decisions.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006 and ADR 012–019. PI-1 (#4), PI-2A (#31), PI-2B (#33), PI-2C (#35) and PI-2D1 through PI-2D3 (#45–#47 / PRs #50, #53 and #55) are completed. Both patient scopes can explicitly save the supported non-medical snapshot and the shared fixed 39-question questionnaire while canonical records remain unchanged. PI-2D4 (#48) is the next gated increment pending explicit authorization.
+Active under ADR 006 and ADR 012–019. PI-1 (#4) and PI-2 (#5) are completed through PI-2D4 (#48 / PR #57 / CI #485). Both patient scopes can explicitly capture and save the supported non-medical snapshot and fixed 39-question questionnaire with conflict/expiry/session recovery while canonical records remain unchanged. PI-3 and PI-4 remain not started.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -489,11 +489,11 @@ Allow new and existing patients to propose or complement information through lea
    2. PI-1B staff invitation lifecycle — #23 — completed
    3. PI-1C activation/login/self-session — #24 — completed
    4. PI-1D patient auth frontend/security closure — #25 — completed
-2. PI-2 — Intake Draft and Self-Service Capture — issue #5 — active
+2. PI-2 — Intake Draft and Self-Service Capture — issue #5 — completed
    1. PI-2A domain/persistence — #31 — completed
    2. PI-2B existing-patient self-service draft — #33 / PR #34 — completed
    3. PI-2C waiting-room link and intake-only scope — #35 — completed through #36 / #37 / #38 and PR #43
-   4. PI-2D Angular intake capture/closure — #44 — #45, #46 and #47 completed; #48 next pending authorization
+   4. PI-2D Angular intake capture/closure — #44 — #45 through #48 completed
 3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
 4. PI-4 — Audit Visibility and Security Hardening — issue #7
 

@@ -96,7 +96,7 @@
 
 [Hecho] PI-2C — Waiting-Room Link and Intake-Only Scope (#35) queda completado mediante PI-2C1 #36 / PR #41, PI-2C2 #37 / PR #42 y PI-2C3 #38 / PR #43. El cierre incluye credencial single-use/hash-only de 30 minutos, permiso `patientportal.intake.manage` solo `TenantAdmin`, activación transaccional, cuenta unlinked con `scope=patient_intake`, UI staff para generar/copiar/imprimir/revocar y QR local, fragment cleanup y sesión browser memory-only. CI #455 quedó verde y no se crean datos canónicos.
 
-[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) permanece activa mediante cuatro incrementos obligatorios. PI-2D1 #45 quedó completado mediante PR #50 y CI #459, con hardening method-aware en PR #51 / CI #461. PI-2D2 #46 quedó completado mediante PR #53 y CI #470. PI-2D3 #47 quedó completado mediante PR #55, merge commit `378ddb255b975efc98d1902a054bf5568f39857c` y CI #479: catálogo frontend compartido de seis secciones/39 claves, captura familiar `Sí / No / Sin respuesta`, detalle acotado, progreso y guardado explícito full-snapshot que preserva las ediciones de ambas secciones. PI-2D4 #48 es el siguiente gate con dependencia satisfecha, pero permanece sin implementar y requiere autorización explícita.
+[Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) queda completado mediante PI-2D1 a PI-2D4. PI-2D1 #45 cerró rutas/sesiones/data-access mediante PR #50 y el hardening method-aware de PR #51; PI-2D2 #46 cerró captura no médica mediante PR #53; PI-2D3 #47 cerró el catálogo compartido y las 39 preguntas mediante PR #55; PI-2D4 #48 quedó completado mediante PR #57, merge commit `4b8cb66163948c5b69ff6c3c0027d01e105ce1fb` y CI #485 con conflicto/expiración fail-safe, sesión scope-correct, navegación sin guardar y smoke automatizado. Con ello PI-2 — Intake Draft and Self-Service Capture queda formalmente cerrado sin writes canónicos.
 
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
@@ -114,9 +114,9 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] fase abierta; PI-1 completado mediante PI-1A a PI-1D; PI-2 activa bajo ADR 016–019; PI-2A, PI-2B y PI-2C completados. PI-2D #44 está activo: PI-2D1 #45 completó rutas/sesiones/data-access, PI-2D2 #46 completó la captura no médica y PI-2D3 #47 completó el cuestionario fijo compartido de 39 preguntas. PI-2D4 #48 es el siguiente gate pendiente de autorización; PI-3 y PI-4 permanecen sin iniciar.
+**Estado** — [Hecho] fase abierta con PI-1 y PI-2 completados. PI-2A a PI-2D quedaron cerrados con persistencia, APIs self-only, waiting-room scope, captura Angular completa y hardening de conflicto/expiración/navegación. PI-3 — Submit, Clinic Review and Canonical Apply y PI-4 — Audit Visibility and Security Hardening permanecen sin iniciar; abrir PI-3 requiere una decisión explícita separada.
 
-**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 está cerrado y PI-2 se implementa de forma obligatoria mediante PI-2A → PI-2B → PI-2C → PI-2D antes de abrir PI-3.
+**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 y PI-2 están cerrados. PI-3 no se abre automáticamente por este cierre y no existen todavía submit/review/apply ni writes canónicos desde el intake.
 
 **Tracking** — [Hecho]
 
@@ -131,6 +131,7 @@
 - ADR 019 — `docs/decisions/019-patient-intake-only-authentication-boundary.md`.
 - Plan PI-2D — `docs/pi-2d-angular-intake-capture-plan.md`.
 - Cierre PI-2D3 — `docs/pi-2d3-medical-questionnaire-closure.md`.
+- Cierre PI-2 — `docs/pi-2-patient-intake-capture-closure.md`.
 - Cierre PI-1 — `docs/pi-1-patient-portal-access-and-security-closure.md`.
 - Runbook — `docs/patient-portal-assisted-recovery-runbook.md`.
 - Plan general — `docs/patient-intake-and-portal-plan.md`.
