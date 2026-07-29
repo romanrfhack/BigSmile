@@ -1,13 +1,13 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 completed; PI-2D3 is the next gate pending explicit authorization
+- **Status:** In progress; PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3 completed; PI-2D4 is the next gate pending explicit authorization
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
 - **Architecture decisions:** ADR 006 and ADR 012–019
 - **Canonical ADR:** `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - **Parent tracking:** GitHub issue #2
 - **Implementation tracking:** issues #4, #5, #6 and #7
-- **Last updated:** 2026-07-27
+- **Last updated:** 2026-07-29
 
 ## 1. Purpose
 
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1, PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 are completed; PI-2D3 is the next gated increment pending explicit authorization.
+- Phase 2.1: active; PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3 are completed; PI-2D4 is the next gated increment pending explicit authorization.
 
 This placement is deliberate:
 
@@ -59,12 +59,12 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Patient-facing architecture decision | Accepted and merged | ADR 006 / PR #3 |
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Completed through PI-1A to PI-1D | Issues #4 and #22–#25 / PRs #26, #28, #29 and #30 |
-| PI-2 intake draft | Active; PI-2A, PI-2B, PI-2C, PI-2D1 and PI-2D2 completed; PI-2D3 next | Issue #5 / #31 / #33 / #35 / #44 / #45 / #46 / #47 |
+| PI-2 intake draft | Active; PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3 completed; PI-2D4 next | Issue #5 / #31 / #33 / #35 / #44 / #45 / #46 / #47 / #48 |
 | PI-3 submit/review/apply | Planned; not implemented | Issue #6 |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
 | Patient-facing backend/API/database | Access/auth, intake persistence, linked-patient API and waiting-room intake-only bootstrap implemented | PRs #26, #28, #29, #32, #34, #41 and #42 |
-| Patient-facing frontend | Auth, waiting-room handoff, shared workspace and non-medical intake capture implemented | PR #30 / PR #43 / PR #50 / PR #53 / ADR 015 / ADR 019 |
-| Patient-facing intake | Self-only APIs, shared workspace and explicit non-medical capture implemented; medical questionnaire remains pending | PI-2B / PI-2C / PI-2D1 #45 / PI-2D2 #46 / PR #53 |
+| Patient-facing frontend | Auth, waiting-room handoff, shared workspace, non-medical capture and fixed 39-question capture implemented | PR #30 / PR #43 / PR #50 / PR #53 / PR #55 / ADR 015 / ADR 019 |
+| Patient-facing intake | Self-only APIs, shared workspace, explicit non-medical capture and shared fixed 39-question questionnaire implemented; final conflict/expiry closure remains pending | PI-2B / PI-2C / PI-2D1 #45 / PI-2D2 #46 / PI-2D3 #47 / PR #55 |
 
 ## 4. Scope boundary
 

@@ -4,8 +4,8 @@
 - **Parent:** PI-2 issue #5
 - **Tracking:** PI-2D #44
 - **Dependencies:** PI-2A #31, PI-2B #33 and completed PI-2C #35
-- **Latest completed increment:** PI-2D2 #46 / PR #53 / CI #470
-- **Next gated increment:** PI-2D3 #47 — implementation pending explicit authorization
+- **Latest completed increment:** PI-2D3 #47 / PR #55 / CI #479
+- **Next gated increment:** PI-2D4 #48 — implementation pending explicit authorization
 - **Required sequence:** #45 → #46 → #47 → #48
 - **Architecture:** ADR 006 and ADR 012–019
 - **Risk:** High but bounded — browser capture of personal and patient-reported medical data
@@ -132,7 +132,7 @@ Exit gate:
 - no canonical writes;
 - CI #470 green; PR #53 merged as `ade674eb7f52be366f8c2970539966c10e3d0f52`.
 
-### PI-2D3 — Familiar 39-question medical history capture — #47 — next gate; not started
+### PI-2D3 — Familiar 39-question medical history capture — #47 — completed
 
 Scope:
 
@@ -147,7 +147,7 @@ Exit gate:
 
 - exactly 39 unique keys rendered and submitted once;
 - clinical and intake consumers share catalog parity;
-- accessible responsive behavior and CI green.
+- accessible responsive behavior; PR #55 merged as `378ddb255b975efc98d1902a054bf5568f39857c`; CI #479 green.
 
 ### PI-2D4 — Conflict/expiry UX, validation and PI-2 closure — #48
 
