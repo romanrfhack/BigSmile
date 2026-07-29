@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
+import { patientIntakeUnsavedChangesGuard } from './features/patient-intake-capture/guards/patient-intake-unsaved-changes.guard';
 import {
   patientIntakeAnonymousGuard,
   patientIntakeWorkspaceGuard
@@ -102,7 +103,8 @@ export const routes: Routes = [
       {
         path: ':tenantSubdomain/intake',
         loadComponent: loadPatientIntakeWorkspacePage,
-        canActivate: [patientIntakeWorkspaceGuard]
+        canActivate: [patientIntakeWorkspaceGuard],
+        canDeactivate: [patientIntakeUnsavedChangesGuard]
       },
       {
         path: ':tenantSubdomain/login',
