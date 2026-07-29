@@ -43,16 +43,25 @@ describe('PatientIntakeMedicalQuestionnaireComponent', () => {
   it('counts only non-Unknown answers and preserves details when changing away from Yes', () => {
     const fixture = createComponent(draft());
     const answer = fixture.componentInstance.answerForm('diabetes');
+    const yesRadio = fixture.nativeElement.querySelector(
+      '#patient-intake-medical-answer-diabetes-yes') as HTMLInputElement;
 
-    answer.controls.answer.setValue('Yes');
-    answer.controls.details.setValue('  Controlled with diet.  ');
-    fixture.detectChanges(false);
+    yesRadio.click();
+    fixture.detectChanges();
+
+    const details = fixture.nativeElement.querySelector(
+      '#patient-intake-medical-details-diabetes') as HTMLTextAreaElement;
+    details.value = '  Controlled with diet.  ';
+    details.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
 
     expect(fixture.componentInstance.capturedQuestionCount).toBe(1);
-    expect(fixture.nativeElement.querySelector('#patient-intake-medical-details-diabetes')).not.toBeNull();
+    expect(details).not.toBeNull();
 
-    answer.controls.answer.setValue('No');
-    fixture.detectChanges(false);
+    const noRadio = fixture.nativeElement.querySelector(
+      '#patient-intake-medical-answer-diabetes-no') as HTMLInputElement;
+    noRadio.click();
+    fixture.detectChanges();
 
     expect(fixture.componentInstance.capturedQuestionCount).toBe(1);
     expect(answer.controls.details.value).toBe('  Controlled with diet.  ');
