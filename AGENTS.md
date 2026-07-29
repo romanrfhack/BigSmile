@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1, PI-2A, PI-2B and PI-2C completed; PI-2D1 #45, PI-2D2 #46 and PI-2D3 #47 completed through PRs #50/#51/#53/#55 and CI #459/#461/#470/#479; PI-2D4 #48 is the next gated increment pending explicit authorization
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 and PI-2 are completed through PI-2D4 #48 / PR #57 / CI #485; PI-3 and PI-4 remain not started and require separate explicit opening decisions
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -140,7 +140,7 @@ Phase 2.1 opening evidence:
 - PI-2A — issue #31 / PR #32
 - PI-2B — issue #33 / PR #34
 - PI-2C — issue #35; sub-slices #36, #37 and #38 — completed through PR #43
-- PI-2D — issue #44; #45 / PR #50, #46 / PR #53 and #47 / PR #55 completed; #48 next pending authorization
+- PI-2D — issue #44; #45 / PR #50, #46 / PR #53, #47 / PR #55 and #48 / PR #57 completed; PI-2 closed
 
 Treat Release 4 as the accepted foundational Odontogram boundary:
 - explicit creation and `404` when missing
@@ -191,13 +191,13 @@ Repository code also exists in later capabilities, including reminders/manual re
 Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted MVP:
 - architecture accepted in ADR 006; PI-1 access decisions are accepted in ADR 012 through ADR 015; PI-2 baseline and runtime boundaries are accepted in ADR 016 through ADR 019
 - PI-1 (#4) is completed through PI-1A to PI-1D
-- PI-2 (#5) is active; PI-2A (#31), PI-2B (#33) and PI-2C (#35) are completed
-- PI-2D (#44) is active: #45 routes/session/data-access, #46 demographics/contact/reason and #47 fixed questionnaire are completed; #48 conflict/expiry/closure is the next gate pending explicit authorization
+- PI-2 (#5) is completed through PI-2A (#31), PI-2B (#33), PI-2C (#35) and PI-2D (#44)
+- PI-2D (#44) is completed through #45–#48, including conflict/expiry/session-invalidated UX, dirty-navigation protection and automated smoke evidence
 - PI-3 and PI-4 remain not started
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve completed PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3. Do not implement PI-2D4 until its explicit gate is authorized; when authorized, limit it to conflict/expiry/session-invalidated states, unsaved-navigation protection, responsive/accessibility validation, operational smoke evidence and PI-2 closure.
+Preserve completed PI-1 and PI-2 without opening PI-3 implicitly. The next product decision is whether to authorize PI-3 — Submit, Clinic Review and Canonical Apply; until then, canonical Patient and Clinical data remain clinic-controlled and unchanged by intake.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -210,7 +210,7 @@ Immediate priorities:
 - preserve ADR 016 fields, typed-phone proposal ownership, 30-day effective-save expiry, explicit save and append-only revisions
 - preserve PI-2B as linked existing-patient self-only create/get/save with id-less ownership, no-store, optimistic concurrency and no canonical Patient/Clinical writes
 - preserve completed PI-2C credential, activation, `patient_intake`, staff copy/print/local-QR and memory-only handoff boundaries
-- preserve completed PI-2D1 route/session/data-access, PI-2D2 non-medical capture and PI-2D3 shared fixed questionnaire; keep #48 conflict/expiry/closure gated and explicit
+- preserve completed PI-2D1 through PI-2D4, including explicit full-snapshot save, 39-key parity, stale-write blocking, scope-correct recovery and route-only unsaved-navigation protection
 - avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override

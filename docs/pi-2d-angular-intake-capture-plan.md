@@ -1,11 +1,11 @@
 # PI-2D — Angular Patient Intake Capture Plan
 
-- **Status:** Active
+- **Status:** Completed
 - **Parent:** PI-2 issue #5
 - **Tracking:** PI-2D #44
 - **Dependencies:** PI-2A #31, PI-2B #33 and completed PI-2C #35
-- **Latest completed increment:** PI-2D3 #47 / PR #55 / CI #479
-- **Next gated increment:** PI-2D4 #48 — implementation pending explicit authorization
+- **Latest completed increment:** PI-2D4 #48 / PR #57 / CI #485
+- **Next gated increment:** none inside PI-2D; opening PI-3 requires a separate explicit decision
 - **Required sequence:** #45 → #46 → #47 → #48
 - **Architecture:** ADR 006 and ADR 012–019
 - **Risk:** High but bounded — browser capture of personal and patient-reported medical data
@@ -149,7 +149,7 @@ Exit gate:
 - clinical and intake consumers share catalog parity;
 - accessible responsive behavior; PR #55 merged as `378ddb255b975efc98d1902a054bf5568f39857c`; CI #479 green.
 
-### PI-2D4 — Conflict/expiry UX, validation and PI-2 closure — #48
+### PI-2D4 — Conflict/expiry UX, validation and PI-2 closure — #48 — completed
 
 Scope:
 
@@ -166,7 +166,7 @@ Exit gate:
 - conflicts, expiry and session invalidation fail safely;
 - operational smoke flows pass;
 - canonical data remains unchanged;
-- CI green and docs aligned.
+- PR #57 merged as `4b8cb66163948c5b69ff6c3c0027d01e105ce1fb`; CI #485 green; canonical closure recorded in `docs/pi-2-patient-intake-capture-closure.md`.
 
 ## 5. Route and session boundary
 

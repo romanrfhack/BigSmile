@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3 completed; PI-2D4 is the next gate pending explicit authorization
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1 and PI-2 are completed through PI-2D4; PI-3 and PI-4 remain not started
 
 ### Release 4 closure evidence
 
@@ -101,7 +101,7 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B/PI-2C while implementing only PI-2D:
+Preserve Releases 1 through 7 and completed PI-1/PI-2 while awaiting an explicit decision on PI-3:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
 * preserve PI-1A tenant-owned account/invitation persistence
@@ -111,9 +111,9 @@ Preserve Releases 1 through 7 and completed PI-1/PI-2A/PI-2B/PI-2C while impleme
 * preserve PI-2A tenant-owned draft, fixed-answer, immutable-revision, expiry and concurrency semantics
 * preserve PI-2B id-less self-only create/get/save, GET without side effects, no-store and canonical-write prohibition
 * preserve PI-2C credential/staff API, transactional intake-only session and memory-only staff handoff UI
-* preserve completed PI-2D1 through PI-2D3; keep #48 conflict/expiry/closure as the only remaining PI-2D gate
+* preserve completed PI-2D1 through PI-2D4, including conflict/expiry/session recovery and unsaved-navigation protection
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* PI-1, PI-2A, PI-2B, PI-2C and PI-2D1 through PI-2D3 are accepted with test evidence; PI-2D4 #48 is the next gated step and remains unimplemented pending authorization
+* PI-1 and PI-2A through PI-2D4 are accepted with test evidence; PI-3 remains unimplemented and must not be inferred from the completed capture workflow
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
