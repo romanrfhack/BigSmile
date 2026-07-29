@@ -72,8 +72,10 @@ namespace BigSmile.Api.Controllers
                         result.Intake),
                     PatientIntakeCreateFailure.SessionInvalid => Unauthorized(),
                     PatientIntakeCreateFailure.ActiveDraftExists => BuildConflictProblem(
+                        "patient_intake.active_draft_exists",
                         "A current patient intake draft already exists."),
                     _ => BuildConflictProblem(
+                        "patient_intake.create_conflict",
                         "The patient intake draft could not be created because its state changed.")
                 };
             }
@@ -126,8 +128,10 @@ namespace BigSmile.Api.Controllers
                     PatientIntakeSaveFailure.SessionInvalid => Unauthorized(),
                     PatientIntakeSaveFailure.Missing => BuildMissingProblem(),
                     PatientIntakeSaveFailure.Expired => BuildConflictProblem(
+                        "patient_intake.expired",
                         "The current patient intake draft has expired. Start a new draft."),
                     _ => BuildConflictProblem(
+                        "patient_intake.concurrency_conflict",
                         "The patient intake draft changed. Reload it before saving again.")
                 };
             }
@@ -151,13 +155,14 @@ namespace BigSmile.Api.Controllers
             });
         }
 
-        private ObjectResult BuildConflictProblem(string detail)
+        private ObjectResult BuildConflictProblem(string code, string detail)
         {
             return Conflict(new ProblemDetails
             {
                 Status = StatusCodes.Status409Conflict,
                 Title = "Patient intake draft conflict.",
-                Detail = detail
+                Detail = detail,
+                Extensions = { ["code"] = code }
             });
         }
 
