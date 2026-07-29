@@ -1,11 +1,16 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../shared/i18n';
 import { PatientPortalCardComponent } from '../../patient-portal-auth/components/patient-portal-card.component';
 import { normalizeTenantRealm } from '../../patient-portal-auth/guards/patient-portal-auth.guard';
 import { PatientIntakeDemographicsFormComponent } from '../components/patient-intake-demographics-form.component';
+import { PatientIntakeMedicalQuestionnaireComponent } from '../components/patient-intake-medical-questionnaire.component';
 import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspace.facade';
+import {
+  PatientIntakeMedicalAnswerFormValue,
+  PatientIntakeNonMedicalFormValue
+} from '../models/patient-intake.models';
 
 @Component({
   selector: 'app-patient-intake-workspace-page',
@@ -15,7 +20,8 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
     RouterLink,
     TranslatePipe,
     PatientPortalCardComponent,
-    PatientIntakeDemographicsFormComponent
+    PatientIntakeDemographicsFormComponent,
+    PatientIntakeMedicalQuestionnaireComponent
   ],
   providers: [PatientIntakeWorkspaceFacade],
   template: `
@@ -104,16 +110,24 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
           </dl>
 
           <div class="patient-alert patient-alert--info">
-            {{ 'This information remains in your private draft until the clinic reviews it. Medical history questions are not editable in this step.' | t }}
+            {{ 'Personal information and medical answers remain in this private draft until the clinic reviews them.' | t }}
           </div>
 
           <app-patient-intake-demographics-form
             [intake]="intake"
             [saving]="facade.saving()"
-            [saveOutcome]="facade.saveOutcome()"
-            [saveError]="facade.saveError()"
-            (saveRequested)="facade.saveNonMedicalDraft($event)">
+            [saveOutcome]="facade.saveTarget() === 'demographics' ? facade.saveOutcome() : null"
+            [saveError]="facade.saveTarget() === 'demographics' ? facade.saveError() : null"
+            (saveRequested)="saveNonMedical($event)">
           </app-patient-intake-demographics-form>
+
+          <app-patient-intake-medical-questionnaire
+            [intake]="intake"
+            [saving]="facade.saving()"
+            [saveOutcome]="facade.saveTarget() === 'medical' ? facade.saveOutcome() : null"
+            [saveError]="facade.saveTarget() === 'medical' ? facade.saveError() : null"
+            (saveRequested)="saveMedical($event)">
+          </app-patient-intake-medical-questionnaire>
         </section>
       }
 
@@ -177,6 +191,13 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
 export class PatientIntakeWorkspacePageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+
+  @ViewChild(PatientIntakeDemographicsFormComponent)
+  private demographicsForm?: PatientIntakeDemographicsFormComponent;
+
+  @ViewChild(PatientIntakeMedicalQuestionnaireComponent)
+  private medicalQuestionnaire?: PatientIntakeMedicalQuestionnaireComponent;
+
   readonly facade = inject(PatientIntakeWorkspaceFacade);
   readonly tenantRealm = signal('');
 
@@ -184,6 +205,14 @@ export class PatientIntakeWorkspacePageComponent implements OnInit {
     const realm = normalizeTenantRealm(this.route.snapshot.paramMap.get('tenantSubdomain'));
     this.tenantRealm.set(realm);
     this.facade.initialize(realm);
+  }
+
+  saveNonMedical(value: PatientIntakeNonMedicalFormValue): void {
+    this.facade.saveNonMedicalDraft(value, this.medicalQuestionnaire?.currentValue());
+  }
+
+  saveMedical(value: PatientIntakeMedicalAnswerFormValue[]): void {
+    this.facade.saveMedicalDraft(value, this.demographicsForm?.currentValue());
   }
 
   logout(): void {

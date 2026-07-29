@@ -1,3 +1,8 @@
+import type {
+  MedicalQuestionnaireAnswerValue,
+  MedicalQuestionnaireQuestionKey
+} from '../../../shared/medical-questionnaire/medical-questionnaire.catalog';
+
 export interface ClinicalAllergy {
   id: string;
   substance: string;
@@ -132,48 +137,8 @@ export interface AddClinicalDiagnosisRequest {
   notes: string | null;
 }
 
-export type ClinicalMedicalAnswerValue = 'Unknown' | 'Yes' | 'No';
-
-export type ClinicalMedicalQuestionKey =
-  | 'currentMedicalTreatment'
-  | 'regularMedication'
-  | 'priorSurgery'
-  | 'bloodTransfusion'
-  | 'drugUse'
-  | 'allergicReactions'
-  | 'allergyPenicillin'
-  | 'allergyAnesthetics'
-  | 'allergyAspirin'
-  | 'allergySulfas'
-  | 'allergyIodine'
-  | 'allergyOther'
-  | 'hypertension'
-  | 'hypotension'
-  | 'excessiveBleeding'
-  | 'bloodOrCoagulationDisorder'
-  | 'anemiaHemophiliaVitaminKDeficiency'
-  | 'retroviralTreatment'
-  | 'badDentalExperience'
-  | 'covidHistory'
-  | 'sexuallyTransmittedDisease'
-  | 'congenitalOrCurrentHeartDisease'
-  | 'hepatitis'
-  | 'endocarditis'
-  | 'seizures'
-  | 'diabetes'
-  | 'tuberculosis'
-  | 'hyperthyroidism'
-  | 'hypothyroidism'
-  | 'heartAttackOrAngina'
-  | 'openHeartSurgery'
-  | 'recurrentHerpesOrAphthae'
-  | 'bitesNailsOrLips'
-  | 'smokes'
-  | 'acidicFoodConsumption'
-  | 'bruxismAtNight'
-  | 'pregnantLactatingOrSuspected'
-  | 'contraceptiveMedication'
-  | 'anesthesiaComplications';
+export type ClinicalMedicalAnswerValue = MedicalQuestionnaireAnswerValue;
+export type ClinicalMedicalQuestionKey = MedicalQuestionnaireQuestionKey;
 
 export interface ClinicalMedicalAnswer {
   id: string | null;

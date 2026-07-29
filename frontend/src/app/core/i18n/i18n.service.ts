@@ -7,6 +7,7 @@ import {
   UI_LANGUAGE_STORAGE_KEY,
   normalizeLanguageCode
 } from './i18n.model';
+import { PATIENT_INTAKE_MEDICAL_TRANSLATIONS } from './patient-intake-medical-translations';
 import { PATIENT_PORTAL_TRANSLATIONS } from './patient-portal-translations';
 import { TRANSLATIONS, TranslationParams } from './translations';
 
@@ -32,7 +33,9 @@ export class I18nService {
     }
 
     const language = this.currentLanguageSignal();
-    const featureTemplate = PATIENT_PORTAL_TRANSLATIONS[language][key];
+    const featureTemplate =
+      PATIENT_INTAKE_MEDICAL_TRANSLATIONS[language][key] ??
+      PATIENT_PORTAL_TRANSLATIONS[language][key];
     const sharedTemplate = language === DEFAULT_LANGUAGE
       ? TRANSLATIONS[DEFAULT_LANGUAGE][key]
       : TRANSLATIONS[language][key];

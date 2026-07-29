@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MEDICAL_QUESTIONNAIRE_KEYS } from '../../../shared/medical-questionnaire/medical-questionnaire.catalog';
 import { PatientIntakeDraft, PatientIntakeNonMedicalFormValue } from '../models/patient-intake.models';
 import {
   PatientIntakeDemographicsFormComponent,
@@ -143,9 +144,9 @@ function draft(): PatientIntakeDraft {
     responsiblePartyRelationship: null,
     responsiblePartyPhone: null,
     reasonForVisit: null,
-    medicalAnswers: Array.from({ length: 39 }, (_, index) => ({
-      questionKey: `question-${index + 1}`,
-      answer: 'Unknown' as const,
+    medicalAnswers: MEDICAL_QUESTIONNAIRE_KEYS.map(questionKey => ({
+      questionKey,
+      answer: 'Unknown',
       details: null
     })),
     currentRevisionNumber: 0,

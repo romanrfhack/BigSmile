@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
+import { MEDICAL_QUESTIONNAIRE_KEYS } from '../../../shared/medical-questionnaire/medical-questionnaire.catalog';
 import { PatientIntakeAuthApi } from '../../patient-portal-auth/data-access/patient-intake-auth.api';
 import { PatientPortalAuthApi } from '../../patient-portal-auth/data-access/patient-portal-auth.api';
 import { PatientIntakeSessionStore } from '../../patient-portal-auth/services/patient-intake-session.store';
@@ -8,7 +9,9 @@ import { PatientPortalSessionStore } from '../../patient-portal-auth/services/pa
 import { PatientIntakeApi } from '../data-access/patient-intake.api';
 import {
   PatientIntakeDraft,
-  PatientIntakeNonMedicalFormValue
+  PatientIntakeMedicalAnswerFormValue,
+  PatientIntakeNonMedicalFormValue,
+  SavePatientIntakeDraftRequest
 } from '../models/patient-intake.models';
 import { PatientIntakeWorkspaceFacade } from './patient-intake-workspace.facade';
 
@@ -117,7 +120,7 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(intakeApi.getCurrent).not.toHaveBeenCalled();
   });
 
-  it('saves the complete snapshot while preserving all 39 medical answers', () => {
+  it('saves the complete non-medical snapshot while preserving all 39 medical answers', () => {
     boundary.setPatientSession(patientResponse());
     const facade = createFacade();
     facade.initialize('clinic-a');
@@ -125,7 +128,7 @@ describe('PatientIntakeWorkspaceFacade', () => {
     facade.saveNonMedicalDraft(nonMedicalValue());
 
     expect(intakeApi.save).toHaveBeenCalledTimes(1);
-    const request = intakeApi.save.mock.calls[0][0];
+    const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
     expect(request).toMatchObject({
       firstName: 'María',
       lastName: 'García',
@@ -140,9 +143,48 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(request).not.toHaveProperty('tenantId');
     expect(request).not.toHaveProperty('patientId');
     expect(request).not.toHaveProperty('intakeId');
+    expect(facade.saveTarget()).toBe('demographics');
     expect(facade.saveOutcome()).toBe('saved');
     expect(facade.intake()?.currentRevisionNumber).toBe(1);
     expect(facade.intake()?.concurrencyToken).toBe('rv1.next-token');
+  });
+
+  it('saves all 39 medical answers and includes current unsaved non-medical edits', () => {
+    boundary.setIntakeSession(intakeResponse());
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+
+    const answers = medicalValue();
+    const diabetes = answers.find(answer => answer.questionKey === 'diabetes')!;
+    diabetes.answer = 'Yes';
+    diabetes.details = '  Diet controlled.  ';
+    facade.saveMedicalDraft(answers, nonMedicalValue());
+
+    const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
+    expect(request.firstName).toBe('María');
+    expect(request.lastName).toBe('García');
+    expect(request.reasonForVisit).toBe('Dolor al masticar.');
+    expect(request.medicalAnswers.map(answer => answer.questionKey)).toEqual(MEDICAL_QUESTIONNAIRE_KEYS);
+    expect(request.medicalAnswers.find(answer => answer.questionKey === 'diabetes')).toEqual({
+      questionKey: 'diabetes',
+      answer: 'Yes',
+      details: 'Diet controlled.'
+    });
+    expect(facade.saveTarget()).toBe('medical');
+    expect(facade.saveOutcome()).toBe('saved');
+  });
+
+  it('includes current unsaved medical edits when saving the non-medical section', () => {
+    boundary.setPatientSession(patientResponse());
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+    const answers = medicalValue();
+    answers.find(answer => answer.questionKey === 'hypertension')!.answer = 'No';
+
+    facade.saveNonMedicalDraft(nonMedicalValue(), answers);
+
+    const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
+    expect(request.medicalAnswers.find(answer => answer.questionKey === 'hypertension')?.answer).toBe('No');
   });
 
   it('represents an unchanged save without inventing a revision increment', () => {
@@ -151,8 +193,9 @@ describe('PatientIntakeWorkspaceFacade', () => {
     const facade = createFacade();
     facade.initialize('clinic-a');
 
-    facade.saveNonMedicalDraft(nonMedicalValue());
+    facade.saveMedicalDraft(medicalValue());
 
+    expect(facade.saveTarget()).toBe('medical');
     expect(facade.saveOutcome()).toBe('unchanged');
     expect(facade.intake()?.currentRevisionNumber).toBe(0);
     expect(facade.intake()?.concurrencyToken).toBe('rv1.token');
@@ -167,6 +210,7 @@ describe('PatientIntakeWorkspaceFacade', () => {
     facade.saveNonMedicalDraft(nonMedicalValue());
 
     expect(facade.intake()?.concurrencyToken).toBe('rv1.token');
+    expect(facade.saveTarget()).toBe('demographics');
     expect(facade.saveOutcome()).toBeNull();
     expect(facade.saveError()).toBe(
       'The intake draft changed or expired. Reload it before saving again.'
@@ -240,6 +284,14 @@ describe('PatientIntakeWorkspaceFacade', () => {
       reasonForVisit: ' Dolor al masticar. '
     };
   }
+
+  function medicalValue(): PatientIntakeMedicalAnswerFormValue[] {
+    return MEDICAL_QUESTIONNAIRE_KEYS.map(questionKey => ({
+      questionKey,
+      answer: 'Unknown',
+      details: ''
+    }));
+  }
 });
 
 function draft(): PatientIntakeDraft {
@@ -262,8 +314,8 @@ function draft(): PatientIntakeDraft {
     responsiblePartyRelationship: null,
     responsiblePartyPhone: null,
     reasonForVisit: null,
-    medicalAnswers: Array.from({ length: 39 }, (_, index) => ({
-      questionKey: `question-${index + 1}`,
+    medicalAnswers: MEDICAL_QUESTIONNAIRE_KEYS.map((questionKey, index) => ({
+      questionKey,
       answer: index === 0 ? 'Yes' : 'Unknown',
       details: index === 0 ? 'Preserve this answer.' : null
     })),

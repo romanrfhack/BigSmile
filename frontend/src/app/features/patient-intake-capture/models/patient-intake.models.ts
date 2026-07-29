@@ -1,4 +1,12 @@
-export type PatientIntakeAnswerValue = 'Unknown' | 'Yes' | 'No';
+import {
+  MEDICAL_QUESTIONNAIRE_DETAILS_MAX_LENGTH,
+  MEDICAL_QUESTIONNAIRE_KEYS,
+  MedicalQuestionnaireAnswerValue,
+  MedicalQuestionnaireQuestionKey
+} from '../../../shared/medical-questionnaire/medical-questionnaire.catalog';
+
+export type PatientIntakeAnswerValue = MedicalQuestionnaireAnswerValue;
+export type PatientIntakeQuestionKey = MedicalQuestionnaireQuestionKey;
 export type PatientIntakeSex = 'Unspecified' | 'Female' | 'Male' | 'Other';
 export type PatientIntakeMaritalStatus =
   | 'Unspecified'
@@ -30,11 +38,12 @@ export const PATIENT_INTAKE_FIELD_LIMITS = {
   demographic: 100,
   phone: 40,
   email: 256,
-  reasonForVisit: 500
+  reasonForVisit: 500,
+  medicalDetails: MEDICAL_QUESTIONNAIRE_DETAILS_MAX_LENGTH
 } as const;
 
 export interface PatientIntakeMedicalAnswer {
-  questionKey: string;
+  questionKey: PatientIntakeQuestionKey;
   answer: PatientIntakeAnswerValue;
   details: string | null;
 }
@@ -86,8 +95,14 @@ export interface PatientIntakeNonMedicalFormValue {
   reasonForVisit: string;
 }
 
+export interface PatientIntakeMedicalAnswerFormValue {
+  questionKey: PatientIntakeQuestionKey;
+  answer: PatientIntakeAnswerValue;
+  details: string;
+}
+
 export interface SavePatientIntakeMedicalAnswerRequest {
-  questionKey: string;
+  questionKey: PatientIntakeQuestionKey;
   answer: PatientIntakeAnswerValue;
   details: string | null;
 }
@@ -141,9 +156,29 @@ export function toPatientIntakeNonMedicalFormValue(
   };
 }
 
+export function toPatientIntakeMedicalFormValue(
+  intake: PatientIntakeDraft
+): PatientIntakeMedicalAnswerFormValue[] {
+  const answersByKey = new Map(intake.medicalAnswers.map(answer => [answer.questionKey, answer]));
+
+  return MEDICAL_QUESTIONNAIRE_KEYS.map(questionKey => {
+    const answer = answersByKey.get(questionKey);
+    if (!answer) {
+      throw new Error(`Missing patient intake medical answer for ${questionKey}.`);
+    }
+
+    return {
+      questionKey,
+      answer: answer.answer,
+      details: answer.details ?? ''
+    };
+  });
+}
+
 export function buildSavePatientIntakeDraftRequest(
   intake: PatientIntakeDraft,
-  value: PatientIntakeNonMedicalFormValue
+  value: PatientIntakeNonMedicalFormValue,
+  medicalAnswers: readonly PatientIntakeMedicalAnswerFormValue[] = toPatientIntakeMedicalFormValue(intake)
 ): SavePatientIntakeDraftRequest {
   return {
     firstName: normalizeOptional(value.firstName),
@@ -162,13 +197,38 @@ export function buildSavePatientIntakeDraftRequest(
     responsiblePartyRelationship: normalizeOptional(value.responsiblePartyRelationship),
     responsiblePartyPhone: normalizeOptional(value.responsiblePartyPhone),
     reasonForVisit: normalizeOptional(value.reasonForVisit),
-    medicalAnswers: intake.medicalAnswers.map(answer => ({
-      questionKey: answer.questionKey,
-      answer: answer.answer,
-      details: answer.details
-    })),
+    medicalAnswers: normalizeMedicalAnswers(medicalAnswers),
     concurrencyToken: intake.concurrencyToken
   };
+}
+
+function normalizeMedicalAnswers(
+  medicalAnswers: readonly PatientIntakeMedicalAnswerFormValue[]
+): SavePatientIntakeMedicalAnswerRequest[] {
+  const answersByKey = new Map<PatientIntakeQuestionKey, PatientIntakeMedicalAnswerFormValue>();
+  for (const answer of medicalAnswers) {
+    if (answersByKey.has(answer.questionKey)) {
+      throw new Error(`Duplicate patient intake medical answer for ${answer.questionKey}.`);
+    }
+    answersByKey.set(answer.questionKey, answer);
+  }
+
+  if (answersByKey.size !== MEDICAL_QUESTIONNAIRE_KEYS.length) {
+    throw new Error('Patient intake medical answers must contain the complete fixed questionnaire.');
+  }
+
+  return MEDICAL_QUESTIONNAIRE_KEYS.map(questionKey => {
+    const answer = answersByKey.get(questionKey);
+    if (!answer) {
+      throw new Error(`Missing patient intake medical answer for ${questionKey}.`);
+    }
+
+    return {
+      questionKey,
+      answer: answer.answer,
+      details: normalizeOptional(answer.details)
+    };
+  });
 }
 
 function normalizeOptional(value: string): string | null {
