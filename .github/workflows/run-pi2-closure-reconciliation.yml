@@ -1,0 +1,33 @@
+name: Run PI-2 closure reconciliation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/pi-2-intake-closure
+          fetch-depth: 0
+      - name: Run reconciliation script
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          source = Path('.github/workflows/reconcile-pi2-closure.yml')
+          lines = source.read_text(encoding='utf-8').splitlines()
+          start = next(index for index, line in enumerate(lines) if line.strip() == 'run: |') + 1
+          script_lines = []
+          for line in lines[start:]:
+              script_lines.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/reconcile-pi2.sh').write_text('\n'.join(script_lines) + '\n', encoding='utf-8')
+          PY
+          bash /tmp/reconcile-pi2.sh
