@@ -29,6 +29,8 @@ export type PatientIntakeWorkspaceStatus =
   | 'error';
 
 export type PatientIntakeSaveTarget = 'demographics' | 'medical' | null;
+export type PatientIntakeBlockingState = 'conflict' | 'expired' | null;
+export type PatientIntakeRecoveryState = 'patient-login' | 'waiting-room-reissue' | null;
 
 @Injectable()
 export class PatientIntakeWorkspaceFacade {
@@ -41,6 +43,8 @@ export class PatientIntakeWorkspaceFacade {
   private readonly saveOutcomeState = signal<PatientIntakeSaveOutcome>(null);
   private readonly saveErrorState = signal<string | null>(null);
   private readonly saveTargetState = signal<PatientIntakeSaveTarget>(null);
+  private readonly blockingStateValue = signal<PatientIntakeBlockingState>(null);
+  private readonly recoveryStateValue = signal<PatientIntakeRecoveryState>(null);
   private tenantRealm = '';
 
   readonly status = this.statusState.asReadonly();
@@ -52,7 +56,14 @@ export class PatientIntakeWorkspaceFacade {
   readonly saveOutcome = this.saveOutcomeState.asReadonly();
   readonly saveError = this.saveErrorState.asReadonly();
   readonly saveTarget = this.saveTargetState.asReadonly();
+  readonly blockingState = this.blockingStateValue.asReadonly();
+  readonly recoveryState = this.recoveryStateValue.asReadonly();
+  readonly saveBlocked = computed(() => this.blockingStateValue() !== null);
   readonly canCreate = computed(() => this.modeState() === 'patient' && this.statusState() === 'missing');
+  readonly canReplaceExpired = computed(() =>
+    this.modeState() === 'patient' &&
+    this.statusState() === 'ready' &&
+    this.blockingStateValue() === 'expired');
 
   constructor(
     private readonly intakeApi: PatientIntakeApi,
@@ -67,6 +78,8 @@ export class PatientIntakeWorkspaceFacade {
     this.tenantRealm = normalizeRealm(tenantSubdomain);
     this.errorState.set(null);
     this.intakeState.set(null);
+    this.blockingStateValue.set(null);
+    this.recoveryStateValue.set(null);
     this.clearSaveFeedback();
 
     const resolution = this.sessionBoundary.resolve();
@@ -101,34 +114,28 @@ export class PatientIntakeWorkspaceFacade {
     this.initialize(this.tenantRealm);
   }
 
+  reloadLatest(): void {
+    if (this.blockingStateValue() !== 'conflict') {
+      return;
+    }
+
+    this.initialize(this.tenantRealm);
+  }
+
   createDraft(): void {
     if (!this.canCreate() || this.creatingState()) {
       return;
     }
 
-    this.creatingState.set(true);
-    this.errorState.set(null);
-    this.clearSaveFeedback();
+    this.createCurrentDraft();
+  }
 
-    this.intakeApi.create().pipe(
-      tap(intake => {
-        this.intakeState.set(intake);
-        this.statusState.set('ready');
-      }),
-      catchError(error => {
-        if (error instanceof HttpErrorResponse && error.status === 401) {
-          this.sessionBoundary.clearPatientSession();
-          this.statusState.set('unauthorized');
-        } else if (error instanceof HttpErrorResponse && error.status === 409) {
-          this.errorState.set('A current intake draft already exists. Reload the workspace.');
-        } else {
-          this.errorState.set('The intake draft could not be created.');
-        }
+  replaceExpiredDraft(): void {
+    if (!this.canReplaceExpired() || this.creatingState()) {
+      return;
+    }
 
-        return of(null);
-      }),
-      finalize(() => this.creatingState.set(false))
-    ).subscribe();
+    this.createCurrentDraft();
   }
 
   saveNonMedicalDraft(
@@ -187,6 +194,8 @@ export class PatientIntakeWorkspaceFacade {
         this.intakeState.set(null);
         this.modeState.set(null);
         this.statusState.set('unauthorized');
+        this.blockingStateValue.set(null);
+        this.recoveryStateValue.set(null);
         this.clearSaveFeedback();
       })
     );
@@ -202,12 +211,44 @@ export class PatientIntakeWorkspaceFacade {
     this.saveTargetState.set(null);
   }
 
+  private createCurrentDraft(): void {
+    this.creatingState.set(true);
+    this.errorState.set(null);
+    this.clearSaveFeedback();
+
+    this.intakeApi.create().pipe(
+      tap(intake => {
+        this.intakeState.set(intake);
+        this.blockingStateValue.set(null);
+        this.recoveryStateValue.set(null);
+        this.statusState.set('ready');
+      }),
+      catchError(error => {
+        if (error instanceof HttpErrorResponse && error.status === 401) {
+          this.handleSessionFailure('patient');
+        } else if (error instanceof HttpErrorResponse && error.status === 409) {
+          this.errorState.set('A current intake draft already exists. Reload the workspace.');
+        } else {
+          this.errorState.set('The intake draft could not be created.');
+        }
+
+        return of(null);
+      }),
+      finalize(() => this.creatingState.set(false))
+    ).subscribe();
+  }
+
   private saveDraft(
     request: ReturnType<typeof buildSavePatientIntakeDraftRequest>,
     target: Exclude<PatientIntakeSaveTarget, null>
   ): void {
     const mode = this.modeState();
-    if (!mode || this.statusState() !== 'ready' || this.savingState()) {
+    if (
+      !mode ||
+      this.statusState() !== 'ready' ||
+      this.savingState() ||
+      this.blockingStateValue() !== null
+    ) {
       return;
     }
 
@@ -219,6 +260,7 @@ export class PatientIntakeWorkspaceFacade {
     this.intakeApi.save(request).pipe(
       tap(response => {
         this.intakeState.set(response.intake);
+        this.blockingStateValue.set(null);
         this.saveOutcomeState.set(response.changed ? 'saved' : 'unchanged');
       }),
       catchError(error => {
@@ -250,9 +292,7 @@ export class PatientIntakeWorkspaceFacade {
     }
 
     if (error instanceof HttpErrorResponse && error.status === 401) {
-      this.sessionBoundary.clearMode(mode);
-      this.modeState.set(null);
-      this.statusState.set('unauthorized');
+      this.handleSessionFailure(mode);
       return;
     }
 
@@ -262,15 +302,24 @@ export class PatientIntakeWorkspaceFacade {
 
   private handleSaveError(error: unknown, mode: PatientPortalSessionMode): void {
     if (error instanceof HttpErrorResponse && error.status === 401) {
-      this.sessionBoundary.clearMode(mode);
-      this.modeState.set(null);
-      this.statusState.set('unauthorized');
+      this.handleSessionFailure(mode);
       this.saveErrorState.set('Your intake session is no longer available.');
       return;
     }
 
     if (error instanceof HttpErrorResponse && error.status === 409) {
-      this.saveErrorState.set('The intake draft changed or expired. Reload it before saving again.');
+      const code = readProblemCode(error);
+      if (code === 'patient_intake.expired' || readProblemDetail(error).toLowerCase().includes('expired')) {
+        this.blockingStateValue.set('expired');
+        this.saveErrorState.set('The current intake draft expired and can no longer be saved.');
+        if (mode === 'patient_intake') {
+          this.sessionBoundary.clearIntakeSession();
+          this.recoveryStateValue.set('waiting-room-reissue');
+        }
+      } else {
+        this.blockingStateValue.set('conflict');
+        this.saveErrorState.set('A newer version of this intake exists. Reload it before saving again.');
+      }
       return;
     }
 
@@ -281,8 +330,27 @@ export class PatientIntakeWorkspaceFacade {
 
     this.saveErrorState.set('The intake draft could not be saved. Try again.');
   }
+
+  private handleSessionFailure(mode: PatientPortalSessionMode): void {
+    this.sessionBoundary.clearMode(mode);
+    this.modeState.set(mode);
+    this.statusState.set('unauthorized');
+    this.blockingStateValue.set(null);
+    this.recoveryStateValue.set(mode === 'patient_intake' ? 'waiting-room-reissue' : 'patient-login');
+  }
 }
 
 function normalizeRealm(value: string | null | undefined): string {
   return (value ?? '').trim().toLowerCase();
+}
+
+function readProblemCode(error: HttpErrorResponse): string {
+  const body = error.error as { code?: unknown; extensions?: { code?: unknown } } | null;
+  const value = body?.code ?? body?.extensions?.code;
+  return typeof value === 'string' ? value : '';
+}
+
+function readProblemDetail(error: HttpErrorResponse): string {
+  const body = error.error as { detail?: unknown } | null;
+  return typeof body?.detail === 'string' ? body.detail : '';
 }
