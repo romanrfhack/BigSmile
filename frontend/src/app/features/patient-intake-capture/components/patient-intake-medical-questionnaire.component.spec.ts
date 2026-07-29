@@ -26,7 +26,6 @@ describe('PatientIntakeMedicalQuestionnaireComponent', () => {
 
   it('renders six familiar groups, 39 questions, and visible Yes/No/Unknown options', () => {
     const fixture = createComponent(draft());
-    fixture.detectChanges();
 
     expect(MEDICAL_QUESTIONNAIRE_GROUPS).toHaveLength(6);
     expect(fixture.nativeElement.querySelectorAll('.medical-group')).toHaveLength(6);
@@ -47,13 +46,13 @@ describe('PatientIntakeMedicalQuestionnaireComponent', () => {
 
     answer.controls.answer.setValue('Yes');
     answer.controls.details.setValue('  Controlled with diet.  ');
-    fixture.detectChanges();
+    fixture.detectChanges(false);
 
     expect(fixture.componentInstance.capturedQuestionCount).toBe(1);
     expect(fixture.nativeElement.querySelector('#patient-intake-medical-details-diabetes')).not.toBeNull();
 
     answer.controls.answer.setValue('No');
-    fixture.detectChanges();
+    fixture.detectChanges(false);
 
     expect(fixture.componentInstance.capturedQuestionCount).toBe(1);
     expect(answer.controls.details.value).toBe('  Controlled with diet.  ');
@@ -67,7 +66,7 @@ describe('PatientIntakeMedicalQuestionnaireComponent', () => {
 
     fixture.componentInstance.answerForm('diabetes').controls.answer.setValue('Yes');
     fixture.componentInstance.answerForm('diabetes').controls.details.setValue('Diet controlled.');
-    fixture.detectChanges();
+    fixture.detectChanges(false);
 
     expect(emitted).toHaveLength(0);
     fixture.componentInstance.submit();
@@ -95,7 +94,7 @@ describe('PatientIntakeMedicalQuestionnaireComponent', () => {
     answer.controls.answer.setValue('Yes');
     answer.controls.details.setValue('x'.repeat(501));
     answer.controls.details.markAsTouched();
-    fixture.detectChanges();
+    fixture.detectChanges(false);
     fixture.componentInstance.submit();
 
     expect(answer.controls.details.hasError('maxlength')).toBe(true);
