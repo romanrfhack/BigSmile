@@ -10,7 +10,8 @@ import { PatientIntakeApi } from '../data-access/patient-intake.api';
 import {
   PatientIntakeDraft,
   PatientIntakeMedicalAnswerFormValue,
-  PatientIntakeNonMedicalFormValue
+  PatientIntakeNonMedicalFormValue,
+  SavePatientIntakeDraftRequest
 } from '../models/patient-intake.models';
 import { PatientIntakeWorkspaceFacade } from './patient-intake-workspace.facade';
 
@@ -127,7 +128,7 @@ describe('PatientIntakeWorkspaceFacade', () => {
     facade.saveNonMedicalDraft(nonMedicalValue());
 
     expect(intakeApi.save).toHaveBeenCalledTimes(1);
-    const request = intakeApi.save.mock.calls[0][0];
+    const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
     expect(request).toMatchObject({
       firstName: 'María',
       lastName: 'García',
@@ -148,13 +149,8 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(facade.intake()?.concurrencyToken).toBe('rv1.next-token');
   });
 
-  it('saves all 39 medical answers while preserving the authoritative non-medical snapshot', () => {
+  it('saves all 39 medical answers and includes current unsaved non-medical edits', () => {
     boundary.setIntakeSession(intakeResponse());
-    const loaded = draft();
-    loaded.firstName = 'Ana';
-    loaded.lastName = 'López';
-    loaded.reasonForVisit = 'Revisión general.';
-    intakeApi.getCurrent.mockReturnValue(of(loaded));
     const facade = createFacade();
     facade.initialize('clinic-a');
 
@@ -162,12 +158,12 @@ describe('PatientIntakeWorkspaceFacade', () => {
     const diabetes = answers.find(answer => answer.questionKey === 'diabetes')!;
     diabetes.answer = 'Yes';
     diabetes.details = '  Diet controlled.  ';
-    facade.saveMedicalDraft(answers);
+    facade.saveMedicalDraft(answers, nonMedicalValue());
 
-    const request = intakeApi.save.mock.calls[0][0];
-    expect(request.firstName).toBe('Ana');
-    expect(request.lastName).toBe('López');
-    expect(request.reasonForVisit).toBe('Revisión general.');
+    const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
+    expect(request.firstName).toBe('María');
+    expect(request.lastName).toBe('García');
+    expect(request.reasonForVisit).toBe('Dolor al masticar.');
     expect(request.medicalAnswers.map(answer => answer.questionKey)).toEqual(MEDICAL_QUESTIONNAIRE_KEYS);
     expect(request.medicalAnswers.find(answer => answer.questionKey === 'diabetes')).toEqual({
       questionKey: 'diabetes',
@@ -176,6 +172,19 @@ describe('PatientIntakeWorkspaceFacade', () => {
     });
     expect(facade.saveTarget()).toBe('medical');
     expect(facade.saveOutcome()).toBe('saved');
+  });
+
+  it('includes current unsaved medical edits when saving the non-medical section', () => {
+    boundary.setPatientSession(patientResponse());
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+    const answers = medicalValue();
+    answers.find(answer => answer.questionKey === 'hypertension')!.answer = 'No';
+
+    facade.saveNonMedicalDraft(nonMedicalValue(), answers);
+
+    const request = intakeApi.save.mock.calls[0][0] as SavePatientIntakeDraftRequest;
+    expect(request.medicalAnswers.find(answer => answer.questionKey === 'hypertension')?.answer).toBe('No');
   });
 
   it('represents an unchanged save without inventing a revision increment', () => {
