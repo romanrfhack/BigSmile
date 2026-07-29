@@ -5,6 +5,7 @@ import { TranslatePipe } from '../../../shared/i18n';
 import { PatientPortalCardComponent } from '../../patient-portal-auth/components/patient-portal-card.component';
 import { normalizeTenantRealm } from '../../patient-portal-auth/guards/patient-portal-auth.guard';
 import { PatientIntakeDemographicsFormComponent } from '../components/patient-intake-demographics-form.component';
+import { PatientIntakeMedicalQuestionnaireComponent } from '../components/patient-intake-medical-questionnaire.component';
 import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspace.facade';
 
 @Component({
@@ -15,7 +16,8 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
     RouterLink,
     TranslatePipe,
     PatientPortalCardComponent,
-    PatientIntakeDemographicsFormComponent
+    PatientIntakeDemographicsFormComponent,
+    PatientIntakeMedicalQuestionnaireComponent
   ],
   providers: [PatientIntakeWorkspaceFacade],
   template: `
@@ -104,16 +106,24 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
           </dl>
 
           <div class="patient-alert patient-alert--info">
-            {{ 'This information remains in your private draft until the clinic reviews it. Medical history questions are not editable in this step.' | t }}
+            {{ 'Personal information and medical answers remain in this private draft until the clinic reviews them.' | t }}
           </div>
 
           <app-patient-intake-demographics-form
             [intake]="intake"
             [saving]="facade.saving()"
-            [saveOutcome]="facade.saveOutcome()"
-            [saveError]="facade.saveError()"
+            [saveOutcome]="facade.saveTarget() === 'demographics' ? facade.saveOutcome() : null"
+            [saveError]="facade.saveTarget() === 'demographics' ? facade.saveError() : null"
             (saveRequested)="facade.saveNonMedicalDraft($event)">
           </app-patient-intake-demographics-form>
+
+          <app-patient-intake-medical-questionnaire
+            [intake]="intake"
+            [saving]="facade.saving()"
+            [saveOutcome]="facade.saveTarget() === 'medical' ? facade.saveOutcome() : null"
+            [saveError]="facade.saveTarget() === 'medical' ? facade.saveError() : null"
+            (saveRequested)="facade.saveMedicalDraft($event)">
+          </app-patient-intake-medical-questionnaire>
         </section>
       }
 
