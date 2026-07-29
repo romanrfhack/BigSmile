@@ -7,6 +7,25 @@ import { TREATMENT_HISTORY_QUESTIONS } from './catalog/treatment-history.questio
 
 export type MedicalQuestionnaireAnswerValue = 'Unknown' | 'Yes' | 'No';
 
+export type MedicalQuestionnaireQuestionKey =
+  | (typeof TREATMENT_HISTORY_QUESTIONS)[number]['questionKey']
+  | (typeof ALLERGY_QUESTIONS)[number]['questionKey']
+  | (typeof PRESSURE_BLOOD_COAGULATION_QUESTIONS)[number]['questionKey']
+  | (typeof SYSTEMIC_DISEASE_QUESTIONS)[number]['questionKey']
+  | (typeof HABITS_DENTAL_CONDITION_QUESTIONS)[number]['questionKey']
+  | (typeof PREGNANCY_ANESTHESIA_SPECIAL_QUESTIONS)[number]['questionKey'];
+
+export interface MedicalQuestionnaireQuestion {
+  questionKey: MedicalQuestionnaireQuestionKey;
+  labelKey: string;
+}
+
+export interface MedicalQuestionnaireGroup {
+  id: string;
+  titleKey: string;
+  questions: readonly MedicalQuestionnaireQuestion[];
+}
+
 export interface MedicalQuestionnaireAnswerOption {
   value: MedicalQuestionnaireAnswerValue;
   labelKey: string;
@@ -26,7 +45,7 @@ export const MEDICAL_QUESTIONNAIRE_ANSWER_OPTIONS: readonly MedicalQuestionnaire
   { value: 'Unknown', labelKey: 'No answer' }
 ];
 
-export const MEDICAL_QUESTIONNAIRE_GROUPS = [
+export const MEDICAL_QUESTIONNAIRE_GROUPS: readonly MedicalQuestionnaireGroup[] = [
   {
     id: 'treatment-history',
     titleKey: 'Treatment and history',
@@ -57,11 +76,7 @@ export const MEDICAL_QUESTIONNAIRE_GROUPS = [
     titleKey: 'Pregnancy, anesthesia, and special conditions',
     questions: PREGNANCY_ANESTHESIA_SPECIAL_QUESTIONS
   }
-] as const;
-
-export type MedicalQuestionnaireGroup = (typeof MEDICAL_QUESTIONNAIRE_GROUPS)[number];
-export type MedicalQuestionnaireQuestion = MedicalQuestionnaireGroup['questions'][number];
-export type MedicalQuestionnaireQuestionKey = MedicalQuestionnaireQuestion['questionKey'];
+];
 
 export const MEDICAL_QUESTIONNAIRE_KEYS: readonly MedicalQuestionnaireQuestionKey[] =
   MEDICAL_QUESTIONNAIRE_GROUPS.flatMap((group) =>
