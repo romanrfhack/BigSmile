@@ -16,6 +16,7 @@ import {
   PatientIntakeNonMedicalFormValue,
   PatientIntakeSaveOutcome,
   buildSavePatientIntakeDraftRequest,
+  toPatientIntakeMedicalFormValue,
   toPatientIntakeNonMedicalFormValue
 } from '../models/patient-intake.models';
 
@@ -130,19 +131,10 @@ export class PatientIntakeWorkspaceFacade {
     ).subscribe();
   }
 
-  saveNonMedicalDraft(value: PatientIntakeNonMedicalFormValue): void {
-    const intake = this.intakeState();
-    if (!intake) {
-      return;
-    }
-
-    this.saveDraft(
-      buildSavePatientIntakeDraftRequest(intake, value),
-      'demographics'
-    );
-  }
-
-  saveMedicalDraft(value: PatientIntakeMedicalAnswerFormValue[]): void {
+  saveNonMedicalDraft(
+    value: PatientIntakeNonMedicalFormValue,
+    medicalAnswers?: readonly PatientIntakeMedicalAnswerFormValue[]
+  ): void {
     const intake = this.intakeState();
     if (!intake) {
       return;
@@ -151,7 +143,26 @@ export class PatientIntakeWorkspaceFacade {
     this.saveDraft(
       buildSavePatientIntakeDraftRequest(
         intake,
-        toPatientIntakeNonMedicalFormValue(intake),
+        value,
+        medicalAnswers ?? toPatientIntakeMedicalFormValue(intake)
+      ),
+      'demographics'
+    );
+  }
+
+  saveMedicalDraft(
+    value: PatientIntakeMedicalAnswerFormValue[],
+    nonMedicalValue?: PatientIntakeNonMedicalFormValue
+  ): void {
+    const intake = this.intakeState();
+    if (!intake) {
+      return;
+    }
+
+    this.saveDraft(
+      buildSavePatientIntakeDraftRequest(
+        intake,
+        nonMedicalValue ?? toPatientIntakeNonMedicalFormValue(intake),
         value
       ),
       'medical'
