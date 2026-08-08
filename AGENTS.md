@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 and PI-2 are completed through PI-2D4 #48 / PR #57 / CI #485; PI-3 and PI-4 remain not started and require separate explicit opening decisions
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 and PI-2 are completed through PI-2D4 #48 / PR #57 / CI #485; PI-3A submission/pre-appointment request is explicitly opened under ADR 020; PI-3B review/apply and PI-4 remain not started
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -131,6 +131,9 @@ Phase 2.1 opening evidence:
 - ADR 015 — `docs/decisions/015-patient-portal-frontend-session-boundary.md`
 - ADR 016 — `docs/decisions/016-patient-intake-draft-baseline.md`
 - ADR 017 — `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`
+- ADR 018 — `docs/decisions/018-patient-intake-waiting-room-link-management.md`
+- ADR 019 — `docs/decisions/019-patient-intake-only-authentication-boundary.md`
+- ADR 020 — `docs/decisions/020-patient-intake-submission-and-preappointment-request.md`
 - PI-1 closure — `docs/pi-1-patient-portal-access-and-security-closure.md`
 - PI-1 runbook — `docs/patient-portal-assisted-recovery-runbook.md`
 - PI-1A — issue #22 / PR #26
@@ -193,11 +196,11 @@ Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted 
 - PI-1 (#4) is completed through PI-1A to PI-1D
 - PI-2 (#5) is completed through PI-2A (#31), PI-2B (#33), PI-2C (#35) and PI-2D (#44)
 - PI-2D (#44) is completed through #45–#48, including conflict/expiry/session-invalidated UX, dirty-navigation protection and automated smoke evidence
-- PI-3 and PI-4 remain not started
+- PI-3A is explicitly opened for final submission and appointment-scoped manual access handoff; PI-3B and PI-4 remain not started
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Preserve completed PI-1 and PI-2 without opening PI-3 implicitly. The next product decision is whether to authorize PI-3 — Submit, Clinic Review and Canonical Apply; until then, canonical Patient and Clinical data remain clinic-controlled and unchanged by intake.
+Complete and validate bounded PI-3A under ADR 020 while preserving completed PI-1/PI-2. Do not infer PI-3B clinic review/canonical apply from submission or appointment handoff; canonical Patient and Clinical data remain clinic-controlled and unchanged by intake.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -211,6 +214,9 @@ Immediate priorities:
 - preserve PI-2B as linked existing-patient self-only create/get/save with id-less ownership, no-store, optimistic concurrency and no canonical Patient/Clinical writes
 - preserve completed PI-2C credential, activation, `patient_intake`, staff copy/print/local-QR and memory-only handoff boundaries
 - preserve completed PI-2D1 through PI-2D4, including explicit full-snapshot save, 39-key parity, stale-write blocking, scope-correct recovery and route-only unsaved-navigation protection
+- preserve PI-3A one-time completion semantics: only persisted `Submitted` counts, drafts remain requestable, and no linked Patient can have more than one submitted intake
+- preserve `patientportal.intake.request` as an independent tenant-only permission for appointment access preparation; no platform override or implicit intake-management/recovery/clinical permissions
+- preserve WhatsApp as manual click-to-chat without automated-delivery claims or provider integration
 - avoid reopening accepted aggregates through incidental Patient Portal linkage
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override

@@ -46,6 +46,33 @@ export interface AppointmentSummary {
   cancellationReason: string | null;
 }
 
+export type PatientPortalAccessStatus = 'NotActivated' | 'Active' | 'RecoveryRequired';
+export type AppointmentPatientIntakeStatus = 'NotStarted' | 'InProgress' | 'Completed';
+export type AppointmentPatientIntakeRecommendedAccess =
+  | 'Activation'
+  | 'Login'
+  | 'RecoveryRequired'
+  | 'None';
+
+export interface AppointmentPatientIntakeRequestStatus {
+  appointmentId: string;
+  patientId: string;
+  patientFullName: string;
+  patientPrimaryPhone: string | null;
+  patientPortalRealm: string;
+  portalAccessStatus: PatientPortalAccessStatus;
+  intakeStatus: AppointmentPatientIntakeStatus;
+  recommendedAccess: AppointmentPatientIntakeRecommendedAccess;
+  canRequest: boolean;
+  submittedAtUtc: string | null;
+}
+
+export interface PreparedAppointmentPatientIntakeRequest {
+  status: AppointmentPatientIntakeRequestStatus;
+  accessMode: 'Activation' | 'Login';
+  activationToken: string | null;
+}
+
 export interface AppointmentBlockSummary {
   id: string;
   branchId: string;

@@ -5,7 +5,9 @@ import { environment } from '../../../../environments/environment';
 import {
   PatientIntakeDraft,
   SavePatientIntakeDraftRequest,
-  SavePatientIntakeDraftResponse
+  SavePatientIntakeDraftResponse,
+  SubmitPatientIntakeRequest,
+  SubmitPatientIntakeResponse
 } from '../models/patient-intake.models';
 
 @Injectable({ providedIn: 'root' })
@@ -24,5 +26,9 @@ export class PatientIntakeApi {
 
   save(request: SavePatientIntakeDraftRequest): Observable<SavePatientIntakeDraftResponse> {
     return this.http.put<SavePatientIntakeDraftResponse>(this.baseUrl, request);
+  }
+
+  submit(request: SubmitPatientIntakeRequest): Observable<SubmitPatientIntakeResponse> {
+    return this.http.post<SubmitPatientIntakeResponse>(`${this.baseUrl}/submit`, request);
   }
 }

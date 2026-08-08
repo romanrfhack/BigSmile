@@ -4,9 +4,21 @@ namespace BigSmile.Application.Interfaces.Repositories
 {
     public interface IPatientIntakeRepository
     {
+        Task<PatientIntake?> GetCurrentByAccountAsync(
+            Guid tenantId,
+            Guid patientPortalAccountId,
+            bool trackChanges,
+            CancellationToken cancellationToken = default);
+
         Task<PatientIntake?> GetDraftByAccountAsync(
             Guid tenantId,
             Guid patientPortalAccountId,
+            bool trackChanges,
+            CancellationToken cancellationToken = default);
+
+        Task<PatientIntake?> GetSubmittedByPatientAsync(
+            Guid tenantId,
+            Guid patientId,
             bool trackChanges,
             CancellationToken cancellationToken = default);
 

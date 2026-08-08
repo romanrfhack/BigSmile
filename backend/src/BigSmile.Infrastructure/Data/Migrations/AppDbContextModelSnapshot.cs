@@ -1100,6 +1100,9 @@ namespace BigSmile.Infrastructure.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<DateTime?>("SubmittedAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1117,6 +1120,10 @@ namespace BigSmile.Infrastructure.Data.Migrations
 
                     b.HasIndex("TenantId", "PatientId");
 
+                    b.HasIndex("TenantId", "PatientId", "Status")
+                        .IsUnique()
+                        .HasFilter("[Status] = N'Submitted' AND [PatientId] IS NOT NULL");
+
                     b.HasIndex("TenantId", "PatientPortalAccountId")
                         .IsUnique()
                         .HasFilter("[Status] = N'Draft'");
@@ -1130,6 +1137,8 @@ namespace BigSmile.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("CK_PatientIntakes_ExpiryOrder", "[ExpiresAtUtc] > [CreatedAtUtc]");
 
                             t.HasCheckConstraint("CK_PatientIntakes_OriginPatientLink", "(([Origin] = N'ExistingPatientPortal' AND [PatientId] IS NOT NULL AND [CanonicalPatientBaselineJson] IS NOT NULL AND [CanonicalPatientBaselineCapturedAtUtc] IS NOT NULL) OR ([Origin] = N'NewPatientWaitingRoom' AND [PatientId] IS NULL AND [CanonicalPatientBaselineJson] IS NULL AND [CanonicalPatientBaselineCapturedAtUtc] IS NULL))");
+
+                            t.HasCheckConstraint("CK_PatientIntakes_SubmissionMetadata", "(([Status] = N'Submitted' AND [SubmittedAtUtc] IS NOT NULL) OR ([Status] <> N'Submitted' AND [SubmittedAtUtc] IS NULL))");
                         });
                 });
 

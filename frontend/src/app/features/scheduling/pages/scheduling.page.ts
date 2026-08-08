@@ -16,6 +16,7 @@ import { AppointmentBlockFormComponent } from '../components/appointment-block-f
 import { AppointmentCalendarComponent } from '../components/appointment-calendar.component';
 import { AppointmentFormComponent } from '../components/appointment-form.component';
 import { AppointmentManualReminderComponent } from '../components/appointment-manual-reminder.component';
+import { AppointmentPatientIntakeRequestComponent } from '../components/appointment-patient-intake-request.component';
 import { AppointmentReminderLogComponent } from '../components/appointment-reminder-log.component';
 import { AppointmentReminderWorklistComponent } from '../components/appointment-reminder-worklist.component';
 import { ReminderTemplateManagerComponent } from '../components/reminder-template-manager.component';
@@ -45,6 +46,7 @@ type SchedulingEditorSurface = 'appointment' | 'block';
     AppointmentFormComponent,
     AppointmentBlockFormComponent,
     AppointmentManualReminderComponent,
+    AppointmentPatientIntakeRequestComponent,
     AppointmentReminderWorklistComponent,
     AppointmentReminderLogComponent,
     ReminderTemplateManagerComponent,
@@ -242,6 +244,11 @@ type SchedulingEditorSurface = 'appointment' | 'block';
 
       <div *ngIf="selectedAppointment" class="appointment-secondary-grid">
         <div class="appointment-detail-stack">
+          <app-appointment-patient-intake-request
+            *ngIf="canRequestPatientIntake && isScheduledAppointment(selectedAppointment)"
+            [appointmentId]="selectedAppointment.id">
+          </app-appointment-patient-intake-request>
+
           <app-appointment-manual-reminder
             [appointment]="selectedAppointment"
             [canWrite]="canWrite"
@@ -622,6 +629,10 @@ export class SchedulingPageComponent implements OnInit {
 
   get canWrite(): boolean {
     return this.authService.hasPermissions(['scheduling.write']);
+  }
+
+  get canRequestPatientIntake(): boolean {
+    return this.authService.hasPermissions(['patientportal.intake.request']);
   }
 
   get selectedBranchName(): string {

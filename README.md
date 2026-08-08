@@ -79,7 +79,7 @@ Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 —
 
 Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Phase 2.1 is active with PI-1 and PI-2 completed. Both patient scopes use the same self-only workspace for explicit full-snapshot demographic/contact and fixed 39-question capture, with conflict/expiry/session-invalidated recovery and unsaved-navigation protection. Canonical Patient/Clinical data remains unchanged. PI-3 submit/review/apply and PI-4 audit hardening remain unopened and require separate decisions. Code presence in reminders, providers, jobs, online booking or advanced analytics still does not imply acceptance.
+Phase 2.1 is active with PI-1 and PI-2 completed and bounded PI-3A explicitly opened under ADR 020. Both patient scopes use the same self-only workspace; only explicit final `Submitted` counts as completed. Scheduling can show portal/history status and prepare optional activation/login access under independent `patientportal.intake.request`, including manual WhatsApp click-to-chat. Canonical Patient/Clinical data remains unchanged; clinic review/apply and PI-4 remain unopened.
 
 ---
 
@@ -278,10 +278,10 @@ Current roadmap position:
 * **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
-* **Latest Phase 2.1 increment completed:** **PI-2D2 — Demographics, contact and reason-for-visit capture**
-* **Current slice:** **PI-2D — Angular Patient Intake Capture and PI-2 Closure**
-* **Next gated increment:** **PI-2D3 — Familiar fixed 39-question medical history capture**; implementation pending explicit authorization
-* **Public patient runtime:** linked-patient and waiting-room authentication, the shared self-only intake workspace, and explicit non-medical draft capture are available; the fixed 39-question interaction remains PI-2D3 and canonical application remains PI-3
+* **Latest completed Phase 2.1 increment:** **PI-2D4 — conflict/expiry/session and navigation closure**
+* **Current slice:** **PI-3A — final patient submission and pre-appointment intake request**
+* **Next gated increment:** **PI-3B — clinic review, duplicate resolution and canonical apply**; not opened
+* **Public patient runtime:** linked-patient and waiting-room authentication, full fixed 39-question capture and explicit final submission; canonical Patient/Clinical application remains gated
 
 Release 2 is formally complete with branch-aware daily and weekly calendar views, appointment create/edit/reschedule/cancel flows, appointment notes, blocked slots, and explicit attended/no-show states.
 
@@ -448,13 +448,14 @@ The initial operational MVP is accepted, but Bigsmile is not feature-complete. P
 
 ### Phase 2 Expansion — Modern Operations
 
-* **Phase 2.1 — Patient Intake and Portal Foundation** is the active phase under ADR 006 and ADR 012–017
+* **Phase 2.1 — Patient Intake and Portal Foundation** is the active phase under ADR 006 and ADR 012–020
 * PI-1 is completed through account/invitation persistence, tenant-admin invitation lifecycle, separate patient auth/session backend and bounded Angular patient auth
 * PI-2A completed the tenant-owned draft/fixed-answer/revision persistence foundation
 * PI-2B completed linked-patient self-only `POST / GET / PUT /api/patient-portal/intake` with no-store, no GET side effects and optimistic concurrency
-* PI-2C is active only for the one-time waiting-room credential, `patientportal.intake.manage`, unlinked `patient_intake` session and minimal staff copy/print/local-QR UI; PI-2D retains patient capture
-* PI-3 and PI-4 remain pending for clinic review/application, audit visibility and production hardening
-* PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`; PI-2 decisions: ADR 016 and ADR 017
+* PI-2C and PI-2D are completed with waiting-room handoff, both self-only scopes, full capture and lifecycle hardening
+* PI-3A adds `Submitted`, one-time completion, appointment status indicators, independent reception permission and manual WhatsApp handoff
+* PI-3B and PI-4 remain pending for clinic review/application, audit visibility and production hardening
+* PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`; PI-3A decision: ADR 020
 * The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred
 
 ---

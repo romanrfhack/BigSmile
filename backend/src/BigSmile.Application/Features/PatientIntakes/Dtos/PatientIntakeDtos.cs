@@ -34,6 +34,7 @@ namespace BigSmile.Application.Features.PatientIntakes.Dtos
         DateTime CreatedAtUtc,
         DateTime LastUpdatedAtUtc,
         DateTime? LastEffectiveSavedAtUtc,
+        DateTime? SubmittedAtUtc,
         DateTime ExpiresAtUtc);
 
     public sealed record SavePatientIntakeMedicalAnswerCommand(
@@ -101,7 +102,8 @@ namespace BigSmile.Application.Features.PatientIntakes.Dtos
         None = 0,
         SessionInvalid = 1,
         ActiveDraftExists = 2,
-        ConcurrentConflict = 3
+        ConcurrentConflict = 3,
+        IntakeAlreadySubmitted = 4
     }
 
     public sealed record PatientIntakeCreateResult(
@@ -164,6 +166,44 @@ namespace BigSmile.Application.Features.PatientIntakes.Dtos
         PatientIntakeDto Intake,
         bool Changed);
 
+    public enum PatientIntakeSubmitFailure
+    {
+        None = 0,
+        SessionInvalid = 1,
+        Missing = 2,
+        Expired = 3,
+        Incomplete = 4,
+        ConcurrentConflict = 5
+    }
+
+    public sealed record PatientIntakeSubmitResult(
+        PatientIntakeDto? Intake,
+        bool Changed,
+        PatientIntakeSubmitFailure Failure)
+    {
+        public bool Succeeded => Intake is not null && Failure == PatientIntakeSubmitFailure.None;
+
+        public static PatientIntakeSubmitResult Success(PatientIntakeDto intake, bool changed)
+        {
+            ArgumentNullException.ThrowIfNull(intake);
+            return new PatientIntakeSubmitResult(intake, changed, PatientIntakeSubmitFailure.None);
+        }
+
+        public static PatientIntakeSubmitResult Failed(PatientIntakeSubmitFailure failure)
+        {
+            if (failure == PatientIntakeSubmitFailure.None)
+            {
+                throw new ArgumentOutOfRangeException(nameof(failure));
+            }
+
+            return new PatientIntakeSubmitResult(null, false, failure);
+        }
+    }
+
+    public sealed record PatientIntakeSubmitResponseDto(
+        PatientIntakeDto Intake,
+        bool Changed);
+
     internal static class PatientIntakeDtoMappings
     {
         public static PatientIntakeDto ToDto(this PatientIntake intake)
@@ -201,6 +241,7 @@ namespace BigSmile.Application.Features.PatientIntakes.Dtos
                 intake.CreatedAtUtc,
                 intake.LastUpdatedAtUtc,
                 intake.LastEffectiveSavedAtUtc,
+                intake.SubmittedAtUtc,
                 intake.ExpiresAtUtc);
         }
     }

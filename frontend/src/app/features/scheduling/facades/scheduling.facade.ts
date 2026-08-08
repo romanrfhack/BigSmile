@@ -184,6 +184,14 @@ export class SchedulingFacade {
     );
   }
 
+  getPatientIntakeRequestStatus(appointmentId: string) {
+    return this.schedulingApi.getPatientIntakeRequestStatus(appointmentId);
+  }
+
+  preparePatientIntakeRequest(appointmentId: string) {
+    return this.schedulingApi.preparePatientIntakeRequest(appointmentId);
+  }
+
   updateAppointment(id: string, payload: UpdateAppointmentRequest) {
     return this.schedulingApi.updateAppointment(id, payload).pipe(
       tap(() => this.loadCalendar())

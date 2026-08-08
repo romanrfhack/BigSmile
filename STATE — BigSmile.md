@@ -22,7 +22,7 @@
 
 **Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 006 define la frontera separada de identidad/intake; ADR 012 a ADR 015 cierran el acceso, invitaciones, autenticación/sesión y frontera Angular; ADR 016 fija el baseline de datos y draft lifecycle; ADR 017 acepta la API self-only de paciente existente; ADR 018 y ADR 019 cierran la credencial de sala de espera y el boundary `patient_intake`. PI-1 y PI-2C quedan completados. PI-2D está activa mediante #44 y se implementa secuencialmente como #45 → #46 → #47 → #48.
+**Patient Intake and Portal Foundation** — [Hecho] ADR 006 y ADR 012 a ADR 019 cierran PI-1/PI-2 y ambos boundaries patient-self. ADR 020 abre de forma acotada PI-3A: envío final `Submitted`, solicitud opcional desde Appointment, indicadores de acceso/historia, permiso independiente `patientportal.intake.request` y WhatsApp manual. PI-3B review/apply permanece sin abrir y no hay writes canónicos.
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
@@ -98,6 +98,8 @@
 
 [Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) queda completado mediante PI-2D1 a PI-2D4. PI-2D1 #45 cerró rutas/sesiones/data-access mediante PR #50 y el hardening method-aware de PR #51; PI-2D2 #46 cerró captura no médica mediante PR #53; PI-2D3 #47 cerró el catálogo compartido y las 39 preguntas mediante PR #55; PI-2D4 #48 quedó completado mediante PR #57, merge commit `4b8cb66163948c5b69ff6c3c0027d01e105ce1fb` y CI #485 con conflicto/expiración fail-safe, sesión scope-correct, navegación sin guardar y smoke automatizado. Con ello PI-2 — Intake Draft and Self-Service Capture queda formalmente cerrado sin writes canónicos.
 
+[En curso] PI-3A — Patient Submission and Pre-Appointment Request queda explícitamente abierto el 2026-08-06 bajo ADR 020. `Submitted` es el único marcador de historia completada; requiere identidad mínima y las 39 respuestas explícitas, deja revisión inmutable y bloquea solicitudes futuras para el mismo Patient. Scheduling prepara activación/login solo desde una cita y Branch accesible con `patientportal.intake.request`; WhatsApp permanece click-to-chat manual. PI-3B clinic review/canonical apply sigue sin iniciar.
+
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
 ## 4.1 Nota de reconciliación UX / código existente
@@ -114,9 +116,9 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [Hecho] fase abierta con PI-1 y PI-2 completados. PI-2A a PI-2D quedaron cerrados con persistencia, APIs self-only, waiting-room scope, captura Angular completa y hardening de conflicto/expiración/navegación. PI-3 — Submit, Clinic Review and Canonical Apply y PI-4 — Audit Visibility and Security Hardening permanecen sin iniciar; abrir PI-3 requiere una decisión explícita separada.
+**Estado** — [En curso] fase abierta con PI-1 y PI-2 completados. PI-3A está abierto de forma acotada para submit final y solicitud previa a la cita. PI-3B — Clinic Review and Canonical Apply y PI-4 permanecen sin iniciar.
 
-**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 y PI-2 están cerrados. PI-3 no se abre automáticamente por este cierre y no existen todavía submit/review/apply ni writes canónicos desde el intake.
+**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 y PI-2 están cerrados. Existe submit patient-self bajo PI-3A, pero no review/apply ni writes canónicos desde el intake.
 
 **Tracking** — [Hecho]
 
@@ -129,6 +131,7 @@
 - ADR 017 — `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`.
 - ADR 018 — `docs/decisions/018-patient-intake-waiting-room-link-management.md`.
 - ADR 019 — `docs/decisions/019-patient-intake-only-authentication-boundary.md`.
+- ADR 020 — `docs/decisions/020-patient-intake-submission-and-preappointment-request.md`.
 - Plan PI-2D — `docs/pi-2d-angular-intake-capture-plan.md`.
 - Cierre PI-2D3 — `docs/pi-2d3-medical-questionnaire-closure.md`.
 - Cierre PI-2 — `docs/pi-2-patient-intake-capture-closure.md`.

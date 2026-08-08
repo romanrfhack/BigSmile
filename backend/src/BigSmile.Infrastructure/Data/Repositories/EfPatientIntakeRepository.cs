@@ -14,6 +14,26 @@ namespace BigSmile.Infrastructure.Data.Repositories
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
+        public Task<PatientIntake?> GetCurrentByAccountAsync(
+            Guid tenantId,
+            Guid patientPortalAccountId,
+            bool trackChanges,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _dbContext.PatientIntakes
+                .Include(intake => intake.PatientPortalAccount)
+                .Include(intake => intake.MedicalAnswers)
+                .Where(intake => intake.TenantId == tenantId &&
+                                 intake.PatientPortalAccountId == patientPortalAccountId &&
+                                 (intake.Status == PatientIntakeStatus.Draft ||
+                                  intake.Status == PatientIntakeStatus.Submitted))
+                .OrderByDescending(intake => intake.Status == PatientIntakeStatus.Submitted)
+                .ThenByDescending(intake => intake.CreatedAtUtc);
+
+            return ApplyTracking(query, trackChanges)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public Task<PatientIntake?> GetDraftByAccountAsync(
             Guid tenantId,
             Guid patientPortalAccountId,
@@ -29,6 +49,24 @@ namespace BigSmile.Infrastructure.Data.Repositories
 
             return ApplyTracking(query, trackChanges)
                 .SingleOrDefaultAsync(cancellationToken);
+        }
+
+        public Task<PatientIntake?> GetSubmittedByPatientAsync(
+            Guid tenantId,
+            Guid patientId,
+            bool trackChanges,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _dbContext.PatientIntakes
+                .Include(intake => intake.PatientPortalAccount)
+                .Include(intake => intake.MedicalAnswers)
+                .Where(intake => intake.TenantId == tenantId &&
+                                 intake.PatientId == patientId &&
+                                 intake.Status == PatientIntakeStatus.Submitted)
+                .OrderByDescending(intake => intake.SubmittedAtUtc);
+
+            return ApplyTracking(query, trackChanges)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<bool> TryCreateAsync(

@@ -23,6 +23,7 @@ describe('PatientIntakeWorkspaceFacade', () => {
     create: ReturnType<typeof vi.fn>;
     getCurrent: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
+    submit: ReturnType<typeof vi.fn>;
   };
   let patientAuthApi: PatientPortalAuthApi & {
     getCurrent: ReturnType<typeof vi.fn>;
@@ -40,7 +41,8 @@ describe('PatientIntakeWorkspaceFacade', () => {
     intakeApi = {
       create: vi.fn().mockReturnValue(of(draft())),
       getCurrent: vi.fn().mockReturnValue(of(draft())),
-      save: vi.fn().mockReturnValue(of({ intake: savedDraft(), changed: true }))
+      save: vi.fn().mockReturnValue(of({ intake: savedDraft(), changed: true })),
+      submit: vi.fn().mockReturnValue(of({ intake: submittedDraft(), changed: true }))
     } as unknown as typeof intakeApi;
     patientAuthApi = {
       getCurrent: vi.fn().mockReturnValue(of(patientCurrent())),
@@ -188,6 +190,39 @@ describe('PatientIntakeWorkspaceFacade', () => {
     expect(intakeApi.save).toHaveBeenCalledTimes(1);
   });
 
+  it('saves the complete snapshot and submits with the refreshed concurrency token', () => {
+    boundary.setPatientSession(patientResponse());
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+
+    facade.submitIntake(nonMedicalValue(), completedMedicalValue());
+
+    expect(intakeApi.save).toHaveBeenCalledTimes(1);
+    expect(intakeApi.submit).toHaveBeenCalledWith({
+      concurrencyToken: 'rv1.next-token'
+    });
+    expect(facade.submitted()).toBe(true);
+    expect(facade.intake()?.status).toBe('Submitted');
+    expect(facade.intake()?.submittedAtUtc).toBe('2026-08-06T13:30:00Z');
+    expect(facade.submitError()).toBeNull();
+  });
+
+  it('does not call submit after a failed authoritative save', () => {
+    boundary.setPatientSession(patientResponse());
+    intakeApi.save.mockReturnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: { code: 'patient_intake.concurrency_conflict' }
+    })));
+    const facade = createFacade();
+    facade.initialize('clinic-a');
+
+    facade.submitIntake(nonMedicalValue(), completedMedicalValue());
+
+    expect(intakeApi.submit).not.toHaveBeenCalled();
+    expect(facade.blockingState()).toBe('conflict');
+    expect(facade.submitted()).toBe(false);
+  });
+
   function createFacade(): PatientIntakeWorkspaceFacade {
     return new PatientIntakeWorkspaceFacade(
       intakeApi,
@@ -265,6 +300,14 @@ function medicalValue(): PatientIntakeMedicalAnswerFormValue[] {
   }));
 }
 
+function completedMedicalValue(): PatientIntakeMedicalAnswerFormValue[] {
+  return MEDICAL_QUESTIONNAIRE_KEYS.map(questionKey => ({
+    questionKey,
+    answer: 'No',
+    details: ''
+  }));
+}
+
 function draft(): PatientIntakeDraft {
   return {
     origin: 'ExistingPatientPortal',
@@ -295,6 +338,7 @@ function draft(): PatientIntakeDraft {
     createdAtUtc: '2026-07-27T10:00:00Z',
     lastUpdatedAtUtc: '2026-07-27T10:00:00Z',
     lastEffectiveSavedAtUtc: null,
+    submittedAtUtc: null,
     expiresAtUtc: '2026-08-26T10:00:00Z'
   };
 }
@@ -307,5 +351,15 @@ function savedDraft(): PatientIntakeDraft {
     currentRevisionNumber: 1,
     concurrencyToken: 'rv1.next-token',
     lastEffectiveSavedAtUtc: '2026-07-27T11:00:00Z'
+  };
+}
+
+function submittedDraft(): PatientIntakeDraft {
+  return {
+    ...savedDraft(),
+    status: 'Submitted',
+    currentRevisionNumber: 2,
+    concurrencyToken: 'rv1.submitted-token',
+    submittedAtUtc: '2026-08-06T13:30:00Z'
   };
 }

@@ -73,6 +73,7 @@ export interface PatientIntakeDraft {
   createdAtUtc: string;
   lastUpdatedAtUtc: string;
   lastEffectiveSavedAtUtc: string | null;
+  submittedAtUtc: string | null;
   expiresAtUtc: string;
 }
 
@@ -129,6 +130,15 @@ export interface SavePatientIntakeDraftRequest {
 }
 
 export interface SavePatientIntakeDraftResponse {
+  intake: PatientIntakeDraft;
+  changed: boolean;
+}
+
+export interface SubmitPatientIntakeRequest {
+  concurrencyToken: string;
+}
+
+export interface SubmitPatientIntakeResponse {
   intake: PatientIntakeDraft;
   changed: boolean;
 }
@@ -200,6 +210,17 @@ export function buildSavePatientIntakeDraftRequest(
     medicalAnswers: normalizeMedicalAnswers(medicalAnswers),
     concurrencyToken: intake.concurrencyToken
   };
+}
+
+export function isPatientIntakeReadyForSubmission(
+  value: PatientIntakeNonMedicalFormValue,
+  medicalAnswers: readonly PatientIntakeMedicalAnswerFormValue[]
+): boolean {
+  return value.firstName.trim().length > 0 &&
+    value.lastName.trim().length > 0 &&
+    value.dateOfBirth.trim().length > 0 &&
+    medicalAnswers.length === MEDICAL_QUESTIONNAIRE_KEYS.length &&
+    medicalAnswers.every(answer => answer.answer !== 'Unknown');
 }
 
 function normalizeMedicalAnswers(

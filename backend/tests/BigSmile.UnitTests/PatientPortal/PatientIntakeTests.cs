@@ -293,25 +293,118 @@ namespace BigSmile.UnitTests.PatientPortal
                 "responsible-party"));
         }
 
+        [Fact]
+        public void Submit_RequiresCompleteDemographicsAndEveryMedicalAnswer()
+        {
+            var account = PatientPortalAccount.CreateUnlinked(
+                Guid.NewGuid(),
+                "new.patient",
+                "versioned-hash");
+            var intake = PatientIntake.CreateForNewPatient(
+                account,
+                branch: null,
+                CreatedAtUtc);
+
+            Assert.False(intake.IsReadyForSubmission());
+            Assert.Throws<InvalidOperationException>(() => intake.Submit(
+                account.Id,
+                CreatedAtUtc.AddMinutes(1),
+                "incomplete-submit"));
+
+            intake.SaveDraft(
+                BuildDraft(
+                    firstName: "Ana",
+                    lastName: "Lopez",
+                    dateOfBirth: new DateOnly(1991, 2, 14),
+                    answerAllQuestions: true),
+                account.Id,
+                CreatedAtUtc.AddMinutes(2),
+                "complete-draft");
+
+            Assert.True(intake.IsReadyForSubmission());
+        }
+
+        [Fact]
+        public void Submit_CreatesFinalRevisionAndMakesIntakeImmutableAndNonExpiring()
+        {
+            var account = PatientPortalAccount.CreateUnlinked(
+                Guid.NewGuid(),
+                "new.patient",
+                "versioned-hash");
+            var intake = PatientIntake.CreateForNewPatient(
+                account,
+                branch: null,
+                CreatedAtUtc);
+            intake.SaveDraft(
+                BuildDraft(
+                    firstName: "Ana",
+                    lastName: "Lopez",
+                    dateOfBirth: new DateOnly(1991, 2, 14),
+                    answerAllQuestions: true),
+                account.Id,
+                CreatedAtUtc.AddMinutes(1),
+                "complete-draft");
+            var submittedAtUtc = CreatedAtUtc.AddMinutes(2);
+
+            var revision = intake.Submit(
+                account.Id,
+                submittedAtUtc,
+                "submit-1");
+
+            Assert.Equal(PatientIntakeStatus.Submitted, intake.Status);
+            Assert.Equal(submittedAtUtc, intake.SubmittedAtUtc);
+            Assert.Equal(submittedAtUtc, intake.LastUpdatedAtUtc);
+            Assert.Equal(2, intake.CurrentRevisionNumber);
+            Assert.Equal(2, intake.Revisions.Count);
+            Assert.Contains("status", revision.ChangedFieldsJson, StringComparison.Ordinal);
+            Assert.Equal("submit-1", revision.CorrelationId);
+            Assert.False(intake.IsExpiredAt(intake.ExpiresAtUtc.AddYears(1)));
+            Assert.False(intake.ExpireIfDue(intake.ExpiresAtUtc.AddYears(1)));
+
+            Assert.Throws<InvalidOperationException>(() => intake.SaveDraft(
+                BuildDraft(
+                    firstName: "Changed",
+                    lastName: "Lopez",
+                    dateOfBirth: new DateOnly(1991, 2, 14),
+                    answerAllQuestions: true),
+                account.Id,
+                submittedAtUtc.AddMinutes(1),
+                "post-submit-save"));
+            Assert.Throws<InvalidOperationException>(() => intake.Submit(
+                account.Id,
+                submittedAtUtc.AddMinutes(1),
+                "second-submit"));
+        }
+
         private static PatientIntakeDraftData BuildDraft(
             string? firstName = null,
+            string? lastName = null,
+            DateOnly? dateOfBirth = null,
             string? reasonForVisit = null,
             ClinicalMedicalAnswerValue diabetesAnswer = ClinicalMedicalAnswerValue.Unknown,
-            string? diabetesDetails = null)
+            string? diabetesDetails = null,
+            bool answerAllQuestions = false)
         {
             var empty = PatientIntakeDraftData.Empty();
             return empty with
             {
                 FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = dateOfBirth,
                 ReasonForVisit = reasonForVisit,
                 MedicalAnswers = empty.MedicalAnswers
                     .Select(answer => answer.QuestionKey == "diabetes"
                         ? answer with
                         {
-                            Answer = diabetesAnswer,
+                            Answer = answerAllQuestions &&
+                                     diabetesAnswer == ClinicalMedicalAnswerValue.Unknown
+                                ? ClinicalMedicalAnswerValue.No
+                                : diabetesAnswer,
                             Details = diabetesDetails
                         }
-                        : answer)
+                        : answerAllQuestions
+                            ? answer with { Answer = ClinicalMedicalAnswerValue.No }
+                            : answer)
                     .ToArray()
             };
         }

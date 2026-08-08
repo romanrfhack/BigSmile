@@ -312,6 +312,132 @@ namespace BigSmile.IntegrationTests.PatientPortal
         }
 
         [Fact]
+        public async Task SubmitAsync_FinalizesOnceAndPreventsFuturePatientRequests()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seed = await SeedLinkedAccountAsync(databaseName, "Tenant A", "tenant-a");
+            var timeProvider = new MutableTimeProvider(InitialUtc);
+            var identity = BuildIdentity(seed);
+            var created = await CreateDraftAsync(databaseName, identity, timeProvider);
+
+            PatientIntakeSaveResult completedDraft;
+            await using (var saveContext = CreateContext(
+                             databaseName,
+                             CreatePatientContext(identity)))
+            {
+                completedDraft = await CreateService(saveContext, timeProvider).SaveAsync(
+                    identity,
+                    BuildCompleteSaveCommand(created),
+                    "complete-before-submit");
+            }
+
+            Assert.True(completedDraft.Succeeded);
+            Assert.True(completedDraft.Changed);
+            Assert.All(completedDraft.Intake!.MedicalAnswers, answer =>
+                Assert.Equal(ClinicalMedicalAnswerValue.No.ToString(), answer.Answer));
+
+            timeProvider.Advance(TimeSpan.FromMinutes(1));
+            PatientIntakeSubmitResult submitted;
+            await using (var submitContext = CreateContext(
+                             databaseName,
+                             CreatePatientContext(identity)))
+            {
+                submitted = await CreateService(submitContext, timeProvider).SubmitAsync(
+                    identity,
+                    completedDraft.Intake.ConcurrencyToken,
+                    "submit-once");
+            }
+
+            Assert.True(submitted.Succeeded);
+            Assert.True(submitted.Changed);
+            Assert.Equal(PatientIntakeStatus.Submitted.ToString(), submitted.Intake!.Status);
+            Assert.Equal(timeProvider.GetUtcNow().UtcDateTime, submitted.Intake.SubmittedAtUtc);
+
+            await using (var repeatContext = CreateContext(
+                             databaseName,
+                             CreatePatientContext(identity)))
+            {
+                var service = CreateService(repeatContext, timeProvider);
+                var repeated = await service.SubmitAsync(
+                    identity,
+                    completedDraft.Intake.ConcurrencyToken,
+                    "repeat-submit");
+                var createAgain = await service.CreateAsync(identity);
+                var current = await service.GetCurrentAsync(identity);
+
+                Assert.True(repeated.Succeeded);
+                Assert.False(repeated.Changed);
+                Assert.Equal(
+                    PatientIntakeCreateFailure.IntakeAlreadySubmitted,
+                    createAgain.Failure);
+                Assert.True(current.Succeeded);
+                Assert.Equal(PatientIntakeStatus.Submitted.ToString(), current.Intake!.Status);
+            }
+
+            await using var verificationContext = CreateContext(
+                databaseName,
+                new TenantContext());
+            var persisted = await verificationContext.PatientIntakes.SingleAsync();
+            Assert.Equal(PatientIntakeStatus.Submitted, persisted.Status);
+            Assert.NotNull(persisted.SubmittedAtUtc);
+            Assert.Equal(2, await verificationContext.PatientIntakeRevisions.CountAsync());
+            Assert.Empty(await verificationContext.ClinicalMedicalAnswers.ToListAsync());
+            Assert.Empty(await verificationContext.ClinicalRecords.ToListAsync());
+        }
+
+        [Fact]
+        public async Task SubmitAsync_RejectsIncompleteAndStaleDraftsWithoutChangingStatus()
+        {
+            var databaseName = Guid.NewGuid().ToString();
+            var seed = await SeedLinkedAccountAsync(databaseName, "Tenant A", "tenant-a");
+            var timeProvider = new MutableTimeProvider(InitialUtc);
+            var identity = BuildIdentity(seed);
+            var created = await CreateDraftAsync(databaseName, identity, timeProvider);
+
+            await using (var incompleteContext = CreateContext(
+                             databaseName,
+                             CreatePatientContext(identity)))
+            {
+                var incomplete = await CreateService(incompleteContext, timeProvider).SubmitAsync(
+                    identity,
+                    created.ConcurrencyToken,
+                    "incomplete-submit");
+                Assert.Equal(PatientIntakeSubmitFailure.Incomplete, incomplete.Failure);
+            }
+
+            PatientIntakeSaveResult completedDraft;
+            await using (var saveContext = CreateContext(
+                             databaseName,
+                             CreatePatientContext(identity)))
+            {
+                completedDraft = await CreateService(saveContext, timeProvider).SaveAsync(
+                    identity,
+                    BuildCompleteSaveCommand(created),
+                    "complete-draft");
+            }
+
+            await using (var staleContext = CreateContext(
+                             databaseName,
+                             CreatePatientContext(identity)))
+            {
+                var stale = await CreateService(staleContext, timeProvider).SubmitAsync(
+                    identity,
+                    created.ConcurrencyToken,
+                    "stale-submit");
+                Assert.Equal(PatientIntakeSubmitFailure.ConcurrentConflict, stale.Failure);
+            }
+
+            await using var verificationContext = CreateContext(
+                databaseName,
+                new TenantContext());
+            var persisted = await verificationContext.PatientIntakes.SingleAsync();
+            Assert.Equal(PatientIntakeStatus.Draft, persisted.Status);
+            Assert.Null(persisted.SubmittedAtUtc);
+            Assert.Equal(1, await verificationContext.PatientIntakeRevisions.CountAsync());
+            Assert.NotNull(completedDraft.Intake);
+        }
+
+        [Fact]
         public async Task SessionIdentityMismatchCannotReadCreateOrSaveAnotherAccountDraft()
         {
             var databaseName = Guid.NewGuid().ToString();
@@ -343,6 +469,12 @@ namespace BigSmile.IntegrationTests.PatientPortal
                     forgedIdentity,
                     BuildSaveCommand(createdA),
                     "forged-save")).Failure);
+            Assert.Equal(
+                PatientIntakeSubmitFailure.SessionInvalid,
+                (await service.SubmitAsync(
+                    forgedIdentity,
+                    createdA.ConcurrencyToken,
+                    "forged-submit")).Failure);
         }
 
         private static async Task<PatientIntakeDto> CreateDraftAsync(
@@ -398,6 +530,20 @@ namespace BigSmile.IntegrationTests.PatientPortal
                         answer.Details))
                     .ToArray(),
                 intake.ConcurrencyToken);
+        }
+
+        private static SavePatientIntakeDraftCommand BuildCompleteSaveCommand(
+            PatientIntakeDto intake)
+        {
+            return BuildSaveCommand(intake) with
+            {
+                MedicalAnswers = intake.MedicalAnswers
+                    .Select(answer => new SavePatientIntakeMedicalAnswerCommand(
+                        answer.QuestionKey,
+                        ClinicalMedicalAnswerValue.No,
+                        null))
+                    .ToArray()
+            };
         }
 
         private static PatientPortalSessionIdentity BuildIdentity(SeedData seed)

@@ -3,6 +3,7 @@ namespace BigSmile.Domain.Entities
     public enum PatientIntakeStatus
     {
         Draft = 0,
-        Expired = 1
+        Submitted = 1,
+        Expired = 2
     }
 }

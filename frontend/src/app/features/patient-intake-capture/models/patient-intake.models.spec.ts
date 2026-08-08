@@ -6,6 +6,7 @@ import {
   PatientIntakeMedicalAnswerFormValue,
   PatientIntakeNonMedicalFormValue,
   buildSavePatientIntakeDraftRequest,
+  isPatientIntakeReadyForSubmission,
   toPatientIntakeMedicalFormValue,
   toPatientIntakeNonMedicalFormValue
 } from './patient-intake.models';
@@ -106,6 +107,25 @@ describe('patient intake form mapping', () => {
       duplicated
     )).toThrowError(/Duplicate patient intake medical answer/);
   });
+
+  it('requires identity fields and an explicit answer to every question before submission', () => {
+    const intake = draft();
+    const nonMedical = toPatientIntakeNonMedicalFormValue(intake);
+    const medical = toPatientIntakeMedicalFormValue(intake);
+
+    expect(isPatientIntakeReadyForSubmission(nonMedical, medical)).toBe(false);
+
+    const completedMedical = medical.map(answer => ({
+      ...answer,
+      answer: 'No' as const
+    }));
+    expect(isPatientIntakeReadyForSubmission(nonMedical, completedMedical)).toBe(true);
+
+    expect(isPatientIntakeReadyForSubmission(
+      { ...nonMedical, dateOfBirth: '' },
+      completedMedical
+    )).toBe(false);
+  });
 });
 
 function nonMedicalValue(): PatientIntakeNonMedicalFormValue {
@@ -159,6 +179,7 @@ function draft(): PatientIntakeDraft {
     createdAtUtc: '2026-07-27T10:00:00Z',
     lastUpdatedAtUtc: '2026-07-27T10:00:00Z',
     lastEffectiveSavedAtUtc: '2026-07-27T10:00:00Z',
+    submittedAtUtc: null,
     expiresAtUtc: '2026-08-26T10:00:00Z'
   };
 }

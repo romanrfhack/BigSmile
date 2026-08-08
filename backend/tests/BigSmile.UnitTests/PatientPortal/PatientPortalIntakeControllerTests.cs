@@ -91,6 +91,68 @@ namespace BigSmile.UnitTests.PatientPortal
             AssertNoStore(controller.Response.Headers);
         }
 
+        [Fact]
+        public async Task Submit_UsesSessionIdentityAndReturnsFinalizedIntake()
+        {
+            var identity = BuildIdentity();
+            var submittedAtUtc = DateTime.UtcNow;
+            var intake = BuildIntakeDto() with
+            {
+                Status = PatientIntakeStatus.Submitted.ToString(),
+                CurrentRevisionNumber = 2,
+                SubmittedAtUtc = submittedAtUtc
+            };
+            var service = new Mock<IPatientIntakeSelfService>();
+            service
+                .Setup(candidate => candidate.SubmitAsync(
+                    It.Is<PatientPortalSessionIdentity>(value => value == identity),
+                    "fb1.current-token",
+                    "trace-intake-1",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(PatientIntakeSubmitResult.Success(intake, changed: true));
+            var controller = CreateController(service.Object, identity);
+
+            var result = await controller.Submit(new PatientPortalIntakeController.SubmitPatientIntakeRequest
+            {
+                ConcurrencyToken = "fb1.current-token"
+            });
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<PatientIntakeSubmitResponseDto>(ok.Value);
+            Assert.True(response.Changed);
+            Assert.Same(intake, response.Intake);
+            AssertNoStore(controller.Response.Headers);
+        }
+
+        [Theory]
+        [InlineData(PatientIntakeSubmitFailure.Incomplete, "patient_intake.incomplete")]
+        [InlineData(PatientIntakeSubmitFailure.ConcurrentConflict, "patient_intake.concurrency_conflict")]
+        public async Task Submit_ReturnsBoundedConflict(
+            PatientIntakeSubmitFailure failure,
+            string expectedCode)
+        {
+            var identity = BuildIdentity();
+            var service = new Mock<IPatientIntakeSelfService>();
+            service
+                .Setup(candidate => candidate.SubmitAsync(
+                    It.IsAny<PatientPortalSessionIdentity>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(PatientIntakeSubmitResult.Failed(failure));
+            var controller = CreateController(service.Object, identity);
+
+            var result = await controller.Submit(new PatientPortalIntakeController.SubmitPatientIntakeRequest
+            {
+                ConcurrencyToken = "fb1.current-token"
+            });
+
+            var conflict = Assert.IsType<ConflictObjectResult>(result.Result);
+            var problem = Assert.IsType<ProblemDetails>(conflict.Value);
+            Assert.Equal(expectedCode, problem.Extensions["code"]);
+            AssertNoStore(controller.Response.Headers);
+        }
+
         [Theory]
         [InlineData(PatientIntakeSaveFailure.ConcurrentConflict)]
         [InlineData(PatientIntakeSaveFailure.Expired)]
@@ -134,10 +196,16 @@ namespace BigSmile.UnitTests.PatientPortal
             var getResult = await controller.GetCurrent();
             var createResult = await controller.Create();
             var saveResult = await controller.Save(BuildSaveRequest());
+            var submitResult = await controller.Submit(
+                new PatientPortalIntakeController.SubmitPatientIntakeRequest
+                {
+                    ConcurrencyToken = "fb1.current-token"
+                });
 
             Assert.IsType<UnauthorizedResult>(getResult.Result);
             Assert.IsType<ForbidResult>(createResult.Result);
             Assert.IsType<UnauthorizedResult>(saveResult.Result);
+            Assert.IsType<UnauthorizedResult>(submitResult.Result);
             service.VerifyNoOtherCalls();
         }
 
@@ -193,6 +261,8 @@ namespace BigSmile.UnitTests.PatientPortal
                                                 method.GetCustomAttribute<HttpPostAttribute>() is not null);
             Assert.Contains(methods, method => method.Name == nameof(PatientPortalIntakeController.Save) &&
                                                 method.GetCustomAttribute<HttpPutAttribute>() is not null);
+            Assert.Contains(methods, method => method.Name == nameof(PatientPortalIntakeController.Submit) &&
+                                                method.GetCustomAttribute<HttpPostAttribute>()?.Template == "submit");
         }
 
         private static PatientPortalIntakeController CreateController(
@@ -299,6 +369,7 @@ namespace BigSmile.UnitTests.PatientPortal
                 "fb1.current-token",
                 DateTime.UtcNow,
                 DateTime.UtcNow,
+                null,
                 null,
                 DateTime.UtcNow.AddDays(30));
         }

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   AppointmentBlockSummary,
+  AppointmentPatientIntakeRequestStatus,
   AppointmentReminderLogEntry,
   AppointmentReminderWorkItem,
   AppointmentSummary,
@@ -17,6 +18,7 @@ import {
   ManualReminderFollowUpRequest,
   ManualReminderFollowUpResult,
   PreviewReminderTemplateRequest,
+  PreparedAppointmentPatientIntakeRequest,
   ReminderTemplate,
   ReminderTemplatePreview,
   RescheduleAppointmentRequest,
@@ -62,6 +64,21 @@ export class SchedulingApiService {
 
   createAppointment(payload: CreateAppointmentRequest): Observable<AppointmentSummary> {
     return this.http.post<AppointmentSummary>(this.appointmentsBaseUrl, payload);
+  }
+
+  getPatientIntakeRequestStatus(
+    appointmentId: string
+  ): Observable<AppointmentPatientIntakeRequestStatus> {
+    return this.http.get<AppointmentPatientIntakeRequestStatus>(
+      `${this.appointmentsBaseUrl}/${appointmentId}/patient-intake-request`);
+  }
+
+  preparePatientIntakeRequest(
+    appointmentId: string
+  ): Observable<PreparedAppointmentPatientIntakeRequest> {
+    return this.http.post<PreparedAppointmentPatientIntakeRequest>(
+      `${this.appointmentsBaseUrl}/${appointmentId}/patient-intake-request`,
+      {});
   }
 
   updateAppointment(id: string, payload: UpdateAppointmentRequest): Observable<AppointmentSummary> {

@@ -232,6 +232,7 @@ function draft(): PatientIntakeDraft {
     createdAtUtc: '2026-07-29T10:00:00Z',
     lastUpdatedAtUtc: '2026-07-29T10:00:00Z',
     lastEffectiveSavedAtUtc: null,
+    submittedAtUtc: null,
     expiresAtUtc: '2026-08-28T10:00:00Z'
   };
 }
