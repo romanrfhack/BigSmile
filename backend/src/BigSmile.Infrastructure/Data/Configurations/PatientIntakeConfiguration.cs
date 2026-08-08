@@ -20,6 +20,9 @@ namespace BigSmile.Infrastructure.Data.Configurations
                 tableBuilder.HasCheckConstraint(
                     "CK_PatientIntakes_CurrentRevisionNumber",
                     "[CurrentRevisionNumber] >= 0");
+                tableBuilder.HasCheckConstraint(
+                    "CK_PatientIntakes_SubmissionMetadata",
+                    "(([Status] = N'Submitted' AND [SubmittedAtUtc] IS NOT NULL) OR ([Status] <> N'Submitted' AND [SubmittedAtUtc] IS NULL))");
             });
 
             builder.HasKey(intake => intake.Id);
@@ -95,6 +98,8 @@ namespace BigSmile.Infrastructure.Data.Configurations
             builder.Property(intake => intake.LastUpdatedAtUtc)
                 .IsRequired();
 
+            builder.Property(intake => intake.SubmittedAtUtc);
+
             builder.Property(intake => intake.ExpiresAtUtc)
                 .IsRequired();
 
@@ -121,6 +126,15 @@ namespace BigSmile.Infrastructure.Data.Configurations
                     intake.TenantId,
                     intake.PatientId
                 });
+
+            builder.HasIndex(intake => new
+                {
+                    intake.TenantId,
+                    intake.PatientId,
+                    intake.Status
+                })
+                .IsUnique()
+                .HasFilter("[Status] = N'Submitted' AND [PatientId] IS NOT NULL");
 
             builder.HasIndex(intake => intake.BranchId);
 

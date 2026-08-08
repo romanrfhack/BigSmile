@@ -53,7 +53,7 @@ A module is not complete merely because entities, endpoints, UI, migrations or t
 - **Release 5 — Treatments and Quotes** — completed
 - **Release 6 — Billing** — completed
 - **Release 7 — Documents and Dashboard** — completed; initial operational MVP accepted
-- **Phase 2 Expansion — Modern Operations** — active; PI-1A completed, PI-1B next
+- **Phase 2 Expansion — Modern Operations** — active; PI-1/PI-2 completed and bounded PI-3A opened
   - **Phase 2.1 — Patient Intake and Portal Foundation**
 - **Phase 3 Expansion — SaaS Growth**
 - **Phase 4 Expansion — Advanced Product Capabilities**
@@ -464,12 +464,12 @@ MVP status: **accepted**. This bounded milestone does not include payments/cash/
 ## 13. Phase 2 Expansion — Modern Operations
 
 ### Status
-Active after formal MVP acceptance. PI-1 and PI-2 are completed; PI-3 and PI-4 remain not started and require separate explicit opening decisions.
+Active after formal MVP acceptance. PI-1 and PI-2 are completed. PI-3A is explicitly opened for final patient submission and optional pre-appointment access preparation under ADR 020; PI-3B clinic review/canonical apply and PI-4 remain not started.
 
 ### Phase 2.1 — Patient Intake and Portal Foundation
 
 #### Status
-Active under ADR 006 and ADR 012–019. PI-1 (#4) and PI-2 (#5) are completed through PI-2D4 (#48 / PR #57 / CI #485). Both patient scopes can explicitly capture and save the supported non-medical snapshot and fixed 39-question questionnaire with conflict/expiry/session recovery while canonical records remain unchanged. PI-3 and PI-4 remain not started.
+Active under ADR 006 and ADR 012–020. PI-1 (#4) and PI-2 (#5) are completed through PI-2D4 (#48 / PR #57 / CI #485). PI-3A adds explicit final patient submission plus an appointment-scoped reception action with independent `patientportal.intake.request` permission, access/completion indicators and manual WhatsApp click-to-chat. Canonical records remain unchanged; PI-3B review/apply and PI-4 remain not started.
 
 #### Goal
 Allow new and existing patients to propose or complement information through least-privilege self-only flows while keeping canonical data under clinic review.
@@ -494,7 +494,9 @@ Allow new and existing patients to propose or complement information through lea
    2. PI-2B existing-patient self-service draft — #33 / PR #34 — completed
    3. PI-2C waiting-room link and intake-only scope — #35 — completed through #36 / #37 / #38 and PR #43
    4. PI-2D Angular intake capture/closure — #44 — #45 through #48 completed
-3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6
+3. PI-3 — Submit, Clinic Review and Canonical Apply — issue #6 — partially opened
+   1. PI-3A final patient submission and pre-appointment request — ADR 020 — opened
+   2. PI-3B clinic review, duplicate resolution and canonical apply — not started
 4. PI-4 — Audit Visibility and Security Hardening — issue #7
 
 #### Included
@@ -527,6 +529,7 @@ Allow new and existing patients to propose or complement information through lea
 - ADR 017: `docs/decisions/017-existing-patient-intake-api-and-waiting-room-bootstrap.md`
 - ADR 018: `docs/decisions/018-patient-intake-waiting-room-link-management.md`
 - ADR 019: `docs/decisions/019-patient-intake-only-authentication-boundary.md`
+- ADR 020: `docs/decisions/020-patient-intake-submission-and-preappointment-request.md`
 - PI-2D plan: `docs/pi-2d-angular-intake-capture-plan.md`
 - PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`
 - recovery runbook: `docs/patient-portal-assisted-recovery-runbook.md`

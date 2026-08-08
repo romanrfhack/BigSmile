@@ -504,9 +504,10 @@ Responsible for the bounded Phase 2.1 patient-facing boundary:
 * separate patient authentication/session policy
 * waiting-room and existing-patient intake drafts
 * patient-originated revisions and audit
+* explicit patient submission and appointment-scoped access preparation
 * clinic review before canonical application
 
-It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary; ADR 012–015 establish linked-patient access and browser-session separation; ADR 016 establishes the intake model; ADR 017 accepts the linked-patient API and opens a separate waiting-room credential plus `patient_intake` policy. PI-2B never accepts ownership ids or applies canonical data, and PI-2C must keep staff management outside the patient bearer prefix.
+It must not reuse staff membership/permissions, enable platform override in patient policies, or expose accepted Clinical/Treatment/Billing/Documents aggregates directly. ADR 006 defines the boundary; ADR 012–015 establish linked-patient access and browser-session separation; ADR 016–019 establish intake persistence and both patient scopes. ADR 020 adds `Submitted` as the only completion marker plus a least-privilege appointment request surface. PI-3A still never applies canonical data; clinic review/apply remains a separate gate.
 
 ---
 

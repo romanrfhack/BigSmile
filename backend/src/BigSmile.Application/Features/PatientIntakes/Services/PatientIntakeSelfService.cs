@@ -31,6 +31,18 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
             SavePatientIntakeDraftCommand command,
             string correlationId,
             CancellationToken cancellationToken = default);
+
+        Task<PatientIntakeSubmitResult> SubmitAsync(
+            PatientPortalSessionIdentity identity,
+            string concurrencyToken,
+            string correlationId,
+            CancellationToken cancellationToken = default);
+
+        Task<PatientIntakeSubmitResult> SubmitAsync(
+            PatientIntakeSessionIdentity identity,
+            string concurrencyToken,
+            string correlationId,
+            CancellationToken cancellationToken = default);
     }
 
     public sealed class PatientIntakeSelfService : IPatientIntakeSelfService
@@ -86,7 +98,7 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
                 return PatientIntakeReadResult.Failed(PatientIntakeReadFailure.SessionInvalid);
             }
 
-            var intake = await _intakeRepository.GetDraftByAccountAsync(
+            var intake = await _intakeRepository.GetCurrentByAccountAsync(
                 identity.TenantId,
                 identity.AccountId,
                 trackChanges: false,
@@ -128,6 +140,17 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
             }
 
             var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+            var submittedIntake = await _intakeRepository.GetSubmittedByPatientAsync(
+                identity.TenantId,
+                identity.PatientId,
+                trackChanges: false,
+                cancellationToken);
+            if (submittedIntake is not null)
+            {
+                return PatientIntakeCreateResult.Failed(
+                    PatientIntakeCreateFailure.IntakeAlreadySubmitted);
+            }
+
             var currentDraft = await _intakeRepository.GetDraftByAccountAsync(
                 identity.TenantId,
                 identity.AccountId,
@@ -221,6 +244,59 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
                 cancellationToken);
         }
 
+        public async Task<PatientIntakeSubmitResult> SubmitAsync(
+            PatientPortalSessionIdentity identity,
+            string concurrencyToken,
+            string correlationId,
+            CancellationToken cancellationToken = default)
+        {
+            var account = await GetCurrentAccountAsync(
+                identity,
+                trackChanges: false,
+                cancellationToken);
+            if (account is null)
+            {
+                return PatientIntakeSubmitResult.Failed(
+                    PatientIntakeSubmitFailure.SessionInvalid);
+            }
+
+            var intake = await _intakeRepository.GetCurrentByAccountAsync(
+                identity.TenantId,
+                identity.AccountId,
+                trackChanges: true,
+                cancellationToken);
+            return await SubmitResolvedDraftAsync(
+                intake,
+                identity.AccountId,
+                concurrencyToken,
+                correlationId,
+                cancellationToken);
+        }
+
+        public async Task<PatientIntakeSubmitResult> SubmitAsync(
+            PatientIntakeSessionIdentity identity,
+            string concurrencyToken,
+            string correlationId,
+            CancellationToken cancellationToken = default)
+        {
+            var state = await GetCurrentIntakeOnlyStateAsync(
+                identity,
+                trackIntakeChanges: true,
+                cancellationToken);
+            if (state is null)
+            {
+                return PatientIntakeSubmitResult.Failed(
+                    PatientIntakeSubmitFailure.SessionInvalid);
+            }
+
+            return await SubmitResolvedDraftAsync(
+                state.Value.Intake,
+                identity.AccountId,
+                concurrencyToken,
+                correlationId,
+                cancellationToken);
+        }
+
         private async Task<PatientIntakeSaveResult> SaveResolvedDraftAsync(
             PatientIntake? intake,
             Guid actorAccountId,
@@ -274,6 +350,56 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
                 ? PatientIntakeSaveResult.Success(intake.ToDto(), changed: true)
                 : PatientIntakeSaveResult.Failed(
                     PatientIntakeSaveFailure.ConcurrentConflict);
+        }
+
+        private async Task<PatientIntakeSubmitResult> SubmitResolvedDraftAsync(
+            PatientIntake? intake,
+            Guid actorAccountId,
+            string concurrencyToken,
+            string correlationId,
+            CancellationToken cancellationToken)
+        {
+            if (intake is null)
+            {
+                return PatientIntakeSubmitResult.Failed(PatientIntakeSubmitFailure.Missing);
+            }
+
+            if (intake.Status == PatientIntakeStatus.Submitted)
+            {
+                return PatientIntakeSubmitResult.Success(intake.ToDto(), changed: false);
+            }
+
+            var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+            if (intake.IsExpiredAt(utcNow))
+            {
+                intake.ExpireIfDue(utcNow);
+                var expirationSaved = await _intakeRepository.TrySaveAsync(
+                    intake,
+                    cancellationToken);
+                return PatientIntakeSubmitResult.Failed(
+                    expirationSaved
+                        ? PatientIntakeSubmitFailure.Expired
+                        : PatientIntakeSubmitFailure.ConcurrentConflict);
+            }
+
+            if (!PatientIntakeConcurrencyToken.Matches(intake, concurrencyToken))
+            {
+                return PatientIntakeSubmitResult.Failed(
+                    PatientIntakeSubmitFailure.ConcurrentConflict);
+            }
+
+            if (!intake.IsReadyForSubmission())
+            {
+                return PatientIntakeSubmitResult.Failed(
+                    PatientIntakeSubmitFailure.Incomplete);
+            }
+
+            intake.Submit(actorAccountId, utcNow, correlationId);
+            var saved = await _intakeRepository.TrySaveAsync(intake, cancellationToken);
+            return saved
+                ? PatientIntakeSubmitResult.Success(intake.ToDto(), changed: true)
+                : PatientIntakeSubmitResult.Failed(
+                    PatientIntakeSubmitFailure.ConcurrentConflict);
         }
 
         private async Task<PatientPortalAccount?> GetCurrentAccountAsync(
@@ -331,8 +457,9 @@ namespace BigSmile.Application.Features.PatientIntakes.Services
             if (intake is null ||
                 intake.PatientId.HasValue ||
                 intake.Origin != PatientIntakeOrigin.NewPatientWaitingRoom ||
-                intake.Status != PatientIntakeStatus.Draft ||
-                intake.IsExpiredAt(utcNow))
+                (intake.Status == PatientIntakeStatus.Draft && intake.IsExpiredAt(utcNow)) ||
+                (intake.Status != PatientIntakeStatus.Draft &&
+                 intake.Status != PatientIntakeStatus.Submitted))
             {
                 return null;
             }

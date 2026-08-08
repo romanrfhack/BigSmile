@@ -12,6 +12,7 @@ namespace BigSmile.Application.Authorization
         public const string PatientPortalInvitationManage = "patientportal.invitation.manage";
         public const string PatientPortalAccountRecover = "patientportal.account.recover";
         public const string PatientPortalIntakeManage = "patientportal.intake.manage";
+        public const string PatientPortalIntakeRequest = "patientportal.intake.request";
         public const string SchedulingRead = "scheduling.read";
         public const string SchedulingWrite = "scheduling.write";
         public const string ClinicalRead = "clinical.read";

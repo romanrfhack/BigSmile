@@ -74,6 +74,9 @@ namespace BigSmile.Api.Controllers
                     PatientIntakeCreateFailure.ActiveDraftExists => BuildConflictProblem(
                         "patient_intake.active_draft_exists",
                         "A current patient intake draft already exists."),
+                    PatientIntakeCreateFailure.IntakeAlreadySubmitted => BuildConflictProblem(
+                        "patient_intake.already_submitted",
+                        "This patient intake has already been submitted."),
                     _ => BuildConflictProblem(
                         "patient_intake.create_conflict",
                         "The patient intake draft could not be created because its state changed.")
@@ -87,6 +90,54 @@ namespace BigSmile.Api.Controllers
             {
                 return BuildValidationProblem(exception.Message);
             }
+        }
+
+        [HttpPost("submit")]
+        public async Task<ActionResult<PatientIntakeSubmitResponseDto>> Submit(
+            [FromBody] SubmitPatientIntakeRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            SetNoStoreHeaders();
+
+            PatientIntakeSubmitResult result;
+            if (PatientPortalClaims.TryGetSessionIdentity(User, out var patientIdentity))
+            {
+                result = await _intakeService.SubmitAsync(
+                    patientIdentity,
+                    request.ConcurrencyToken,
+                    GetCorrelationId(),
+                    cancellationToken);
+            }
+            else if (PatientPortalClaims.TryGetIntakeSessionIdentity(User, out var intakeIdentity))
+            {
+                result = await _intakeService.SubmitAsync(
+                    intakeIdentity,
+                    request.ConcurrencyToken,
+                    GetCorrelationId(),
+                    cancellationToken);
+            }
+            else
+            {
+                return Unauthorized();
+            }
+
+            return result.Failure switch
+            {
+                PatientIntakeSubmitFailure.None => Ok(new PatientIntakeSubmitResponseDto(
+                    result.Intake!,
+                    result.Changed)),
+                PatientIntakeSubmitFailure.SessionInvalid => Unauthorized(),
+                PatientIntakeSubmitFailure.Missing => BuildMissingProblem(),
+                PatientIntakeSubmitFailure.Expired => BuildConflictProblem(
+                    "patient_intake.expired",
+                    "The current patient intake draft has expired. Start a new draft."),
+                PatientIntakeSubmitFailure.Incomplete => BuildConflictProblem(
+                    "patient_intake.incomplete",
+                    "Complete the required identity fields and every medical-history answer before submitting."),
+                _ => BuildConflictProblem(
+                    "patient_intake.concurrency_conflict",
+                    "The patient intake draft changed. Reload it before submitting.")
+            };
         }
 
         [HttpPut]
@@ -340,6 +391,13 @@ namespace BigSmile.Api.Controllers
 
             [MaxLength(ClinicalMedicalAnswer.DetailsMaxLength)]
             public string? Details { get; set; }
+        }
+
+        public sealed class SubmitPatientIntakeRequest
+        {
+            [Required]
+            [MaxLength(256)]
+            public string ConcurrencyToken { get; set; } = string.Empty;
         }
 
         private static bool HasValue(string? value)

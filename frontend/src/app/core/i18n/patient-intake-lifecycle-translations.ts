@@ -20,7 +20,21 @@ export const PATIENT_INTAKE_LIFECYCLE_TRANSLATIONS: Record<SupportedLanguageCode
     'Start a new intake draft and discard the expired local edits shown on this screen?': '¿Iniciar un nuevo borrador y descartar los cambios locales vencidos mostrados en esta pantalla?',
     'End the session and discard your unsaved changes?': '¿Cerrar la sesión y descartar tus cambios sin guardar?',
     'The current intake draft expired and can no longer be saved.': 'El borrador actual venció y ya no puede guardarse.',
-    'A newer version of this intake exists. Reload it before saving again.': 'Existe una versión más reciente de esta captura. Recárgala antes de volver a guardar.'
+    'A newer version of this intake exists. Reload it before saving again.': 'Existe una versión más reciente de esta captura. Recárgala antes de volver a guardar.',
+    'Your medical history was submitted successfully.': 'Tu historia clínica fue enviada correctamente.',
+    'The clinic will review it. You do not need to complete this form again for a future appointment.': 'La clínica la revisará. No necesitas volver a llenar este formulario en una cita futura.',
+    'Submitted': 'Enviada',
+    'Final step': 'Paso final',
+    'Submit medical history': 'Enviar historia clínica',
+    'Complete your name, date of birth and all medical-history questions. Submission is final.': 'Completa tu nombre, fecha de nacimiento y todas las preguntas de historia clínica. El envío es definitivo.',
+    'Save and submit medical history': 'Guardar y enviar historia clínica',
+    'Saving and submitting...': 'Guardando y enviando...',
+    'Complete your name, date of birth and every medical-history answer before submitting.': 'Completa tu nombre, fecha de nacimiento y todas las respuestas de historia clínica antes de enviar.',
+    'Submit your medical history now? You will not be able to edit it after this step.': '¿Enviar tu historia clínica ahora? No podrás editarla después de este paso.',
+    'The current intake draft expired and can no longer be submitted.': 'El borrador actual venció y ya no puede enviarse.',
+    'A newer version of this intake exists. Reload it before submitting.': 'Existe una versión más reciente de esta captura. Recárgala antes de enviarla.',
+    'Review the information before submitting your medical history.': 'Revisa la información antes de enviar tu historia clínica.',
+    'Your medical history could not be submitted. Try again.': 'No se pudo enviar tu historia clínica. Inténtalo nuevamente.'
   },
   'en-US': {}
 };

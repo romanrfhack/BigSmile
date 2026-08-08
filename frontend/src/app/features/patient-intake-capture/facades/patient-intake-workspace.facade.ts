@@ -40,11 +40,13 @@ export class PatientIntakeWorkspaceFacade {
   private readonly errorState = signal<string | null>(null);
   private readonly creatingState = signal(false);
   private readonly savingState = signal(false);
+  private readonly submittingState = signal(false);
   private readonly saveOutcomeState = signal<PatientIntakeSaveOutcome>(null);
   private readonly saveErrorState = signal<string | null>(null);
   private readonly saveTargetState = signal<PatientIntakeSaveTarget>(null);
   private readonly blockingStateValue = signal<PatientIntakeBlockingState>(null);
   private readonly recoveryStateValue = signal<PatientIntakeRecoveryState>(null);
+  private readonly submitErrorState = signal<string | null>(null);
   private tenantRealm = '';
 
   readonly status = this.statusState.asReadonly();
@@ -53,11 +55,14 @@ export class PatientIntakeWorkspaceFacade {
   readonly error = this.errorState.asReadonly();
   readonly creating = this.creatingState.asReadonly();
   readonly saving = this.savingState.asReadonly();
+  readonly submitting = this.submittingState.asReadonly();
   readonly saveOutcome = this.saveOutcomeState.asReadonly();
   readonly saveError = this.saveErrorState.asReadonly();
   readonly saveTarget = this.saveTargetState.asReadonly();
   readonly blockingState = this.blockingStateValue.asReadonly();
   readonly recoveryState = this.recoveryStateValue.asReadonly();
+  readonly submitError = this.submitErrorState.asReadonly();
+  readonly submitted = computed(() => this.intakeState()?.status === 'Submitted');
   readonly saveBlocked = computed(() => this.blockingStateValue() !== null);
   readonly canCreate = computed(() => this.modeState() === 'patient' && this.statusState() === 'missing');
   readonly canReplaceExpired = computed(() =>
@@ -80,6 +85,7 @@ export class PatientIntakeWorkspaceFacade {
     this.intakeState.set(null);
     this.blockingStateValue.set(null);
     this.recoveryStateValue.set(null);
+    this.submitErrorState.set(null);
     this.clearSaveFeedback();
 
     const resolution = this.sessionBoundary.resolve();
@@ -176,6 +182,50 @@ export class PatientIntakeWorkspaceFacade {
     );
   }
 
+  submitIntake(
+    nonMedicalValue: PatientIntakeNonMedicalFormValue,
+    medicalAnswers: readonly PatientIntakeMedicalAnswerFormValue[]
+  ): void {
+    const intake = this.intakeState();
+    const mode = this.modeState();
+    if (
+      !intake ||
+      !mode ||
+      this.statusState() !== 'ready' ||
+      this.savingState() ||
+      this.submittingState() ||
+      this.blockingStateValue() !== null ||
+      intake.status === 'Submitted'
+    ) {
+      return;
+    }
+
+    this.submittingState.set(true);
+    this.submitErrorState.set(null);
+    this.clearSaveFeedback();
+
+    const saveRequest = buildSavePatientIntakeDraftRequest(
+      intake,
+      nonMedicalValue,
+      medicalAnswers);
+    this.intakeApi.save(saveRequest).pipe(
+      tap(response => this.intakeState.set(response.intake)),
+      switchMap(response => this.intakeApi.submit({
+        concurrencyToken: response.intake.concurrencyToken
+      })),
+      tap(response => {
+        this.intakeState.set(response.intake);
+        this.blockingStateValue.set(null);
+        this.submitErrorState.set(null);
+      }),
+      catchError(error => {
+        this.handleSubmitError(error, mode);
+        return of(null);
+      }),
+      finalize(() => this.submittingState.set(false))
+    ).subscribe();
+  }
+
   logout(): Observable<void> {
     const mode = this.modeState();
     if (!mode) {
@@ -196,6 +246,7 @@ export class PatientIntakeWorkspaceFacade {
         this.statusState.set('unauthorized');
         this.blockingStateValue.set(null);
         this.recoveryStateValue.set(null);
+        this.submitErrorState.set(null);
         this.clearSaveFeedback();
       })
     );
@@ -209,6 +260,10 @@ export class PatientIntakeWorkspaceFacade {
     this.saveOutcomeState.set(null);
     this.saveErrorState.set(null);
     this.saveTargetState.set(null);
+  }
+
+  clearSubmitError(): void {
+    this.submitErrorState.set(null);
   }
 
   private createCurrentDraft(): void {
@@ -329,6 +384,35 @@ export class PatientIntakeWorkspaceFacade {
     }
 
     this.saveErrorState.set('The intake draft could not be saved. Try again.');
+  }
+
+  private handleSubmitError(error: unknown, mode: PatientPortalSessionMode): void {
+    if (error instanceof HttpErrorResponse && error.status === 401) {
+      this.handleSessionFailure(mode);
+      this.submitErrorState.set('Your intake session is no longer available.');
+      return;
+    }
+
+    if (error instanceof HttpErrorResponse && error.status === 409) {
+      const code = readProblemCode(error);
+      if (code === 'patient_intake.incomplete') {
+        this.submitErrorState.set('Complete your name, date of birth and every medical-history answer before submitting.');
+      } else if (code === 'patient_intake.expired') {
+        this.blockingStateValue.set('expired');
+        this.submitErrorState.set('The current intake draft expired and can no longer be submitted.');
+      } else {
+        this.blockingStateValue.set('conflict');
+        this.submitErrorState.set('A newer version of this intake exists. Reload it before submitting.');
+      }
+      return;
+    }
+
+    if (error instanceof HttpErrorResponse && error.status === 400) {
+      this.submitErrorState.set('Review the information before submitting your medical history.');
+      return;
+    }
+
+    this.submitErrorState.set('Your medical history could not be submitted. Try again.');
   }
 
   private handleSessionFailure(mode: PatientPortalSessionMode): void {

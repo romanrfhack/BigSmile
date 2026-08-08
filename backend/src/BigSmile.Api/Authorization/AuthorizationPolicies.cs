@@ -16,6 +16,7 @@ namespace BigSmile.Api.Authorization
         public const string PatientPortalInvitationManage = "patientportal.invitation.manage";
         public const string PatientPortalAccountRecover = "patientportal.account.recover";
         public const string PatientPortalIntakeManage = "patientportal.intake.manage";
+        public const string PatientPortalIntakeRequest = "patientportal.intake.request";
         public const string SchedulingRead = "scheduling.read";
         public const string SchedulingWrite = "scheduling.write";
         public const string ClinicalRead = "clinical.read";
@@ -107,6 +108,14 @@ namespace BigSmile.Api.Authorization
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(new PermissionRequirement(
                     Permissions.PatientPortalIntakeManage,
+                    requireResolvedTenantContext: true));
+            });
+
+            options.AddPolicy(PatientPortalIntakeRequest, policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(new PermissionRequirement(
+                    Permissions.PatientPortalIntakeRequest,
                     requireResolvedTenantContext: true));
             });
 

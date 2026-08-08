@@ -73,6 +73,25 @@ describe('PatientIntakeApi', () => {
     request.flush({ intake: createDraft(), changed: true });
   });
 
+  it('submits only the current self-owned intake concurrency token', () => {
+    api.submit({ concurrencyToken: 'rv1.token' }).subscribe();
+
+    const request = httpTesting.expectOne('/api/patient-portal/intake/submit');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ concurrencyToken: 'rv1.token' });
+    expect(request.request.body).not.toHaveProperty('tenantId');
+    expect(request.request.body).not.toHaveProperty('patientId');
+    expect(request.request.body).not.toHaveProperty('intakeId');
+    request.flush({
+      intake: {
+        ...createDraft(),
+        status: 'Submitted',
+        submittedAtUtc: '2026-08-06T13:30:00Z'
+      },
+      changed: true
+    });
+  });
+
   function createDraft() {
     return {
       origin: 'ExistingPatientPortal',
@@ -99,6 +118,7 @@ describe('PatientIntakeApi', () => {
       createdAtUtc: '2026-07-27T10:00:00Z',
       lastUpdatedAtUtc: '2026-07-27T10:00:00Z',
       lastEffectiveSavedAtUtc: null,
+      submittedAtUtc: null,
       expiresAtUtc: '2026-08-26T10:00:00Z'
     };
   }

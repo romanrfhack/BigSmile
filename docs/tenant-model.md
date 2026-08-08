@@ -255,6 +255,10 @@ Current rules:
 - PI-2B exposes id-less self-only create/get/save for linked accounts; Tenant/Patient/intake come from the validated session
 - PI-2C waiting-room credentials carry `TenantId`, optional same-tenant Branch and no PatientId; management is TenantAdmin-only with no platform override
 - unlinked accounts use an explicit `patient_intake` scope with `intake_id` and no `patient_id`
+- PI-3A adds immutable `Submitted` plus `SubmittedAtUtc`; only an explicit submitted intake counts as completed, while drafts remain requestable
+- a linked Patient has at most one submitted intake per Tenant; the filtered unique constraint is enforced in SQL
+- appointment access preparation requires `patientportal.intake.request`, a resolved tenant and an accessible Branch, with no platform override
+- the reception request permission prepares activation/login access but does not grant waiting-room management, assisted recovery, clinical review or canonical apply
 
 ---
 

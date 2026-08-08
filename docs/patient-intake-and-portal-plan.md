@@ -1,13 +1,13 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1 and PI-2 completed; PI-3 and PI-4 not started
+- **Status:** In progress; PI-1 and PI-2 completed; PI-3A submission/pre-appointment request opened under ADR 020; PI-3B and PI-4 not started
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
-- **Architecture decisions:** ADR 006 and ADR 012–019
+- **Architecture decisions:** ADR 006 and ADR 012–020
 - **Canonical ADR:** `docs/decisions/006-patient-intake-and-portal-foundation.md`
 - **Parent tracking:** GitHub issue #2
 - **Implementation tracking:** issues #4, #5, #6 and #7
-- **Last updated:** 2026-07-29
+- **Last updated:** 2026-08-06
 
 ## 1. Purpose
 
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1 and PI-2 are completed; PI-3 and PI-4 remain not started.
+- Phase 2.1: active; PI-1 and PI-2 are completed; bounded PI-3A is opened; PI-3B and PI-4 remain not started.
 
 This placement is deliberate:
 
@@ -60,7 +60,7 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Completed through PI-1A to PI-1D | Issues #4 and #22–#25 / PRs #26, #28, #29 and #30 |
 | PI-2 intake draft | Completed through PI-2A to PI-2D4 | Issue #5 / #31 / #33 / #35 / #44 / #45–#48 / PR #57 / CI #485 |
-| PI-3 submit/review/apply | Planned; not implemented | Issue #6 |
+| PI-3 submit/review/apply | PI-3A opened for submit and appointment request; PI-3B not started | Issue #6 / ADR 020 |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
 | Patient-facing backend/API/database | Access/auth, intake persistence, linked-patient API and waiting-room intake-only bootstrap implemented | PRs #26, #28, #29, #32, #34, #41 and #42 |
 | Patient-facing frontend | Auth, waiting-room handoff, shared workspace, complete capture, conflict/expiry recovery and unsaved-navigation protection implemented | PR #30 / PR #43 / PR #50 / PR #53 / PR #55 / PR #57 / ADR 015 / ADR 019 |
@@ -288,13 +288,20 @@ PI-2 exit gate:
 
 ### PI-3 — Submit, Review and Canonical Apply — issue #6
 
-Scope:
-- immutable submission;
+PI-3A opened scope under ADR 020:
+- immutable patient submission after identity fields and all 39 explicit answers;
+- one submitted linked-patient intake as the durable completion marker;
+- appointment-scoped portal/history status;
+- independent `patientportal.intake.request` permission for reception;
+- optional activation/login preparation and manual WhatsApp click-to-chat;
+- no canonical Patient/ClinicalRecord changes.
+
+PI-3B remains gated:
 - staff review worklist;
 - duplicate/link/create decisions;
 - explicit application to canonical Patient/ClinicalRecord;
-- provenance and conflict handling;
-- append-only transition audit.
+- provenance and field-level conflict handling;
+- accept/reject/apply transition audit.
 
 Exit gate:
 - patient/public endpoint cannot apply canonical data;
@@ -369,7 +376,7 @@ Every PI slice must consider:
 - PI-2C uses an unlinked account with `scope=patient_intake`, `intake_id` and no `patient_id`; QR generation remains local and the raw link stays memory-only.
 - Mandatory sequence PI-2A → PI-2B → PI-2C → PI-2D.
 
-### Before PI-3
+### Before PI-3B
 
 - Staff roles/permissions allowed to review/apply.
 - Duplicate-candidate criteria and reviewer-visible data.
@@ -410,15 +417,15 @@ The current repository has an accepted MVP and an explicitly opened **Phase 2.1 
 
 For Patient Intake and Portal:
 
-1. Preserve PI-1 / #4, PI-2A / #31 and PI-2B / #33 as completed through PRs #26, #28, #29, #30, #32 and #34.
-2. Implement only PI-2C1 / #36 next: waiting-room credential, append-only audit, `patientportal.intake.manage` and staff issue/list/revoke API.
-3. Keep anonymous consume and `patient_intake` session in PI-2C2 / #37; keep staff copy/print/local-QR UI in PI-2C3 / #38; keep patient capture in PI-2D.
-4. Do not add canonical application to PI-2; keep PI-3 and PI-4 pending until their own gates.
+1. Preserve completed PI-1 and PI-2 boundaries, including both patient scopes and full-snapshot capture.
+2. Implement only bounded PI-3A under ADR 020: final submission, one-time completion and appointment-scoped manual access preparation.
+3. Keep `patientportal.intake.request` independent from intake management, invitation administration, recovery and clinical permissions.
+4. Do not add clinic review or canonical application until PI-3B receives its own explicit gate; keep PI-4 pending.
 
 ## 13. Decision note
 
 **Context:** The client wants waiting-room registration and ongoing patient updates, but did not assign priority over the operational-core roadmap.
 
-**Decision:** Implement PI-1 under ADR 012–015 and PI-2 under ADR 016/017. Accept PI-2B as the linked-patient self-only API and implement PI-2C only through #36 → #37 → #38 before PI-2D.
+**Decision:** Implement PI-1 under ADR 012–015, PI-2 under ADR 016–019, and only bounded PI-3A under ADR 020. Treat explicit `Submitted` as completion and allow optional appointment-scoped access preparation without opening clinic review/apply.
 
-**Consequence:** PI-1, PI-2A and PI-2B now provide secure linked-patient access and intake create/get/save without canonical writes. Waiting-room credential/session/staff handoff remain PI-2C; patient questionnaire capture remains PI-2D; review/apply and final hardening remain unimplemented.
+**Consequence:** PI-1 and PI-2 provide secure access and complete draft capture. PI-3A adds immutable patient completion plus a least-privilege reception handoff. Review/apply and final hardening remain unimplemented, and canonical data remains clinic-controlled.

@@ -60,6 +60,7 @@ namespace BigSmile.Domain.Entities
         public DateTime CreatedAtUtc { get; private set; }
         public DateTime LastUpdatedAtUtc { get; private set; }
         public DateTime? LastEffectiveSavedAtUtc { get; private set; }
+        public DateTime? SubmittedAtUtc { get; private set; }
         public DateTime ExpiresAtUtc { get; private set; }
         public byte[] RowVersion { get; private set; } = Array.Empty<byte>();
 
@@ -231,11 +232,51 @@ namespace BigSmile.Domain.Entities
             return revision;
         }
 
+        public PatientIntakeRevision Submit(
+            Guid actorPatientPortalAccountId,
+            DateTime occurredAtUtc,
+            string correlationId)
+        {
+            EnsureUtc(occurredAtUtc, nameof(occurredAtUtc));
+
+            if (actorPatientPortalAccountId == Guid.Empty ||
+                actorPatientPortalAccountId != PatientPortalAccountId)
+            {
+                throw new InvalidOperationException(
+                    "Only the owning patient portal account can submit this intake draft.");
+            }
+
+            if (Status != PatientIntakeStatus.Draft || occurredAtUtc >= ExpiresAtUtc)
+            {
+                throw new InvalidOperationException(
+                    "Only a current patient intake draft can be submitted.");
+            }
+
+            EnsureReadyForSubmission();
+
+            CurrentRevisionNumber = checked(CurrentRevisionNumber + 1);
+            Status = PatientIntakeStatus.Submitted;
+            SubmittedAtUtc = occurredAtUtc;
+            LastUpdatedAtUtc = occurredAtUtc;
+
+            var revision = new PatientIntakeRevision(
+                this,
+                CurrentRevisionNumber,
+                actorPatientPortalAccountId,
+                occurredAtUtc,
+                PatientIntakeSnapshotSerializer.SerializeChangedFields(new[] { "status" }),
+                PatientIntakeSnapshotSerializer.SerializeSnapshot(GetDraftData()),
+                correlationId);
+
+            _revisions.Add(revision);
+            return revision;
+        }
+
         public bool ExpireIfDue(DateTime occurredAtUtc)
         {
             EnsureUtc(occurredAtUtc, nameof(occurredAtUtc));
 
-            if (Status == PatientIntakeStatus.Expired || occurredAtUtc < ExpiresAtUtc)
+            if (Status != PatientIntakeStatus.Draft || occurredAtUtc < ExpiresAtUtc)
             {
                 return false;
             }
@@ -248,7 +289,35 @@ namespace BigSmile.Domain.Entities
         public bool IsExpiredAt(DateTime occurredAtUtc)
         {
             EnsureUtc(occurredAtUtc, nameof(occurredAtUtc));
-            return Status == PatientIntakeStatus.Expired || occurredAtUtc >= ExpiresAtUtc;
+            return Status == PatientIntakeStatus.Expired ||
+                   (Status == PatientIntakeStatus.Draft && occurredAtUtc >= ExpiresAtUtc);
+        }
+
+        public bool IsReadyForSubmission()
+        {
+            return !string.IsNullOrWhiteSpace(FirstName) &&
+                   !string.IsNullOrWhiteSpace(LastName) &&
+                   DateOfBirth.HasValue &&
+                   _medicalAnswers.Count == ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys.Count &&
+                   _medicalAnswers.All(answer => answer.Answer != ClinicalMedicalAnswerValue.Unknown);
+        }
+
+        private void EnsureReadyForSubmission()
+        {
+            if (string.IsNullOrWhiteSpace(FirstName) ||
+                string.IsNullOrWhiteSpace(LastName) ||
+                !DateOfBirth.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "First name, last name and date of birth are required before submitting patient intake.");
+            }
+
+            if (_medicalAnswers.Count != ClinicalMedicalQuestionnaireCatalog.AllowedQuestionKeys.Count ||
+                _medicalAnswers.Any(answer => answer.Answer == ClinicalMedicalAnswerValue.Unknown))
+            {
+                throw new InvalidOperationException(
+                    "Every medical-history question must be answered before submitting patient intake.");
+            }
         }
 
         public PatientIntakeDraftData GetDraftData()

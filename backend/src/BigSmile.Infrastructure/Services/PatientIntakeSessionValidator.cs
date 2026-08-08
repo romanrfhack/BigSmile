@@ -50,8 +50,8 @@ namespace BigSmile.Infrastructure.Services
             return intake is not null &&
                    intake.PatientId is null &&
                    intake.Origin == PatientIntakeOrigin.NewPatientWaitingRoom &&
-                   intake.Status == PatientIntakeStatus.Draft &&
-                   !intake.IsExpiredAt(utcNow);
+                   ((intake.Status == PatientIntakeStatus.Draft && !intake.IsExpiredAt(utcNow)) ||
+                    intake.Status == PatientIntakeStatus.Submitted);
         }
     }
 }

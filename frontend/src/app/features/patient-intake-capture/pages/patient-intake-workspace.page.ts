@@ -11,7 +11,8 @@ import { PatientIntakeWorkspaceFacade } from '../facades/patient-intake-workspac
 import { PatientIntakeUnsavedChangesAware } from '../guards/patient-intake-unsaved-changes.guard';
 import {
   PatientIntakeMedicalAnswerFormValue,
-  PatientIntakeNonMedicalFormValue
+  PatientIntakeNonMedicalFormValue,
+  isPatientIntakeReadyForSubmission
 } from '../models/patient-intake.models';
 
 @Component({
@@ -162,25 +163,57 @@ import {
             </div>
           </dl>
 
-          <div class="patient-alert patient-alert--info">
-            {{ 'Personal information and medical answers remain in this private draft until the clinic reviews them.' | t }}
-          </div>
+          @if (facade.submitted()) {
+            <div class="intake-submitted" role="status" aria-live="polite">
+              <strong>{{ 'Your medical history was submitted successfully.' | t }}</strong>
+              <p>{{ 'The clinic will review it. You do not need to complete this form again for a future appointment.' | t }}</p>
+              @if (intake.submittedAtUtc) {
+                <small>{{ 'Submitted' | t }}: {{ intake.submittedAtUtc | date:'medium' }}</small>
+              }
+            </div>
+          } @else {
+            <div class="patient-alert patient-alert--info">
+              {{ 'Personal information and medical answers remain in this private draft until the clinic reviews them.' | t }}
+            </div>
 
-          <app-patient-intake-demographics-form
-            [intake]="intake"
-            [saving]="facade.saving()"
-            [saveOutcome]="facade.saveTarget() === 'demographics' ? facade.saveOutcome() : null"
-            [saveError]="facade.saveTarget() === 'demographics' ? facade.saveError() : null"
-            (saveRequested)="saveNonMedical($event)">
-          </app-patient-intake-demographics-form>
+            <app-patient-intake-demographics-form
+              [intake]="intake"
+              [saving]="facade.saving() || facade.submitting()"
+              [saveOutcome]="facade.saveTarget() === 'demographics' ? facade.saveOutcome() : null"
+              [saveError]="facade.saveTarget() === 'demographics' ? facade.saveError() : null"
+              (saveRequested)="saveNonMedical($event)">
+            </app-patient-intake-demographics-form>
 
-          <app-patient-intake-medical-questionnaire
-            [intake]="intake"
-            [saving]="facade.saving()"
-            [saveOutcome]="facade.saveTarget() === 'medical' ? facade.saveOutcome() : null"
-            [saveError]="facade.saveTarget() === 'medical' ? facade.saveError() : null"
-            (saveRequested)="saveMedical($event)">
-          </app-patient-intake-medical-questionnaire>
+            <app-patient-intake-medical-questionnaire
+              [intake]="intake"
+              [saving]="facade.saving() || facade.submitting()"
+              [saveOutcome]="facade.saveTarget() === 'medical' ? facade.saveOutcome() : null"
+              [saveError]="facade.saveTarget() === 'medical' ? facade.saveError() : null"
+              (saveRequested)="saveMedical($event)">
+            </app-patient-intake-medical-questionnaire>
+
+            <section class="intake-submit" aria-labelledby="intake-submit-heading">
+              <div>
+                <p>{{ 'Final step' | t }}</p>
+                <h2 id="intake-submit-heading">{{ 'Submit medical history' | t }}</h2>
+                <span>{{ 'Complete your name, date of birth and all medical-history questions. Submission is final.' | t }}</span>
+              </div>
+
+              @if (submissionValidationError() || facade.submitError()) {
+                <div class="patient-alert patient-alert--error" role="alert">
+                  {{ (submissionValidationError() || facade.submitError()) | t }}
+                </div>
+              }
+
+              <button
+                type="button"
+                class="patient-button patient-button--primary"
+                [disabled]="facade.saving() || facade.submitting() || facade.saveBlocked()"
+                (click)="submitIntake()">
+                {{ (facade.submitting() ? 'Saving and submitting...' : 'Save and submit medical history') | t }}
+              </button>
+            </section>
+          }
         </section>
       }
 
@@ -244,6 +277,36 @@ import {
       font-weight: 750;
     }
 
+    .intake-submit,
+    .intake-submitted {
+      display: grid;
+      gap: 0.85rem;
+      padding: 1rem;
+      border: 1px solid var(--bsm-color-accent-accessible);
+      border-radius: var(--bsm-radius-md);
+      background: var(--bsm-color-accent-soft);
+    }
+
+    .intake-submit p,
+    .intake-submit h2,
+    .intake-submit span,
+    .intake-submitted p {
+      margin: 0;
+    }
+
+    .intake-submit p {
+      color: var(--bsm-color-text-muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .intake-submitted {
+      border-color: var(--bsm-color-success-soft);
+      background: var(--bsm-color-success-soft);
+      color: var(--bsm-color-success);
+    }
+
     .lifecycle-alert {
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
@@ -291,6 +354,7 @@ export class PatientIntakeWorkspacePageComponent implements OnInit, PatientIntak
 
   readonly facade = inject(PatientIntakeWorkspaceFacade);
   readonly tenantRealm = signal('');
+  readonly submissionValidationError = signal<string | null>(null);
 
   ngOnInit(): void {
     const realm = normalizeTenantRealm(this.route.snapshot.paramMap.get('tenantSubdomain'));
@@ -325,6 +389,34 @@ export class PatientIntakeWorkspacePageComponent implements OnInit, PatientIntak
 
   saveMedical(value: PatientIntakeMedicalAnswerFormValue[]): void {
     this.facade.saveMedicalDraft(value, this.demographicsForm?.currentValue());
+  }
+
+  submitIntake(): void {
+    this.submissionValidationError.set(null);
+    this.facade.clearSubmitError();
+    this.demographicsForm?.form.markAllAsTouched();
+    this.medicalQuestionnaire?.form.markAllAsTouched();
+
+    const nonMedicalValue = this.demographicsForm?.currentValue();
+    const medicalValue = this.medicalQuestionnaire?.currentValue();
+    if (
+      !nonMedicalValue ||
+      !medicalValue ||
+      this.demographicsForm?.form.invalid ||
+      this.medicalQuestionnaire?.form.invalid ||
+      !isPatientIntakeReadyForSubmission(nonMedicalValue, medicalValue)
+    ) {
+      this.submissionValidationError.set(
+        'Complete your name, date of birth and every medical-history answer before submitting.');
+      return;
+    }
+
+    if (!window.confirm(this.i18n.translate(
+      'Submit your medical history now? You will not be able to edit it after this step.'))) {
+      return;
+    }
+
+    this.facade.submitIntake(nonMedicalValue, medicalValue);
   }
 
   reloadLatest(): void {

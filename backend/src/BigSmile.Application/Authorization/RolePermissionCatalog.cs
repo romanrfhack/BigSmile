@@ -44,6 +44,7 @@ namespace BigSmile.Application.Authorization
                     Permissions.PatientPortalInvitationManage,
                     Permissions.PatientPortalAccountRecover,
                     Permissions.PatientPortalIntakeManage,
+                    Permissions.PatientPortalIntakeRequest,
                     Permissions.SchedulingRead,
                     Permissions.SchedulingWrite,
                     Permissions.ClinicalRead,
@@ -67,6 +68,7 @@ namespace BigSmile.Application.Authorization
                     Permissions.BranchReadAssigned,
                     Permissions.PatientRead,
                     Permissions.PatientWrite,
+                    Permissions.PatientPortalIntakeRequest,
                     Permissions.SchedulingRead,
                     Permissions.SchedulingWrite
                 }
