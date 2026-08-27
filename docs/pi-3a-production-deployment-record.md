@@ -169,6 +169,19 @@ Atomic promotion then confirmed:
 
 Technical promotion completed at `2026-08-27T06:44:44+00:00`.
 
+A subsequent read-only post-promotion recheck reconfirmed:
+
+- `current`, `.latest` and `.previous` matched the expected immutable releases;
+- the API process remained active/enabled with its working directory in the new release;
+- active backend and frontend hashes still matched the staged artifacts;
+- local/public staff and patient authentication endpoints still returned the expected `401`;
+- the public frontend still returned `200`;
+- SQL history remained at 34 migrations with the target migration last;
+- the API journal contained no error-priority entries after promotion;
+- no migration, sidecar or promotion process remained active.
+
+The post-promotion technical recheck passed without modifying the database, service configuration or release pointers.
+
 ## 7. Rollback boundary
 
 Application rollback remains available through the preserved previous immutable release. The database migration is additive and was applied before promotion.
