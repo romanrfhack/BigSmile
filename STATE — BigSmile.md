@@ -22,7 +22,7 @@
 
 **Frontend** — [Hecho] El frontend es feature-based, con separación entre páginas, componentes, facades, data-access y modelos. Las llamadas HTTP permanecen en data-access y se prioriza UX operativa rápida.
 
-**Patient Intake and Portal Foundation** — [Hecho] ADR 006 y ADR 012 a ADR 019 cierran PI-1/PI-2 y ambos boundaries patient-self. ADR 020 abre de forma acotada PI-3A: envío final `Submitted`, solicitud opcional desde Appointment, indicadores de acceso/historia, permiso independiente `patientportal.intake.request` y WhatsApp manual. PI-3B review/apply permanece sin abrir y no hay writes canónicos.
+**Patient Intake and Portal Foundation** — [En validación] ADR 006 y ADR 012 a ADR 019 cierran PI-1/PI-2 y ambos boundaries patient-self. PI-3A bajo ADR 020 está implementado, fusionado mediante PR #60 y desplegado técnicamente en producción: envío final `Submitted`, solicitud opcional desde Appointment, indicadores de acceso/historia, permiso independiente `patientportal.intake.request` y WhatsApp manual. La aceptación funcional autenticada sigue pendiente; PI-3B review/apply permanece sin abrir y no hay writes canónicos.
 
 **Release 4 — Odontogram** — [Hecho] ADR 007 acepta el cierre del Odontogram fundacional mediante los slices 4.1 a 4.4, sin exigir funcionalidades avanzadas expresamente diferidas.
 
@@ -98,7 +98,7 @@
 
 [Hecho] PI-2D — Angular Patient Intake Capture and PI-2 Closure (#44) queda completado mediante PI-2D1 a PI-2D4. PI-2D1 #45 cerró rutas/sesiones/data-access mediante PR #50 y el hardening method-aware de PR #51; PI-2D2 #46 cerró captura no médica mediante PR #53; PI-2D3 #47 cerró el catálogo compartido y las 39 preguntas mediante PR #55; PI-2D4 #48 quedó completado mediante PR #57, merge commit `4b8cb66163948c5b69ff6c3c0027d01e105ce1fb` y CI #485 con conflicto/expiración fail-safe, sesión scope-correct, navegación sin guardar y smoke automatizado. Con ello PI-2 — Intake Draft and Self-Service Capture queda formalmente cerrado sin writes canónicos.
 
-[En curso] PI-3A — Patient Submission and Pre-Appointment Request queda explícitamente abierto el 2026-08-06 bajo ADR 020. `Submitted` es el único marcador de historia completada; requiere identidad mínima y las 39 respuestas explícitas, deja revisión inmutable y bloquea solicitudes futuras para el mismo Patient. Scheduling prepara activación/login solo desde una cita y Branch accesible con `patientportal.intake.request`; WhatsApp permanece click-to-chat manual. PI-3B clinic review/canonical apply sigue sin iniciar.
+[En validación] PI-3A — Patient Submission and Pre-Appointment Request fue implementado y fusionado mediante PR #60 / commit `67e29f6712e4d23c9ca6eaaa1cbda29c484687b4`. El 2026-08-27 quedó desplegado técnicamente en producción con 616 pruebas backend, 281 pruebas frontend, CI verde, release `20260827064136-67e29f6712e4`, 34 migraciones y smoke técnico satisfactorio. `Submitted` es el único marcador de historia completada; requiere identidad mínima y las 39 respuestas explícitas, deja revisión inmutable y bloquea solicitudes futuras para el mismo Patient. Scheduling prepara activación/login solo desde una cita y Branch accesible con `patientportal.intake.request`; WhatsApp permanece click-to-chat manual. Falta UAT autenticado controlado antes de aceptar formalmente PI-3A. PI-3B clinic review/canonical apply sigue sin iniciar.
 
 [Hecho] El MVP aceptado sigue sin implicar payments, cash management, CFDI, doctor views, automatizaciones, advanced analytics ni full Patient Portal.
 
@@ -116,9 +116,9 @@
 
 ## 4.2 Fase actual — Phase 2.1 Patient Intake and Portal Foundation
 
-**Estado** — [En curso] fase abierta con PI-1 y PI-2 completados. PI-3A está abierto de forma acotada para submit final y solicitud previa a la cita. PI-3B — Clinic Review and Canonical Apply y PI-4 permanecen sin iniciar.
+**Estado** — [En validación] fase abierta con PI-1 y PI-2 completados. PI-3A está implementado y técnicamente desplegado para submit final y solicitud previa a la cita; su aceptación funcional autenticada permanece pendiente. PI-3B — Clinic Review and Canonical Apply y PI-4 permanecen sin iniciar.
 
-**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 y PI-2 están cerrados. Existe submit patient-self bajo PI-3A, pero no review/apply ni writes canónicos desde el intake.
+**Ubicación** — [Hecho] fase actual posterior al MVP aceptado; PI-1 y PI-2 están cerrados. Existe submit patient-self desplegado bajo PI-3A, pero no review/apply ni writes canónicos desde el intake.
 
 **Tracking** — [Hecho]
 
@@ -132,6 +132,8 @@
 - ADR 018 — `docs/decisions/018-patient-intake-waiting-room-link-management.md`.
 - ADR 019 — `docs/decisions/019-patient-intake-only-authentication-boundary.md`.
 - ADR 020 — `docs/decisions/020-patient-intake-submission-and-preappointment-request.md`.
+- PI-3A — PR #60 / commit `67e29f6712e4d23c9ca6eaaa1cbda29c484687b4`.
+- Despliegue técnico PI-3A — `docs/pi-3a-production-deployment-record.md`.
 - Plan PI-2D — `docs/pi-2d-angular-intake-capture-plan.md`.
 - Cierre PI-2D3 — `docs/pi-2d3-medical-questionnaire-closure.md`.
 - Cierre PI-2 — `docs/pi-2-patient-intake-capture-closure.md`.
@@ -396,25 +398,25 @@
 
 Lista priorizada:
 
-1. Preservar PI-1 (#4) como foundation completado mediante PI-1A a PI-1D, sin acceso paciente a módulos canónicos.
+1. Ejecutar UAT autenticado y controlado de PI-3A en producción con una cita/paciente de prueba autorizados: estado inicial, preparación de acceso, handoff manual, submit final, estado completado y bloqueo de una segunda solicitud.
 
-2. Preservar PI-2B (#33 / PR #34) como API self-only completada para pacientes existentes y mantener sus contratos id-less, no-store, GET sin side effects y optimistic concurrency.
+2. Confirmar durante el UAT que `patientportal.intake.request` mantiene least privilege, que usuarios sin permiso son rechazados y que no se modifican `Patient` ni `ClinicalRecord` canónicos.
 
-3. Implementar PI-2C solo mediante #36 → #37 → #38: credencial de 30 minutos, `patientportal.intake.manage`, scope `patient_intake` y UI staff mínima; PI-2D conserva la captura Angular del paciente.
+3. Registrar el resultado del UAT y aceptar formalmente PI-3A solo si el flujo completo pasa; una promoción técnica exitosa no sustituye la aceptación funcional.
 
-4. Mantener guardado explícito, no-op sin revisión, expiración sliding de 30 días, `Unknown` distinto de `No` y revisiones append-only.
+4. Preservar PI-1 y PI-2 completos, ambos patient scopes, guardado explícito, `Unknown` distinto de `No`, revisiones append-only, optimistic concurrency y tokens solo en memoria.
 
-5. Mantener tokens de paciente solo en memoria; no introducir `localStorage`, refresh token ni recuperación remota sin una decisión posterior.
+5. Mantener PI-3B y PI-4 sin iniciar hasta una apertura explícita; prohibir review/apply o writes canónicos desde endpoints patient-self.
 
-6. Mantener PI-3 y PI-4 no iniciados y prohibir aplicación canónica desde endpoints de paciente.
+6. Convertir los scripts operativos release-specific del VPS en automatización versionada y parametrizada: conteos/listas de migraciones, evidencia, hashes y rutas no deben quedar como literales heredados.
 
-7. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados.
+7. Mantener permisos de staging compatibles con `www-data` sin alterar contenido, y validar traversal, ejecutabilidad y checksums antes de cualquier sidecar o migración.
 
-8. Mantener payments, balances, receipts, cash management y fiscal/CFDI fuera del MVP aceptado hasta slices dedicados.
+8. Atender por separado la deuda operativa observada: Data Protection efímero, configuración de HTTPS detrás de proxy y warnings de dependencias vulnerables; no mezclarla retroactivamente con PI-3A.
 
-9. Mantener diferidas las `doctor-based views` y cualquier linkage cross-module no aceptado.
+9. Preservar Releases 1 a 7 y el MVP aceptado sin debilitar tenant isolation, contratos ni boundaries cerrados; payments/cash/CFDI, doctor views y automatizaciones siguen diferidos.
 
-10. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap, tenant model y ADRs en cada gate de PI-2.
+10. Mantener sincronizados STATE, README, PROJECT_MAP, AGENTS, roadmap, plan y evidencia de despliegue en cada gate posterior.
 
 ## 12. Riesgos y temas a vigilar
 
@@ -422,7 +424,7 @@ Lista priorizada:
 
 **Authorization model** — [Hecho] Permisos nuevos deben evolucionar junto con módulos reales, sin cambiar silenciosamente scopes o roles.
 
-**Patient-facing identity e intake** — [Hecho] PI-1A a PI-1D establecen acceso separado. PI-2A agrega persistencia tenant-owned de draft, respuestas y revisiones. PI-2B expone create/get/save id-less para la cuenta vinculada y deriva Tenant/Patient/intake de la sesión validada, sin platform override ni aplicación canónica. PI-2C debe mantener separado el trust mode unlinked mediante `patient_intake`, token single-use y validación server-side de account/Tenant/intake/SessionVersion.
+**Patient-facing identity e intake** — [En validación] PI-1 y PI-2 establecen acceso separado, ambos trust modes y captura completa. PI-3A ya expone submit final y preparación appointment-scoped bajo permiso independiente, sin platform override ni aplicación canónica. El riesgo inmediato es validar en UAT autenticado que el handoff, el bloqueo posterior a `Submitted` y la ausencia de writes canónicos funcionen con datos controlados.
 
 **Query filters y acceso a datos** — [Hecho] No degradar filtros globales y write enforcement con filtros manuales dispersos.
 
@@ -446,7 +448,7 @@ Lista priorizada:
 
 [Hecho] BigSmile es un producto SaaS multi-tenant; cualquier atajo que debilite tenant isolation, mantenibilidad o reviewability rompe el rumbo.
 
-[Hecho] El orden completado del MVP es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. Phase 2.1 Patient Intake and Portal Foundation está activa; PI-1, PI-2A y PI-2B están completados, PI-2C está activa y el portal amplio permanece en Phase 4.
+[Hecho] El orden completado del MVP es Foundation → Patients → Scheduling → Clinical Records → Odontogram → Treatments and Quotes → Billing → Documents and Dashboard. Phase 2.1 Patient Intake and Portal Foundation está activa; PI-1 y PI-2 están completados; PI-3A está técnicamente desplegado con UAT autenticado pendiente; PI-3B/PI-4 siguen gated y el portal amplio permanece en Phase 4.
 
 [Hecho] Ningún release funcional ni Phase 2.1 se considera completado sin evidencia explícita en código, pruebas y documentación alineada.
 
@@ -454,10 +456,10 @@ Lista priorizada:
 
 ## 14. Nota tipo ADR resumida
 
-**Estado:** Nota canónica actualizada con ADR 006 a ADR 017; Phase 2.1 abierta; PI-1, PI-2A y PI-2B completados; PI-2C activa.
+**Estado:** Nota canónica actualizada con ADR 006 a ADR 020; Phase 2.1 abierta; PI-1 y PI-2 completados; PI-3A implementado y técnicamente desplegado; aceptación funcional autenticada pendiente.
 
-**Contexto:** PI-2B expone por primera vez información médica declarada mediante una API patient-self. El cliente autorizó continuar exclusivamente con bootstrap de sala de espera, identidad intake-only y handoff staff mínimo.
+**Contexto:** PR #60 agregó submit final patient-self y preparación manual de acceso desde Appointment. El despliegue coordinado de backend, frontend y migración fue promovido el 2026-08-27 después de backup verificado, restore drill, efbundle NOOP, sidecar y smoke técnico.
 
-**Decisión:** Aceptar PI-2B mediante PR #34 con contratos id-less/no-store y abrir PI-2C bajo ADR 017 como secuencia #36 → #37 → #38, usando credencial hash-only de 30 minutos, permiso TenantAdmin-only, scope `patient_intake` sin `patient_id` y QR generado localmente.
+**Decisión:** Mantener PI-3A dentro del boundary de ADR 020 y separar dos gates: despliegue técnico y aceptación funcional. La primera quedó aprobada; la segunda requiere UAT autenticado con datos controlados. PI-3B no se abre implícitamente y los datos canónicos permanecen bajo control de la clínica.
 
-**Consecuencias:** Pacientes existentes ya pueden crear/leer/guardar su propio draft sin writes canónicos. Waiting-room bootstrap, UI staff de handoff y sesión intake-only siguen pendientes dentro de PI-2C; la captura Angular del cuestionario permanece PI-2D y submit/review/apply permanece PI-3.
+**Consecuencias:** Producción ejecuta la funcionalidad y la base contiene la migración `20260806131500_AddPatientIntakeSubmissionBoundary`. Las incidencias recuperadas del runbook, evidencia y deuda operativa están registradas en `docs/pi-3a-production-deployment-record.md`. Hasta cerrar UAT, PI-3A no debe rotularse como product-accepted.

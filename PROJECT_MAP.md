@@ -66,7 +66,7 @@ Canonical project status:
 * **Release 6 — Billing:** completed through **Release 6.1 — Billing Document Foundation**
 * **Release 7 — Documents and Dashboard:** completed through **Release 7.1 — Patient Documents Foundation** and **Release 7.2 — Dashboard Read Model Foundation**
 * **Initial operational MVP:** formally accepted
-* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1 and PI-2 are completed through PI-2D4; PI-3A submission/pre-appointment request is opened under ADR 020; PI-3B and PI-4 remain not started
+* **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**; PI-1 and PI-2 are completed; PI-3A is implemented, merged through PR #60 and technically deployed; authenticated production UAT remains pending; PI-3B and PI-4 remain not started
 
 ### Release 4 closure evidence
 
@@ -101,7 +101,7 @@ Visual slices may improve presentation, organization, copy, color, microinteract
 
 ### Current expected priority
 
-Preserve Releases 1 through 7 and completed PI-1/PI-2 while implementing only the explicitly opened PI-3A boundary:
+Preserve Releases 1 through 7, completed PI-1/PI-2 and the technically deployed PI-3A boundary while completing its controlled authenticated production acceptance:
 
 * preserve the accepted Clinical, Odontogram, Treatments/Quotes, Billing, Documents and Dashboard boundaries
 * preserve PI-1A tenant-owned account/invitation persistence
@@ -113,7 +113,7 @@ Preserve Releases 1 through 7 and completed PI-1/PI-2 while implementing only th
 * preserve PI-2C credential/staff API, transactional intake-only session and memory-only staff handoff UI
 * preserve completed PI-2D1 through PI-2D4, including conflict/expiry/session recovery and unsaved-navigation protection
 * preserve server-side document signature validation, storage containment and tenant-local Dashboard day boundaries
-* PI-1 and PI-2A through PI-2D4 are accepted with test evidence; PI-3A adds only final submission and appointment-scoped manual handoff, while PI-3B review/apply remains unimplemented
+* PI-1 and PI-2A through PI-2D4 are accepted with test evidence; PI-3A adds only final submission and appointment-scoped manual handoff, is technically deployed, and remains product-acceptance-pending until controlled authenticated UAT passes; PI-3B review/apply remains unimplemented
 * keep payments, balances, receipts, cash management, fiscal/CFDI and automatic quote mutation outside Release 6.1
 * keep OCR/sharing/versioning and advanced Dashboard analytics outside Release 7
 * keep automated messaging/providers/jobs/queues/retries, online booking and full Patient Portal deferred
@@ -180,6 +180,7 @@ Expected layout:
 * `docs/decisions/015-patient-portal-frontend-session-boundary.md`
 * `docs/pi-1-patient-portal-access-and-security-closure.md`
 * `docs/patient-portal-assisted-recovery-runbook.md`
+* `docs/pi-3a-production-deployment-record.md`
 * `docs/patient-intake-and-portal-plan.md`
 
 ### Documentation ownership rules
@@ -609,7 +610,7 @@ Future Reporting owns deeper treatment/scheduling/billing metrics, charts, expor
 
 ### 7.12 Patient Intake and Portal
 
-Accepted PI-1/PI-2 and opened PI-3A ownership:
+Accepted PI-1/PI-2 and technically deployed PI-3A ownership:
 
 * tenant-owned portal accounts and existing-patient invitations separate from staff identity
 * patient-only authentication/session and Angular auth boundary
@@ -832,7 +833,7 @@ Documents and Dashboard — completed through Release 7.1 and 7.2; initial opera
 
 ### Later phases
 
-* Phase 2.1 Patient Intake and Portal Foundation under ADR 006 and ADR 012–020 — PI-1/PI-2 completed; bounded PI-3A opened; PI-3B/PI-4 gated
+* Phase 2.1 Patient Intake and Portal Foundation under ADR 006 and ADR 012–020 — PI-1/PI-2 completed; bounded PI-3A technically deployed with authenticated UAT pending; PI-3B/PI-4 gated
 * reminders/providers/online booking
 * electronic invoicing
 * advanced SaaS platform features
@@ -1050,6 +1051,6 @@ Operational deployment baseline:
 - database: BigSmile
 - pilot protection: Nginx Basic Auth
 
-This is documented in `docs/decisions/004-manual-vps-deployment-foundation.md`.
+This foundation is documented in `docs/decisions/004-manual-vps-deployment-foundation.md`. The 2026-08-27 PI-3A coordinated backend/frontend/database deployment and its recovered operational defects are recorded in `docs/pi-3a-production-deployment-record.md`.
 
 GitHub Actions deployment should automate the same release/rollback flow and must not introduce a different deployment model without a new decision.

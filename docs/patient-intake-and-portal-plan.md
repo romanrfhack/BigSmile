@@ -1,6 +1,6 @@
 # Patient Intake and Portal General Plan
 
-- **Status:** In progress; PI-1 and PI-2 completed; PI-3A submission/pre-appointment request opened under ADR 020; PI-3B and PI-4 not started
+- **Status:** In progress; PI-1 and PI-2 completed; PI-3A implemented, merged through PR #60 and technically deployed on 2026-08-27; authenticated functional acceptance pending; PI-3B and PI-4 not started
 - **Roadmap placement:** Phase 2.1 — Patient Intake and Portal Foundation
 - **Start gate:** Satisfied through MVP acceptance and explicit client authorization on 2026-07-24
 - **Architecture decisions:** ADR 006 and ADR 012–020
@@ -33,7 +33,7 @@ Current accepted roadmap frontier:
 - Release 6 — Billing: completed through Release 6.1.
 - Release 7 — Documents and Dashboard: completed through Release 7.1 and 7.2.
 - Initial operational MVP: formally accepted under ADR 011.
-- Phase 2.1: active; PI-1 and PI-2 are completed; bounded PI-3A is opened; PI-3B and PI-4 remain not started.
+- Phase 2.1: active; PI-1 and PI-2 are completed; bounded PI-3A is technically deployed with authenticated production UAT pending; PI-3B and PI-4 remain not started.
 
 This placement is deliberate:
 
@@ -60,11 +60,11 @@ The broader patient portal remains deferred to Phase 4. Phase 2.1 does not inclu
 | Parent product backlog | Open | Issue #2 |
 | PI-1 access/invitations | Completed through PI-1A to PI-1D | Issues #4 and #22–#25 / PRs #26, #28, #29 and #30 |
 | PI-2 intake draft | Completed through PI-2A to PI-2D4 | Issue #5 / #31 / #33 / #35 / #44 / #45–#48 / PR #57 / CI #485 |
-| PI-3 submit/review/apply | PI-3A opened for submit and appointment request; PI-3B not started | Issue #6 / ADR 020 |
+| PI-3 submit/review/apply | PI-3A implemented and technically deployed; authenticated acceptance pending; PI-3B not started | Issue #6 / ADR 020 / PR #60 / deployment record |
 | PI-4 audit/hardening | Planned; not implemented | Issue #7 |
-| Patient-facing backend/API/database | Access/auth, intake persistence, linked-patient API and waiting-room intake-only bootstrap implemented | PRs #26, #28, #29, #32, #34, #41 and #42 |
-| Patient-facing frontend | Auth, waiting-room handoff, shared workspace, complete capture, conflict/expiry recovery and unsaved-navigation protection implemented | PR #30 / PR #43 / PR #50 / PR #53 / PR #55 / PR #57 / ADR 015 / ADR 019 |
-| Patient-facing intake | PI-2 capture completed with self-only APIs, full snapshot, 39 questions, stale-write blocking, scope-correct recovery and no canonical writes | PI-2B / PI-2C / PI-2D1–PI-2D4 / PR #57 / CI #485 |
+| Patient-facing backend/API/database | Access/auth, intake persistence, both self-only scopes, final submit and appointment request/status implemented; production schema at 34 migrations | PRs #26, #28, #29, #32, #34, #41, #42 and #60 |
+| Patient-facing frontend | Auth, waiting-room handoff, shared workspace, complete capture, submission, scheduling handoff, conflict/expiry recovery and unsaved-navigation protection implemented | PR #30 / PR #43 / PR #50 / PR #53 / PR #55 / PR #57 / PR #60 / ADR 015 / ADR 019 / ADR 020 |
+| Patient-facing intake | PI-2 capture completed and PI-3A technically deployed with self-only submission, one-time completion and no canonical writes; authenticated UAT pending | PI-2B / PI-2C / PI-2D1–PI-2D4 / PR #60 / deployment record |
 
 ## 4. Scope boundary
 
@@ -288,7 +288,7 @@ PI-2 exit gate:
 
 ### PI-3 — Submit, Review and Canonical Apply — issue #6
 
-PI-3A opened scope under ADR 020:
+PI-3A implemented and technically deployed scope under ADR 020 (PR #60):
 - immutable patient submission after identity fields and all 39 explicit answers;
 - one submitted linked-patient intake as the durable completion marker;
 - appointment-scoped portal/history status;
@@ -308,7 +308,8 @@ Exit gate:
 - staff authorization explicit;
 - conflicts never silently overwrite data;
 - application is idempotent/transaction-safe to accepted extent;
-- cross-tenant/duplicate/concurrency/partial-failure tests green.
+- cross-tenant/duplicate/concurrency/partial-failure tests green;
+- controlled authenticated production UAT confirms appointment status, access preparation, manual handoff, final submission, second-request blocking and no canonical writes.
 
 ### PI-4 — Audit Visibility and Security Hardening — issue #7
 
@@ -413,19 +414,20 @@ It is complete only when:
 
 ## 12. Current next action
 
-The current repository has an accepted MVP and an explicitly opened **Phase 2.1 — Patient Intake and Portal Foundation**.
+The current repository has an accepted MVP and an active **Phase 2.1 — Patient Intake and Portal Foundation**. PI-3A is implemented and technically deployed, but is not yet product-accepted.
 
 For Patient Intake and Portal:
 
-1. Preserve completed PI-1 and PI-2 boundaries, including both patient scopes and full-snapshot capture.
-2. Implement only bounded PI-3A under ADR 020: final submission, one-time completion and appointment-scoped manual access preparation.
-3. Keep `patientportal.intake.request` independent from intake management, invitation administration, recovery and clinical permissions.
-4. Do not add clinic review or canonical application until PI-3B receives its own explicit gate; keep PI-4 pending.
+1. Run controlled authenticated production UAT for PI-3A using authorized test data and record the result.
+2. Verify least-privilege appointment status/preparation, manual handoff, final `Submitted`, one-time completion and absence of canonical Patient/ClinicalRecord changes.
+3. Preserve completed PI-1/PI-2 and keep `patientportal.intake.request` independent from intake management, invitation administration, recovery and clinical permissions.
+4. Close PI-3A only after UAT passes. Do not add clinic review or canonical application until PI-3B receives its own explicit gate; keep PI-4 pending.
+5. Follow up the release-automation debt recorded in `docs/pi-3a-production-deployment-record.md` without changing PI-3A behavior.
 
 ## 13. Decision note
 
 **Context:** The client wants waiting-room registration and ongoing patient updates, but did not assign priority over the operational-core roadmap.
 
-**Decision:** Implement PI-1 under ADR 012–015, PI-2 under ADR 016–019, and only bounded PI-3A under ADR 020. Treat explicit `Submitted` as completion and allow optional appointment-scoped access preparation without opening clinic review/apply.
+**Decision:** Implement PI-1 under ADR 012–015, PI-2 under ADR 016–019, and only bounded PI-3A under ADR 020. Treat explicit `Submitted` as completion and allow optional appointment-scoped access preparation without opening clinic review/apply. Treat technical deployment and authenticated functional acceptance as separate gates.
 
-**Consequence:** PI-1 and PI-2 provide secure access and complete draft capture. PI-3A adds immutable patient completion plus a least-privilege reception handoff. Review/apply and final hardening remain unimplemented, and canonical data remains clinic-controlled.
+**Consequence:** PI-1 and PI-2 provide secure access and complete draft capture. PI-3A is technically available in production and adds immutable patient completion plus a least-privilege reception handoff, but remains acceptance-pending until controlled UAT passes. Review/apply and final hardening remain unimplemented, and canonical data remains clinic-controlled.
