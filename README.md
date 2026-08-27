@@ -79,7 +79,7 @@ Releases 4 — Odontogram, 5 — Treatments and Quotes, 6 — Billing, and 7 —
 
 Release 7 closure also formally accepts the initial operational MVP. This is a bounded product milestone: issued Billing documents do not imply payments/cash/CFDI, Documents do not imply OCR/sharing, and Dashboard does not imply advanced analytics.
 
-Phase 2.1 is active with PI-1 and PI-2 completed and bounded PI-3A explicitly opened under ADR 020. Both patient scopes use the same self-only workspace; only explicit final `Submitted` counts as completed. Scheduling can show portal/history status and prepare optional activation/login access under independent `patientportal.intake.request`, including manual WhatsApp click-to-chat. Canonical Patient/Clinical data remains unchanged; clinic review/apply and PI-4 remain unopened.
+Phase 2.1 is active with PI-1 and PI-2 completed. Bounded PI-3A is implemented, merged through PR #60 and technically deployed to production under ADR 020. Both patient scopes use the same self-only workspace; only explicit final `Submitted` counts as completed. Scheduling can show portal/history status and prepare optional activation/login access under independent `patientportal.intake.request`, including manual WhatsApp click-to-chat. Canonical Patient/Clinical data remains unchanged. Authenticated production UAT is still required before formal PI-3A product acceptance; clinic review/apply and PI-4 remain unopened.
 
 ---
 
@@ -278,8 +278,8 @@ Current roadmap position:
 * **Latest completed delivery phase:** **Release 7 — Documents and Dashboard**
 * **Initial operational MVP:** **formally accepted**
 * **Current phase:** **Phase 2.1 — Patient Intake and Portal Foundation**
-* **Latest completed Phase 2.1 increment:** **PI-2D4 — conflict/expiry/session and navigation closure**
-* **Current slice:** **PI-3A — final patient submission and pre-appointment intake request**
+* **Latest technically deployed Phase 2.1 increment:** **PI-3A — final patient submission and pre-appointment intake request**
+* **Current acceptance gate:** **controlled authenticated production UAT for PI-3A**
 * **Next gated increment:** **PI-3B — clinic review, duplicate resolution and canonical apply**; not opened
 * **Public patient runtime:** linked-patient and waiting-room authentication, full fixed 39-question capture and explicit final submission; canonical Patient/Clinical application remains gated
 
@@ -361,7 +361,7 @@ Release 7 closure evidence:
 
 The current authorization foundation includes scope-aware JWT claims, explicit permission policies, policy-gated platform override, centralized tenant read/write enforcement in EF Core, `/api/auth/me`, and frontend session state in memory.
 
-The initial operational MVP is accepted, but Bigsmile is not feature-complete. PI-1 is completed through PI-1A to PI-1D, including the bounded Angular patient-auth surface. Intake, review/apply and final audit hardening remain pending through PI-2 to PI-4. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
+The initial operational MVP is accepted, but Bigsmile is not feature-complete. PI-1 and PI-2 are completed. PI-3A is implemented and technically deployed; its authenticated functional production acceptance remains pending. PI-3B clinic review/canonical apply and PI-4 audit hardening remain gated. Payments/cash/CFDI, provider views, automated messaging, online booking, advanced analytics and the full Patient Portal remain future bounded work.
 
 ---
 
@@ -454,8 +454,9 @@ The initial operational MVP is accepted, but Bigsmile is not feature-complete. P
 * PI-2B completed linked-patient self-only `POST / GET / PUT /api/patient-portal/intake` with no-store, no GET side effects and optimistic concurrency
 * PI-2C and PI-2D are completed with waiting-room handoff, both self-only scopes, full capture and lifecycle hardening
 * PI-3A adds `Submitted`, one-time completion, appointment status indicators, independent reception permission and manual WhatsApp handoff
-* PI-3B and PI-4 remain pending for clinic review/application, audit visibility and production hardening
-* PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`; PI-3A decision: ADR 020
+* PI-3A was merged in PR #60 and technically deployed on 2026-08-27; controlled authenticated production UAT remains the acceptance gate
+* PI-3B and PI-4 remain pending for clinic review/application and final audit hardening
+* PI-1 closure: `docs/pi-1-patient-portal-access-and-security-closure.md`; PI-3A decision: ADR 020; deployment evidence: `docs/pi-3a-production-deployment-record.md`
 * The full patient portal, automated messaging, online booking, providers, jobs, queues, campaigns and advanced dashboards remain deferred
 
 ---
