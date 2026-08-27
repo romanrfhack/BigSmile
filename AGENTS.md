@@ -104,7 +104,7 @@ Canonical project status:
 - `Release 6 — Billing`: completed through accepted Release 6.1 — Billing Document Foundation
 - `Release 7 — Documents and Dashboard`: completed through accepted Release 7.1 and 7.2
 - Initial operational MVP: formally accepted
-- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 and PI-2 are completed through PI-2D4 #48 / PR #57 / CI #485; PI-3A submission/pre-appointment request is explicitly opened under ADR 020; PI-3B review/apply and PI-4 remain not started
+- Current phase: `Phase 2.1 — Patient Intake and Portal Foundation`; PI-1 and PI-2 are completed; PI-3A is implemented, merged through PR #60 and technically deployed to production; authenticated functional acceptance remains pending; PI-3B review/apply and PI-4 remain not started
 
 Release 4 closure evidence:
 - `docs/release-4-odontogram-audit-and-closure.md`
@@ -134,6 +134,7 @@ Phase 2.1 opening evidence:
 - ADR 018 — `docs/decisions/018-patient-intake-waiting-room-link-management.md`
 - ADR 019 — `docs/decisions/019-patient-intake-only-authentication-boundary.md`
 - ADR 020 — `docs/decisions/020-patient-intake-submission-and-preappointment-request.md`
+- PI-3A production deployment record — `docs/pi-3a-production-deployment-record.md`
 - PI-1 closure — `docs/pi-1-patient-portal-access-and-security-closure.md`
 - PI-1 runbook — `docs/patient-portal-assisted-recovery-runbook.md`
 - PI-1A — issue #22 / PR #26
@@ -196,11 +197,11 @@ Phase 2.1 — Patient Intake and Portal Foundation is active after the accepted 
 - PI-1 (#4) is completed through PI-1A to PI-1D
 - PI-2 (#5) is completed through PI-2A (#31), PI-2B (#33), PI-2C (#35) and PI-2D (#44)
 - PI-2D (#44) is completed through #45–#48, including conflict/expiry/session-invalidated UX, dirty-navigation protection and automated smoke evidence
-- PI-3A is explicitly opened for final submission and appointment-scoped manual access handoff; PI-3B and PI-4 remain not started
+- PI-3A final submission and appointment-scoped manual access handoff are implemented and technically deployed; authenticated production UAT is pending; PI-3B and PI-4 remain not started
 - full patient portal remains deferred beyond the bounded Phase 2.1 intake/update capability
 
 # Immediate objective
-Complete and validate bounded PI-3A under ADR 020 while preserving completed PI-1/PI-2. Do not infer PI-3B clinic review/canonical apply from submission or appointment handoff; canonical Patient and Clinical data remain clinic-controlled and unchanged by intake.
+Run controlled authenticated production UAT for bounded PI-3A, record the acceptance result, and only then close the slice. Preserve completed PI-1/PI-2 and the technically deployed PI-3A boundary. Do not infer PI-3B clinic review/canonical apply from submission or appointment handoff; canonical Patient and Clinical data remain clinic-controlled and unchanged by intake.
 
 Immediate priorities:
 - preserve tenant-aware authorization aligned with `TenantContext` and, where applicable, `BranchContext`
@@ -221,7 +222,8 @@ Immediate priorities:
 - keep doctor-based views deferred until provider/doctor assignment is intentionally opened
 - keep privileged/platform paths explicit and auditable; patient-facing policies must have no platform override
 - maintain automated coverage for cross-tenant, IDOR, replay, expiry, revocation, concurrency and existing staff regression scenarios
-- update canonical documentation whenever the phase is opened or an architectural decision changes
+- preserve the production deployment evidence in `docs/pi-3a-production-deployment-record.md`; do not mark PI-3A product-accepted until controlled authenticated UAT passes
+- update canonical documentation whenever a slice is opened, deployed, accepted or materially changes architecture
 
 If a task touches later modules, keep the change bounded and do not assume the module is accepted merely because implementation exists.
 
